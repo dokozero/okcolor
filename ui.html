@@ -4,9 +4,14 @@
 <button id="cancel">Cancel</button> -->
 
 <div>
-  <input id="Hue" type="number" min="0" max="360" spellcheck="false">
-  <input id="Saturation" type="number" min="0" max="100" spellcheck="false">
-  <input id="Lightness" type="number" min="0" max="100" spellcheck="false">
+  <label for="Hue">Hue</label>
+  <input id="Hue" type="number" min="0" max="360" value="0" spellcheck="false">
+
+  <label for="Saturation">Saturation</label>
+  <input id="Saturation" type="number" min="0" max="100" value="50" spellcheck="false">
+
+  <label for="Lightness">Lightness</label>
+  <input id="Lightness" type="number" min="0" max="100" value="50" spellcheck="false">
 </div>
 
 <script>
@@ -22,9 +27,19 @@
   for (i = 0; i != inputs.length; i++) {
     inputs[i].onkeyup = function sendData() {
       let id = this.id;
-      let value = this.value;
-      parent.postMessage({ pluginMessage: { type: 'change', id, value } }, '*')
+      let values = {
+        hue: document.getElementById('Hue').value,
+        saturation: document.getElementById('Saturation').value,
+        lightness: document.getElementById('Lightness').value,
+      };
+      parent.postMessage({ pluginMessage: { type: 'change', id, values, } }, '*')
     }
+  }
+
+  onmessage = (event) => {
+    document.getElementById('Hue').value = event.data.pluginMessage.hue;
+    document.getElementById('Saturation').value = event.data.pluginMessage.saturation;
+    document.getElementById('Lightness').value = event.data.pluginMessage.lightness;
   }
   
 
