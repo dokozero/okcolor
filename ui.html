@@ -8,10 +8,10 @@
   <input id="Hue" type="number" min="0" max="360" value="0" spellcheck="false">
 
   <label for="Saturation">Saturation</label>
-  <input id="Saturation" type="number" min="0" max="100" value="50" spellcheck="false">
+  <input id="Saturation" type="number" min="0" max="100" value="0" spellcheck="false">
 
   <label for="Lightness">Lightness</label>
-  <input id="Lightness" type="number" min="0" max="100" value="50" spellcheck="false">
+  <input id="Lightness" type="number" min="0" max="100" value="0" spellcheck="false">
 </div>
 
 <script>
@@ -32,7 +32,7 @@
         saturation: document.getElementById('Saturation').value,
         lightness: document.getElementById('Lightness').value,
       };
-      parent.postMessage({ pluginMessage: { type: 'change', id, values, } }, '*')
+      parent.postMessage({ pluginMessage: { type: 'changeFillColor', id, values, } }, '*')
     }
   }
 

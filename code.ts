@@ -716,8 +716,21 @@ function rgb_to_hex(r,g,b)
 
 
 
+function setColorInUI(shape) {
+  let r = shape[0].color.r * 255;
+  let g = shape[0].color.g * 255;
+  let b = shape[0].color.b * 255;
 
+  let okhslResult = srgb_to_okhsl(r, g, b);
 
+  let okhslReady = {
+    "hue": Math.floor(okhslResult[0] * 360),
+    "saturation": Math.floor(okhslResult[1] * 100),
+    "lightness": Math.floor(okhslResult[2] * 100)
+  }
+
+  figma.ui.postMessage(okhslReady);
+}
 
 
 
@@ -758,34 +771,36 @@ if (figma.editorType === 'figma') {
   //   figma.closePlugin();
   // };
 
+
+
   for (const node of figma.currentPage.selection) {
-    // figma.ui.postMessage(42);
+    console.log('selected on launch');
+
+    if (figma.currentPage.selection[0]) {
+      setColorInUI(figma.currentPage.selection[0].fills)
+    }
   }
 
   figma.on("selectionchange", () => {
-    let shape = figma.currentPage.selection[0].fills;
+    console.log('selection change');
 
-    console.log(shape[0].color);
-
-    let r = shape[0].color.r * 255;
-    let g = shape[0].color.g * 255;
-    let b = shape[0].color.b * 255;
-
-    let okhsl = srgb_to_okhsl(r, g, b);
-
-    let okhsl_ready = {
-      "hue": Math.floor(okhsl[0] * 360),
-      "saturation": Math.floor(okhsl[1] * 100),
-      "lightness": Math.floor(okhsl[2] * 100)
+    if (figma.currentPage.selection[0]) {
+      setColorInUI(figma.currentPage.selection[0].fills)
     }
-
-    figma.ui.postMessage(okhsl_ready);
-
+    else {
+      let okhslReady = {
+        "hue": 0,
+        "saturation": 0,
+        "lightness": 0
+      }
+    
+      figma.ui.postMessage(okhslReady);
+    }
   });
 
   figma.ui.onmessage = msg => {
 
-    if (msg.type === 'change') {
+    if (msg.type === 'changeFillColor') {
 
       // console.log(msg.values.hue, msg.values.saturation, msg.values.lightness);
 
@@ -795,75 +810,56 @@ if (figma.editorType === 'figma') {
       // console.log(srgb);
 
       for (const node of figma.currentPage.selection) {
-        let color = node.fills;
+        if ("fills" in node) {
+          let nodeFills = node.fills;
 
-        let yolo = JSON.parse(JSON.stringify(color));
+          let nodeFillsCopy = JSON.parse(JSON.stringify(nodeFills));
 
-        // let red = yolo[0].color.r * 255;
-        // let green = yolo[0].color.g * 255;
-        // let blue = yolo[0].color.b * 255;
+          // let red = yolo[0].color.r * 255;
+          // let green = yolo[0].color.g * 255;
+          // let blue = yolo[0].color.b * 255;
 
-        // let red = yolo[0].color.r * 255;
-        // let green = yolo[0].color.g * 255;
-        // let blue = yolo[0].color.b * 255;
+          // let red = yolo[0].color.r * 255;
+          // let green = yolo[0].color.g * 255;
+          // let blue = yolo[0].color.b * 255;
 
-        let hue = msg.values.hue / 360;
-        let saturation = msg.values.saturation / 100;
-        let lightness = msg.values.lightness / 100;
+          let hue = msg.values.hue / 360;
+          let saturation = msg.values.saturation / 100;
+          let lightness = msg.values.lightness / 100;
 
-        let youpi = okhsl_to_srgb(hue, saturation, lightness);
+          let sRgbResult = okhsl_to_srgb(hue, saturation, lightness);
 
-        console.log(youpi);
+          // console.log(sRgbResult);
 
-        if (youpi[0] < 0) {
-          yolo[0].color.r = 0;
+          for (let i = 0; i < sRgbResult.length; i++) {
+            if (sRgbResult[i] < 0) {
+              nodeFillsCopy[0].color.r = 0;
+            }
+            else if (sRgbResult[0] > 255) {
+              nodeFillsCopy[0].color.r = 1;
+            }
+            else {
+              nodeFillsCopy[0].color.r = sRgbResult[i] / 255;
+            }
+          }
+
+          // console.log(nodeFillsCopy[0].color);
+
+
+          // console.log(red, green, blue);
+
+          // let test = srgb_to_okhsl(red, green, blue);
+
+          // // let hue = test[0] * 360;
+          // // let saturation = test[1] * 100;
+          // // let lightness = test[2] * 100;
+
+          // console.log(hue, saturation, lightness);
+
+          // console.log(okhsl_to_srgb(test[0], test[1], test[2]));
+
+          node.fills = nodeFillsCopy;
         }
-        else if (youpi[0] > 255) {
-          yolo[0].color.r = 1;
-        }
-        else {
-          yolo[0].color.r = youpi[0] / 255;
-        }
-
-
-        if (youpi[1] < 0) {
-          yolo[0].color.g = 0;
-        }
-        else if (youpi[1] > 255) {
-          yolo[0].color.g = 1;
-        }
-        else {
-          yolo[0].color.g = youpi[1] / 255;
-        }
-
-
-        if (youpi[2] < 0) {
-          yolo[0].color.b = 0;
-        }
-        else if (youpi[2] > 255) {
-          yolo[0].color.b = 1;
-        }
-        else {
-          yolo[0].color.b = youpi[2] / 255;
-        }
-
-        console.log(yolo[0].color);
-
-
-        // console.log(red, green, blue);
-
-        // let test = srgb_to_okhsl(red, green, blue);
-
-        // // let hue = test[0] * 360;
-        // // let saturation = test[1] * 100;
-        // // let lightness = test[2] * 100;
-
-        // console.log(hue, saturation, lightness);
-
-        // console.log(okhsl_to_srgb(test[0], test[1], test[2]));
-
-        node.fills = yolo;
-
       }
       
     }
@@ -871,6 +867,8 @@ if (figma.editorType === 'figma') {
     // figma.closePlugin();
   }
   
+
+
 
 
 // If the plugins isn't run in Figma, run this code
