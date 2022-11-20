@@ -7,5 +7,5 @@
     "figma",
     "figjam"
   ],
-  "ui": "ui.html"
+  "ui": "./dist/ui-src/index.html"
 }

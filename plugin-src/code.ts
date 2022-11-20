@@ -1,9 +1,7 @@
-// @ts-nocheck
+// @ts-nochec k
 
 import { srgb_to_okhsl } from "./bottosson/colorconversion";
 import { okhsl_to_srgb } from "./bottosson/colorconversion";
-
-console.log("test");
 
 function setColorInUI(shape) {
   let r = shape[0].color.r * 255;
@@ -22,21 +20,8 @@ function setColorInUI(shape) {
 }
 
 
-// This file holds the main code for the plugin. It has access to the *document*.
-// You can access browser APIs such as the network by creating a UI which contains
-// a full browser environment (see documentation).
-
 // Runs this code if the plugin is run in Figma
 if (figma.editorType === 'figma') {
-  // This plugin will open a window to prompt the user to enter a number, and
-  // it will then create that many rectangles on the screen.
-
-  // This shows the HTML page in "ui.html".
-  figma.showUI(__html__, {width: 400, height: 400});
-
-  // Calls to "parent.postMessage" from within the HTML page will trigger this
-  // callback. The callback will be passed the "pluginMessage" property of the
-  // posted message.
 
   // figma.ui.onmessage = msg => {
   //   // One way of distinguishing between different types of messages sent from
@@ -59,10 +44,10 @@ if (figma.editorType === 'figma') {
   //   figma.closePlugin();
   // };
 
-
+  figma.showUI(__html__, {width: 400, height: 400});
 
   for (const node of figma.currentPage.selection) {
-    console.log('selected on launch');
+    // console.log('selected on launch');
 
     if (figma.currentPage.selection[0]) {
       setColorInUI(figma.currentPage.selection[0].fills)
@@ -70,7 +55,7 @@ if (figma.editorType === 'figma') {
   }
 
   figma.on("selectionchange", () => {
-    console.log('selection change');
+    // console.log('selection change');
 
     if (figma.currentPage.selection[0]) {
       setColorInUI(figma.currentPage.selection[0].fills)
@@ -89,67 +74,36 @@ if (figma.editorType === 'figma') {
   figma.ui.onmessage = msg => {
 
     if (msg.type === 'changeFillColor') {
-
-      // console.log(msg.values.hue, msg.values.saturation, msg.values.lightness);
-
-      // let srgb = okhsl_to_srgb(msg.values.hue, msg.values.saturation, msg.values.lightness);
-      // let hex = rgb_to_hex(srgb[0], srgb[1], srgb[2]);
-
-      // console.log(srgb);
-
       for (const node of figma.currentPage.selection) {
-        if ("fills" in node) {
-          let nodeFills = node.fills;
 
+        if ("fills" in node) {
+          const nodeFills = node.fills;
           let nodeFillsCopy = JSON.parse(JSON.stringify(nodeFills));
 
-          // let red = yolo[0].color.r * 255;
-          // let green = yolo[0].color.g * 255;
-          // let blue = yolo[0].color.b * 255;
+          const hue = msg.values.hue / 360;
+          const saturation = msg.values.saturation / 100;
+          const lightness = msg.values.lightness / 100;
 
-          // let red = yolo[0].color.r * 255;
-          // let green = yolo[0].color.g * 255;
-          // let blue = yolo[0].color.b * 255;
+          const sRgbResult = okhsl_to_srgb(hue, saturation, lightness);
 
-          let hue = msg.values.hue / 360;
-          let saturation = msg.values.saturation / 100;
-          let lightness = msg.values.lightness / 100;
-
-          let sRgbResult = okhsl_to_srgb(hue, saturation, lightness);
-
-          // console.log(sRgbResult);
+          const rgbInitials = ["r", "g", "b"];
 
           for (let i = 0; i < sRgbResult.length; i++) {
             if (sRgbResult[i] < 0) {
-              nodeFillsCopy[0].color.r = 0;
+              nodeFillsCopy[0].color[rgbInitials[i]] = 0;
             }
-            else if (sRgbResult[0] > 255) {
-              nodeFillsCopy[0].color.r = 1;
+            else if (sRgbResult[i] > 255) {
+              nodeFillsCopy[0].color[rgbInitials[i]] = 1;
             }
             else {
-              nodeFillsCopy[0].color.r = sRgbResult[i] / 255;
+              nodeFillsCopy[0].color[rgbInitials[i]] = sRgbResult[i] / 255;
             }
           }
 
-          // console.log(nodeFillsCopy[0].color);
-
-
-          // console.log(red, green, blue);
-
-          // let test = srgb_to_okhsl(red, green, blue);
-
-          // // let hue = test[0] * 360;
-          // // let saturation = test[1] * 100;
-          // // let lightness = test[2] * 100;
-
-          // console.log(hue, saturation, lightness);
-
-          // console.log(okhsl_to_srgb(test[0], test[1], test[2]));
-
           node.fills = nodeFillsCopy;
         }
+
       }
-      
     }
 
     // figma.closePlugin();
