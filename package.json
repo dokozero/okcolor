@@ -4,13 +4,21 @@
   "description": "Your Figma Plugin",
   "main": "code.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "oldbuild": "tsc -p tsconfig.json",
+    "oldwatch": "npm run build -- --watch",
+    "tempbuild": "tsc -p plugin-src/tsconfig.json && vite build --config vitePlugin.config.ts",
+    "build": "vite build --config vitePlugin.config.ts",
     "watch": "npm run build -- --watch"
   },
   "author": "",
   "license": "",
+  "dependencies": {
+    "preact": "^10.11.3"
+  },
   "devDependencies": {
-    "@figma/plugin-typings": "*",
-    "typescript": "*"
+    "@figma/plugin-typings": "^1.55.1",
+    "typescript": "^4.9.3",
+    "@preact/preset-vite": "^2.4.0",
+    "vite": "^3.2.4"
   }
 }

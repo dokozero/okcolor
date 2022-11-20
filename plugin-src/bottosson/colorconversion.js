@@ -422,7 +422,8 @@ function get_ST_mid(a_,b_)
 
 function get_Cs(L, a_, b_)
 {
-    cusp = find_cusp(a_, b_);
+    // MODIFIED - added let
+    let cusp = find_cusp(a_, b_);
 
     let C_max = find_gamut_intersection(a_,b_,L,1,L,cusp);
     let ST_max = get_ST_max(a_, b_, cusp);
@@ -464,7 +465,8 @@ function get_Cs(L, a_, b_)
     return [C_0, C_mid, C_max];
 }
 
-function okhsl_to_srgb(h,s,l)
+// MODIFIED - added export
+export function okhsl_to_srgb(h,s,l)
 {
     if (l == 1)
     {
@@ -516,7 +518,8 @@ function okhsl_to_srgb(h,s,l)
     ]
 }
 
-function srgb_to_okhsl(r,g,b)
+// MODIFIED - added export
+export function srgb_to_okhsl(r,g,b)
 {
     let lab = linear_srgb_to_oklab(
         srgb_transfer_function_inv(r/255),
