@@ -11,6 +11,9 @@ function setColorInUI(shape) {
   let okhslResult = srgb_to_okhsl(r, g, b);
 
   let okhslReady = {
+    "r": r,
+    "g": g,
+    "b": b,
     "hue": Math.floor(okhslResult[0] * 360),
     "saturation": Math.floor(okhslResult[1] * 100),
     "lightness": Math.floor(okhslResult[2] * 100)
@@ -80,24 +83,31 @@ if (figma.editorType === 'figma') {
           const nodeFills = node.fills;
           let nodeFillsCopy = JSON.parse(JSON.stringify(nodeFills));
 
-          const hue = msg.values.hue / 360;
-          const saturation = msg.values.saturation / 100;
-          const lightness = msg.values.lightness / 100;
+          if (msg.values.type == "hsl") {
+            const hue = msg.values.hue / 360;
+            const saturation = msg.values.saturation / 100;
+            const lightness = msg.values.lightness / 100;
 
-          const sRgbResult = okhsl_to_srgb(hue, saturation, lightness);
+            const sRgbResult = okhsl_to_srgb(hue, saturation, lightness);
 
-          const rgbInitials = ["r", "g", "b"];
+            const rgbInitials = ["r", "g", "b"];
 
-          for (let i = 0; i < sRgbResult.length; i++) {
-            if (sRgbResult[i] < 0) {
-              nodeFillsCopy[0].color[rgbInitials[i]] = 0;
+            for (let i = 0; i < sRgbResult.length; i++) {
+              if (sRgbResult[i] < 0) {
+                nodeFillsCopy[0].color[rgbInitials[i]] = 0;
+              }
+              else if (sRgbResult[i] > 255) {
+                nodeFillsCopy[0].color[rgbInitials[i]] = 1;
+              }
+              else {
+                nodeFillsCopy[0].color[rgbInitials[i]] = sRgbResult[i] / 255;
+              }
             }
-            else if (sRgbResult[i] > 255) {
-              nodeFillsCopy[0].color[rgbInitials[i]] = 1;
-            }
-            else {
-              nodeFillsCopy[0].color[rgbInitials[i]] = sRgbResult[i] / 255;
-            }
+          }
+          else if (msg.values.type == "rgb") {
+            nodeFillsCopy[0].color.r = msg.values.r;
+            nodeFillsCopy[0].color.g = msg.values.g;
+            nodeFillsCopy[0].color.b = msg.values.b;
           }
 
           node.fills = nodeFillsCopy;

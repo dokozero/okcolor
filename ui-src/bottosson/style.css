@@ -1,6 +1,6 @@
 body 
 {
-    background-color: rgb(119,119,119);
+    /* background-color: rgb(119,119,119); */
     font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 }
 h2
@@ -58,6 +58,7 @@ canvas.colorpicker_square
     position: absolute;
     left: 10px;
     top: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.3);
 }
 canvas.colorpicker_slider
 {
