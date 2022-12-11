@@ -1,10 +1,43 @@
 import { okhsl_to_srgb, srgb_to_okhsl } from "./colorconversion";
 
 const picker_size = 257;
-const slider_width = 31;
+const slider_width = 15;
 
 let lowres_picker_size = (picker_size+1)/2;
 let picker_size_inv = 1/picker_size;
+
+
+export function render_static()
+{
+    let result = {};
+
+    {
+        let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+        for (let i = 0; i < picker_size; i++) 
+        {
+
+            let a_ = Math.cos(2*Math.PI*i*picker_size_inv);
+            let b_ = Math.sin(2*Math.PI*i*picker_size_inv);
+
+            let rgb = okhsl_to_srgb(i/picker_size, 0.9, 0.65 + 0.17*b_ - 0.08*a_);
+
+            for (let j = 0; j < slider_width; j++) 
+            {
+                let index = 4*(i*slider_width + j);
+                data[index + 0] = rgb[0];
+                data[index + 1] = rgb[1];
+                data[index + 2] = rgb[2];
+                data[index + 3] = 255;
+            }               
+        }
+
+        result["okhsl_h"] = new ImageData(data, slider_width);
+    }
+
+    return result;
+}
+
 
 function upscale(lowres_data, data)
 {
@@ -122,111 +155,6 @@ function render_hsl(r, g, b, prefix, to_hsl, from_hsl, result)
     let hsl = to_hsl(r,g,b);
 
     {
-        let data = new Uint8ClampedArray(picker_size*picker_size*4);       
-        let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);   
-
-        for (let i = 0; i < lowres_picker_size; i++) 
-        {   
-            for (let j = 0; j < lowres_picker_size; j++) 
-            {
-                let hsl_a = 2*(2*i*picker_size_inv)-1;
-                let hsl_b = 2*(1 - 2*j*picker_size_inv)-1;
-
-                let rgb = from_hsl(0.5+0.5*Math.atan2(hsl_a, hsl_b)/Math.PI, Math.sqrt(hsl_a**2 + hsl_b**2), hsl[2]);
-                let index = 3*(i*lowres_picker_size + j);
-                lowres_data[index + 0] = rgb[0];
-                lowres_data[index + 1] = rgb[1];
-                lowres_data[index + 2] = rgb[2];
-                
-                {
-                    let alpha = 0.25*picker_size*(1 - (hsl_a**2 + hsl_b**2));
-                    alpha = alpha > 1 ? 1 : alpha;
-                    alpha = alpha < 0 ? 0 : alpha;
-                    data[4*((2*i)*picker_size + 2*j) + 3] = 255*alpha; 
-                }
-
-                if (2*i + 1 < picker_size)
-                {
-                    let alpha = 0.25*picker_size*(1 - ((hsl_a + 2*picker_size_inv)**2 + hsl_b**2));
-                    alpha = alpha > 1 ? 1 : alpha;
-                    alpha = alpha < 0 ? 0 : alpha;
-                    data[4*((2*i+1)*picker_size + 2*j) + 3] = 255*alpha; 
-                }
-
-                if (2*j + 1 < picker_size)
-                {
-                    let alpha = 0.25*picker_size*(1 - (hsl_a**2 + (hsl_b - 2*picker_size_inv)**2));
-                    alpha = alpha > 1 ? 1 : alpha;
-                    alpha = alpha < 0 ? 0 : alpha;
-                    data[4*((2*i)*picker_size + 2*j+1) + 3] = 255*alpha; 
-                }
-
-                if (2*i + 1 < picker_size && 2*j + 1 < picker_size)
-                {
-                    let alpha = 0.25*picker_size*(1 - ((hsl_a + 2*picker_size_inv)**2 + (hsl_b - 2*picker_size_inv)**2));
-                    alpha = alpha > 1 ? 1 : alpha;
-                    alpha = alpha < 0 ? 0 : alpha;
-                    data[4*((2*i+1)*picker_size + 2*j+1) + 3] = 255*alpha; 
-                }
-            }               
-        }
-
-        upscale(lowres_data, data);
-        
-        result[prefix + "_hs"] = new ImageData(data, picker_size);  
-    }
-
-    {
-        let data = new Uint8ClampedArray(picker_size*picker_size*4);
-        let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);   
-
-        for (let i = 0; i < lowres_picker_size; i++) 
-        {
-            for (let j = 0; j < lowres_picker_size; j++) 
-            {
-                let rgb = from_hsl(2*j*picker_size_inv, hsl[1], 1-2*i*picker_size_inv);
-                let index = 3*(i*lowres_picker_size + j);
-                lowres_data[index + 0] = rgb[0];
-                lowres_data[index + 1] = rgb[1];
-                lowres_data[index + 2] = rgb[2];
-            }               
-        }
-
-        for (let i = 0; i < picker_size; i++) 
-        {
-            for (let j = 0; j < picker_size; j++) 
-            {
-                let index = 4*(i*picker_size + j);
-                data[index + 3] = 255;
-            }               
-        }
-
-        upscale(lowres_data, data);
-
-        result[prefix + "_hl"] = new ImageData(data, picker_size);
-    }
-
-    {
-        let data = new Uint8ClampedArray(picker_size*slider_width*4);
-
-        for (let i = 0; i < picker_size; i++) 
-        {
-            let rgb = from_hsl(hsl[0], 1-i*picker_size_inv, hsl[2]);
-
-            for (let j = 0; j < slider_width; j++) 
-            {
-                let index = 4*(i*slider_width + j);
-                data[index + 0] = rgb[0];
-                data[index + 1] = rgb[1];
-                data[index + 2] = rgb[2];
-                data[index + 3] = 255;
-            }               
-        }
-
-        result[prefix + "_s"] = new ImageData(data, slider_width);
-    }
-
-    {
         let data = new Uint8ClampedArray(picker_size*picker_size*4);
         let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);   
 
@@ -265,3 +193,4 @@ export function render_okhsl(r,g,b)
     render_hsl(r, g, b, "okhsl", srgb_to_okhsl, okhsl_to_srgb, result);
     return result;
 }
+

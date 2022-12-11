@@ -2,8 +2,7 @@ import { signal } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
 
 import { okhsl_to_srgb, srgb_to_okhsl, rgb_to_hex } from "./bottosson/colorconversion";
-// import { eps, picker_size } from "./bottosson/constants";
-import { render_okhsl } from "./bottosson/render";
+import { render_okhsl, render_static } from "./bottosson/render";
 
 // import MyWorker from "./bottosson/workerokhsl?worker&inline";
 
@@ -17,167 +16,136 @@ export function App() {
   //   type: 'module'
   // });
 
-  const canvas = useRef(null);
-  const manipulator = useRef(null);
-
-  useEffect(() => {
-    const el2 = canvas.current;
-
-    setup_hsl_handlers("okhsl", srgb_to_okhsl, okhsl_to_srgb);
-    update(true);
-  }, []);
-
-  // const worker_okhsl = new MyWorker();
-
-
   const picker_size = 257;
   const eps = 0.0001;
 
+  const canvasColorPickerOkHSL = useRef(null);
+  const canvasHueSliderOkHSL = useRef(null);
+  const manipulatorColorPickerOkHSL = useRef(null);
+  const manipulatorHueSliderOkHSL = useRef(null);
 
-  // m = location.hash.match(/^#([0-9a-f]{6})$/i);
-  // if (m) 
-  // {
-  //     r = eps + (1-2*eps)*parseInt(m[1].substr(0,2),16);
-  //     g = eps + (1-2*eps)*parseInt(m[1].substr(2,2),16);
-  //     b = eps + (1-2*eps)*parseInt(m[1].substr(4,2),16);
-  // }
-
-
-  // let worker_okhsl = new Worker('workerokhsl.js');    
-  // worker_okhsl.onmessage = function(e) 
-  // {
-  //     display_results_okhsl(e.data);
-  // };
-
-  function update_canvas(image) {
-      let ctx = canvas.current.getContext('2d');
-      ctx.putImageData(image, 0, 0);
+  function clamp(x) {
+    return x < eps ? eps : (x > 1-eps ? 1-eps : x);
   }
 
+  useEffect(() => {
+    setup_hsl_handlers(srgb_to_okhsl, okhsl_to_srgb);
+    update(true);
+
+    let results = render_static();
+
+    display_okhsl_slider(results);
+  }, []);
+
+  
+  // const worker_okhsl = new MyWorker();
+
   function display_results_okhsl(results) {
-      update_canvas(results["okhsl_sl"]);
+    let ctx = canvasColorPickerOkHSL.current.getContext('2d');
+    ctx.putImageData(results["okhsl_sl"], 0, 0);
+  }
+
+  function display_okhsl_slider(results) {
+    let ctx = canvasHueSliderOkHSL.current.getContext('2d');
+    ctx.putImageData(results["okhsl_h"], 0, 0);
   }
 
   function update(render)  {
 
-    function update_hsl_manipulators(prefix, to_hsl) {
-      let hsl = to_hsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
-      document.getElementById(manipulator.current.transform.baseVal.getItem(0).setTranslate(picker_size*hsl[1],picker_size*(1-hsl[2])));
-      updateFromCanvas();
+    // Previously in update_hsl_manipulators()
+    let hsl = srgb_to_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
 
-      let hslResult = srgb_to_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+    document.getElementById(manipulatorColorPickerOkHSL.current.transform.baseVal.getItem(0).setTranslate(picker_size*hsl[1], picker_size*(1-hsl[2])));
+    document.getElementById(manipulatorHueSliderOkHSL.current.transform.baseVal.getItem(0).setTranslate(picker_size*hsl[0], 0));
 
-      hslValues.hue.value = Math.round(hslResult[0] * 360);
-      hslValues.saturation.value = Math.round(hslResult[1] * 100);
-      hslValues.lightness.value = Math.round(hslResult[2] * 100);
-    }
+    let hslResult = srgb_to_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
 
-    update_hsl_manipulators("okhsl", srgb_to_okhsl);
+    hslValues.hue.value = Math.round(hslResult[0] * 360);
+    hslValues.saturation.value = Math.round(hslResult[1] * 100);
+    hslValues.lightness.value = Math.round(hslResult[2] * 100);
+
 
     if (render) {
-      display_results_okhsl(render_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value));
+      let pendingRender = true;
+      setTimeout(function()
+      {
+        pendingRender = false;
+        display_results_okhsl(render_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value));
+      }, 5);
     }        
   }
 
     
   let mouse_handler = null;
-  let touch_handler = null;
 
-  // function update_url()
-  // {
-  //     history.replaceState(null, null, rgb_to_hex(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value));
-  // }
+  function setup_handler(canvas, handler) {
+    let outer_mouse_handler = function(event) {
+      event.preventDefault();
 
-  function setup_handler(canvas, handler)
-  {
-      let outer_mouse_handler = function(event) 
-      {
-          event.preventDefault();
+      updateFromCanvas();
 
-          let rect = canvas.getBoundingClientRect();      
-          let x = event.clientX - rect.left;
-          let y = event.clientY - rect.top;
+      if (event.target.id == "okhsl_sl_canvas") {
+        let rect = canvas.getBoundingClientRect();      
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
 
-          handler(x,y);
+        handler(x,y);
 
-          update(false);
-      };
+        update(false);
+      }
+      else if (event.target.id == "okhsl_h_canvas") {
+        let rect = canvas.getBoundingClientRect();      
+        let y = event.clientX - rect.left;
+        let x = event.clientY - rect.top;
 
-      let outer_touch_handler = function(event) 
-      {
-          event.preventDefault();
+        handler(x,y);
 
-          touch = event.touches[0];
-
-          let rect = canvas.getBoundingClientRect();
-          let x = touch.clientX - rect.left;
-          let y = touch.clientY - rect.top;
-
-          handler(x,y);
-
-          update(false);
-      };
-
-      canvas.addEventListener('mousedown', function(event)
-      {
-          mouse_handler = outer_mouse_handler;
-          outer_mouse_handler(event);
-
-      }, false);
-
-      canvas.addEventListener('touchstart', function(event)
-      {
-          if (event.touches.length === 1)
-          {
-              touch_handler = outer_touch_handler;
-              outer_touch_handler(event);
-          }
-          else
-          {
-              touch_handler = null;
-          }
-
-      }, false);
-  }
-
-  function clamp(x)
-  {
-      return x < eps ? eps : (x > 1-eps ? 1-eps : x);
-  }
-
-  document.addEventListener('mouseup', function(event)
-  {
-      if (mouse_handler !== null)
-      {
-          mouse_handler(event);
-          mouse_handler = null;
-          // update_url();
+        update(true);
       }
 
+    };
+
+    canvas.addEventListener('mousedown', function(event) {
+      mouse_handler = outer_mouse_handler;
+      outer_mouse_handler(event);
+    }, false);
+  }
+
+  document.addEventListener('mouseup', function(event) {
+    if (mouse_handler !== null) {
+      mouse_handler(event);
+      mouse_handler = null;
+    }
   }, false);
-  document.addEventListener('mousemove', function(event)
-  {
-      if (mouse_handler !== null)
-      {
-          mouse_handler(event);      
-      }
+
+  document.addEventListener('mousemove', function(event) {
+    if (mouse_handler !== null) {
+      mouse_handler(event);      
+    }
   }, false);
 
+  function setup_hsl_handlers(to_hsl, from_hsl) {
+    setup_handler(canvasColorPickerOkHSL.current, function(x, y) {
+      let hsl = to_hsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
 
-  function setup_hsl_handlers(prefix, to_hsl, from_hsl)
-  {
-      setup_handler(canvas.current, function(x, y) 
-      {
-          let hsl = to_hsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+      let new_s = clamp(x/picker_size);
+      let new_v = clamp(1 - y/picker_size);
 
-          let new_s = clamp(x/picker_size);
-          let new_v = clamp(1 - y/picker_size);
+      let rgb = from_hsl(hsl[0], new_s, new_v);
+      rgbValues.r.value = rgb[0];
+      rgbValues.g.value = rgb[1];
+      rgbValues.b.value = rgb[2];
+    });
 
-          let rgb = from_hsl(hsl[0], new_s, new_v);
-          rgbValues.r.value = rgb[0];
-          rgbValues.g.value = rgb[1];
-          rgbValues.b.value = rgb[2];
-      });
+    setup_handler(canvasHueSliderOkHSL.current, function(x, y) {
+      let h = clamp(y/picker_size);
+
+      let hsl = to_hsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+      let rgb = from_hsl(h, hsl[1], hsl[2]);
+      rgbValues.r.value = rgb[0];
+      rgbValues.g.value = rgb[1];
+      rgbValues.b.value = rgb[2];
+    });
   }
   
 
@@ -203,7 +171,7 @@ export function App() {
 
     hslValues[id].value = parseInt(event.target.value);
 
-    // Check here is values are within the boundaries?
+    // TODO: Check here is values are within the boundaries?
 
     let values = {
       type: "hsl",
@@ -230,6 +198,7 @@ export function App() {
       }
     }
 
+    // TODO: render true only if Hue has changed
     update(true);
     
   }
@@ -260,12 +229,24 @@ export function App() {
   return (
     <>
       <div class="colorpicker">
-        <canvas ref={canvas} class="colorpicker_square" id="okhsl_sl_canvas" width="257" height="257"></canvas>
-        {/* <canvas class="colorpicker_slider" id="okhsl_h_canvas" width="31" height="257"></canvas> */}
+        <canvas ref={canvasColorPickerOkHSL} class="colorpicker__element" id="okhsl_sl_canvas" width="257" height="257"></canvas>
 
-        <svg class="colorpicker" width="326" height="276"> 
-          <g transform="translate(10,10)">
-            <g ref={manipulator} id="okhsl_sl_manipulator" transform="translate(0,0)">
+        <svg class="colorpicker__handler" width="257" height="257"> 
+          <g transform="translate(0,0)">
+            <g ref={manipulatorColorPickerOkHSL} id="okhsl_sl_manipulator" transform="translate(0,0)">
+              <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.75" stroke="#ffffff" ></circle>
+              <circle cx="0" cy="0" r="6" fill="none" stroke-width="1.25" stroke="#000000" ></circle>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <div class="colorslider">
+        <canvas ref={canvasHueSliderOkHSL} class="colorslider__element" id="okhsl_h_canvas" width="15" height="257"></canvas>
+
+        <svg class="colorslider__handler" width="257" height="15"> 
+          <g transform="translate(0,7)">
+            <g ref={manipulatorHueSliderOkHSL} id="okhsl_h_manipulator" transform="translate(0,0)">
               <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.75" stroke="#ffffff" ></circle>
               <circle cx="0" cy="0" r="6" fill="none" stroke-width="1.25" stroke="#000000" ></circle>
             </g>
@@ -273,7 +254,7 @@ export function App() {
         </svg>
       </div>
       
-      <div>
+      <div style="margin-top: 30px;">
         {/* <label for="hue">Hue</label> */}
         <input onChange={updateFromInput} id="hue" type="number" min="0" max="360" value={hslValues.hue} spellcheck={false} />
       
