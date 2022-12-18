@@ -1,7 +1,8 @@
 // @ts-nochec k
 
-import { srgb_to_okhsl } from "./bottosson/colorconversion";
-import { okhsl_to_srgb } from "./bottosson/colorconversion";
+import { srgb_to_okhsl, srgb_to_okhsv, okhsl_to_srgb } from "../bottosson/colorconversion";
+
+let currentFillOrStroke: string= "fill";
 
 function setColorInUI(shape) {
   let r = shape[0].color.r * 255;
@@ -9,17 +10,25 @@ function setColorInUI(shape) {
   let b = shape[0].color.b * 255;
 
   let okhslResult = srgb_to_okhsl(r, g, b);
+  let okhsvResult = srgb_to_okhsv(r, g, b);
 
-  let okhslReady = {
+  let colors = {
     "r": r,
     "g": g,
     "b": b,
-    "hue": Math.floor(okhslResult[0] * 360),
-    "saturation": Math.floor(okhslResult[1] * 100),
-    "lightness": Math.floor(okhslResult[2] * 100)
+    okhsl: {
+      "hue": Math.floor(okhslResult[0] * 360),
+      "saturation": Math.floor(okhslResult[1] * 100),
+      "lightness": Math.floor(okhslResult[2] * 100)
+    },
+    okhsv: {
+      "hue": Math.floor(okhsvResult[0] * 360),
+      "saturation": Math.floor(okhsvResult[1] * 100),
+      "value": Math.floor(okhsvResult[2] * 100)
+    }
   }
 
-  figma.ui.postMessage(okhslReady);
+  figma.ui.postMessage(colors);
 }
 
 
@@ -47,21 +56,27 @@ if (figma.editorType === 'figma') {
   //   figma.closePlugin();
   // };
 
-  figma.showUI(__html__, {width: 400, height: 400});
+  figma.showUI(__html__, {width: 280, height: 470});
 
   for (const node of figma.currentPage.selection) {
     // console.log('selected on launch');
 
     if (figma.currentPage.selection[0]) {
-      setColorInUI(figma.currentPage.selection[0].fills)
+      setColorInUI(figma.currentPage.selection[0].fills);
     }
   }
 
   figma.on("selectionchange", () => {
-    // console.log('selection change');
+    console.log('selection change');
 
     if (figma.currentPage.selection[0]) {
-      setColorInUI(figma.currentPage.selection[0].fills)
+      if (currentFillOrStroke == "fill") {
+        setColorInUI(figma.currentPage.selection[0].fills);
+      }
+      else if (currentFillOrStroke == "stroke") {
+        setColorInUI(figma.currentPage.selection[0].strokes)
+      }
+      
     }
     else {
       let okhslReady = {
@@ -76,13 +91,13 @@ if (figma.editorType === 'figma') {
 
   figma.ui.onmessage = msg => {
 
-    if (msg.type === 'changeFillColor') {
+    if (msg.type == "changeColor") {
+      
+      // console.log("changeColor");
+      
       for (const node of figma.currentPage.selection) {
 
-        if ("fills" in node) {
-          const nodeFills = node.fills;
-          let nodeFillsCopy = JSON.parse(JSON.stringify(nodeFills));
-
+        function changeColor(nodeCopy) {
           if (msg.values.type == "hsl") {
             const hue = msg.values.hue / 360;
             const saturation = msg.values.saturation / 100;
@@ -94,25 +109,55 @@ if (figma.editorType === 'figma') {
 
             for (let i = 0; i < sRgbResult.length; i++) {
               if (sRgbResult[i] < 0) {
-                nodeFillsCopy[0].color[rgbInitials[i]] = 0;
+                nodeCopy[0].color[rgbInitials[i]] = 0;
               }
               else if (sRgbResult[i] > 255) {
-                nodeFillsCopy[0].color[rgbInitials[i]] = 1;
+                nodeCopy[0].color[rgbInitials[i]] = 1;
               }
               else {
-                nodeFillsCopy[0].color[rgbInitials[i]] = sRgbResult[i] / 255;
+                nodeCopy[0].color[rgbInitials[i]] = sRgbResult[i] / 255;
               }
             }
           }
           else if (msg.values.type == "rgb") {
-            nodeFillsCopy[0].color.r = msg.values.r;
-            nodeFillsCopy[0].color.g = msg.values.g;
-            nodeFillsCopy[0].color.b = msg.values.b;
+            nodeCopy[0].color.r = msg.values.r;
+            nodeCopy[0].color.g = msg.values.g;
+            nodeCopy[0].color.b = msg.values.b;
           }
 
-          node.fills = nodeFillsCopy;
+          return nodeCopy;    
         }
 
+        if (msg.fillOrStroke == "fill") {
+          if ("fills" in node) {
+            const nodeFills = node.fills;
+            let nodeFillsCopy = JSON.parse(JSON.stringify(nodeFills));
+  
+            node.fills = changeColor(nodeFillsCopy);
+          }
+        }
+        else if (msg.fillOrStroke == "stroke") {
+          if ("strokes" in node) {
+            const nodeStrokes = node.strokes;
+            let nodeStrokesCopy = JSON.parse(JSON.stringify(nodeStrokes));
+  
+            node.strokes = changeColor(nodeStrokesCopy);
+          }
+        }
+
+      }
+    }
+    else if (msg.type == "updateUIColor") {
+
+      // console.log("updateUIColor");
+
+      currentFillOrStroke = msg.fillOrStroke;
+
+      if (msg.fillOrStroke == "fill") {
+        setColorInUI(figma.currentPage.selection[0].fills);
+      }
+      else if (msg.fillOrStroke == "stroke") {
+        setColorInUI(figma.currentPage.selection[0].strokes);
       }
     }
 

@@ -1,6 +1,6 @@
 // export function colorconversionExport() {
 
-    function rgb_to_hsl(r, g, b)
+    export function rgb_to_hsl(r, g, b)
     {
         r /= 255; 
         g /= 255; 
@@ -37,7 +37,7 @@
         return [h, s, l];
     }
 
-    function hsl_to_rgb(h, s, l)
+    export function hsl_to_rgb(h, s, l)
     {
         let r, g, b;
 
@@ -566,7 +566,7 @@
     }
 
 
-    function okhsv_to_srgb(h,s,v)
+    export function okhsv_to_srgb(h,s,v)
     {
         let a_ = Math.cos(2*Math.PI*h);
         let b_ = Math.sin(2*Math.PI*h);   
@@ -611,7 +611,7 @@
         ]
     }
 
-    function srgb_to_okhsv(r,g,b)
+    export function srgb_to_okhsv(r,g,b)
     {
         let lab = linear_srgb_to_oklab(
             srgb_transfer_function_inv(r/255),
@@ -632,15 +632,15 @@
         let T = ST_max[1];
         let k = 1 - S_0/S_max;
 
-        t = T/(C+L*T);
+        let t = T/(C+L*T);
         let L_v = t*L;
         let C_v = t*C;
 
-        L_vt = toe_inv(L_v);
-        C_vt = C_v * L_vt/L_v;
+        let L_vt = toe_inv(L_v);
+        let C_vt = C_v * L_vt/L_v;
 
-        rgb_scale = oklab_to_linear_srgb(L_vt,a_*C_vt,b_*C_vt);
-        scale_L = Math.cbrt(1/(Math.max(rgb_scale[0],rgb_scale[1],rgb_scale[2],0)));
+        let rgb_scale = oklab_to_linear_srgb(L_vt,a_*C_vt,b_*C_vt);
+        let scale_L = Math.cbrt(1/(Math.max(rgb_scale[0],rgb_scale[1],rgb_scale[2],0)));
 
         L = L/scale_L;
         C = C/scale_L;
@@ -648,8 +648,8 @@
         C = C * toe(L)/L;
         L = toe(L);
 
-        v = L/L_v;
-        s = (S_0+T)*C_v/((T*S_0) + T*k*C_v)
+        let v = L/L_v;
+        let s = (S_0+T)*C_v/((T*S_0) + T*k*C_v)
 
         return [h,s,v];
     }
