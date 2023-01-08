@@ -7,8 +7,7 @@ canvas {
   width: 320px;
   height: 280px; 
 }
-  .colorpicker__element {
-    /* position: absolute; */
+  .colorpicker__canvas {
     border: 1px solid rgba(0, 0, 0, 0.3);
   }
   .colorpicker__handler {
@@ -33,3 +32,6 @@ canvas {
     position: absolute;
     pointer-events: none;
   }
+
+.u-display-none { display: none; }
+.u-visibility-hidden { visibility: hidden; }
