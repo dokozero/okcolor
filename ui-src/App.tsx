@@ -12,16 +12,10 @@ const rgbValues = {
   b: signal(0)
 };
 
-const okhslValues = {
+const okhxyValues = {
   hue: signal(0),
-  saturation: signal(0),
-  lightness: signal(0),
-};
-
-const okhsvValues = {
-  hue: signal(0),
-  saturation: signal(0),
-  value: signal(0),
+  x: signal(0),
+  y: signal(0),
 };
 
 const fillOrStroke = signal("fill");
@@ -43,46 +37,45 @@ export function App() {
   const manipulatorHueSlider = useRef(null);
 
 
-  function computeOkhslValues() {
-    let okhsl = srgb_to_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+  function computeOkhxyValues() {   
+    let okhxy;
 
-    okhslValues.hue.value = Math.round(okhsl[0] * 360);
-    okhslValues.saturation.value = Math.round(okhsl[1] * 100);
-    okhslValues.lightness.value = Math.round(okhsl[2] * 100);
-  }
+    if (colorModel.value == "okhsl") {
+      okhxy = srgb_to_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+    }
+    else if (colorModel.value == "okhsv") {
+      okhxy = srgb_to_okhsv(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+    }
 
-  function computeOkhsvValues() {
-    let okhsv = srgb_to_okhsv(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
-
-    okhsvValues.hue.value = Math.round(okhsv[0] * 360);
-    okhsvValues.saturation.value = Math.round(okhsv[1] * 100);
-    okhsvValues.value.value = Math.round(okhsv[2] * 100);
+    okhxyValues.hue.value = Math.round(okhxy[0] * 360);
+    okhxyValues.x.value = Math.round(okhxy[1] * 100);
+    okhxyValues.y.value = Math.round(okhxy[2] * 100);
   }
 
   const colorModelHandle = (event) => {
     colorModel.value = event.target.value;
     
-    if (colorModel.value == "okhsl") {
-      computeOkhslValues();
-    }
-    else if (colorModel.value == "okhsv") {
-      computeOkhsvValues();
-    }
-    
+    computeOkhxyValues();    
     updateManipulators();
     renderCanvas();
   }
 
-  function display_results_okhsl(results) {
-    // console.log("display_results_okhsl");
-    let ctx = canvasColorPicker.current.getContext('2d');
-    ctx.putImageData(results["okhsl_sl"], 0, 0);
-  }
+  function display_results_okhxy() {
+    // console.log("display_results_okhxy");
+    
+    let results;
+    let ctx;
 
-  function display_results_okhsv(results) {
-    // console.log("display_results_okhsv");
-    let ctx = canvasColorPicker.current.getContext('2d');
-    ctx.putImageData(results["okhsv_sv"], 0, 0);
+    if (colorModel.value == "okhsl") {
+      results = render_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+      ctx = canvasColorPicker.current.getContext('2d');
+      ctx.putImageData(results["okhsl_sl"], 0, 0);
+    }
+    else if (colorModel.value == "okhsv") {
+      results = render(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value)
+      ctx = canvasColorPicker.current.getContext('2d');
+      ctx.putImageData(results["okhsv_sv"], 0, 0);
+    }
   }
 
   function display_hue_slider(results) {
@@ -91,43 +84,20 @@ export function App() {
   }
 
   function updateManipulators()  {
+    let h = okhxyValues.hue.value / 360;
+    let x = okhxyValues.x.value / 100;
+    let y = okhxyValues.y.value / 100;
 
-    if (colorModel.value == "okhsl") {
-
-      let h = okhslValues.hue.value / 360;
-      let s = okhslValues.saturation.value / 100;
-      let l = okhslValues.lightness.value / 100;
-
-      document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*s, picker_size*(1-l)));
-      document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*h, 0));
-    }
-
-    if (colorModel.value == "okhsv") {
-
-      let h = okhsvValues.hue.value / 360;
-      let s = okhsvValues.saturation.value / 100;
-      let v = okhsvValues.value.value / 100;
-
-      document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*s,picker_size*(1-v)));
-      document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*h, 0));
-    }
-
+    document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y)));
+    document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*h, 0));
   }
 
   function renderCanvas() {
     setTimeout(function(){
-      if (colorModel.value == "okhsl") {
-        display_results_okhsl(render_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value));
-      }
-
-      if (colorModel.value == "okhsv") {
-        display_results_okhsv(render(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value));
-      }
-
+      display_results_okhxy();
     }, 5);
   }
 
-    
   let mouse_handler = null;
 
   function setup_handler(canvas, handler) {
@@ -187,62 +157,45 @@ export function App() {
     // console.log("setup_hsl_handler()");
 
     setup_handler(canvasColorPicker.current, function(x, y) {
+      let h = okhxyValues.hue.value / 360;
+      let new_x = clamp(x/picker_size);
+      let new_y = clamp(1 - y/picker_size);
+
+      let rgb;
+
       if (colorModel.value == "okhsl") {
-        let h = okhslValues.hue.value / 360;
-        let new_s = clamp(x/picker_size);
-        let new_l = clamp(1 - y/picker_size);
-  
-        let rgb = okhsl_to_srgb(h, new_s, new_l);
-  
-        rgbValues.r.value = rgb[0];
-        rgbValues.g.value = rgb[1];
-        rgbValues.b.value = rgb[2];
-  
-        computeOkhslValues();
+        rgb = okhsl_to_srgb(h, new_x, new_y);
       }
       else if (colorModel.value == "okhsv") {
-        let h = okhsvValues.hue.value / 360;
-        let new_s = clamp(x/picker_size);
-        let new_v = clamp(1 - y/picker_size);
-  
-        let rgb = okhsv_to_srgb(h, new_s, new_v);
-  
-        rgbValues.r.value = rgb[0];
-        rgbValues.g.value = rgb[1];
-        rgbValues.b.value = rgb[2];
-  
-        computeOkhsvValues();
+        rgb = okhsv_to_srgb(h, new_x, new_y);
       }
+
+      rgbValues.r.value = rgb[0];
+      rgbValues.g.value = rgb[1];
+      rgbValues.b.value = rgb[2];
+
+      computeOkhxyValues();
     });
 
     setup_handler(canvasHueSlider.current, function(x, y) {
       let new_h = clamp(y/picker_size);
+      let current_x = okhxyValues.x.value / 100;
+      let current_y = okhxyValues.y.value / 100;
+
       let rgb;
 
       if (colorModel.value == "okhsl") {
-        let s = okhslValues.saturation.value / 100;
-        let l = okhslValues.lightness.value / 100;
-
-        rgb = okhsl_to_srgb(new_h, s, l);
-
-        rgbValues.r.value = rgb[0];
-        rgbValues.g.value = rgb[1];
-        rgbValues.b.value = rgb[2];
-
-        computeOkhslValues();
+        rgb = okhsl_to_srgb(new_h, current_x, current_y);
       }
       else if (colorModel.value == "okhsv") {
-        let s = okhsvValues.saturation.value / 100;
-        let v = okhsvValues.value.value / 100;
-
-        rgb = okhsv_to_srgb(new_h, s, v);
-
-        rgbValues.r.value = rgb[0];
-        rgbValues.g.value = rgb[1];
-        rgbValues.b.value = rgb[2];
-
-        computeOkhsvValues();
+        rgb = okhsv_to_srgb(new_h, current_x, current_y);
       }
+
+      rgbValues.r.value = rgb[0];
+      rgbValues.g.value = rgb[1];
+      rgbValues.b.value = rgb[2];
+
+      computeOkhxyValues();
 
     });
   }
@@ -275,13 +228,13 @@ export function App() {
 
     // TODO: Check here if values from inputs are within the boundaries?
 
+    okhxyValues[event.target.id].value = parseInt(event.target.value);
+
     if (colorModel.value == "okhsl") {
-      okhslValues[event.target.id].value = parseInt(event.target.value);
-      sRgbResult = okhsl_to_srgb(okhslValues.hue.value / 360, okhslValues.saturation.value / 100, okhslValues.lightness.value / 100);
+      sRgbResult = okhsl_to_srgb(okhxyValues.hue.value / 360, okhxyValues.x.value / 100, okhxyValues.y.value / 100);
     }
     else if (colorModel.value == "okhsv") {
-      okhsvValues[event.target.id].value = parseInt(event.target.value);
-      sRgbResult = okhsv_to_srgb(okhsvValues.hue.value / 360, okhsvValues.saturation.value / 100, okhsvValues.value.value / 100);
+      sRgbResult = okhsv_to_srgb(okhxyValues.hue.value / 360, okhxyValues.x.value / 100, okhxyValues.y.value / 100);
     }
 
     rgbValues.r.value = sRgbResult[0];
@@ -322,17 +275,18 @@ export function App() {
     rgbValues.g.value = Math.round(event.data.pluginMessage.g);
     rgbValues.b.value = Math.round(event.data.pluginMessage.b);
 
-    let okhslResult = srgb_to_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
-    let okhsvResult = srgb_to_okhsv(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+    let okhxyResult;
 
-    okhslValues.hue.value = Math.floor(okhslResult[0] * 360);
-    okhslValues.saturation.value = Math.floor(okhslResult[1] * 100);
-    okhslValues.lightness.value = Math.floor(okhslResult[2] * 100);
+    if (colorModel.value == "okhsl") {
+      okhxyResult = srgb_to_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+    }
+    else if (colorModel.value == "okhsv") {
+      okhxyResult = srgb_to_okhsv(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+    }
 
-    okhsvValues.hue.value = Math.floor(okhsvResult[0] * 360);
-    okhsvValues.saturation.value = Math.floor(okhsvResult[1] * 100);
-    okhsvValues.value.value = Math.floor(okhsvResult[2] * 100);
-
+    okhxyValues.hue.value = Math.floor(okhxyResult[0] * 360);
+    okhxyValues.x.value = Math.floor(okhxyResult[1] * 100);
+    okhxyValues.y.value = Math.floor(okhxyResult[2] * 100);
 
     if (init) {
       // console.log("init functions");
@@ -392,18 +346,10 @@ export function App() {
         </select>
       </div>
 
-      <div class={colorModel.value == "okhsl" ? "" : "u-display-none"} style="margin-top: 20px;">
-        {/* <h3>hsl</h3> */}
-        <input onChange={updateFromInput} id="hue" type="number" min="0" max="360" value={okhslValues.hue} spellcheck={false} />
-        <input onChange={updateFromInput} id="saturation" type="number" min="0" max="100" value={okhslValues.saturation} spellcheck={false} />
-        <input onChange={updateFromInput} id="lightness" type="number" min="0" max="100" value={okhslValues.lightness} spellcheck={false} />
-      </div>
-
-      <div class={colorModel.value == "okhsv" ? "" : "u-display-none"} style="margin-top: 20px;">
-        {/* <h3>hsv</h3> */}
-        <input onChange={updateFromInput} id="hue" type="number" min="0" max="360" value={okhsvValues.hue} spellcheck={false} />
-        <input onChange={updateFromInput} id="saturation" type="number" min="0" max="100" value={okhsvValues.saturation} spellcheck={false} />
-        <input onChange={updateFromInput} id="value" type="number" min="0" max="100" value={okhsvValues.value} spellcheck={false} />
+      <div style="margin-top: 20px;">
+        <input onChange={updateFromInput} id="hue" type="number" min="0" max="360" value={okhxyValues.hue} spellcheck={false} />
+        <input onChange={updateFromInput} id="x" type="number" min="0" max="100" value={okhxyValues.x} spellcheck={false} />
+        <input onChange={updateFromInput} id="y" type="number" min="0" max="100" value={okhxyValues.y} spellcheck={false} />
       </div>
     </>
   )
