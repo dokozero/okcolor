@@ -1,7 +1,7 @@
 import { signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
 
-import {okhsl_to_srgb as okhslToSrgb, srgb_to_okhsl as srgbToOkhsl, srgb_to_okhsv as srgbToOkhsv, okhsv_to_srgb as okhsvToSrgb} from "../bottosson/colorconversion";
+import {okhsl_to_srgb, srgb_to_okhsl, srgb_to_okhsv, okhsv_to_srgb} from "../bottosson/colorconversion";
 import { render, render_okhsl, render_static } from "../bottosson/render";
 import {picker_size} from "../bottosson/constants";
 
@@ -57,16 +57,48 @@ export function App() {
     return x;
   }
 
+   // I create this function as a bridge to the color conversion ones as there are some cases that needed to handle data correction to avoid some bugs.
+   function colorConversion(name, param1, param2, param3) {
+
+    let result;
+
+    // We get an error from srgbToOkhsl and srgbToOkhsv if we have 0 values on the three rgb values.
+    if (name == "srgbToOkhsl" || name == "srgbToOkhsv") {
+      if (param1 == 0) { param1 = 0.001; }
+      if (param2 == 0) { param2 = 0.001; }
+      if (param2 == 0) { param3 = 0.001; }
+    }
+
+    if (name == "okhslToSrgb") { result = okhsl_to_srgb(param1, param2, param3); }
+    else if (name == "okhsvToSrgb") { result = okhsv_to_srgb(param1, param2, param3); }
+    else if (name == "srgbToOkhsl") { result = srgb_to_okhsl(param1, param2, param3); }
+    else if (name == "srgbToOkhsv") { result = srgb_to_okhsv(param1, param2, param3); }
+
+    // This code is to be sure we don't have value outside range because it looks like there is a bug with okhsl_to_srgb and okhsv_to_srgb functions that return out of range values when for exemple we have hue set to 0 or 100 and saturation as well.
+    if (name == "okhslToSrgb" || name == "okhsvToSrgb") {
+      for (let i = 0; i < Object.keys(result).length; i++) {
+        if (result[i] < 0) {
+          result[i] = 0;
+        }
+        else if (result[i] > 255) {
+          result[i] = 255;
+        }
+      }
+    }
+
+    return result;
+  }
+
   function convertRgbToOkhxyValues() {
     // console.log("convert Rgb To Okhxy Values");
 
     let newOkhxy;
 
     if (colorModel == "okhsl") {
-      newOkhxy = srgbToOkhsl(rgbValues.r, rgbValues.g, rgbValues.b);
+      newOkhxy = colorConversion("srgbToOkhsl", rgbValues.r, rgbValues.g, rgbValues.b);
     }
     else if (colorModel == "okhsv") {
-      newOkhxy = srgbToOkhsv(rgbValues.r, rgbValues.g, rgbValues.b);
+      newOkhxy = colorConversion("srgbToOkhsv", rgbValues.r, rgbValues.g, rgbValues.b);
     }
 
     okhxyValues.hue.value = Math.round(newOkhxy[0] * 360);
@@ -184,10 +216,10 @@ export function App() {
       }
 
       if (colorModel == "okhsl") {
-        newRgb = okhslToSrgb(newHxy.hue, newHxy.x, newHxy.y);
+        newRgb = colorConversion("okhslToSrgb", newHxy.hue, newHxy.x, newHxy.y);
       }
       else if (colorModel == "okhsv") {
-        newRgb = okhsvToSrgb(newHxy.hue, newHxy.x, newHxy.y);
+        newRgb = colorConversion("okhsvToSrgb", newHxy.hue, newHxy.x, newHxy.y);
       }
 
       rgbValues.r = newRgb[0];
@@ -269,10 +301,10 @@ export function App() {
     let y = okhxyValues.y.value / 100;
 
     if (colorModel == "okhsl") {
-      newRgb = okhslToSrgb(hue, x, y);
+      newRgb = colorConversion("okhslToSrgb", hue, x, y);
     }
     else if (colorModel == "okhsv") {
-      newRgb = okhsvToSrgb(hue, x, y);
+      newRgb = colorConversion("okhsvToSrgb", hue, x, y);
     }
 
     rgbValues.r = newRgb[0];
@@ -294,17 +326,6 @@ export function App() {
 
   function updateShapeColor() {
     // console.log("update Shape Color");
-
-    // This code is to be sure we don't have value outside range because it looks like there is a bug with okhslToSrgb and okhsvToSrgb functions that return out of rage values when for exemple we have hue set to 0 or 100 and saturation as well.
-    const rgbInitials = ["r", "g", "b"];
-    for (let i = 0; i < Object.keys(rgbValues).length; i++) {
-      if (rgbValues[rgbInitials[i]] < 0) {
-        rgbValues[rgbInitials[i]] = 0;
-      }
-      else if (rgbValues[rgbInitials[i]] > 255) {
-        rgbValues[rgbInitials[i]] = 255;
-      }
-    }
 
     let preparedRgbValue = {
       r: rgbValues.r / 255,
