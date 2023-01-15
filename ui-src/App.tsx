@@ -1,34 +1,21 @@
 import { signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
 
-import { okhsl_to_srgb, srgb_to_okhsl, srgb_to_okhsv, okhsv_to_srgb } from "../bottosson/colorconversion";
+import {okhsl_to_srgb as okhslToSrgb, srgb_to_okhsl as srgbToOkhsl, srgb_to_okhsv as srgbToOkhsv, okhsv_to_srgb as okhsvToSrgb} from "../bottosson/colorconversion";
 import { render, render_okhsl, render_static } from "../bottosson/render";
-
-let init = true;
-
-let rgbValues = {
-  r: 0,
-  g: 0,
-  b: 0
-};
+import {picker_size} from "../bottosson/constants";
 
 const okhxyValues = {
   hue: signal(0),
   x: signal(0),
-  y: signal(0),
+  y: signal(0)
 };
 
-let fillOrStroke: string = "fill";
-let colorModel: string = "okhsl";
-
-const picker_size = 257;
-const eps = 0.0001;
-
-function clamp(x) {
-  return x < eps ? eps : (x > 1-eps ? 1-eps : x);
-}
-
 export function App() { 
+
+  /*
+  ** VARIABLES DECLARATIONS
+  */
 
   // We could use one canvas element but better no to avoid flickering when user change color model 
   const canvasColorPicker = useRef(null);
@@ -36,45 +23,67 @@ export function App() {
   const manipulatorColorPicker = useRef(null);
   const manipulatorHueSlider = useRef(null);
 
+  let init = true;
 
-  function computeOkhxyValues() {   
-    let okhxy;
+  let rgbValues = {
+    r: 0,
+    g: 0,
+    b: 0
+  };
+
+  let fillOrStroke: string = "fill";
+  let colorModel: string = "okhsl";
+
+  const eps = 0.0001;
+
+  let mouseHandler = null;
+
+
+
+
+  /*
+  ** HELPER FUNCTIONS
+  */
+
+  function clamp(x) {
+    if (x < eps)
+      return eps;
+    else if (x > 1-eps)
+      return 1-eps;
+    
+    return x;
+  }
+
+  function convertRgbToOkhxyValues() {
+    // console.log("convert Rgb To Okhxy Values");
+
+    let newOkhxy;
 
     if (colorModel == "okhsl") {
-      okhxy = srgb_to_okhsl(rgbValues.r, rgbValues.g, rgbValues.b);
+      newOkhxy = srgbToOkhsl(rgbValues.r, rgbValues.g, rgbValues.b);
     }
     else if (colorModel == "okhsv") {
-      okhxy = srgb_to_okhsv(rgbValues.r, rgbValues.g, rgbValues.b);
+      newOkhxy = srgbToOkhsv(rgbValues.r, rgbValues.g, rgbValues.b);
     }
 
-    okhxyValues.hue.value = Math.round(okhxy[0] * 360);
-    okhxyValues.x.value = Math.round(okhxy[1] * 100);
-    okhxyValues.y.value = Math.round(okhxy[2] * 100);
+    okhxyValues.hue.value = Math.round(newOkhxy[0] * 360);
+    okhxyValues.x.value = Math.round(newOkhxy[1] * 100);
+    okhxyValues.y.value = Math.round(newOkhxy[2] * 100);
   }
 
-  const colorModelHandle = (event) => {
-    colorModel = event.target.value;
-    
-    computeOkhxyValues();
-    updateManipulators();
-    renderCanvas();
-  }
 
-  function display_hue_slider(results) {
+  function renderHueSliderCanvas() {
+    // console.log("render Hue Slider Canvas");
+
+    let results = render_static();
     let ctx = canvasHueSlider.current.getContext('2d');
     ctx.putImageData(results["okhsl_h"], 0, 0);
   }
 
-  function updateManipulators()  {
-    let h = okhxyValues.hue.value / 360;
-    let x = okhxyValues.x.value / 100;
-    let y = okhxyValues.y.value / 100;
 
-    document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y)));
-    document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*h, 0));
-  }
+  function renderColorPickerCanvas() {
+    // console.log("render Color Picker Canvas");
 
-  function renderCanvas() {
     let results;
     let ctx = canvasColorPicker.current.getContext('2d');
 
@@ -93,116 +102,158 @@ export function App() {
 
 
   
-  let mouse_handler = null;
+  
 
-  function setupHandler(canvas, handler) {
-    let outer_mouse_handler = function(event) {
+  /* 
+  ** UPDATES TO UI
+  */
+
+  function updateManipulatorPositions()  {
+    // console.log("update Manipulator Positions");
+
+    let h = okhxyValues.hue.value / 360;
+    let x = okhxyValues.x.value / 100;
+    let y = okhxyValues.y.value / 100;
+
+    document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y)));
+    document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*h, 0));
+  }
+
+
+  /* 
+  ** UPDATES FROM UI
+  */
+
+  function fillOrStrokeHandle(event) {
+    // console.log("fill Or Stroke Handle");
+
+    fillOrStroke = event.target.id;
+
+    parent.postMessage({ pluginMessage: { type: "send me shape color", "fillOrStroke": fillOrStroke} }, "*");
+  }
+
+
+  function colorModelHandle(event) {
+    // console.log("color Model Handle");
+
+    colorModel = event.target.value;
+    
+    convertRgbToOkhxyValues();
+    updateManipulatorPositions();
+    renderColorPickerCanvas();
+  }
+
+
+  function setupHandler(canvas) {
+    // console.log("setup Handler - " + canvas.id);
+
+    let outerMouseHandler = function(event) {
       event.preventDefault();
-
-      let rect = canvas.getBoundingClientRect();
 
       let render: boolean = false;
 
-      let x: number = 0;
-      let y: number = 0;
+      let rect = canvas.getBoundingClientRect();
 
-      if (event.target.id == "okhsl_sl_canvas" || event.target.id == "okhsv_sv_canvas") {;
-        x = event.clientX - rect.left;
-        y = event.clientY - rect.top;
-        render = false;
+      let newHxy = {
+        "h": okhxyValues.hue.value / 360,
+        "x": okhxyValues.x.value / 100,
+        "y": okhxyValues.y.value / 100
+      };
+
+      let newRgb;
+
+      if (event.target.id == "okhsl_sl_canvas" || event.target.id == "okhsv_sv_canvas") {
+        let canvas_x = event.clientX - rect.left;
+        let canvas_y = event.clientY - rect.top;
+        newHxy.x = clamp(canvas_x/picker_size);
+        newHxy.y = clamp(1 - canvas_y/picker_size); 
       }
       else if (event.target.id == "okhsl_h_canvas") {
-        y = event.clientX - rect.left;
-        x = event.clientY - rect.top;
+        let canvas_y = event.clientX - rect.left;
+        newHxy.h = clamp(canvas_y/picker_size);
         render = true;
       }
-      
-      handler(x,y);
-      changeColorInPlugin();
-      updateManipulators();
+
+      if (colorModel == "okhsl") {
+        newRgb = okhslToSrgb(newHxy.h, newHxy.x, newHxy.y);
+      }
+      else if (colorModel == "okhsv") {
+        newRgb = okhsvToSrgb(newHxy.h, newHxy.x, newHxy.y);
+      }
+
+      rgbValues.r = newRgb[0];
+      rgbValues.g = newRgb[1];
+      rgbValues.b = newRgb[2];
+
+      convertRgbToOkhxyValues();
+
+      updateShapeColor();
+      updateManipulatorPositions();
 
       if (render) {
-        renderCanvas();
+        renderColorPickerCanvas();
       }
     };
 
-    canvas.addEventListener('mousedown', function(event) {
-      mouse_handler = outer_mouse_handler;
-      outer_mouse_handler(event);
+    canvas.addEventListener("mousedown", function(event) {
+      mouseHandler = outerMouseHandler;
+      outerMouseHandler(event);
     }, false);
   }
 
-  document.addEventListener('mouseup', function(event) {
-    if (mouse_handler !== null) {
-      // mouse_handler(event);
-      mouse_handler = null;
+  document.addEventListener("mouseup", function(event) {
+    if (mouseHandler !== null) {
+      mouseHandler = null;
     }
   }, false);
 
-  document.addEventListener('mousemove', function(event) {
-    if (mouse_handler !== null) {
-      mouse_handler(event);      
+  document.addEventListener("mousemove", function(event) {
+    if (mouseHandler !== null) {
+      mouseHandler(event);  
     }
   }, false);
 
 
-  function setupHandlers() {
-    // console.log("setup_hsl_handler()");
 
-    setupHandler(canvasColorPicker.current, function(x, y) {
-      let h = okhxyValues.hue.value / 360;
-      let new_x = clamp(x/picker_size);
-      let new_y = clamp(1 - y/picker_size);
+  function hxyInputHandle(event) {
+    // console.log("hxy Input Handle");
 
-      let rgb;
+    // TODO: Check here if values from inputs are within the boundaries?
 
-      if (colorModel == "okhsl") {
-        rgb = okhsl_to_srgb(h, new_x, new_y);
-      }
-      else if (colorModel == "okhsv") {
-        rgb = okhsv_to_srgb(h, new_x, new_y);
-      }
+    let newRgb;
 
-      rgbValues.r = rgb[0];
-      rgbValues.g = rgb[1];
-      rgbValues.b = rgb[2];
+    okhxyValues[event.target.id].value = parseInt(event.target.value);
 
-      computeOkhxyValues();
-    });
+    let h = okhxyValues.hue.value / 360;
+    let x = okhxyValues.x.value / 100;
+    let y = okhxyValues.y.value / 100;
 
-    setupHandler(canvasHueSlider.current, function(x, y) {
-      let new_h = clamp(y/picker_size);
-      let current_x = okhxyValues.x.value / 100;
-      let current_y = okhxyValues.y.value / 100;
+    if (colorModel == "okhsl") {
+      newRgb = okhslToSrgb(h, x, y);
+    }
+    else if (colorModel == "okhsv") {
+      newRgb = okhsvToSrgb(h, x, y);
+    }
 
-      let rgb;
+    rgbValues.r = newRgb[0];
+    rgbValues.g = newRgb[1];
+    rgbValues.b = newRgb[2];
 
-      if (colorModel == "okhsl") {
-        rgb = okhsl_to_srgb(new_h, current_x, current_y);
-      }
-      else if (colorModel == "okhsv") {
-        rgb = okhsv_to_srgb(new_h, current_x, current_y);
-      }
+    updateShapeColor();
+    updateManipulatorPositions();
 
-      rgbValues.r = rgb[0];
-      rgbValues.g = rgb[1];
-      rgbValues.b = rgb[2];
-
-      computeOkhxyValues();
-
-    });
-  }
-
-  
-
-  const fillOrStrokeHandle = (event) => {    
-    fillOrStroke = event.target.id;
-    parent.postMessage({ pluginMessage: { type: "updateUIColor", fillOrStroke: fillOrStroke} }, "*");
+    if (event.target.id == "hue") {
+      renderColorPickerCanvas();
+    }    
   }
 
 
-  const changeColorInPlugin = () => {
-    // console.log("Update from canvas");
+  /* 
+  ** UPDATES TO BACKEND
+  */
+
+  function updateShapeColor() {
+    // console.log("update Shape Color");
 
     let values = {
       r: rgbValues.r / 255,
@@ -210,85 +261,50 @@ export function App() {
       b: rgbValues.b / 255
     };
 
-    parent.postMessage({ pluginMessage: { type: "changeColor", fillOrStroke: fillOrStroke,  values } }, '*');
+    parent.postMessage({ pluginMessage: { type: "update shape color", "fillOrStroke": fillOrStroke,  values } }, '*');
   }
 
 
-  const updateFromInput = (event) => {
-    // console.log("Update from input");
-
-    let rgbResult;
-
-    // TODO: Check here if values from inputs are within the boundaries?
-
-    okhxyValues[event.target.id].value = parseInt(event.target.value);
-
-    if (colorModel == "okhsl") {
-      rgbResult = okhsl_to_srgb(okhxyValues.hue.value / 360, okhxyValues.x.value / 100, okhxyValues.y.value / 100);
-    }
-    else if (colorModel == "okhsv") {
-      rgbResult = okhsv_to_srgb(okhxyValues.hue.value / 360, okhxyValues.x.value / 100, okhxyValues.y.value / 100);
-    }
-
-    rgbValues.r = rgbResult[0];
-    rgbValues.g = rgbResult[1];
-    rgbValues.b = rgbResult[2];
-
-    // const rgbInitials = ["r", "g", "b"];
-
-    // for (let i = 0; i < sRgbResult.length; i++) {
-    //   if (sRgbResult[i] < 0) {
-    //     rgbValues[rgbInitials[i]].value = 0;
-    //   }
-    //   else if (sRgbResult[i] > 255) {
-    //     rgbValues[rgbInitials[i]].value = 255;
-    //   }
-    //   else {
-    //     rgbValues[rgbInitials[i]].value = Math.round(sRgbResult[i]);
-    //   }
-    // }
-
-    changeColorInPlugin();
-
-    if (event.target.id == "hue") {
-      updateManipulators();
-      renderCanvas();
-    }
-    else {
-      updateManipulators();
-    }
-    
-  }
+  /* 
+  ** UPDATES FROM BACKEND
+  */
 
   onmessage = (event) => {
-    // console.log(event.data.pluginMessage);
-    console.log("message from plugin");
+    if (event.data.pluginMessage.message == "new shape color") {
+      rgbValues.r = Math.round(event.data.pluginMessage.rgb.r);
+      rgbValues.g = Math.round(event.data.pluginMessage.rgb.g);
+      rgbValues.b = Math.round(event.data.pluginMessage.rgb.b);
 
-    rgbValues.r = Math.round(event.data.pluginMessage.r);
-    rgbValues.g = Math.round(event.data.pluginMessage.g);
-    rgbValues.b = Math.round(event.data.pluginMessage.b);
+      convertRgbToOkhxyValues();
 
-    computeOkhxyValues();
+      if (init) {
+        // console.log("- Init function");
 
-    if (init) {
-      // console.log("init functions");
-      let results = render_static();
-      display_hue_slider(results);
-      setupHandlers();
-      init = false;
+        renderHueSliderCanvas();
+
+        setupHandler(canvasColorPicker.current);
+        setupHandler(canvasHueSlider.current);
+
+        init = false;
+
+        // console.log("- End init function");
+
+      }
+
+      updateManipulatorPositions();
+      renderColorPickerCanvas();
     }
-
-    updateManipulators();
-    renderCanvas();
   }
 
+
+  
   return (
     <>
       <div>
-        <input onChange={fillOrStrokeHandle} type="radio" id="fill" name="fillOrStroke" value="fill" defaultChecked/>
+        <input onChange={fillOrStrokeHandle} type="radio" id="fill" name="fill_or_stroke" value="fill" defaultChecked/>
         <label for="fill">Fill</label>
 
-        <input onChange={fillOrStrokeHandle} type="radio" id="stroke" name="fillOrStroke" value="stroke" />
+        <input onChange={fillOrStrokeHandle} type="radio" id="stroke" name="fill_or_stroke" value="stroke" />
         <label for="stroke">Stroke</label>
       </div>
 
@@ -321,17 +337,34 @@ export function App() {
       </div>
 
       <div style="margin-top: 20px;">
-        <select onChange={colorModelHandle} name="colorModel" id="colorModel">
+        <select onChange={colorModelHandle} name="color_model" id="color_model">
           <option value="okhsv">OkHSV</option>
           <option value="okhsl" selected>OkHSL</option>
         </select>
       </div>
 
       <div style="margin-top: 20px;">
-        <input onChange={updateFromInput} id="hue" type="number" min="0" max="360" value={okhxyValues.hue} spellcheck={false} />
-        <input onChange={updateFromInput} id="x" type="number" min="0" max="100" value={okhxyValues.x} spellcheck={false} />
-        <input onChange={updateFromInput} id="y" type="number" min="0" max="100" value={okhxyValues.y} spellcheck={false} />
+        <input onChange={hxyInputHandle} id="hue" type="number" min="0" max="360" value={okhxyValues.hue} spellcheck={false} />
+        <input onChange={hxyInputHandle} id="x" type="number" min="0" max="100" value={okhxyValues.x} spellcheck={false} />
+        <input onChange={hxyInputHandle} id="y" type="number" min="0" max="100" value={okhxyValues.y} spellcheck={false} />
       </div>
     </>
   )
 }
+
+
+
+
+// const rgbInitials = ["r", "g", "b"];
+
+// for (let i = 0; i < sRgbResult.length; i++) {
+//   if (sRgbResult[i] < 0) {
+//     rgbValues[rgbInitials[i]].value = 0;
+//   }
+//   else if (sRgbResult[i] > 255) {
+//     rgbValues[rgbInitials[i]].value = 255;
+//   }
+//   else {
+//     rgbValues[rgbInitials[i]].value = Math.round(sRgbResult[i]);
+//   }
+// }

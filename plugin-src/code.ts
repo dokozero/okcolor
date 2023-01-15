@@ -1,91 +1,67 @@
 // @ts-nochec k
 
-// import { srgb_to_okhsl, srgb_to_okhsv, okhsl_to_srgb } from "../bottosson/colorconversion";
-
 let currentFillOrStroke: string= "fill";
 
-function setColorInUI(shape) {
+function sendShapeColorToUI(shape) {
+  // console.log("BACKEND: send Shape Color To UI");
 
-  let r = shape[0].color.r * 255;
-  let g = shape[0].color.g * 255;
-  let b = shape[0].color.b * 255;  
+  let rgb = {};
 
-  let rgb = {
-    "r": r,
-    "g": g,
-    "b": b,
+  if (shape != null) {
+    rgb = {
+      "r": shape[0].color.r * 255,
+      "g": shape[0].color.g * 255,
+      "b": shape[0].color.b * 255,
+    }
+  }
+  else {
+    rgb = {
+      "r": 255,
+      "g": 255,
+      "b": 255
+    }
   }
 
-  figma.ui.postMessage(rgb);
+  figma.ui.postMessage({"rgb": rgb, "message": "new shape color"});
 }
 
 
 // Runs this code if the plugin is run in Figma
 if (figma.editorType === 'figma') {
 
-  // figma.ui.onmessage = msg => {
-  //   // One way of distinguishing between different types of messages sent from
-  //   // your HTML page is to use an object with a "type" property like this.
-  //   if (msg.type === 'create-shapes') {
-  //     const nodes: SceneNode[] = [];
-  //     for (let i = 0; i < msg.count; i++) {
-  //       const rect = figma.createRectangle();
-  //       rect.x = i * 150;
-  //       rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-  //       figma.currentPage.appendChild(rect);
-  //       nodes.push(rect);
-  //     }
-  //     figma.currentPage.selection = nodes;
-  //     figma.viewport.scrollAndZoomIntoView(nodes);
-  //   }
-
-  //   // Make sure to close the plugin when you're done. Otherwise the plugin will
-  //   // keep running, which shows the cancel button at the bottom of the screen.
-  //   figma.closePlugin();
-  // };
-
   figma.showUI(__html__, {width: 280, height: 470});
 
+  // To send the color of the shape on launch
   for (const node of figma.currentPage.selection) {
     // console.log('selected on launch');
 
     if (figma.currentPage.selection[0]) {
-      setColorInUI(figma.currentPage.selection[0].fills);
+      sendShapeColorToUI(figma.currentPage.selection[0].fills);
     }
   }
 
   figma.on("selectionchange", () => {
-    console.log('selection change');
+    // console.log('BACKEND: selection change');
 
     if (figma.currentPage.selection[0]) {
       if (currentFillOrStroke == "fill") {
-        setColorInUI(figma.currentPage.selection[0].fills);
+        sendShapeColorToUI(figma.currentPage.selection[0].fills);
       }
       else if (currentFillOrStroke == "stroke") {
-        setColorInUI(figma.currentPage.selection[0].strokes)
+        sendShapeColorToUI(figma.currentPage.selection[0].strokes)
       }
       
     }
     else {
-      let okhslReady = {
-        "hue": 0,
-        "saturation": 0,
-        "lightness": 0
-      }
-    
-      figma.ui.postMessage(okhslReady);
+      sendShapeColorToUI(null);
     }
   });
 
-  figma.ui.onmessage = msg => {
-
-    if (msg.type == "changeColor") {
-      
-      // console.log("changeColor");
+  figma.ui.onmessage = (msg) => {
+    if (msg.type == "update shape color") {
+      // console.log("BACKEND: update shape color");
       
       for (const node of figma.currentPage.selection) {
-
-
         if (msg.fillOrStroke == "fill") {
           if ("fills" in node) {
             const nodeFills = node.fills;
@@ -113,21 +89,18 @@ if (figma.editorType === 'figma') {
 
       }
     }
-    else if (msg.type == "updateUIColor") {
-
-      // console.log("updateUIColor");
+    else if (msg.type == "send me shape color") {
+      // console.log("BACKEND: send shape color");
 
       currentFillOrStroke = msg.fillOrStroke;
 
       if (msg.fillOrStroke == "fill") {
-        setColorInUI(figma.currentPage.selection[0].fills);
+        sendShapeColorToUI(figma.currentPage.selection[0].fills);
       }
       else if (msg.fillOrStroke == "stroke") {
-        setColorInUI(figma.currentPage.selection[0].strokes);
+        sendShapeColorToUI(figma.currentPage.selection[0].strokes);
       }
     }
-
-    // figma.closePlugin();
   }
   
 

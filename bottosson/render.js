@@ -1,4 +1,4 @@
-import { okhsl_to_srgb, srgb_to_okhsl, srgb_to_okhsv, okhsv_to_srgb, rgb_to_hsl, hsl_to_rgb } from "./colorconversion";
+import { okhsl_to_srgb, srgb_to_okhsl, srgb_to_okhsv, okhsv_to_srgb } from "./colorconversion";
 
 const picker_size = 257;
 const slider_width = 15;
