@@ -6,10 +6,10 @@ import { render, render_okhsl, render_static } from "../bottosson/render";
 
 let init = true;
 
-const rgbValues = {
-  r: signal(0),
-  g: signal(0),
-  b: signal(0)
+let rgbValues = {
+  r: 0,
+  g: 0,
+  b: 0
 };
 
 const okhxyValues = {
@@ -18,8 +18,8 @@ const okhxyValues = {
   y: signal(0),
 };
 
-const fillOrStroke = signal("fill");
-const colorModel = signal("okhsl");
+let fillOrStroke: string = "fill";
+let colorModel: string = "okhsl";
 
 const picker_size = 257;
 const eps = 0.0001;
@@ -40,11 +40,11 @@ export function App() {
   function computeOkhxyValues() {   
     let okhxy;
 
-    if (colorModel.value == "okhsl") {
-      okhxy = srgb_to_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+    if (colorModel == "okhsl") {
+      okhxy = srgb_to_okhsl(rgbValues.r, rgbValues.g, rgbValues.b);
     }
-    else if (colorModel.value == "okhsv") {
-      okhxy = srgb_to_okhsv(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
+    else if (colorModel == "okhsv") {
+      okhxy = srgb_to_okhsv(rgbValues.r, rgbValues.g, rgbValues.b);
     }
 
     okhxyValues.hue.value = Math.round(okhxy[0] * 360);
@@ -53,29 +53,11 @@ export function App() {
   }
 
   const colorModelHandle = (event) => {
-    colorModel.value = event.target.value;
+    colorModel = event.target.value;
     
-    computeOkhxyValues();    
+    computeOkhxyValues();
     updateManipulators();
     renderCanvas();
-  }
-
-  function display_results_okhxy() {
-    // console.log("display_results_okhxy");
-    
-    let results;
-    let ctx;
-
-    if (colorModel.value == "okhsl") {
-      results = render_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
-      ctx = canvasColorPicker.current.getContext('2d');
-      ctx.putImageData(results["okhsl_sl"], 0, 0);
-    }
-    else if (colorModel.value == "okhsv") {
-      results = render(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value)
-      ctx = canvasColorPicker.current.getContext('2d');
-      ctx.putImageData(results["okhsv_sv"], 0, 0);
-    }
   }
 
   function display_hue_slider(results) {
@@ -93,14 +75,27 @@ export function App() {
   }
 
   function renderCanvas() {
-    setTimeout(function(){
-      display_results_okhxy();
-    }, 5);
+    let results;
+    let ctx = canvasColorPicker.current.getContext('2d');
+
+    if (colorModel == "okhsl") {
+      results = render_okhsl(rgbValues.r, rgbValues.g, rgbValues.b);
+      ctx.putImageData(results["okhsl_sl"], 0, 0);
+    }
+    else if (colorModel == "okhsv") {
+      results = render(rgbValues.r, rgbValues.g, rgbValues.b);
+      ctx.putImageData(results["okhsv_sv"], 0, 0);
+    }
+
+    // setTimeout(function(){
+    // }, 5);
   }
 
+
+  
   let mouse_handler = null;
 
-  function setup_handler(canvas, handler) {
+  function setupHandler(canvas, handler) {
     let outer_mouse_handler = function(event) {
       event.preventDefault();
 
@@ -114,13 +109,11 @@ export function App() {
       if (event.target.id == "okhsl_sl_canvas" || event.target.id == "okhsv_sv_canvas") {;
         x = event.clientX - rect.left;
         y = event.clientY - rect.top;
-        
         render = false;
       }
       else if (event.target.id == "okhsl_h_canvas") {
         y = event.clientX - rect.left;
         x = event.clientY - rect.top;
-
         render = true;
       }
       
@@ -153,47 +146,47 @@ export function App() {
   }, false);
 
 
-  function setup_handlers() {
+  function setupHandlers() {
     // console.log("setup_hsl_handler()");
 
-    setup_handler(canvasColorPicker.current, function(x, y) {
+    setupHandler(canvasColorPicker.current, function(x, y) {
       let h = okhxyValues.hue.value / 360;
       let new_x = clamp(x/picker_size);
       let new_y = clamp(1 - y/picker_size);
 
       let rgb;
 
-      if (colorModel.value == "okhsl") {
+      if (colorModel == "okhsl") {
         rgb = okhsl_to_srgb(h, new_x, new_y);
       }
-      else if (colorModel.value == "okhsv") {
+      else if (colorModel == "okhsv") {
         rgb = okhsv_to_srgb(h, new_x, new_y);
       }
 
-      rgbValues.r.value = rgb[0];
-      rgbValues.g.value = rgb[1];
-      rgbValues.b.value = rgb[2];
+      rgbValues.r = rgb[0];
+      rgbValues.g = rgb[1];
+      rgbValues.b = rgb[2];
 
       computeOkhxyValues();
     });
 
-    setup_handler(canvasHueSlider.current, function(x, y) {
+    setupHandler(canvasHueSlider.current, function(x, y) {
       let new_h = clamp(y/picker_size);
       let current_x = okhxyValues.x.value / 100;
       let current_y = okhxyValues.y.value / 100;
 
       let rgb;
 
-      if (colorModel.value == "okhsl") {
+      if (colorModel == "okhsl") {
         rgb = okhsl_to_srgb(new_h, current_x, current_y);
       }
-      else if (colorModel.value == "okhsv") {
+      else if (colorModel == "okhsv") {
         rgb = okhsv_to_srgb(new_h, current_x, current_y);
       }
 
-      rgbValues.r.value = rgb[0];
-      rgbValues.g.value = rgb[1];
-      rgbValues.b.value = rgb[2];
+      rgbValues.r = rgb[0];
+      rgbValues.g = rgb[1];
+      rgbValues.b = rgb[2];
 
       computeOkhxyValues();
 
@@ -203,8 +196,8 @@ export function App() {
   
 
   const fillOrStrokeHandle = (event) => {    
-    fillOrStroke.value = event.target.id;
-    parent.postMessage({ pluginMessage: { type: "updateUIColor", fillOrStroke: fillOrStroke.value} }, "*");
+    fillOrStroke = event.target.id;
+    parent.postMessage({ pluginMessage: { type: "updateUIColor", fillOrStroke: fillOrStroke} }, "*");
   }
 
 
@@ -212,34 +205,34 @@ export function App() {
     // console.log("Update from canvas");
 
     let values = {
-      r: rgbValues.r.value / 255,
-      g: rgbValues.g.value / 255,
-      b: rgbValues.b.value / 255
+      r: rgbValues.r / 255,
+      g: rgbValues.g / 255,
+      b: rgbValues.b / 255
     };
 
-    parent.postMessage({ pluginMessage: { type: "changeColor", fillOrStroke: fillOrStroke.value,  values } }, '*');
+    parent.postMessage({ pluginMessage: { type: "changeColor", fillOrStroke: fillOrStroke,  values } }, '*');
   }
 
 
   const updateFromInput = (event) => {
     // console.log("Update from input");
 
-    let sRgbResult;
+    let rgbResult;
 
     // TODO: Check here if values from inputs are within the boundaries?
 
     okhxyValues[event.target.id].value = parseInt(event.target.value);
 
-    if (colorModel.value == "okhsl") {
-      sRgbResult = okhsl_to_srgb(okhxyValues.hue.value / 360, okhxyValues.x.value / 100, okhxyValues.y.value / 100);
+    if (colorModel == "okhsl") {
+      rgbResult = okhsl_to_srgb(okhxyValues.hue.value / 360, okhxyValues.x.value / 100, okhxyValues.y.value / 100);
     }
-    else if (colorModel.value == "okhsv") {
-      sRgbResult = okhsv_to_srgb(okhxyValues.hue.value / 360, okhxyValues.x.value / 100, okhxyValues.y.value / 100);
+    else if (colorModel == "okhsv") {
+      rgbResult = okhsv_to_srgb(okhxyValues.hue.value / 360, okhxyValues.x.value / 100, okhxyValues.y.value / 100);
     }
 
-    rgbValues.r.value = sRgbResult[0];
-    rgbValues.g.value = sRgbResult[1];
-    rgbValues.b.value = sRgbResult[2];
+    rgbValues.r = rgbResult[0];
+    rgbValues.g = rgbResult[1];
+    rgbValues.b = rgbResult[2];
 
     // const rgbInitials = ["r", "g", "b"];
 
@@ -269,31 +262,19 @@ export function App() {
 
   onmessage = (event) => {
     // console.log(event.data.pluginMessage);
-    // console.log("message from plugin");
+    console.log("message from plugin");
 
-    rgbValues.r.value = Math.round(event.data.pluginMessage.r);
-    rgbValues.g.value = Math.round(event.data.pluginMessage.g);
-    rgbValues.b.value = Math.round(event.data.pluginMessage.b);
+    rgbValues.r = Math.round(event.data.pluginMessage.r);
+    rgbValues.g = Math.round(event.data.pluginMessage.g);
+    rgbValues.b = Math.round(event.data.pluginMessage.b);
 
-    let okhxyResult;
-
-    if (colorModel.value == "okhsl") {
-      okhxyResult = srgb_to_okhsl(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
-    }
-    else if (colorModel.value == "okhsv") {
-      okhxyResult = srgb_to_okhsv(rgbValues.r.value, rgbValues.g.value, rgbValues.b.value);
-    }
-
-    okhxyValues.hue.value = Math.floor(okhxyResult[0] * 360);
-    okhxyValues.x.value = Math.floor(okhxyResult[1] * 100);
-    okhxyValues.y.value = Math.floor(okhxyResult[2] * 100);
+    computeOkhxyValues();
 
     if (init) {
       // console.log("init functions");
-
       let results = render_static();
       display_hue_slider(results);
-      setup_handlers();
+      setupHandlers();
       init = false;
     }
 
