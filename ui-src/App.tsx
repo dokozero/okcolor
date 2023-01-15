@@ -47,10 +47,12 @@ export function App() {
   */
 
   function clamp(x) {
-    if (x < eps)
+    if (x < eps) {
       return eps;
-    else if (x > 1-eps)
+    }
+    else if (x > 1-eps) {
       return 1-eps;
+    }
     
     return x;
   }
@@ -163,6 +165,8 @@ export function App() {
 
       let newRgb;
 
+      let hueBackup = okhxyValues.hue.value;
+
       if (mouseHandlerEventTargetId == "") {
         mouseHandlerEventTargetId = event.target.id;
       }
@@ -191,6 +195,11 @@ export function App() {
       rgbValues.b = newRgb[2];
 
       convertRgbToOkhxyValues();
+
+      // This is a fix because with OkHSL SL Canvas, if we move the cursor after the top left corner, the hue value sent from srgbToOkhsl() in convertRgbToOkhxyValues() change and it shouldn't.
+      if (mouseHandlerEventTargetId == "okhsl_sl_canvas") {
+        okhxyValues.hue.value = hueBackup;
+      }
 
       updateShapeColor();
       updateManipulatorPositions();
@@ -229,6 +238,7 @@ export function App() {
     let eventTargetId = event.target.id;
     let eventTargetValue = parseInt(event.target.value);
     
+    // We test user's value and adjust it if enter one outside allowed range.
     if (eventTargetId == "hue") {
       if (eventTargetValue < 0) {
         eventTargetValue = 0;
@@ -323,7 +333,6 @@ export function App() {
         init = false;
 
         // console.log("- End init function");
-
       }
 
       updateManipulatorPositions();
