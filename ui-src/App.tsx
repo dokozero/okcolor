@@ -36,7 +36,8 @@ export function App() {
 
   const eps = 0.0001;
 
-  let mouseHandler = null;
+  let activeMouseHandler = null;
+  let eventTargetId = "";
 
 
 
@@ -147,7 +148,7 @@ export function App() {
   function setupHandler(canvas) {
     // console.log("setup Handler - " + canvas.id);
 
-    let outerMouseHandler = function(event) {
+    const mouseHandler = (event) => {
       event.preventDefault();
 
       let render: boolean = false;
@@ -162,13 +163,17 @@ export function App() {
 
       let newRgb;
 
-      if (event.target.id == "okhsl_sl_canvas" || event.target.id == "okhsv_sv_canvas") {
+      if (eventTargetId == "") {
+        eventTargetId = event.target.id;
+      }
+
+      if (eventTargetId == "okhsl_sl_canvas" || eventTargetId == "okhsv_sv_canvas") {
         let canvas_x = event.clientX - rect.left;
         let canvas_y = event.clientY - rect.top;
         newHxy.x = clamp(canvas_x/picker_size);
         newHxy.y = clamp(1 - canvas_y/picker_size); 
       }
-      else if (event.target.id == "okhsl_h_canvas") {
+      else if (eventTargetId == "okhsl_h_canvas") {
         let canvas_y = event.clientX - rect.left;
         newHxy.h = clamp(canvas_y/picker_size);
         render = true;
@@ -196,20 +201,21 @@ export function App() {
     };
 
     canvas.addEventListener("mousedown", function(event) {
-      mouseHandler = outerMouseHandler;
-      outerMouseHandler(event);
+      activeMouseHandler = mouseHandler;
+      mouseHandler(event);
     }, false);
   }
 
   document.addEventListener("mouseup", function(event) {
-    if (mouseHandler !== null) {
-      mouseHandler = null;
+    if (activeMouseHandler !== null) {
+      activeMouseHandler = null;
+      eventTargetId = "";
     }
   }, false);
 
   document.addEventListener("mousemove", function(event) {
-    if (mouseHandler !== null) {
-      mouseHandler(event);  
+    if (activeMouseHandler !== null) {
+      activeMouseHandler(event);  
     }
   }, false);
 
