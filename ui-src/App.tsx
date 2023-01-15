@@ -37,7 +37,7 @@ export function App() {
   const eps = 0.0001;
 
   let activeMouseHandler = null;
-  let eventTargetId = "";
+  let mouseHandlerEventTargetId = "";
 
 
 
@@ -112,12 +112,12 @@ export function App() {
   function updateManipulatorPositions()  {
     // console.log("update Manipulator Positions");
 
-    let h = okhxyValues.hue.value / 360;
+    let hue = okhxyValues.hue.value / 360;
     let x = okhxyValues.x.value / 100;
     let y = okhxyValues.y.value / 100;
 
     document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y)));
-    document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*h, 0));
+    document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*hue, 0));
   }
 
 
@@ -156,34 +156,34 @@ export function App() {
       let rect = canvas.getBoundingClientRect();
 
       let newHxy = {
-        "h": okhxyValues.hue.value / 360,
+        "hue": okhxyValues.hue.value / 360,
         "x": okhxyValues.x.value / 100,
         "y": okhxyValues.y.value / 100
       };
 
       let newRgb;
 
-      if (eventTargetId == "") {
-        eventTargetId = event.target.id;
+      if (mouseHandlerEventTargetId == "") {
+        mouseHandlerEventTargetId = event.target.id;
       }
 
-      if (eventTargetId == "okhsl_sl_canvas" || eventTargetId == "okhsv_sv_canvas") {
+      if (mouseHandlerEventTargetId == "okhsl_sl_canvas" || mouseHandlerEventTargetId == "okhsv_sv_canvas") {
         let canvas_x = event.clientX - rect.left;
         let canvas_y = event.clientY - rect.top;
         newHxy.x = clamp(canvas_x/picker_size);
         newHxy.y = clamp(1 - canvas_y/picker_size); 
       }
-      else if (eventTargetId == "okhsl_h_canvas") {
+      else if (mouseHandlerEventTargetId == "okhsl_h_canvas") {
         let canvas_y = event.clientX - rect.left;
-        newHxy.h = clamp(canvas_y/picker_size);
+        newHxy.hue = clamp(canvas_y/picker_size);
         render = true;
       }
 
       if (colorModel == "okhsl") {
-        newRgb = okhslToSrgb(newHxy.h, newHxy.x, newHxy.y);
+        newRgb = okhslToSrgb(newHxy.hue, newHxy.x, newHxy.y);
       }
       else if (colorModel == "okhsv") {
-        newRgb = okhsvToSrgb(newHxy.h, newHxy.x, newHxy.y);
+        newRgb = okhsvToSrgb(newHxy.hue, newHxy.x, newHxy.y);
       }
 
       rgbValues.r = newRgb[0];
@@ -209,7 +209,7 @@ export function App() {
   document.addEventListener("mouseup", function(event) {
     if (activeMouseHandler !== null) {
       activeMouseHandler = null;
-      eventTargetId = "";
+      mouseHandlerEventTargetId = "";
     }
   }, false);
 
@@ -224,21 +224,39 @@ export function App() {
   function hxyInputHandle(event) {
     // console.log("hxy Input Handle");
 
-    // TODO: Check here if values from inputs are within the boundaries?
-
     let newRgb;
 
-    okhxyValues[event.target.id].value = parseInt(event.target.value);
+    let eventTargetId = event.target.id;
+    let eventTargetValue = parseInt(event.target.value);
+    
+    if (eventTargetId == "hue") {
+      if (eventTargetValue < 0) {
+        eventTargetValue = 0;
+      }
+      else if (eventTargetValue > 360) {
+        eventTargetValue = 360;
+      }
+    }
+    else if (eventTargetId == "x" || eventTargetId == "y") {
+      if (eventTargetValue < 0) {
+        eventTargetValue = 0;
+      }
+      else if (eventTargetValue > 100) {
+        eventTargetValue = 100;
+      }
+    }
 
-    let h = okhxyValues.hue.value / 360;
+    okhxyValues[eventTargetId].value = eventTargetValue;
+
+    let hue = okhxyValues.hue.value / 360;
     let x = okhxyValues.x.value / 100;
     let y = okhxyValues.y.value / 100;
 
     if (colorModel == "okhsl") {
-      newRgb = okhslToSrgb(h, x, y);
+      newRgb = okhslToSrgb(hue, x, y);
     }
     else if (colorModel == "okhsv") {
-      newRgb = okhsvToSrgb(h, x, y);
+      newRgb = okhsvToSrgb(hue, x, y);
     }
 
     rgbValues.r = newRgb[0];
@@ -261,13 +279,24 @@ export function App() {
   function updateShapeColor() {
     // console.log("update Shape Color");
 
-    let values = {
+    // This code is to be sure we don't have value outside range because it looks like there is a bug with okhslToSrgb and okhsvToSrgb functions that return out of rage values when for exemple we have hue set to 0 or 100 and saturation as well.
+    const rgbInitials = ["r", "g", "b"];
+    for (let i = 0; i < Object.keys(rgbValues).length; i++) {
+      if (rgbValues[rgbInitials[i]] < 0) {
+        rgbValues[rgbInitials[i]] = 0;
+      }
+      else if (rgbValues[rgbInitials[i]] > 255) {
+        rgbValues[rgbInitials[i]] = 255;
+      }
+    }
+
+    let preparedRgbValue = {
       r: rgbValues.r / 255,
       g: rgbValues.g / 255,
       b: rgbValues.b / 255
     };
 
-    parent.postMessage({ pluginMessage: { type: "update shape color", "fillOrStroke": fillOrStroke,  values } }, '*');
+    parent.postMessage({ pluginMessage: { type: "update shape color", "fillOrStroke": fillOrStroke,  preparedRgbValue } }, '*');
   }
 
 
@@ -277,9 +306,9 @@ export function App() {
 
   onmessage = (event) => {
     if (event.data.pluginMessage.message == "new shape color") {
-      rgbValues.r = Math.round(event.data.pluginMessage.rgb.r);
-      rgbValues.g = Math.round(event.data.pluginMessage.rgb.g);
-      rgbValues.b = Math.round(event.data.pluginMessage.rgb.b);
+      rgbValues.r = event.data.pluginMessage.rgb.r;
+      rgbValues.g = event.data.pluginMessage.rgb.g;
+      rgbValues.b = event.data.pluginMessage.rgb.b;
 
       convertRgbToOkhxyValues();
 
@@ -357,20 +386,3 @@ export function App() {
     </>
   )
 }
-
-
-
-
-// const rgbInitials = ["r", "g", "b"];
-
-// for (let i = 0; i < sRgbResult.length; i++) {
-//   if (sRgbResult[i] < 0) {
-//     rgbValues[rgbInitials[i]].value = 0;
-//   }
-//   else if (sRgbResult[i] > 255) {
-//     rgbValues[rgbInitials[i]].value = 255;
-//   }
-//   else {
-//     rgbValues[rgbInitials[i]].value = Math.round(sRgbResult[i]);
-//   }
-// }

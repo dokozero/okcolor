@@ -67,9 +67,9 @@ if (figma.editorType === 'figma') {
             const nodeFills = node.fills;
             let nodeFillsCopy = JSON.parse(JSON.stringify(nodeFills));
 
-            nodeFillsCopy[0].color.r = msg.values.r;
-            nodeFillsCopy[0].color.g = msg.values.g;
-            nodeFillsCopy[0].color.b = msg.values.b;
+            nodeFillsCopy[0].color.r = msg.preparedRgbValue.r;
+            nodeFillsCopy[0].color.g = msg.preparedRgbValue.g;
+            nodeFillsCopy[0].color.b = msg.preparedRgbValue.b;
   
             node.fills = nodeFillsCopy;
           }
@@ -79,9 +79,9 @@ if (figma.editorType === 'figma') {
             const nodeStrokes = node.strokes;
             let nodeStrokesCopy = JSON.parse(JSON.stringify(nodeStrokes));
 
-            nodeStrokesCopy[0].color.r = msg.values.r;
-            nodeStrokesCopy[0].color.g = msg.values.g;
-            nodeStrokesCopy[0].color.b = msg.values.b;
+            nodeStrokesCopy[0].color.r = msg.preparedRgbValue.r;
+            nodeStrokesCopy[0].color.g = msg.preparedRgbValue.g;
+            nodeStrokesCopy[0].color.b = msg.preparedRgbValue.b;
   
             node.strokes = nodeStrokesCopy;
           }
