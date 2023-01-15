@@ -63,11 +63,25 @@ export function App() {
     let result;
 
     // We get an error from srgbToOkhsl and srgbToOkhsv if we have 0 values on the three rgb values.
-    if (name == "srgbToOkhsl" || name == "srgbToOkhsv") {
-      if (param1 == 0) { param1 = 0.001; }
-      if (param2 == 0) { param2 = 0.001; }
-      if (param2 == 0) { param3 = 0.001; }
-    }
+    // if (name == "srgbToOkhsl" || name == "srgbToOkhsv") {
+
+
+      // We do to keep the hue slider working when we have the cursor on one of the 4 corners or on one of the sides (eg. #686868).
+
+      // For this one, it's the only case where the 4 decimal values don't work.
+      if (param2 == 0 && param3 == 1 && colorModel == "okhsl") {
+        param2 = 0.001;
+        param3 = 0.999;
+      }
+      if (param1 == 0) { param1 = 0.0001; }
+      if (param2 == 0) { param2 = 0.0001; }
+      if (param3 == 0) { param3 = 0.0001; }
+      
+      if (param1 == 1) { param1 = 0.9999; }
+      if (param2 == 1) { param2 = 0.9999; }
+      if (param3 == 1) { param3 = 0.9999; }
+
+    // }
 
     if (name == "okhslToSrgb") { result = okhsl_to_srgb(param1, param2, param3); }
     else if (name == "okhsvToSrgb") { result = okhsv_to_srgb(param1, param2, param3); }
