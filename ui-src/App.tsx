@@ -246,6 +246,9 @@ export function App() {
       else if (eventTargetValue > 360) {
         eventTargetValue = 360;
       }
+      else if (Number.isNaN(eventTargetValue)) {
+        eventTargetValue = 180;
+      }
     }
     else if (eventTargetId == "x" || eventTargetId == "y") {
       if (eventTargetValue < 0) {
@@ -253,6 +256,9 @@ export function App() {
       }
       else if (eventTargetValue > 100) {
         eventTargetValue = 100;
+      }
+      else if (Number.isNaN(eventTargetValue)) {
+        eventTargetValue = 50;
       }
     }
 
