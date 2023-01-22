@@ -1,7 +1,48 @@
 // MODIFIED - I create this function as a bridge to the color conversion function as there are some cases that needed to handle data correction to avoid some bugs.
 export function colorConversion(from, to, param1, param2, param3) {
 
-    let result;
+    let result = [];
+
+    const pickColorRgb = {
+        "red": [255, 0, 0],
+        "green": [0, 255, 0],
+        "blue": [0, 0, 255],
+        "yellow": [255, 255, 0],
+        "pink": [255, 0, 255],
+        "cyan": [0, 255, 255]
+    }
+
+    const pickColorConditions = {
+        "okhsl": {
+            "red": (from == "okhsl" && param1 == 29 && param2 > 99 && param3 == 57),
+            "green": (from == "okhsl" && param1 == 142 && param2 > 99 && param3 == 84),
+            "blue": (from == "okhsl" && param1 == 264 && param2 > 99 && param3 == 37),
+            "yellow": (from == "okhsl" && param1 == 110 && param2 > 99 && param3 == 96),
+            "pink": (from == "okhsl" && param1 == 328 && param2 > 99 && param3 == 65),
+            "cyan": (from == "okhsl" && param1 == 195 && param2 > 99 && param3 == 89)
+        },
+        "okhsv": {
+            "red": (from == "okhsv" && param1 == 29 && param2 > 99 && param3 > 99),
+            "green": (from == "okhsv" && param1 == 142 && param2 > 99 && param3 > 99),
+            "blue": (from == "okhsv" && param1 == 264 && param2 > 99 && param3 > 99),
+            "yellow": (from == "okhsv" && param1 == 110 && param2 > 99 && param3 > 99),
+            "pink": (from == "okhsv" && param1 == 328 && param2 > 99 && param3 > 99),
+            "cyan": (from == "okhsv" && param1 == 195 && param2 > 99 && param3 > 99)
+        }
+    };
+
+    let currentKey;
+
+    // We do this before calling the to_srgb color conversion functions to send back the correct pick values as define above. If we don't to this, the to_srgb color conversion function will not send pick rgb values when needed.
+    for (let i = 0; i < Object.keys(pickColorRgb).length; i++) {
+        currentKey = Object.keys(pickColorRgb)[i];
+
+        if (pickColorConditions.okhsl[currentKey] || pickColorConditions.okhsv[currentKey]) {
+            result = pickColorRgb[currentKey];
+            return result;
+        }        
+    }
+    
 
     // okhsl_to_srgb() and okhsv_to_srgb() needs these values between 0 and 1.
     if (from == "okhsl" || from == "okhsv") {

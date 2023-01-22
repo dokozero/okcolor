@@ -170,6 +170,7 @@ export function App() {
         let canvas_y = event.clientX - rect.left;
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/picker_size) * 360);
 
+        // We do this to be abble to change the hue value on the color picker canvas when we have a white or black value. If we don't to this fix, the hue value will always be the same on the color picker canvas.
         let x = clamp(okhxyValues.x.value, 0.1, 99.9);
         let y = clamp(okhxyValues.y.value, 0.1, 99.9);
         rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, x, y);
@@ -232,8 +233,8 @@ export function App() {
     okhxyValues[eventTargetId].value = eventTargetValue;
 
     if (event.target.id == "hue") {
-      let x = clamp(okhxyValues.x.value, 0.1, 99.9);
-      let y = clamp(okhxyValues.y.value, 0.1, 99.9);
+      let x = clamp(okhxyValues.x.value, 0.01, 99.99);
+      let y = clamp(okhxyValues.y.value, 0.01, 99.99);
 
       rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, x, y);
     }
