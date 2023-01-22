@@ -10,7 +10,7 @@ export function colorConversion(from, to, param1, param2, param3) {
         param3 = param3 / 100;
     }
 
-    // console.log(from, to)
+    // console.log(from, to);
 
     // In some cases we need to avoid "full" max or min values:
     // We get an error from srgb_to_okhsl and srgb_to_okhsv if we have 0 values on the three rgb values.
@@ -25,7 +25,7 @@ export function colorConversion(from, to, param1, param2, param3) {
         param3 = 0.0001;
     }
 
-    // console.log(param1, param2, param3)
+    // console.log(param1, param2, param3);
 
     if (from == "okhsl" && to == "srgb") { result = okhsl_to_srgb(param1, param2, param3); }
     else if (from == "okhsv" && to == "srgb") { result = okhsv_to_srgb(param1, param2, param3); }

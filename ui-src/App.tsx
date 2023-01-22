@@ -83,6 +83,11 @@ export function App() {
     let results;
     let ctx = canvasColorPicker.current.getContext('2d');
 
+    // If we don't to this and for exemple we start the plugin with a [0, 0, 0] fill, the color picker hue will be red while the hue picker will be orange. Seems to be an inconsistency with the render functions.
+    if (rgb.every(v => v == 0)) {
+      rgb.fill(0.01);
+    }
+
     if (colorModel == "okhsl") {
       results = render_okhsl(rgb[0], rgb[1], rgb[2]);
       ctx.putImageData(results["okhsl_sl"], 0, 0);
