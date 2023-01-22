@@ -5,25 +5,23 @@ let currentFillOrStroke: string= "fill";
 function sendShapeColorToUI(shape) {
   // console.log("BACKEND: send Shape Color To UI");
 
-  let rgb = {};
+  let rgbValues = [];
 
   if (shape != null) {
-    rgb = {
-      "r": shape[0].color.r * 255,
-      "g": shape[0].color.g * 255,
-      "b": shape[0].color.b * 255,
-    }
+    rgbValues[0] = shape[0].color.r * 255;
+    rgbValues[1] = shape[0].color.g * 255;
+    rgbValues[2] = shape[0].color.b * 255;
   }
   else {
-    rgb = {
-      "r": 255,
-      "g": 255,
-      "b": 255
-    }
+    rgbValues[0] = 255;
+    rgbValues[1] = 255;
+    rgbValues[2] = 255;
   }
 
-  figma.ui.postMessage({"rgb": rgb, "message": "new shape color"});
+  figma.ui.postMessage({"rgbValues": rgbValues, "message": "new shape color"});
 }
+
+// TODO handle case if use change color from Figma color picker?
 
 
 figma.showUI(__html__, {width: 280, height: 470});
@@ -64,9 +62,9 @@ figma.ui.onmessage = (msg) => {
           const nodeFills = node.fills;
           let nodeFillsCopy = JSON.parse(JSON.stringify(nodeFills));
 
-          nodeFillsCopy[0].color.r = msg.preparedRgbValue.r;
-          nodeFillsCopy[0].color.g = msg.preparedRgbValue.g;
-          nodeFillsCopy[0].color.b = msg.preparedRgbValue.b;
+          nodeFillsCopy[0].color.r = msg.rgbValues[0] / 255;
+          nodeFillsCopy[0].color.g = msg.rgbValues[1] / 255;
+          nodeFillsCopy[0].color.b = msg.rgbValues[2] / 255;
 
           node.fills = nodeFillsCopy;
         }
@@ -76,9 +74,9 @@ figma.ui.onmessage = (msg) => {
           const nodeStrokes = node.strokes;
           let nodeStrokesCopy = JSON.parse(JSON.stringify(nodeStrokes));
 
-          nodeStrokesCopy[0].color.r = msg.preparedRgbValue.r;
-          nodeStrokesCopy[0].color.g = msg.preparedRgbValue.g;
-          nodeStrokesCopy[0].color.b = msg.preparedRgbValue.b;
+          nodeStrokesCopy[0].color.r = msg.rgbValues[0] / 255;
+          nodeStrokesCopy[0].color.g = msg.rgbValues[1] / 255;
+          nodeStrokesCopy[0].color.b = msg.rgbValues[2] / 255;
 
           node.strokes = nodeStrokesCopy;
         }

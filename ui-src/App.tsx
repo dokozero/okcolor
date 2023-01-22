@@ -1,7 +1,7 @@
 import { signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
 
-import {okhsl_to_srgb, srgb_to_okhsl, srgb_to_okhsv, okhsv_to_srgb} from "../bottosson/colorconversion";
+import { colorConversion } from "../bottosson/colorconversion";
 import { render, render_okhsl, render_static } from "../bottosson/render";
 import {picker_size} from "../bottosson/constants";
 
@@ -25,11 +25,7 @@ export function App() {
 
   let init = true;
 
-  let rgbValues = {
-    r: 0,
-    g: 0,
-    b: 0
-  };
+  let rgbValues = [0, 0, 0];
 
   let fillOrStroke: string = "fill";
   let colorModel: string = "okhsl";
@@ -46,78 +42,29 @@ export function App() {
   ** HELPER FUNCTIONS
   */
 
-  function clamp(x) {
-    if (x < eps) {
-      return eps;
+  function clamp(num, min, max) {
+    if (num < min) {
+      return min;
     }
-    else if (x > 1-eps) {
-      return 1-eps;
+    else if (num > max) {
+      return max;
     }
-    
-    return x;
+    return num;
   }
 
-   // I create this function as a bridge to the color conversion ones as there are some cases that needed to handle data correction to avoid some bugs.
-   function colorConversion(name, param1, param2, param3) {
-
-    let result;
-
-    // We get an error from srgbToOkhsl and srgbToOkhsv if we have 0 values on the three rgb values.
-    // if (name == "srgbToOkhsl" || name == "srgbToOkhsv") {
-
-
-      // We do to keep the hue slider working when we have the cursor on one of the 4 corners or on one of the sides (eg. #686868).
-
-      // For this one, it's the only case where the 4 decimal values don't work.
-      if (param2 == 0 && param3 == 1 && colorModel == "okhsl") {
-        param2 = 0.001;
-        param3 = 0.999;
-      }
-      if (param1 == 0) { param1 = 0.0001; }
-      if (param2 == 0) { param2 = 0.0001; }
-      if (param3 == 0) { param3 = 0.0001; }
-      
-      if (param1 == 1) { param1 = 0.9999; }
-      if (param2 == 1) { param2 = 0.9999; }
-      if (param3 == 1) { param3 = 0.9999; }
-
-    // }
-
-    if (name == "okhslToSrgb") { result = okhsl_to_srgb(param1, param2, param3); }
-    else if (name == "okhsvToSrgb") { result = okhsv_to_srgb(param1, param2, param3); }
-    else if (name == "srgbToOkhsl") { result = srgb_to_okhsl(param1, param2, param3); }
-    else if (name == "srgbToOkhsv") { result = srgb_to_okhsv(param1, param2, param3); }
-
-    // This code is to be sure we don't have value outside range because it looks like there is a bug with okhsl_to_srgb and okhsv_to_srgb functions that return out of range values when for exemple we have hue set to 0 or 100 and saturation as well.
-    if (name == "okhslToSrgb" || name == "okhsvToSrgb") {
-      for (let i = 0; i < Object.keys(result).length; i++) {
-        if (result[i] < 0) {
-          result[i] = 0;
-        }
-        else if (result[i] > 255) {
-          result[i] = 255;
-        }
-      }
-    }
-
-    return result;
+  function limitMouseHandlerValue(x) {
+    return x < eps ? eps : (x > 1-eps ? 1-eps : x);
   }
+  
 
-  function convertRgbToOkhxyValues() {
+  function updateOkhxyValuesFromRgbValues() {
     // console.log("convert Rgb To Okhxy Values");
 
-    let newOkhxy;
+    let newOkhxy = colorConversion("srgb", colorModel, rgbValues[0], rgbValues[1], rgbValues[2]);
 
-    if (colorModel == "okhsl") {
-      newOkhxy = colorConversion("srgbToOkhsl", rgbValues.r, rgbValues.g, rgbValues.b);
-    }
-    else if (colorModel == "okhsv") {
-      newOkhxy = colorConversion("srgbToOkhsv", rgbValues.r, rgbValues.g, rgbValues.b);
-    }
-
-    okhxyValues.hue.value = Math.round(newOkhxy[0] * 360);
-    okhxyValues.x.value = Math.round(newOkhxy[1] * 100);
-    okhxyValues.y.value = Math.round(newOkhxy[2] * 100);
+    okhxyValues.hue.value = newOkhxy[0];
+    okhxyValues.x.value = newOkhxy[1];
+    okhxyValues.y.value = newOkhxy[2];
   }
 
 
@@ -130,18 +77,18 @@ export function App() {
   }
 
 
-  function renderColorPickerCanvas() {
+  function renderColorPickerCanvas(rgb) {
     // console.log("render Color Picker Canvas");
 
     let results;
     let ctx = canvasColorPicker.current.getContext('2d');
 
     if (colorModel == "okhsl") {
-      results = render_okhsl(rgbValues.r, rgbValues.g, rgbValues.b);
+      results = render_okhsl(rgb[0], rgb[1], rgb[2]);
       ctx.putImageData(results["okhsl_sl"], 0, 0);
     }
     else if (colorModel == "okhsv") {
-      results = render(rgbValues.r, rgbValues.g, rgbValues.b);
+      results = render(rgb[0], rgb[1], rgb[2]);
       ctx.putImageData(results["okhsv_sv"], 0, 0);
     }
 
@@ -187,9 +134,9 @@ export function App() {
 
     colorModel = event.target.value;
     
-    convertRgbToOkhxyValues();
+    updateOkhxyValuesFromRgbValues();
     updateManipulatorPositions();
-    renderColorPickerCanvas();
+    renderColorPickerCanvas(rgbValues);
   }
 
 
@@ -200,18 +147,7 @@ export function App() {
       event.preventDefault();
 
       let render: boolean = false;
-
       let rect = canvas.getBoundingClientRect();
-
-      let newHxy = {
-        "hue": okhxyValues.hue.value / 360,
-        "x": okhxyValues.x.value / 100,
-        "y": okhxyValues.y.value / 100
-      };
-
-      let newRgb;
-
-      let hueBackup = okhxyValues.hue.value;
 
       if (mouseHandlerEventTargetId == "") {
         mouseHandlerEventTargetId = event.target.id;
@@ -220,38 +156,28 @@ export function App() {
       if (mouseHandlerEventTargetId == "okhsl_sl_canvas" || mouseHandlerEventTargetId == "okhsv_sv_canvas") {
         let canvas_x = event.clientX - rect.left;
         let canvas_y = event.clientY - rect.top;
-        newHxy.x = clamp(canvas_x/picker_size);
-        newHxy.y = clamp(1 - canvas_y/picker_size); 
+        okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/picker_size) * 100);
+        okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/picker_size) * 100);
+
+        rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
       }
       else if (mouseHandlerEventTargetId == "okhsl_h_canvas") {
         let canvas_y = event.clientX - rect.left;
-        newHxy.hue = clamp(canvas_y/picker_size);
+        okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/picker_size) * 360);
+
+        let x = clamp(okhxyValues.x.value, 0.1, 99.9);
+        let y = clamp(okhxyValues.y.value, 0.1, 99.9);
+        rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, x, y);
+
         render = true;
       }
 
-      if (colorModel == "okhsl") {
-        newRgb = colorConversion("okhslToSrgb", newHxy.hue, newHxy.x, newHxy.y);
-      }
-      else if (colorModel == "okhsv") {
-        newRgb = colorConversion("okhsvToSrgb", newHxy.hue, newHxy.x, newHxy.y);
-      }
-
-      rgbValues.r = newRgb[0];
-      rgbValues.g = newRgb[1];
-      rgbValues.b = newRgb[2];
-
-      convertRgbToOkhxyValues();
-
-      // This is a fix because with OkHSL SL Canvas, if we move the cursor after the top left corner, the hue value sent from srgbToOkhsl() in convertRgbToOkhxyValues() change and it shouldn't.
-      if (mouseHandlerEventTargetId == "okhsl_sl_canvas") {
-        okhxyValues.hue.value = hueBackup;
-      }
 
       updateShapeColor();
       updateManipulatorPositions();
 
       if (render) {
-        renderColorPickerCanvas();
+        renderColorPickerCanvas(rgbValues);
       }
     };
 
@@ -279,57 +205,43 @@ export function App() {
   function hxyInputHandle(event) {
     // console.log("hxy Input Handle");
 
-    let newRgb;
-
     let eventTargetId = event.target.id;
     let eventTargetValue = parseInt(event.target.value);
     
     // We test user's value and adjust it if enter one outside allowed range.
     if (eventTargetId == "hue") {
-      if (eventTargetValue < 0) {
-        eventTargetValue = 0;
-      }
-      else if (eventTargetValue > 360) {
-        eventTargetValue = 360;
-      }
-      else if (Number.isNaN(eventTargetValue)) {
+      eventTargetValue = clamp(eventTargetValue, 0, 360);
+
+      if (Number.isNaN(eventTargetValue)) {
         eventTargetValue = 180;
       }
     }
     else if (eventTargetId == "x" || eventTargetId == "y") {
-      if (eventTargetValue < 0) {
-        eventTargetValue = 0;
-      }
-      else if (eventTargetValue > 100) {
-        eventTargetValue = 100;
-      }
-      else if (Number.isNaN(eventTargetValue)) {
+      eventTargetValue = clamp(eventTargetValue, 0, 100);
+
+      if (Number.isNaN(eventTargetValue)) {
         eventTargetValue = 50;
       }
     }
 
     okhxyValues[eventTargetId].value = eventTargetValue;
 
-    let hue = okhxyValues.hue.value / 360;
-    let x = okhxyValues.x.value / 100;
-    let y = okhxyValues.y.value / 100;
+    if (event.target.id == "hue") {
+      let x = clamp(okhxyValues.x.value, 0.1, 99.9);
+      let y = clamp(okhxyValues.y.value, 0.1, 99.9);
 
-    if (colorModel == "okhsl") {
-      newRgb = colorConversion("okhslToSrgb", hue, x, y);
+      rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, x, y);
     }
-    else if (colorModel == "okhsv") {
-      newRgb = colorConversion("okhsvToSrgb", hue, x, y);
+    else {
+      rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
     }
 
-    rgbValues.r = newRgb[0];
-    rgbValues.g = newRgb[1];
-    rgbValues.b = newRgb[2];
 
     updateShapeColor();
     updateManipulatorPositions();
 
     if (event.target.id == "hue") {
-      renderColorPickerCanvas();
+      renderColorPickerCanvas(rgbValues);
     }    
   }
 
@@ -340,14 +252,7 @@ export function App() {
 
   function updateShapeColor() {
     // console.log("update Shape Color");
-
-    let preparedRgbValue = {
-      r: rgbValues.r / 255,
-      g: rgbValues.g / 255,
-      b: rgbValues.b / 255
-    };
-
-    parent.postMessage({ pluginMessage: { type: "update shape color", "fillOrStroke": fillOrStroke,  preparedRgbValue } }, '*');
+    parent.postMessage({ pluginMessage: { type: "update shape color", "fillOrStroke": fillOrStroke,  rgbValues } }, '*');
   }
 
 
@@ -357,11 +262,9 @@ export function App() {
 
   onmessage = (event) => {
     if (event.data.pluginMessage.message == "new shape color") {
-      rgbValues.r = event.data.pluginMessage.rgb.r;
-      rgbValues.g = event.data.pluginMessage.rgb.g;
-      rgbValues.b = event.data.pluginMessage.rgb.b;
+      rgbValues = event.data.pluginMessage.rgbValues;
 
-      convertRgbToOkhxyValues();
+      updateOkhxyValuesFromRgbValues();
 
       if (init) {
         // console.log("- Init function");
@@ -377,7 +280,7 @@ export function App() {
       }
 
       updateManipulatorPositions();
-      renderColorPickerCanvas();
+      renderColorPickerCanvas(rgbValues);
     }
   }
 

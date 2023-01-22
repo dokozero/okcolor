@@ -1,3 +1,5 @@
+// TODO add MODIFIED comments (and take back original file before?)
+
 import { okhsl_to_srgb, srgb_to_okhsl, srgb_to_okhsv, okhsv_to_srgb } from "./colorconversion";
 
 const picker_size = 257;
@@ -189,6 +191,7 @@ export function render(r,g,b)
         result["okhsv_sv"] = new ImageData(data, picker_size);
     }
 
+    // MODIFIED - we don't need these calculations for the plugin and it allow a faster render.
     // {
     //     let lab = linear_srgb_to_oklab(
     //         srgb_transfer_function_inv(r/255),

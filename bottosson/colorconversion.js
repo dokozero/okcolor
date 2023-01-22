@@ -1,3 +1,74 @@
+// MODIFIED - I create this function as a bridge to the color conversion function as there are some cases that needed to handle data correction to avoid some bugs.
+export function colorConversion(from, to, param1, param2, param3) {
+
+    let result;
+
+    // okhsl_to_srgb() and okhsv_to_srgb() needs these values between 0 and 1.
+    if (from == "okhsl" || from == "okhsv") {
+        param1 = param1 / 360;
+        param2 = param2 / 100;
+        param3 = param3 / 100;
+    }
+
+    // console.log(from, to)
+
+    // In some cases we need to avoid "full" max or min values:
+    // We get an error from srgb_to_okhsl and srgb_to_okhsv if we have 0 values on the three rgb values.
+    if (from == "srgb" && param1 == 0 && param2 == 0 && param3 == 0) {
+        param1 = 0.0001;
+        param2 = 0.0001;
+        param3 = 0.0001;
+    }
+
+    // okhsv_to_srgb() return NaN values if we have a black value with OkHSV value.
+    if (from == "okhsv" && param3 == 0) {
+        param3 = 0.0001;
+    }
+
+    // console.log(param1, param2, param3)
+
+    if (from == "okhsl" && to == "srgb") { result = okhsl_to_srgb(param1, param2, param3); }
+    else if (from == "okhsv" && to == "srgb") { result = okhsv_to_srgb(param1, param2, param3); }
+    else if (from == "srgb" && to == "okhsl") { result = srgb_to_okhsl(param1, param2, param3); }
+    else if (from == "srgb" && to == "okhsv") { result = srgb_to_okhsv(param1, param2, param3); }
+
+    // We clamp srgb values on the results because with.
+    if (to == "srgb") {
+        for (let i = 0; i < Object.keys(result).length; i++) {
+            if (result[i] < 0) { result[i] = 0; }
+            else if (result[i] > 255) { result[i] = 255; }
+        }
+    }
+
+    // We send the new hxy values ready to be used in the UI
+    if (to == "okhsl" || to == "okhsv") {
+        result[0] = Math.round(result[0] * 360);
+        result[1] = Math.round(result[1] * 100);
+        result[2] = Math.round(result[2] * 100);
+    }
+
+    // console.log(result);
+
+    return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function rgb_to_hsl(r, g, b)
 {
     r /= 255; 
@@ -465,6 +536,7 @@ function get_Cs(L, a_, b_)
     return [C_0, C_mid, C_max];
 }
 
+// MODIFIED - added export
 export function okhsl_to_srgb(h,s,l)
 {
     if (l == 1)
@@ -517,6 +589,7 @@ export function okhsl_to_srgb(h,s,l)
     ]
 }
 
+// MODIFIED - added export
 export function srgb_to_okhsl(r,g,b)
 {
     let lab = linear_srgb_to_oklab(
@@ -561,7 +634,7 @@ export function srgb_to_okhsl(r,g,b)
     return [h,s,l];
 }
 
-
+// MODIFIED - added export
 export function okhsv_to_srgb(h,s,v)
 {
     let a_ = Math.cos(2*Math.PI*h);
@@ -607,6 +680,7 @@ export function okhsv_to_srgb(h,s,v)
     ]
 }
 
+// MODIFIED - added export
 export function srgb_to_okhsv(r,g,b)
 {
     let lab = linear_srgb_to_oklab(
