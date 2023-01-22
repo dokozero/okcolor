@@ -3,13 +3,15 @@ import { useRef } from "preact/hooks";
 
 import { colorConversion } from "../bottosson/colorconversion";
 import { render, render_okhsl, render_static } from "../bottosson/render";
-import {picker_size} from "../bottosson/constants";
+import { picker_size } from "../bottosson/constants";
 
 const okhxyValues = {
   hue: signal(0),
   x: signal(0),
   y: signal(0)
 };
+
+const opacityValue = signal(100);
 
 export function App() { 
 
@@ -20,8 +22,10 @@ export function App() {
   // We could use one canvas element but better no to avoid flickering when user change color model 
   const canvasColorPicker = useRef(null);
   const canvasHueSlider = useRef(null);
+  const canvasOpacitySlider = useRef(null);
   const manipulatorColorPicker = useRef(null);
   const manipulatorHueSlider = useRef(null);
+  const manipulatorOpacitySlider = useRef(null);
 
   let init = true;
 
@@ -68,20 +72,11 @@ export function App() {
   }
 
 
-  function renderHueSliderCanvas() {
-    // console.log("render Hue Slider Canvas");
-
-    let results = render_static();
-    let ctx = canvasHueSlider.current.getContext('2d');
-    ctx.putImageData(results["okhsl_h"], 0, 0);
-  }
-
-
   function renderColorPickerCanvas(rgb) {
     // console.log("render Color Picker Canvas");
 
     let results;
-    let ctx = canvasColorPicker.current.getContext('2d');
+    let ctx = canvasColorPicker.current.getContext("2d");
 
     // If we don't to this and for exemple we start the plugin with a [0, 0, 0] fill, the color picker hue will be red while the hue picker will be orange. Seems to be an inconsistency with the render functions.
     if (rgb.every(v => v == 0)) {
@@ -101,6 +96,28 @@ export function App() {
     // }, 5);
   }
 
+  function renderHueSliderCanvas() {
+    // console.log("render Hue Slider Canvas");
+
+    let results = render_static();
+    let ctx = canvasHueSlider.current.getContext("2d");
+    ctx.putImageData(results["okhsl_h"], 0, 0);
+  }
+
+  function renderOpacitySliderCanvas() {
+    // console.log("render opacity Slider Canvas");
+
+    let ctx = canvasOpacitySlider.current.getContext("2d");
+    const gradient = ctx.createLinearGradient(0, 0, 0, picker_size);
+    
+    gradient.addColorStop(0, "white");
+    gradient.addColorStop(1, `rgba(${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]}, 1)`)
+
+    // Set the fill style and draw a rectangle
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 15, picker_size);
+
+  }
 
   
   
@@ -116,8 +133,11 @@ export function App() {
     let x = okhxyValues.x.value / 100;
     let y = okhxyValues.y.value / 100;
 
+    let opacity = opacityValue.value / 100;
+
     document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y)));
     document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*hue, 0));
+    document.getElementById(manipulatorOpacitySlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*opacity, 0));
   }
 
 
@@ -151,7 +171,7 @@ export function App() {
     const mouseHandler = (event) => {
       event.preventDefault();
 
-      let render: boolean = false;
+      let renderColorPicker: boolean = false;
       let rect = canvas.getBoundingClientRect();
 
       if (mouseHandlerEventTargetId == "") {
@@ -165,6 +185,8 @@ export function App() {
         okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/picker_size) * 100);
 
         rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
+        
+        updateShapeColor();
       }
       else if (mouseHandlerEventTargetId == "okhsl_h_canvas") {
         let canvas_y = event.clientX - rect.left;
@@ -175,13 +197,21 @@ export function App() {
         let y = clamp(okhxyValues.y.value, 0.1, 99.9);
         rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, x, y);
 
-        render = true;
+        renderColorPicker = true;
+      
+        updateShapeColor();
+      }
+      else if (mouseHandlerEventTargetId == "opacity_canvas") {
+        let canvas_y = event.clientX - rect.left;
+        opacityValue.value = Math.round(limitMouseHandlerValue(canvas_y/picker_size) * 100);
+
+        updateShapeOpacity();
       }
 
-      updateShapeColor();
       updateManipulatorPositions();
+      renderOpacitySliderCanvas();
 
-      if (render) {
+      if (renderColorPicker) {
         renderColorPickerCanvas(rgbValues);
       }
     };
@@ -239,11 +269,25 @@ export function App() {
 
 
     updateShapeColor();
+    renderOpacitySliderCanvas();
     updateManipulatorPositions();
 
     if (event.target.id == "hue") {
       renderColorPickerCanvas(rgbValues);
     }    
+  }
+
+  function opacityInputHandle(event) {
+    let eventTargetValue = clamp(parseInt(event.target.value), 0, 100);
+
+    if (Number.isNaN(eventTargetValue)) {
+      eventTargetValue = 100;
+    }
+
+    opacityValue.value = eventTargetValue;
+    updateManipulatorPositions();
+
+    updateShapeOpacity();
   }
 
 
@@ -256,6 +300,11 @@ export function App() {
     parent.postMessage({ pluginMessage: { type: "update shape color", "fillOrStroke": fillOrStroke,  rgbValues } }, '*');
   }
 
+  function updateShapeOpacity() {
+    // console.log("update Shape Opacity");
+    parent.postMessage({ pluginMessage: { type: "update shape opacity", "fillOrStroke": fillOrStroke,  "opacityValue": opacityValue.value } }, '*');
+  }
+
 
   /* 
   ** UPDATES FROM BACKEND
@@ -264,6 +313,8 @@ export function App() {
   onmessage = (event) => {
     if (event.data.pluginMessage.message == "new shape color") {
       rgbValues = event.data.pluginMessage.rgbValues;
+
+      opacityValue.value = event.data.pluginMessage.opacityValue;
 
       updateOkhxyValuesFromRgbValues();
 
@@ -274,12 +325,14 @@ export function App() {
 
         setupHandler(canvasColorPicker.current);
         setupHandler(canvasHueSlider.current);
+        setupHandler(canvasOpacitySlider.current);
 
         init = false;
 
         // console.log("- End init function");
       }
 
+      renderOpacitySliderCanvas();
       updateManipulatorPositions();
       renderColorPickerCanvas(rgbValues);
     }
@@ -313,11 +366,24 @@ export function App() {
       </div>
 
       <div class="colorslider">
-        <canvas ref={canvasHueSlider} class="colorslider__element" id="okhsl_h_canvas" width="15" height="257"></canvas>
+        <canvas ref={canvasHueSlider} class="colorslider__canvas" id="okhsl_h_canvas" width="15" height="257"></canvas>
 
         <svg class="colorslider__handler" width="257" height="15"> 
           <g transform="translate(0,7)">
             <g ref={manipulatorHueSlider} id="okhsl_h_manipulator" transform="translate(0,0)">
+              <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.75" stroke="#ffffff" ></circle>
+              <circle cx="0" cy="0" r="6" fill="none" stroke-width="1.25" stroke="#000000" ></circle>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <div class="opacityslider" style="margin-top: 16px;">
+        <canvas ref={canvasOpacitySlider} class="opacityslider__canvas" id="opacity_canvas" width="15" height="257"></canvas>
+
+        <svg class="opacityslider__handler" width="257" height="15"> 
+          <g transform="translate(0,7)">
+            <g ref={manipulatorOpacitySlider} id="opacity_manipulator" transform="translate(0,0)">
               <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.75" stroke="#ffffff" ></circle>
               <circle cx="0" cy="0" r="6" fill="none" stroke-width="1.25" stroke="#000000" ></circle>
             </g>
@@ -336,6 +402,7 @@ export function App() {
         <input onChange={hxyInputHandle} id="hue" type="number" min="0" max="360" value={okhxyValues.hue} spellcheck={false} />
         <input onChange={hxyInputHandle} id="x" type="number" min="0" max="100" value={okhxyValues.x} spellcheck={false} />
         <input onChange={hxyInputHandle} id="y" type="number" min="0" max="100" value={okhxyValues.y} spellcheck={false} />
+        <input onChange={opacityInputHandle} id="opacity" type="number" min="0" max="100" value={opacityValue} spellcheck={false} />
       </div>
     </>
   )

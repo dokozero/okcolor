@@ -17,18 +17,18 @@ canvas {
   }
 
 
-.colorslider {
+.colorslider, .opacityslider {
   position: relative;
   width: 257px;
   height: 15px;
 }
-  .colorslider__element {
+  .colorslider__canvas, .opacityslider__canvas {
     position: absolute;
     top: 15px;
     transform-origin: top left;
     transform: rotate(-90deg);
   }
-  .colorslider__handler {
+  .colorslider__handler, .opacityslider__handler {
     position: absolute;
     pointer-events: none;
   }
