@@ -178,7 +178,6 @@ export function App() {
         render = true;
       }
 
-
       updateShapeColor();
       updateManipulatorPositions();
 
@@ -217,17 +216,13 @@ export function App() {
     // We test user's value and adjust it if enter one outside allowed range.
     if (eventTargetId == "hue") {
       eventTargetValue = clamp(eventTargetValue, 0, 360);
-
-      if (Number.isNaN(eventTargetValue)) {
-        eventTargetValue = 180;
-      }
     }
     else if (eventTargetId == "x" || eventTargetId == "y") {
       eventTargetValue = clamp(eventTargetValue, 0, 100);
+    }
 
-      if (Number.isNaN(eventTargetValue)) {
-        eventTargetValue = 50;
-      }
+    if (Number.isNaN(eventTargetValue)) {
+      eventTargetValue = 0;
     }
 
     okhxyValues[eventTargetId].value = eventTargetValue;
