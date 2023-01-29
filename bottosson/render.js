@@ -1,45 +1,27 @@
-// TODO add MODIFIED comments (and take back original file before?)
-
-import { okhsl_to_srgb, srgb_to_okhsl, srgb_to_okhsv, okhsv_to_srgb } from "./colorconversion";
-
-const picker_size = 257;
-const slider_width = 15;
+// MODIFIED - added these imports
+import { okhsl_to_srgb, srgb_to_okhsl, srgb_to_okhsv, okhsv_to_srgb, linear_srgb_to_oklab, srgb_transfer_function_inv, toe_inv, find_gamut_intersection, oklab_to_linear_srgb, srgb_transfer_function } from "./colorconversion";
+import { picker_size, slider_width, oklab_C_scale } from "./constants";
 
 let lowres_picker_size = (picker_size+1)/2;
 let picker_size_inv = 1/picker_size;
 
-
-export function render_static()
+function hsluv_to_rgb(h,s,l)
 {
-    let result = {};
-
-    {
-        let data = new Uint8ClampedArray(picker_size*slider_width*4);
-
-        for (let i = 0; i < picker_size; i++) 
-        {
-
-            let a_ = Math.cos(2*Math.PI*i*picker_size_inv);
-            let b_ = Math.sin(2*Math.PI*i*picker_size_inv);
-
-            let rgb = okhsl_to_srgb(i/picker_size, 0.9, 0.65 + 0.17*b_ - 0.08*a_);
-
-            for (let j = 0; j < slider_width; j++) 
-            {
-                let index = 4*(i*slider_width + j);
-                data[index + 0] = rgb[0];
-                data[index + 1] = rgb[1];
-                data[index + 2] = rgb[2];
-                data[index + 3] = 255;
-            }               
-        }
-
-        result["okhsl_h"] = new ImageData(data, slider_width);
-    }
-
-    return result;
+    rgb = hsluv.hsluvToRgb([h*360,s*100,l*100]);
+    rgb[0] *= 255;
+    rgb[1] *= 255;
+    rgb[2] *= 255;
+    return rgb;
 }
 
+function rgb_to_hsluv(r,g,b)
+{
+    hsl = hsluv.rgbToHsluv([r/255,g/255,b/255]);
+    hsl[0] /= 360;
+    hsl[1] /= 100;
+    hsl[2] /= 100;
+    return hsl;
+}
 
 function upscale(lowres_data, data)
 {
@@ -52,16 +34,19 @@ function upscale(lowres_data, data)
             let source_index_10 = 3*((i+1)*lowres_picker_size + j);
             let source_index_11 = 3*((i+1)*lowres_picker_size + j+1);
 
+            // MODIFIED - added let
             let r00 = lowres_data[source_index_00 + 0];
             let r01 = lowres_data[source_index_01 + 0];
             let r10 = lowres_data[source_index_10 + 0];
             let r11 = lowres_data[source_index_11 + 0];
 
+            // MODIFIED - added let
             let g00 = lowres_data[source_index_00 + 1];
             let g01 = lowres_data[source_index_01 + 1];
             let g10 = lowres_data[source_index_10 + 1];
             let g11 = lowres_data[source_index_11 + 1];
 
+            // MODIFIED - added let
             let b00 = lowres_data[source_index_00 + 2];
             let b01 = lowres_data[source_index_01 + 2];
             let b10 = lowres_data[source_index_10 + 2];
@@ -149,20 +134,205 @@ function upscale(lowres_data, data)
     data[target_index + 2] = b;
 }
 
+// MODIFIED - added r,g and b in the function's params
+function render_hsl(r, g, b, prefix, to_hsl, from_hsl, result)
+{
+    let hsl = to_hsl(r,g,b);
 
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*picker_size*4);       
+    //     let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);   
 
+    //     for (let i = 0; i < lowres_picker_size; i++) 
+    //     {   
+    //         for (let j = 0; j < lowres_picker_size; j++) 
+    //         {
+    //             let hsl_a = 2*(2*i*picker_size_inv)-1;
+    //             let hsl_b = 2*(1 - 2*j*picker_size_inv)-1;
 
+    //             let rgb = from_hsl(0.5+0.5*Math.atan2(hsl_a, hsl_b)/Math.PI, Math.sqrt(hsl_a**2 + hsl_b**2), hsl[2]);
+    //             let index = 3*(i*lowres_picker_size + j);
+    //             lowres_data[index + 0] = rgb[0];
+    //             lowres_data[index + 1] = rgb[1];
+    //             lowres_data[index + 2] = rgb[2];
+                
+    //             {
+    //                 let alpha = 0.25*picker_size*(1 - (hsl_a**2 + hsl_b**2));
+    //                 alpha = alpha > 1 ? 1 : alpha;
+    //                 alpha = alpha < 0 ? 0 : alpha;
+    //                 data[4*((2*i)*picker_size + 2*j) + 3] = 255*alpha; 
+    //             }
 
+    //             if (2*i + 1 < picker_size)
+    //             {
+    //                 let alpha = 0.25*picker_size*(1 - ((hsl_a + 2*picker_size_inv)**2 + hsl_b**2));
+    //                 alpha = alpha > 1 ? 1 : alpha;
+    //                 alpha = alpha < 0 ? 0 : alpha;
+    //                 data[4*((2*i+1)*picker_size + 2*j) + 3] = 255*alpha; 
+    //             }
+
+    //             if (2*j + 1 < picker_size)
+    //             {
+    //                 let alpha = 0.25*picker_size*(1 - (hsl_a**2 + (hsl_b - 2*picker_size_inv)**2));
+    //                 alpha = alpha > 1 ? 1 : alpha;
+    //                 alpha = alpha < 0 ? 0 : alpha;
+    //                 data[4*((2*i)*picker_size + 2*j+1) + 3] = 255*alpha; 
+    //             }
+
+    //             if (2*i + 1 < picker_size && 2*j + 1 < picker_size)
+    //             {
+    //                 let alpha = 0.25*picker_size*(1 - ((hsl_a + 2*picker_size_inv)**2 + (hsl_b - 2*picker_size_inv)**2));
+    //                 alpha = alpha > 1 ? 1 : alpha;
+    //                 alpha = alpha < 0 ? 0 : alpha;
+    //                 data[4*((2*i+1)*picker_size + 2*j+1) + 3] = 255*alpha; 
+    //             }
+    //         }               
+    //     }
+
+    //     upscale(lowres_data, data);
+        
+    //     result[prefix + "_hs"] = new ImageData(data, picker_size);  
+    // }
+
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*picker_size*4);
+    //     let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);   
+
+    //     for (let i = 0; i < lowres_picker_size; i++) 
+    //     {
+    //         for (let j = 0; j < lowres_picker_size; j++) 
+    //         {
+    //             let rgb = from_hsl(2*j*picker_size_inv, hsl[1], 1-2*i*picker_size_inv);
+    //             let index = 3*(i*lowres_picker_size + j);
+    //             lowres_data[index + 0] = rgb[0];
+    //             lowres_data[index + 1] = rgb[1];
+    //             lowres_data[index + 2] = rgb[2];
+    //         }               
+    //     }
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         for (let j = 0; j < picker_size; j++) 
+    //         {
+    //             let index = 4*(i*picker_size + j);
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     upscale(lowres_data, data);
+
+    //     result[prefix + "_hl"] = new ImageData(data, picker_size);
+    // }
+
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         let rgb = from_hsl(hsl[0], 1-i*picker_size_inv, hsl[2]);
+
+    //         for (let j = 0; j < slider_width; j++) 
+    //         {
+    //             let index = 4*(i*slider_width + j);
+    //             data[index + 0] = rgb[0];
+    //             data[index + 1] = rgb[1];
+    //             data[index + 2] = rgb[2];
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     result[prefix + "_s"] = new ImageData(data, slider_width);
+    // }
+
+    {
+        let data = new Uint8ClampedArray(picker_size*picker_size*4);
+        let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);   
+
+        for (let i = 0; i < lowres_picker_size; i++) 
+        {
+            for (let j = 0; j < lowres_picker_size; j++) 
+            {
+                let rgb = from_hsl(hsl[0], 2*j*picker_size_inv, 1-2*i*picker_size_inv);
+
+                let index = 3*(i*lowres_picker_size + j);
+                lowres_data[index + 0] = rgb[0];
+                lowres_data[index + 1] = rgb[1];
+                lowres_data[index + 2] = rgb[2];
+            }               
+        }
+
+        for (let i = 0; i < picker_size; i++) 
+        {
+            for (let j = 0; j < picker_size; j++) 
+            {
+                let index = 4*(i*picker_size + j);
+                data[index + 3] = 255;
+            }               
+        }
+
+        upscale(lowres_data, data);
+
+        result[prefix + "_sl"] = new ImageData(data, picker_size);
+    }
+}
+
+function render_hsluv(r,g,b)
+{
+    let result = {};
+    render_hsl(r, g, b, "hsluv", rgb_to_hsluv, hsluv_to_rgb, result);
+    return result;
+}
+
+// MODIFIED - added export
+export function render_okhsl(r,g,b)
+{
+    let result = {};
+    render_hsl(r, g, b, "okhsl", srgb_to_okhsl, okhsl_to_srgb, result);
+    return result;
+}
+
+// MODIFIED - added export
 export function render(r,g,b)
 {
-
     let result = {};
+    
+    // {
+    //     let hsv = rgb_to_hsv(r,g,b);
+
+    //     let data = new Uint8ClampedArray(picker_size*picker_size*4);
+    //     let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);   
+
+    //     for (let i = 0; i < lowres_picker_size; i++) 
+    //     {
+    //         for (let j = 0; j < lowres_picker_size; j++) 
+    //         {
+    //             let rgb = hsv_to_rgb(hsv[0], 2*j*picker_size_inv, 1-2*i*picker_size_inv);
+    //             let index = 3*(i*lowres_picker_size + j);
+    //             lowres_data[index + 0] = rgb[0];
+    //             lowres_data[index + 1] = rgb[1];
+    //             lowres_data[index + 2] = rgb[2];
+    //         }               
+    //     }
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         for (let j = 0; j < picker_size; j++) 
+    //         {
+    //             let index = 4*(i*picker_size + j);
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     upscale(lowres_data, data);
+
+    //     result["hsv_sv"] = new ImageData(data, picker_size);
+    // }
 
     {
         let hsv = srgb_to_okhsv(r,g,b);
 
         let data = new Uint8ClampedArray(picker_size*picker_size*4);
-        let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);
+        let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);   
 
         for (let i = 0; i < lowres_picker_size; i++) 
         {
@@ -191,7 +361,6 @@ export function render(r,g,b)
         result["okhsv_sv"] = new ImageData(data, picker_size);
     }
 
-    // MODIFIED - we don't need these calculations for the plugin and it allow a faster render.
     // {
     //     let lab = linear_srgb_to_oklab(
     //         srgb_transfer_function_inv(r/255),
@@ -199,7 +368,8 @@ export function render(r,g,b)
     //         srgb_transfer_function_inv(b/255)
     //     );
 
-    //     l = Math.sqrt(lab[1]*lab[1] +lab[2]*lab[2]);
+    //     // MODIFIED - added let
+    //     let l = Math.sqrt(lab[1]*lab[1] +lab[2]*lab[2]);
     //     let a_ = lab[1]/l;
     //     let b_ = lab[2]/l;
 
@@ -277,20 +447,23 @@ export function render(r,g,b)
     //             let source_index_10 = 3*((i+1)*lowres_picker_size + j);
     //             let source_index_11 = 3*((i+1)*lowres_picker_size + j+1);
 
-    //             r00 = lowres_data[source_index_00 + 0];
-    //             r01 = lowres_data[source_index_01 + 0];
-    //             r10 = lowres_data[source_index_10 + 0];
-    //             r11 = lowres_data[source_index_11 + 0];
+    //             // MODIFIED - added let
+    //             let r00 = lowres_data[source_index_00 + 0];
+    //             let r01 = lowres_data[source_index_01 + 0];
+    //             let r10 = lowres_data[source_index_10 + 0];
+    //             let r11 = lowres_data[source_index_11 + 0];
 
-    //             g00 = lowres_data[source_index_00 + 1];
-    //             g01 = lowres_data[source_index_01 + 1];
-    //             g10 = lowres_data[source_index_10 + 1];
-    //             g11 = lowres_data[source_index_11 + 1];
+    //             // MODIFIED - added let
+    //             let g00 = lowres_data[source_index_00 + 1];
+    //             let g01 = lowres_data[source_index_01 + 1];
+    //             let g10 = lowres_data[source_index_10 + 1];
+    //             let g11 = lowres_data[source_index_11 + 1];
 
-    //             b00 = lowres_data[source_index_00 + 2];
-    //             b01 = lowres_data[source_index_01 + 2];
-    //             b10 = lowres_data[source_index_10 + 2];
-    //             b11 = lowres_data[source_index_11 + 2];
+    //             // MODIFIED - added let
+    //             let b00 = lowres_data[source_index_00 + 2];
+    //             let b01 = lowres_data[source_index_01 + 2];
+    //             let b10 = lowres_data[source_index_10 + 2];
+    //             let b11 = lowres_data[source_index_11 + 2];
 
     //             let target_index_00 = 4*(2*i*picker_size + 2*j);
     //             let target_index_01 = 4*(2*i*picker_size + 2*j+1);
@@ -318,56 +491,210 @@ export function render(r,g,b)
     //     result["oklch_lc"] = new ImageData(data, picker_size);
     // }
 
-    // render_hsl("hsl", rgb_to_hsl, hsl_to_rgb, result);
+    // render_hsl(r, g, b, "hsl", rgb_to_hsl, hsl_to_rgb, result);
 
     return result;
 }
 
 
-
-
-
-function render_hsl(r, g, b, prefix, to_hsl, from_hsl, result)
+// MODIFIED - added export
+export function render_static()
 {
-    let hsl = to_hsl(r,g,b);
+    let result = {};
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         let rgb = hsv_to_rgb(i*picker_size_inv, 1, 1);
+
+    //         for (let j = 0; j < slider_width; j++) 
+    //         {
+    //             let index = 4*(i*slider_width + j);
+    //             data[index + 0] = rgb[0];
+    //             data[index + 1] = rgb[1];
+    //             data[index + 2] = rgb[2];
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     result["hsv_h"] = new ImageData(data, slider_width);
+    // }
+
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+
+    //         let a_ = Math.cos(2*Math.PI*i*picker_size_inv);
+    //         let b_ = Math.sin(2*Math.PI*i*picker_size_inv);
+
+    //         let rgb = hsluv_to_rgb(i*picker_size_inv, 0.9, 0.65 + 0.20*b_ - 0.09*a_);
+
+    //         for (let j = 0; j < slider_width; j++) 
+    //         {
+    //             let index = 4*(i*slider_width + j);
+    //             data[index + 0] = rgb[0];
+    //             data[index + 1] = rgb[1];
+    //             data[index + 2] = rgb[2];
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     result["okhsv_h"] = new ImageData(data, slider_width);
+    // }
+
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+    //     let L = 0.7502;
+    //     let C = 0.127552;
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         let a_ = Math.cos(2*Math.PI*i*picker_size_inv);
+    //         let b_ = Math.sin(2*Math.PI*i*picker_size_inv);
+
+    //         let rgb = oklab_to_linear_srgb(L, C*a_, C*b_);
+
+    //         for (let j = 0; j < slider_width; j++) 
+    //         {
+    //             let index = 4*(i*slider_width + j);
+    //             data[index + 0] = 255*srgb_transfer_function(rgb[0]);
+    //             data[index + 1] = 255*srgb_transfer_function(rgb[1]);
+    //             data[index + 2] = 255*srgb_transfer_function(rgb[2]);
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     result["oklch_h"] = new ImageData(data, slider_width);
+    // }
+
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         let rgb = hsl_to_rgb(0, 0, 1-i*picker_size_inv);
+
+    //         for (let j = 0; j < slider_width; j++) 
+    //         {
+    //             let index = 4*(i*slider_width + j);
+    //             data[index + 0] = rgb[0];
+    //             data[index + 1] = rgb[1];
+    //             data[index + 2] = rgb[2];
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     result["hsl_l"] = new ImageData(data, slider_width);
+    // }
+
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         let rgb = hsl_to_rgb(i*picker_size_inv, 1, 0.5);
+
+    //         for (let j = 0; j < slider_width; j++) 
+    //         {
+    //             let index = 4*(i*slider_width + j);
+    //             data[index + 0] = rgb[0];
+    //             data[index + 1] = rgb[1];
+    //             data[index + 2] = rgb[2];
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     result["hsl_h"] = new ImageData(data, slider_width);
+    // }
+
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         let rgb = hsluv_to_rgb(0, 0, 1-i*picker_size_inv);
+
+    //         for (let j = 0; j < slider_width; j++) 
+    //         {
+    //             let index = 4*(i*slider_width + j);
+    //             data[index + 0] = rgb[0];
+    //             data[index + 1] = rgb[1];
+    //             data[index + 2] = rgb[2];
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     result["hsluv_l"] = new ImageData(data, slider_width);
+    // }
+
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         let rgb = hsluv_to_rgb(i*picker_size_inv, 1, 0.6);
+
+    //         for (let j = 0; j < slider_width; j++) 
+    //         {
+    //             let index = 4*(i*slider_width + j);
+    //             data[index + 0] = rgb[0];
+    //             data[index + 1] = rgb[1];
+    //             data[index + 2] = rgb[2];
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     result["hsluv_h"] = new ImageData(data, slider_width);
+    // }
+
+    // {
+    //     let data = new Uint8ClampedArray(picker_size*slider_width*4);
+
+    //     for (let i = 0; i < picker_size; i++) 
+    //     {
+    //         let rgb = hsluv_to_rgb(0, 0, 1-i*picker_size_inv);
+            
+    //         for (let j = 0; j < slider_width; j++) 
+    //         {
+    //             let index = 4*(i*slider_width + j);
+    //             data[index + 0] = rgb[0];
+    //             data[index + 1] = rgb[1];
+    //             data[index + 2] = rgb[2];
+    //             data[index + 3] = 255;
+    //         }               
+    //     }
+
+    //     result["okhsl_l"] = new ImageData(data, slider_width);
+    // }
 
     {
-        let data = new Uint8ClampedArray(picker_size*picker_size*4);
-        let lowres_data = new Float32Array(lowres_picker_size*lowres_picker_size*3);   
-
-        for (let i = 0; i < lowres_picker_size; i++) 
-        {
-            for (let j = 0; j < lowres_picker_size; j++) 
-            {
-                let rgb = from_hsl(hsl[0], 2*j*picker_size_inv, 1-2*i*picker_size_inv);
-
-                let index = 3*(i*lowres_picker_size + j);
-                lowres_data[index + 0] = rgb[0];
-                lowres_data[index + 1] = rgb[1];
-                lowres_data[index + 2] = rgb[2];
-            }               
-        }
+        let data = new Uint8ClampedArray(picker_size*slider_width*4);
 
         for (let i = 0; i < picker_size; i++) 
         {
-            for (let j = 0; j < picker_size; j++) 
+
+            let a_ = Math.cos(2*Math.PI*i*picker_size_inv);
+            let b_ = Math.sin(2*Math.PI*i*picker_size_inv);
+
+            // MODIFIED - remplaced ksluv_to_rgb() with okhsl_to_srgb()
+            let rgb = okhsl_to_srgb(i/picker_size, 0.9, 0.65 + 0.17*b_ - 0.08*a_);
+
+            for (let j = 0; j < slider_width; j++) 
             {
-                let index = 4*(i*picker_size + j);
+                let index = 4*(i*slider_width + j);
+                data[index + 0] = rgb[0];
+                data[index + 1] = rgb[1];
+                data[index + 2] = rgb[2];
                 data[index + 3] = 255;
             }               
         }
 
-        upscale(lowres_data, data);
-
-        result[prefix + "_sl"] = new ImageData(data, picker_size);
+        result["okhsl_h"] = new ImageData(data, slider_width);
     }
-}
 
-
-export function render_okhsl(r,g,b)
-{
-    let result = {};
-    render_hsl(r, g, b, "okhsl", srgb_to_okhsl, okhsl_to_srgb, result);
     return result;
 }
-
