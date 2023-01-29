@@ -20,6 +20,7 @@ export function App() {
   */
 
   // We could use one canvas element but better no to avoid flickering when user change color model 
+  const fillOrStrokeSelector = useRef(null);
   const canvasColorPicker = useRef(null);
   const canvasHueSlider = useRef(null);
   const canvasOpacitySlider = useRef(null);
@@ -27,12 +28,18 @@ export function App() {
   const manipulatorHueSlider = useRef(null);
   const manipulatorOpacitySlider = useRef(null);
 
-  let init = true;
+  let init: boolean = true;
 
-  let rgbValues = [0, 0, 0];
+  let shapeFillStrokeInfo = {
+    "fill": false,
+    "stroke": false
+  };
 
-  let fillOrStroke: string = "fill";
-  let colorModel: string = "okhsl";
+  let rgbValues: number[] = [0, 0, 0];
+
+  // Default choice unless selected shape on launch has no fill.
+  let currentFillOrStroke: string = "fill";
+  let currentColorModel: string = "okhsl";
 
   let activeMouseHandler = null;
 
@@ -64,7 +71,7 @@ export function App() {
   function updateOkhxyValuesFromRgbValues() {
     // console.log("convert Rgb To Okhxy Values");
 
-    let newOkhxy = colorConversion("srgb", colorModel, rgbValues[0], rgbValues[1], rgbValues[2]);
+    let newOkhxy = colorConversion("srgb", currentColorModel, rgbValues[0], rgbValues[1], rgbValues[2]);
 
     okhxyValues.hue.value = newOkhxy[0];
     okhxyValues.x.value = newOkhxy[1];
@@ -83,11 +90,11 @@ export function App() {
       rgb.fill(0.01);
     }
 
-    if (colorModel == "okhsl") {
+    if (currentColorModel == "okhsl") {
       results = render_okhsl(rgb[0], rgb[1], rgb[2]);
       ctx.putImageData(results["okhsl_sl"], 0, 0);
     }
-    else if (colorModel == "okhsv") {
+    else if (currentColorModel == "okhsv") {
       results = render(rgb[0], rgb[1], rgb[2]);
       ctx.putImageData(results["okhsv_sv"], 0, 0);
     }
@@ -164,16 +171,16 @@ export function App() {
   function fillOrStrokeHandle(event) {
     // console.log("fill Or Stroke Handle");
 
-    fillOrStroke = event.target.id;
+    currentFillOrStroke = event.target.id;
 
-    parent.postMessage({ pluginMessage: { type: "send me shape color", "fillOrStroke": fillOrStroke} }, "*");
+    parent.postMessage({ pluginMessage: { type: "send me shape color", "fillOrStroke": currentFillOrStroke} }, "*");
   }
 
 
   function colorModelHandle(event) {
     // console.log("color Model Handle");
 
-    colorModel = event.target.value;
+    currentColorModel = event.target.value;
     
     updateOkhxyValuesFromRgbValues();
     updateManipulatorPositions.colorPicker();
@@ -198,7 +205,7 @@ export function App() {
         okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/picker_size) * 100);
         okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/picker_size) * 100);
 
-        rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
+        rgbValues = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
 
         // Temp note - oklch code 1
         
@@ -212,7 +219,7 @@ export function App() {
         // We do this to be abble to change the hue value on the color picker canvas when we have a white or black value. If we don't to this fix, the hue value will always be the same on the color picker canvas.
         let x = clamp(okhxyValues.x.value, 0.1, 99.9);
         let y = clamp(okhxyValues.y.value, 0.1, 99.9);
-        rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, x, y);
+        rgbValues = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, x, y);
 
         // Temp note - oklch code 2
 
@@ -284,10 +291,10 @@ export function App() {
       let x = clamp(okhxyValues.x.value, 0.01, 99.99);
       let y = clamp(okhxyValues.y.value, 0.01, 99.99);
 
-      rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, x, y);
+      rgbValues = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, x, y);
     }
     else {
-      rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
+      rgbValues = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
     }
 
 
@@ -323,12 +330,12 @@ export function App() {
 
   function updateShapeColor() {
     // console.log("update Shape Color");
-    parent.postMessage({ pluginMessage: { type: "update shape color", "fillOrStroke": fillOrStroke,  rgbValues } }, '*');
+    parent.postMessage({ pluginMessage: { type: "update shape color", "fillOrStroke": currentFillOrStroke,  rgbValues } }, '*');
   }
 
   function updateShapeOpacity() {
     // console.log("update Shape Opacity");
-    parent.postMessage({ pluginMessage: { type: "update shape opacity", "fillOrStroke": fillOrStroke,  "opacityValue": opacityValue.value } }, '*');
+    parent.postMessage({ pluginMessage: { type: "update shape opacity", "fillOrStroke": currentFillOrStroke,  "opacityValue": opacityValue.value } }, '*');
   }
 
 
@@ -338,10 +345,42 @@ export function App() {
 
   onmessage = (event) => {
     if (event.data.pluginMessage.message == "new shape color") {
+      // console.log("Update from backend - new shape color");
+
+      // If the previous shape didn't have fill its radio button is disabled, so if the new one has it we enable it again.
+      if (!shapeFillStrokeInfo.fill && event.data.pluginMessage.shapeFillStrokeInfo.fill && !init) {
+        fillOrStrokeSelector.current.children.fill.disabled = false;
+      }
+      // If the previous shape didn't have stroke its radio button is disabled, so if the new one has it we enable it again.
+      if (!shapeFillStrokeInfo.stroke && event.data.pluginMessage.shapeFillStrokeInfo.stroke && !init) {
+        fillOrStrokeSelector.current.children.stroke.disabled = false;
+      }
+
+      shapeFillStrokeInfo = event.data.pluginMessage.shapeFillStrokeInfo;
+
+      if (currentFillOrStroke == "fill") {
+        if (!shapeFillStrokeInfo.fill) {
+          currentFillOrStroke = "stroke";
+          fillOrStrokeSelector.current.children.stroke.checked = true;
+          fillOrStrokeSelector.current.children.fill.disabled = true;
+        }
+        else if (!shapeFillStrokeInfo.stroke) {
+          fillOrStrokeSelector.current.children.stroke.disabled = true;
+        }
+      }
+      else if (currentFillOrStroke == "stroke") {
+        if (!shapeFillStrokeInfo.stroke) {
+          currentFillOrStroke = "fill";
+          fillOrStrokeSelector.current.children.fill.checked = true;
+          fillOrStrokeSelector.current.children.stroke.disabled = true;
+        }
+        else if (!shapeFillStrokeInfo.fill) {
+          fillOrStrokeSelector.current.children.fill.disabled = true;
+        }
+      }
+
       rgbValues = event.data.pluginMessage.rgbValues;
-
       opacityValue.value = event.data.pluginMessage.opacityValue;
-
       updateOkhxyValuesFromRgbValues();
 
       if (init) {
@@ -362,17 +401,28 @@ export function App() {
       updateManipulatorPositions.all();
       renderColorPickerCanvas(rgbValues);
     }
+    // We have this separate message only when we change between fill and stroke with the same shape, this is to avoid doing again the test in "new shape color" on shapeFillStrokeInfo.
+    else if (event.data.pluginMessage.message == "current shape color") {
+      // console.log("Update from backend - current shape color");
+
+      rgbValues = event.data.pluginMessage.rgbValues;
+      opacityValue.value = event.data.pluginMessage.opacityValue;
+      updateOkhxyValuesFromRgbValues()
+      renderOpacitySliderCanvas();
+      updateManipulatorPositions.all();
+      renderColorPickerCanvas(rgbValues);
+    }
   }
 
 
   
   return (
     <>
-      <div>
+      <div ref={fillOrStrokeSelector}>
         <input onChange={fillOrStrokeHandle} type="radio" id="fill" name="fill_or_stroke" value="fill" defaultChecked/>
         <label for="fill">Fill</label>
 
-        <input onChange={fillOrStrokeHandle} type="radio" id="stroke" name="fill_or_stroke" value="stroke" />
+        <input onChange={fillOrStrokeHandle} type="radio" id="stroke" name="fill_or_stroke" value="stroke"/>
         <label for="stroke">Stroke</label>
       </div>
 

@@ -1,13 +1,19 @@
+body {
+  background-color: var(--figma-color-bg);
+  color: var(--figma-color-text);
+}
+
 canvas {
   image-rendering: crisp-edges;
 }
 
 .colorpicker {
   position: relative;
-  width: 320px;
+  width: 260px;
   height: 280px; 
 }
   .colorpicker__canvas {
+    background: #f8f8f8;
     border: 1px solid rgba(0, 0, 0, 0.3);
   }
   .colorpicker__handler {
