@@ -6,12 +6,12 @@ export default defineConfig({
   build: {
     lib: {
       // Could also be a dictionary or array of multiple entry points
-      entry: resolve(__dirname, "plugin-src/code.ts"),
+      entry: resolve(__dirname, "plugin/code.ts"),
       name: "code",
       // the proper extensions will be added
       fileName: "code",
       formats: ["cjs"]
     },
-    outDir: "./"
+    outDir: "./dist/plugin/"
   }
 });

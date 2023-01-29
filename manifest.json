@@ -2,10 +2,10 @@
   "name": "OkColor",
   "id": "1173638098109123591",
   "api": "1.0.0",
-  "main": "code.js",
   "editorType": [
     "figma",
     "figjam"
   ],
-  "ui": "./dist/ui-src/index.html"
+  "main": "./dist/plugin/code.js",
+  "ui": "./dist/ui/index.html"
 }

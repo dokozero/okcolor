@@ -9,8 +9,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, "ui-src/index.html")
+        main: resolve(__dirname, "ui/index.html")
       }
-    }
+    },
+    outDir: "./dist/"
   }
 });

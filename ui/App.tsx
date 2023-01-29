@@ -1,9 +1,9 @@
 import { signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
 
-import { colorConversion } from "../bottosson/colorconversion";
-import { render, render_okhsl, render_static } from "../bottosson/render";
-import { picker_size, eps } from "../bottosson/constants";
+import { colorConversion } from "../lib/bottosson/colorconversion";
+import { render, render_okhsl, render_static } from "../lib/bottosson/render";
+import { picker_size, eps } from "../lib/bottosson/constants";
 
 const okhxyValues = {
   hue: signal(0),
