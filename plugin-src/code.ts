@@ -23,35 +23,31 @@ function getSelection() {
 
   let selection;
 
-  // Todo check which to exclude
-  // "BOOLEAN_OPERATION" |
-  // "CODE_BLOCK" |
-  // "COMPONENT" |
-  // "COMPONENT_SET" |
-  // "CONNECTOR" |
-  // "DOCUMENT" |
-  // "ELLIPSE" |
-  // "EMBED" |
-  // "FRAME" |
-  // "GROUP" |
-  // "INSTANCE" |
-  // "LINE" |
-  // "LINK_UNFURL" |
-  // "MEDIA" |
-  // "PAGE" |
-  // "POLYGON" |
-  // "RECTANGLE" |
-  // "SHAPE_WITH_TEXT" |
-  // "SLICE" |
-  // "STAMP" |
-  // "STAR" |
-  // "STICKY" |
-  // "TEXT" |
-  // "VECTOR" |
-  // "WIDGET"
+  let notSupportedNodeTypes = [
+    "BOOLEAN_OPERATION",
+    "CODE_BLOCK",
+    "COMPONENT",
+    "COMPONENT_SET",
+    "CONNECTOR",
+    "DOCUMENT",
+    "ELLIPSE",
+    "EMBED",
+    "GROUP",
+    "INSTANCE",
+    "LINK_UNFURL",
+    "MEDIA",
+    "PAGE",
+    "POLYGON",
+    "SHAPE_WITH_TEXT",
+    "SLICE",
+    "STAMP",
+    "STAR",
+    "STICKY",
+    "WIDGET"
+  ];
 
-  // We don't support groups as it would be too complicated to change color of potentially lot of nested shape's colors.
-  if (figma.currentPage.selection[0].type !== "GROUP") {
+  // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
+  if (!notSupportedNodeTypes.includes(figma.currentPage.selection[0].type)) {
     selection = figma.currentPage.selection;
   }
   else {
