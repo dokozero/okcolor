@@ -128,19 +128,30 @@ export function App() {
   ** UPDATES TO UI
   */
 
-  // TODO - separate these actions
-  function updateManipulatorPositions()  {
-    // console.log("update Manipulator Positions");
+  const updateManipulatorPositions = {
 
-    let hue = okhxyValues.hue.value / 360;
-    let x = okhxyValues.x.value / 100;
-    let y = okhxyValues.y.value / 100;
-
-    let opacity = opacityValue.value / 100;
-
-    document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y)));
-    document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*hue, 0));
-    document.getElementById(manipulatorOpacitySlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*opacity, 0));
+    colorPicker() {
+      // console.log("update Manipulator Positions - color picker");
+      let x = okhxyValues.x.value / 100;
+      let y = okhxyValues.y.value / 100;
+      document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y)));
+    },
+    hueSlider() {
+      // console.log("update Manipulator Positions - hue slider");
+      let hue = okhxyValues.hue.value / 360;
+      document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*hue, 0));
+    },
+    opacitySlider() {
+      // console.log("update Manipulator Positions - opacity slider");
+      let opacity = opacityValue.value / 100;
+      document.getElementById(manipulatorOpacitySlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*opacity, 0));
+    },
+    all() {
+      this.colorPicker();
+      this.hueSlider();
+      this.opacitySlider();
+    }
+    
   }
 
 
@@ -163,11 +174,12 @@ export function App() {
     colorModel = event.target.value;
     
     updateOkhxyValuesFromRgbValues();
-    updateManipulatorPositions();
+    updateManipulatorPositions.colorPicker();
     renderColorPickerCanvas(rgbValues);
   }
 
 
+  // TODO - handle case where mouse go out plugin's window.
   function setupHandler(canvas) {
     // console.log("setup Handler - " + canvas.id);
 
@@ -192,6 +204,7 @@ export function App() {
         // Temp note - oklch code 1
         
         updateShapeColor();
+        updateManipulatorPositions.colorPicker();
       }
       else if (mouseHandlerEventTargetId == "okhxy_h_canvas") {
         let canvas_y = event.clientX - rect.left;
@@ -207,15 +220,16 @@ export function App() {
         renderColorPicker = true;
       
         updateShapeColor();
+        updateManipulatorPositions.hueSlider();
       }
       else if (mouseHandlerEventTargetId == "opacity_canvas") {
         let canvas_y = event.clientX - rect.left;
         opacityValue.value = Math.round(limitMouseHandlerValue(canvas_y/picker_size) * 100);
 
         updateShapeOpacity();
+        updateManipulatorPositions.opacitySlider();
       }
 
-      updateManipulatorPositions();
       renderOpacitySliderCanvas();
 
       if (renderColorPicker) {
@@ -277,11 +291,14 @@ export function App() {
 
     updateShapeColor();
     renderOpacitySliderCanvas();
-    updateManipulatorPositions();
 
     if (event.target.id == "hue") {
       renderColorPickerCanvas(rgbValues);
-    }    
+      updateManipulatorPositions.hueSlider();
+    }
+    else {
+      updateManipulatorPositions.colorPicker();
+    }
   }
 
   function opacityInputHandle(event) {
@@ -292,7 +309,7 @@ export function App() {
     }
 
     opacityValue.value = eventTargetValue;
-    updateManipulatorPositions();
+    updateManipulatorPositions.opacitySlider();
 
     updateShapeOpacity();
   }
@@ -340,7 +357,7 @@ export function App() {
       }
 
       renderOpacitySliderCanvas();
-      updateManipulatorPositions();
+      updateManipulatorPositions.all();
       renderColorPickerCanvas(rgbValues);
     }
   }
