@@ -35,6 +35,8 @@ export function App() {
   let colorModel: string = "okhsl";
 
   let activeMouseHandler = null;
+
+  // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
   let mouseHandlerEventTargetId = "";
 
 
@@ -179,13 +181,10 @@ export function App() {
   }
 
 
-  // TODO - handle case where mouse go out plugin's window.
   function setupHandler(canvas) {
     // console.log("setup Handler - " + canvas.id);
 
     const mouseHandler = (event) => {
-      event.preventDefault();
-
       let renderColorPicker: boolean = false;
       let rect = canvas.getBoundingClientRect();
 
@@ -239,22 +238,25 @@ export function App() {
 
     canvas.addEventListener("mousedown", function(event) {
       activeMouseHandler = mouseHandler;
-      mouseHandler(event);
-    }, false);
+      activeMouseHandler(event);
+    });
   }
-
-  document.addEventListener("mouseup", function(event) {
-    if (activeMouseHandler !== null) {
-      activeMouseHandler = null;
-      mouseHandlerEventTargetId = "";
-    }
-  }, false);
 
   document.addEventListener("mousemove", function(event) {
     if (activeMouseHandler !== null) {
       activeMouseHandler(event);  
     }
-  }, false);
+  });
+
+  function cancelMouseHandler() {
+    if (activeMouseHandler !== null) {
+      activeMouseHandler = null;
+      mouseHandlerEventTargetId = "";
+    }
+  }
+
+  document.addEventListener("mouseup", cancelMouseHandler);
+  document.addEventListener("mouseleave", cancelMouseHandler);
 
 
 
