@@ -31,8 +31,8 @@ export function App() {
   let init: boolean = true;
 
   let shapeFillStrokeInfo = {
-    "fill": false,
-    "stroke": false
+    "hasFill": false,
+    "hasStroke": false
   };
 
   let rgbValues: number[] = [0, 0, 0];
@@ -348,33 +348,33 @@ export function App() {
       // console.log("Update from backend - new shape color");
 
       // If the previous shape didn't have fill its radio button is disabled, so if the new one has it we enable it again.
-      if (!shapeFillStrokeInfo.fill && event.data.pluginMessage.shapeFillStrokeInfo.fill && !init) {
+      if (!shapeFillStrokeInfo.hasFill && event.data.pluginMessage.shapeFillStrokeInfo.hasFill && !init) {
         fillOrStrokeSelector.current.children.fill.disabled = false;
       }
       // If the previous shape didn't have stroke its radio button is disabled, so if the new one has it we enable it again.
-      if (!shapeFillStrokeInfo.stroke && event.data.pluginMessage.shapeFillStrokeInfo.stroke && !init) {
+      if (!shapeFillStrokeInfo.hasStroke && event.data.pluginMessage.shapeFillStrokeInfo.hasStroke && !init) {
         fillOrStrokeSelector.current.children.stroke.disabled = false;
       }
 
       shapeFillStrokeInfo = event.data.pluginMessage.shapeFillStrokeInfo;
 
       if (currentFillOrStroke == "fill") {
-        if (!shapeFillStrokeInfo.fill) {
+        if (!shapeFillStrokeInfo.hasFill) {
           currentFillOrStroke = "stroke";
           fillOrStrokeSelector.current.children.stroke.checked = true;
           fillOrStrokeSelector.current.children.fill.disabled = true;
         }
-        else if (!shapeFillStrokeInfo.stroke) {
+        else if (!shapeFillStrokeInfo.hasStroke) {
           fillOrStrokeSelector.current.children.stroke.disabled = true;
         }
       }
       else if (currentFillOrStroke == "stroke") {
-        if (!shapeFillStrokeInfo.stroke) {
+        if (!shapeFillStrokeInfo.hasStroke) {
           currentFillOrStroke = "fill";
           fillOrStrokeSelector.current.children.fill.checked = true;
           fillOrStrokeSelector.current.children.stroke.disabled = true;
         }
-        else if (!shapeFillStrokeInfo.fill) {
+        else if (!shapeFillStrokeInfo.hasFill) {
           fillOrStrokeSelector.current.children.fill.disabled = true;
         }
       }
