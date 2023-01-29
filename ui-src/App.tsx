@@ -3,7 +3,7 @@ import { useRef } from "preact/hooks";
 
 import { colorConversion } from "../bottosson/colorconversion";
 import { render, render_okhsl, render_static } from "../bottosson/render";
-import { picker_size } from "../bottosson/constants";
+import { picker_size, eps } from "../bottosson/constants";
 
 const okhxyValues = {
   hue: signal(0),
@@ -33,8 +33,6 @@ export function App() {
 
   let fillOrStroke: string = "fill";
   let colorModel: string = "okhsl";
-
-  const eps = 0.0001;
 
   let activeMouseHandler = null;
   let mouseHandlerEventTargetId = "";
@@ -91,6 +89,10 @@ export function App() {
       results = render(rgb[0], rgb[1], rgb[2]);
       ctx.putImageData(results["okhsv_sv"], 0, 0);
     }
+    // else if (colorModel == "oklch") {
+    //   results = render(rgb[0], rgb[1], rgb[2]);
+    //   ctx.putImageData(results["oklch_lc"], 0, 0);
+    // }
 
     // setTimeout(function(){
     // }, 5);
@@ -126,6 +128,7 @@ export function App() {
   ** UPDATES TO UI
   */
 
+  // TODO - separate these actions
   function updateManipulatorPositions()  {
     // console.log("update Manipulator Positions");
 
@@ -178,17 +181,19 @@ export function App() {
         mouseHandlerEventTargetId = event.target.id;
       }
 
-      if (mouseHandlerEventTargetId == "okhsl_sl_canvas" || mouseHandlerEventTargetId == "okhsv_sv_canvas") {
+      if (mouseHandlerEventTargetId == "okhxy_xy_canvas") {
         let canvas_x = event.clientX - rect.left;
         let canvas_y = event.clientY - rect.top;
         okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/picker_size) * 100);
         okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/picker_size) * 100);
 
         rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
+
+        // Temp note - oklch code 1
         
         updateShapeColor();
       }
-      else if (mouseHandlerEventTargetId == "okhsl_h_canvas") {
+      else if (mouseHandlerEventTargetId == "okhxy_h_canvas") {
         let canvas_y = event.clientX - rect.left;
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/picker_size) * 360);
 
@@ -196,6 +201,8 @@ export function App() {
         let x = clamp(okhxyValues.x.value, 0.1, 99.9);
         let y = clamp(okhxyValues.y.value, 0.1, 99.9);
         rgbValues = colorConversion(colorModel, "srgb", okhxyValues.hue.value, x, y);
+
+        // Temp note - oklch code 2
 
         renderColorPicker = true;
       
@@ -352,7 +359,7 @@ export function App() {
 
       <div class="colorpicker">
 
-        <canvas ref={canvasColorPicker} class="colorpicker__canvas" id="okhsl_sl_canvas" width="257" height="257"></canvas>
+        <canvas ref={canvasColorPicker} class="colorpicker__canvas" id="okhxy_xy_canvas" width="257" height="257"></canvas>
 
         <svg class="colorpicker__handler" width="257" height="257">
           <g transform="translate(0,0)">
@@ -366,7 +373,7 @@ export function App() {
       </div>
 
       <div class="colorslider">
-        <canvas ref={canvasHueSlider} class="colorslider__canvas" id="okhsl_h_canvas" width="15" height="257"></canvas>
+        <canvas ref={canvasHueSlider} class="colorslider__canvas" id="okhxy_h_canvas" width="15" height="257"></canvas>
 
         <svg class="colorslider__handler" width="257" height="15"> 
           <g transform="translate(0,7)">

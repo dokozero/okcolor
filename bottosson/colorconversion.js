@@ -73,7 +73,7 @@ export function colorConversion(from, to, param1, param2, param3) {
     else if (from == "srgb" && to == "okhsl") { result = srgb_to_okhsl(param1, param2, param3); }
     else if (from == "srgb" && to == "okhsv") { result = srgb_to_okhsv(param1, param2, param3); }
 
-    // We clamp srgb values on the results because with.
+    // We clamp srgb values on the results because sometimes the functions will return out of the ranges values (like -0.1 or 255.5).
     if (to == "srgb") {
         for (let i = 0; i < Object.keys(result).length; i++) {
             if (result[i] < 0) { result[i] = 0; }
@@ -81,7 +81,7 @@ export function colorConversion(from, to, param1, param2, param3) {
         }
     }
 
-    // We send the new hxy values ready to be used in the UI
+    // We tranform the new hxy values so they are ready to be used in the UI.
     if (to == "okhsl" || to == "okhsv") {
         result[0] = Math.round(result[0] * 360);
         result[1] = Math.round(result[1] * 100);
@@ -264,15 +264,18 @@ function hsv_to_rgb(h, s, v){
     return [r * 255, g * 255, b * 255];
 }
 
-function srgb_transfer_function(a) {
+// MODIFIED - added export
+export function srgb_transfer_function(a) {
     return .0031308 >= a ? 12.92 * a : 1.055 * Math.pow(a, .4166666666666667) - .055
 }
 
-function srgb_transfer_function_inv(a) {
+// MODIFIED - added export
+export function srgb_transfer_function_inv(a) {
     return .04045 < a ? Math.pow((a + .055) / 1.055, 2.4) : a / 12.92
 }
 
-function linear_srgb_to_oklab(r,g,b) 
+// MODIFIED - added export
+export function linear_srgb_to_oklab(r,g,b) 
 {
     let l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
 	let m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
@@ -289,7 +292,8 @@ function linear_srgb_to_oklab(r,g,b)
     ];
 }
 
-function oklab_to_linear_srgb(L,a,b) 
+// MODIFIED - added export
+export function oklab_to_linear_srgb(L,a,b) 
 {
  
     let l_ = L + 0.3963377774 * a + 0.2158037573 * b;
@@ -316,7 +320,8 @@ function toe(x)
     return 0.5*(k_3*x - k_1 + Math.sqrt((k_3*x - k_1)*(k_3*x - k_1) + 4*k_2*k_3*x))
 }
 
-function toe_inv(x)
+// MODIFIED - added export
+export function toe_inv(x)
 {
     const k_1 = 0.206
     const k_2 = 0.03
@@ -391,7 +396,8 @@ function compute_max_saturation(a, b)
     return S;
 }
 
-function find_cusp(a, b)
+// MODIFIED - added export
+export function find_cusp(a, b)
 {
 	// First, find the maximum saturation (saturation S = C/L)
 	let S_cusp = compute_max_saturation(a, b);
@@ -404,11 +410,12 @@ function find_cusp(a, b)
 	return [ L_cusp , C_cusp ];
 }
 
+// MODIFIED - added export
 // Finds intersection of the line defined by 
 // L = L0 * (1 - t) + t * L1;
 // C = t * C1;
 // a and b must be normalized so a^2 + b^2 == 1
-function find_gamut_intersection(a, b, L1, C1, L0, cusp=null)
+export function find_gamut_intersection(a, b, L1, C1, L0, cusp=null)
 {
     if (!cusp)
     {
@@ -534,7 +541,7 @@ function get_ST_mid(a_,b_)
 
 function get_Cs(L, a_, b_)
 {
-    // Modified - added let
+    // MODIFIED - added let
     let cusp = find_cusp(a_, b_);
 
     let C_max = find_gamut_intersection(a_,b_,L,1,L,cusp);
@@ -743,16 +750,16 @@ export function srgb_to_okhsv(r,g,b)
     let T = ST_max[1];
     let k = 1 - S_0/S_max;
 
-    // Modified - added let
+    // MODIFIED - added let
     let t = T/(C+L*T);
     let L_v = t*L;
     let C_v = t*C;
 
-    // Modified - added let
+    // MODIFIED - added let
     let L_vt = toe_inv(L_v);
     let C_vt = C_v * L_vt/L_v;
 
-    // Modified - added let
+    // MODIFIED - added let
     let rgb_scale = oklab_to_linear_srgb(L_vt,a_*C_vt,b_*C_vt);
     let scale_L = Math.cbrt(1/(Math.max(rgb_scale[0],rgb_scale[1],rgb_scale[2],0)));
 
@@ -762,7 +769,7 @@ export function srgb_to_okhsv(r,g,b)
     C = C * toe(L)/L;
     L = toe(L);
 
-    // Modified - added let
+    // MODIFIED - added let
     let v = L/L_v;
     let s = (S_0+T)*C_v/((T*S_0) + T*k*C_v)
 
