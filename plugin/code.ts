@@ -75,22 +75,17 @@ function isSelectionValid(): boolean {
   let notSupportedNodeTypes = [
     "BOOLEAN_OPERATION",
     "CODE_BLOCK",
-    "COMPONENT",
     "COMPONENT_SET",
     "CONNECTOR",
     "DOCUMENT",
-    "ELLIPSE",
     "EMBED",
     "GROUP",
-    "INSTANCE",
     "LINK_UNFURL",
     "MEDIA",
     "PAGE",
-    "POLYGON",
     "SHAPE_WITH_TEXT",
     "SLICE",
     "STAMP",
-    "STAR",
     "STICKY",
     "WIDGET"
   ];
