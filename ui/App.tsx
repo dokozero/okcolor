@@ -2,10 +2,16 @@ import { signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
 
 import { colorConversion } from "../lib/bottosson/colorconversion";
-import { render, render_okhsl, render_static } from "../lib/bottosson/render";
-import { picker_size, eps } from "../lib/bottosson/constants";
+import { render, render_okhsl } from "../lib/bottosson/render";
+import { eps } from "../lib/bottosson/constants";
 
 import { uiMessageTexts } from "./ui-messages";
+
+// We don't use the picker_size constant from the constants file because if we modify we got a display bug with the results from the render function in render.js
+const picker_size = 240;
+
+// We use a different value for the slider as they take less room.
+const slider_size = 170;
 
 const okhxyValues = {
   hue: signal(0),
@@ -134,26 +140,18 @@ export function App() {
     // }, 5);
   }
 
-  function renderHueSliderCanvas() {
-    // console.log("render Hue Slider Canvas");
-
-    let results = render_static();
-    let ctx = canvasHueSlider.current.getContext("2d");
-    ctx.putImageData(results["okhsl_h"], 0, 0);
-  }
-
   function renderOpacitySliderCanvas() {
     // console.log("render opacity Slider Canvas");
 
     let ctx = canvasOpacitySlider.current.getContext("2d");
-    const gradient = ctx.createLinearGradient(0, 0, 0, picker_size);
+    const gradient = ctx.createLinearGradient(0, 0, slider_size, 0);
     
     gradient.addColorStop(0, "white");
     gradient.addColorStop(1, `rgba(${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]}, 1)`)
 
     // Set the fill style and draw a rectangle
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 15, picker_size);
+    ctx.fillRect(0, 0, slider_size, 15);
   }
 
   function syncWithNewShapeFillStrokeInfo(newData) {
@@ -221,12 +219,12 @@ export function App() {
     hueSlider() {
       // console.log("update Manipulator Positions - hue slider");
       let hue = okhxyValues.hue.value / 360;
-      document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*hue, 0));
+      document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate(slider_size*hue, 0));
     },
     opacitySlider() {
       // console.log("update Manipulator Positions - opacity slider");
       let opacity = opacityValue.value / 100;
-      document.getElementById(manipulatorOpacitySlider.current.transform.baseVal.getItem(0).setTranslate(picker_size*opacity, 0));
+      document.getElementById(manipulatorOpacitySlider.current.transform.baseVal.getItem(0).setTranslate(slider_size*opacity, 0));
     },
     all() {
       this.colorPicker();
@@ -287,7 +285,7 @@ export function App() {
       }
       else if (mouseHandlerEventTargetId == "okhxy_h_canvas") {
         let canvas_y = event.clientX - rect.left;
-        okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/picker_size) * 360);
+        okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
         // We do this to be abble to change the hue value on the color picker canvas when we have a white or black value. If we don't to this fix, the hue value will always be the same on the color picker canvas.
         let x = clamp(okhxyValues.x.value, 0.1, 99.9);
@@ -303,7 +301,7 @@ export function App() {
       }
       else if (mouseHandlerEventTargetId == "opacity_canvas") {
         let canvas_y = event.clientX - rect.left;
-        opacityValue.value = Math.round(limitMouseHandlerValue(canvas_y/picker_size) * 100);
+        opacityValue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 100);
 
         updateShapeOpacity();
         updateManipulatorPositions.opacitySlider();
@@ -421,7 +419,6 @@ export function App() {
 
     if (init) {
       // console.log("- Init function");
-      renderHueSliderCanvas();
 
       setupHandler(canvasColorPicker.current);
       setupHandler(canvasHueSlider.current);
@@ -479,72 +476,76 @@ export function App() {
   
   return (
     <>
-      <div ref={fillOrStrokeSelector}>
-        <input onChange={fillOrStrokeHandle} type="radio" id="fill" name="fill_or_stroke" value="fill" disabled/>
-        <label for="fill">Fill</label>
-
-        <input onChange={fillOrStrokeHandle} type="radio" id="stroke" name="fill_or_stroke" value="stroke" disabled/>
-        <label for="stroke">Stroke</label>
-      </div>
-
       <div class="colorpicker">
 
         <div ref={canvasUiMessage} class="colorpicker__message-wrapper u-display-none">
           <p class="colorpicker__message-text"></p>
         </div>
 
-        <canvas ref={canvasColorPicker} class="colorpicker__canvas" id="okhxy_xy_canvas" width="257" height="257"></canvas>
+        <canvas ref={canvasColorPicker} class="colorpicker__canvas" id="okhxy_xy_canvas" width="240" height="240"></canvas>
 
-        <svg class="colorpicker__handler" width="257" height="257">
+        <svg class="colorpicker__handler" width="240" height="240">
           <g transform="translate(0,0)">
             <g ref={manipulatorColorPicker} id="okhsl_sl_manipulator" transform="translate(0,0)">
-              <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.75" stroke="#ffffff" ></circle>
-              <circle cx="0" cy="0" r="6" fill="none" stroke-width="1.25" stroke="#000000" ></circle>
+              <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.5" stroke="#ffffff" ></circle>
+              <circle cx="0" cy="0" r="6" fill="none" stroke-width="1" stroke="#e0e0e0" ></circle>
             </g>
           </g>
         </svg>
 
       </div>
 
-      <div class="colorslider">
-        <canvas ref={canvasHueSlider} class="colorslider__canvas" id="okhxy_h_canvas" width="15" height="257"></canvas>
+      <div class="bottomcontrols">
+        <div class="fillstrokeselector" ref={fillOrStrokeSelector}>
+          <input onChange={fillOrStrokeHandle} type="radio" id="fill" name="fill_or_stroke" value="fill" disabled/>
+          <label for="fill">Fill</label>
 
-        <svg class="colorslider__handler" width="257" height="15"> 
-          <g transform="translate(0,7)">
-            <g ref={manipulatorHueSlider} id="okhsl_h_manipulator" transform="translate(0,0)">
-              <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.75" stroke="#ffffff" ></circle>
-              <circle cx="0" cy="0" r="6" fill="none" stroke-width="1.25" stroke="#000000" ></circle>
-            </g>
-          </g>
-        </svg>
+          <input onChange={fillOrStrokeHandle} type="radio" id="stroke" name="fill_or_stroke" value="stroke" disabled/>
+          <label for="stroke">Stroke</label>
+        </div>
+
+        <div class="sliders">
+          <div class="hueslider">
+            <div ref={canvasHueSlider} class="hueslider__canvas" id="okhxy_h_canvas" width="15" height="170"></div>
+
+            <svg class="hueslider__handler" width="170" height="15"> 
+              <g transform="translate(0,7)">
+                <g ref={manipulatorHueSlider} id="okhsl_h_manipulator" transform="translate(0,0)">
+                  <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.5" stroke="#ffffff" ></circle>
+                  <circle cx="0" cy="0" r="6" fill="none" stroke-width="1" stroke="#e0e0e0" ></circle>
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          <div class="opacityslider">
+            <canvas ref={canvasOpacitySlider} class="opacityslider__canvas" id="opacity_canvas" width="170" height="15"></canvas>
+
+            <svg class="opacityslider__handler" width="170" height="15"> 
+              <g transform="translate(0,7)">
+                <g ref={manipulatorOpacitySlider} id="opacity_manipulator" transform="translate(0,0)">
+                  <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.5" stroke="#ffffff" ></circle>
+                  <circle cx="0" cy="0" r="6" fill="none" stroke-width="1" stroke="#e0e0e0" ></circle>
+                </g>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="u-flex" style="margin-top: 20px;">
+          <select onChange={colorModelHandle} name="color_model" id="color_model">
+            <option value="okhsv">OkHSV</option>
+            <option value="okhsl" selected>OkHSL</option>
+          </select>
+
+          <input class="valueInput" onChange={hxyInputHandle} id="hue" value={okhxyValues.hue} spellcheck={false} />
+          <input class="valueInput" onChange={hxyInputHandle} id="x" value={okhxyValues.x} spellcheck={false} />
+          <input class="valueInput" onChange={hxyInputHandle} id="y" value={okhxyValues.y} spellcheck={false} />
+          <input class="valueInput" onChange={opacityInputHandle} id="opacity" value={opacityValue} spellcheck={false} />
+        </div>
+
       </div>
 
-      <div class="opacityslider" style="margin-top: 16px;">
-        <canvas ref={canvasOpacitySlider} class="opacityslider__canvas" id="opacity_canvas" width="15" height="257"></canvas>
-
-        <svg class="opacityslider__handler" width="257" height="15"> 
-          <g transform="translate(0,7)">
-            <g ref={manipulatorOpacitySlider} id="opacity_manipulator" transform="translate(0,0)">
-              <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.75" stroke="#ffffff" ></circle>
-              <circle cx="0" cy="0" r="6" fill="none" stroke-width="1.25" stroke="#000000" ></circle>
-            </g>
-          </g>
-        </svg>
-      </div>
-
-      <div style="margin-top: 20px;">
-        <select onChange={colorModelHandle} name="color_model" id="color_model">
-          <option value="okhsv">OkHSV</option>
-          <option value="okhsl" selected>OkHSL</option>
-        </select>
-      </div>
-
-      <div style="margin-top: 20px;">
-        <input onChange={hxyInputHandle} id="hue" type="number" min="0" max="360" value={okhxyValues.hue} spellcheck={false} />
-        <input onChange={hxyInputHandle} id="x" type="number" min="0" max="100" value={okhxyValues.x} spellcheck={false} />
-        <input onChange={hxyInputHandle} id="y" type="number" min="0" max="100" value={okhxyValues.y} spellcheck={false} />
-        <input onChange={opacityInputHandle} id="opacity" type="number" min="0" max="100" value={opacityValue} spellcheck={false} />
-      </div>
     </>
   )
 }

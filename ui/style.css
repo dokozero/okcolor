@@ -1,4 +1,9 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
+  margin: 0;
   background-color: var(--figma-color-bg);
   color: var(--figma-color-text);
 }
@@ -7,11 +12,38 @@ canvas {
   image-rendering: crisp-edges;
 }
 
+.valueInput, select  {
+  background-color: transparent;
+  width: 100%;
+  padding: 0 0 0 7px;
+  border: 1px solid transparent;
+  min-width: 0;
+
+  color: var(--figma-color-text, #333333);
+  fill: var(--figma-color-icon, #333333);
+  border-radius: 2px;
+  cursor: default;
+  box-sizing: border-box;
+  background-clip: padding-box;
+
+  height: 28px;
+  margin-left: 0;
+  margin-right: 0;
+
+  border-top-right-radius: 0!important;
+  border-bottom-right-radius: 0!important;
+
+  flex-grow: 1;
+}
+
+select {
+  min-width: 70px;
+}
+
 .colorpicker {
   position: relative;
-  width: 260px;
-  height: 260px;
-  margin-bottom: 20px;
+  width: 240px;
+  height: 240px;
 }
   .colorpicker__message-wrapper {
     position: absolute;
@@ -31,8 +63,8 @@ canvas {
     }
 
   .colorpicker__canvas {
+    position: absolute;
     background: #f8f8f8;
-    border: 1px solid rgba(0, 0, 0, 0.3);
   }
   .colorpicker__handler {
     position: absolute; 
@@ -40,22 +72,44 @@ canvas {
     pointer-events: none;
   }
 
-
-.colorslider, .opacityslider {
-  position: relative;
-  width: 257px;
-  height: 15px;
+.bottomcontrols {
+  padding: 16px
 }
-  .colorslider__canvas, .opacityslider__canvas {
-    position: absolute;
-    top: 15px;
-    transform-origin: top left;
-    transform: rotate(-90deg);
+
+  .sliders {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
   }
-  .colorslider__handler, .opacityslider__handler {
-    position: absolute;
-    pointer-events: none;
-  }
+    .hueslider, .opacityslider {
+      position: relative;
+      width: 170px;
+      height: 15px;
+    }
+    .opacityslider {
+      margin-top: 16px;
+    }
+      .hueslider__canvas, 
+      .opacityslider__canvas {
+        border-radius: 999px;
+      }
+      .hueslider__canvas {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+
+        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwMAAABaCAYAAADkS4qBAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAARFSURBVHgB7ddRdqs2FAVQyenEOqPOvBNoUHGQjRDgvP+z91oE+SIJ2RjiU//9+59Wnmordd1K3dr3Wzm3y93x63otQ+2nvZz73M7fPpxzmY6VrVauxpb3uLbuX9t64p96ex+/ate9Vubj9Vz/0Kcc+vRzD/WxvfW7WV/pay/TOcu5T7s492HOMvS5eR/PtdZ5nadz7utppdx8Lvt7bqe17vOO872Ot2nuefxYb4fPpJ7rvT2+j9N89djvbvzdXK1/rnd9n9tyVV/3y1RbLurLRX1Z/y7D3K8+y9Dnux5r37393ft+9/Z3n+u/vj3rY7uVr779tb74Wt/t13pka5fSt/ZY949e6+3y7Ft7/VWrF+3xS/rYa/M21i9v5FKGL3K/fnfHSznfjPMXZN+3+eY7jLlut/kL89v41punMa9G79PK9Zzvk1712ce/Xrdx7nHfDlMd6+10qtO4PzrHvMaLufax7Xp985zDglr7sK4/WNvpM/gwX/vlPJvh2l31ma/Pa40X120/Pj2khnq7qh8ejvW0tvneebev7rVx37b7tg7t/XmwPgFaf/2uPft+9THrM2J5lMda+3litG17tPJ+/Rhr87Yu/HF3rPUnyqs97Q/9ftk/fn6CbOd6/Rx5H1/Kuf58YrTtSVzXp+vPFWl9X171/pup9ymHMe3jfm8vx2Pt9aSa+7V+Bff28Xjp52/9yh/71eELftXevzGf+2z/pqdzHsaVw7g69Dn33+esw41RD+OPa9t/Jtys7TRuPLbX3+NrGa5jmd5L71uP4+a55nm3/uM6hrW+f0MP26O/9/F17a/Ldh8BAACBhAEAAAglDAAAQChhAAAAQgkDAAAQShgAAIBQwgAAAIQSBgAAIJQwAAAAoYQBAAAIJQwAAEAoYQAAAEIJAwAAEEoYAACAUMIAAACEEgYAACCUMAAAAKGEAQAACCUMAABAKGEAAABCCQMAABBKGAAAgFDCAAAAhBIGAAAglDAAAAChhAEAAAglDAAAQChhAAAAQgkDAAAQShgAAIBQwgAAAIQSBgAAIJQwAAAAoYQBAAAIJQwAAEAoYQAAAEIJAwAAEEoYAACAUMIAAACEEgYAACCUMAAAAKGEAQAACCUMAABAKGEAAABCCQMAABBKGAAAgFDCAAAAhBIGAAAglDAAAAChhAEAAAglDAAAQChhAAAAQgkDAAAQShgAAIBQwgAAAIQSBgAAIJQwAAAAoYQBAAAIJQwAAEAoYQAAAEIJAwAAEEoYAACAUMIAAACEEgYAACCUMAAAAKGEAQAACCUMAABAKGEAAABCCQMAABBKGAAAgFDCAAAAhBIGAAAglDAAAAChhAEAAAglDAAAQChhAAAAQgkDAAAQShgAAIBQwgAAAIQSBgAAIJQwAAAAoYQBAAAIJQwAAEAoYQAAAEIJAwAAEEoYAACAUMIAAACEEgYAACCUMAAAAKH+B3Kl82LGTHpNAAAAAElFTkSuQmCC');
+        background-size: cover;
+      }
+      .opacityslider__canvas {
+        position: absolute;
+      }
+      .hueslider__handler, .opacityslider__handler {
+        position: absolute;
+        pointer-events: none;
+      }
+
 
 .u-display-none { display: none; }
 .u-visibility-hidden { visibility: hidden; }
+.u-flex { display: flex; }
