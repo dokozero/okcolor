@@ -94,11 +94,14 @@ function isSelectionValid(): boolean {
     sendUiMessageCodeToUI("noSelection");
     return false;
   }
-  
-  // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
-  if (notSupportedNodeTypes.includes(figma.currentPage.selection[0].type)) {
-    sendUiMessageCodeToUI("notSupportedType");
-    return false;
+ 
+  // We use this for loop to either check if one thing is selected or multiple as use can for example select a group a shape, in that case we should block the plugin from being used.
+  for (const node of figma.currentPage.selection) {
+    // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
+    if (notSupportedNodeTypes.includes(node.type)) {
+      sendUiMessageCodeToUI("notSupportedType");
+      return false;
+    }
   }
 
   if (figma.currentPage.selection[0].fills[0] === undefined && figma.currentPage.selection[0].strokes[0] === undefined) {
