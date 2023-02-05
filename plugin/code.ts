@@ -23,31 +23,6 @@ let itsAMe: boolean = false;
 ** HELPER FUNCTIONS
 */
 
-// In the case of multiple selected shapes, this is to test if they all have at least all a fill or a stroke. If not, we don't allow for color changes.
-function doesAllShapesHaveFillOrStroke(selections: any) {
-
-  let allShapesHaveFillOrStroke: boolean = false;
-
-  let fills: number = 0;
-  let strokes: number = 0;
-  
-  for (let i = 0; i < selections.length; i++) {
-    if (selections[i].fills[0] !== undefined) {
-      fills++;
-    }
-    if (selections[i].strokes[0] !== undefined) {
-      strokes++;
-    }
-  }
-
-  if (selections.length == fills || selections.length == strokes) {
-    allShapesHaveFillOrStroke = true;
-  }  
-
-  return allShapesHaveFillOrStroke;
-
-}
-
 function updateShapeFillStrokeInfo(firstSelection: SceneNode) {
   // Get infos if shape has fill and or stroke
 
@@ -112,12 +87,19 @@ function isSelectionValid(): boolean {
   // If user has selected multiple shapes, we test if they all have at least all a fill or a stroke.
   // For example user has selected 3 shapes and 2 of them have only a stroke and the other only a fill, we don't allow the plugin to be used.
   if (figma.currentPage.selection.length > 1) {
-    let allShapesHaveFillOrStroke: boolean = doesAllShapesHaveFillOrStroke(figma.currentPage.selection);
+    let fills: number = 0;
+    let strokes: number = 0;
     
-    if (!allShapesHaveFillOrStroke) {
+    for (const node of figma.currentPage.selection) {
+      if (node.fills[0] !== undefined) fills++;
+      if (node.strokes[0] !== undefined) strokes++;
+    }
+  
+    if (figma.currentPage.selection.length != fills && figma.currentPage.selection.length != strokes) {
       sendUiMessageCodeToUI("notAllShapesHaveFillOrStroke");
       return false;
     }
+
   }
 
   return true;
