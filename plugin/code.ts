@@ -221,45 +221,50 @@ figma.on("documentchange", (event) => {
   const changeType = event.documentChanges[0].type;
   
   if (changeType == "PROPERTY_CHANGE" && !itsAMe) {   
-    // console.log('BACKEND: document change');
-
-    if(!isSelectionValid()) return;
-
-    let firstSelection: SceneNode = figma.currentPage.selection[0];
-      
-    // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
-    let oldShapeFillStrokeInfo = Object.assign({}, shapeFillStrokeInfo);
-    updateShapeFillStrokeInfo(firstSelection);
-
-    if (JSON.stringify(oldShapeFillStrokeInfo) !== JSON.stringify(shapeFillStrokeInfo)) {
-      if (currentFillOrStroke == "fill" && !shapeFillStrokeInfo.hasFill) {
-        currentFillOrStroke = "stroke";
-        sendNewShapeColorToUI(firstSelection.strokes[0]);
-      }
-      else if (currentFillOrStroke == "stroke" && !shapeFillStrokeInfo.hasStroke) {
-        currentFillOrStroke = "fill";
-        sendNewShapeColorToUI(firstSelection.fills[0]);
-      }
-      sendNewShapeFillStrokeInfoToUI();
-      return;
-    }
-
+    
     const changeProperty = event.documentChanges[0].properties[0];
+    
+    // We don't run the code if for example the user has changed the rotation of the shape.
+    if (changeProperty == "fills" || changeProperty == "strokes") {
+      // console.log('BACKEND: document change');
 
-    // This is to change the color in the plugin if the user change it from Figma.
-    if (currentFillOrStroke == "fill" && changeProperty == "fills") {
-      // console.log("Change fill color from Figma");
-      const shapeColor = firstSelection.fills[0];
-      if (shapeColor.color.r != currentRgbValues[0] || shapeColor.color.r != currentRgbValues[1] || shapeColor.color.b != currentRgbValues[2]) {
-        sendNewShapeColorToUI(shapeColor);
+      if(!isSelectionValid()) return;
+
+      let firstSelection: SceneNode = figma.currentPage.selection[0];
+        
+      // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
+      let oldShapeFillStrokeInfo = Object.assign({}, shapeFillStrokeInfo);
+      updateShapeFillStrokeInfo(firstSelection);
+
+      if (JSON.stringify(oldShapeFillStrokeInfo) !== JSON.stringify(shapeFillStrokeInfo)) {
+        if (currentFillOrStroke == "fill" && !shapeFillStrokeInfo.hasFill) {
+          currentFillOrStroke = "stroke";
+          sendNewShapeColorToUI(firstSelection.strokes[0]);
+        }
+        else if (currentFillOrStroke == "stroke" && !shapeFillStrokeInfo.hasStroke) {
+          currentFillOrStroke = "fill";
+          sendNewShapeColorToUI(firstSelection.fills[0]);
+        }
+        sendNewShapeFillStrokeInfoToUI();
+        return;
       }
-    }
-    else if (currentFillOrStroke == "stroke" && changeProperty == "strokes") {
-      // console.log("Change stroke color from Figma");
-      const shapeColor = firstSelection.strokes[0];
-      if (shapeColor.color.r != currentRgbValues[0] || shapeColor.color.r != currentRgbValues[1] || shapeColor.color.b != currentRgbValues[2]) {
-        sendNewShapeColorToUI(shapeColor);
-      } 
+
+      // This is to change the color in the plugin if the user change it from Figma.
+      if (currentFillOrStroke == "fill" && changeProperty == "fills") {
+        // console.log("Change fill color from Figma");
+        const shapeColor = firstSelection.fills[0];
+        if (shapeColor.color.r != currentRgbValues[0] || shapeColor.color.r != currentRgbValues[1] || shapeColor.color.b != currentRgbValues[2]) {
+          sendNewShapeColorToUI(shapeColor);
+        }
+      }
+      else if (currentFillOrStroke == "stroke" && changeProperty == "strokes") {
+        // console.log("Change stroke color from Figma");
+        const shapeColor = firstSelection.strokes[0];
+        if (shapeColor.color.r != currentRgbValues[0] || shapeColor.color.r != currentRgbValues[1] || shapeColor.color.b != currentRgbValues[2]) {
+          sendNewShapeColorToUI(shapeColor);
+        } 
+      }
+
     }
 
   }
