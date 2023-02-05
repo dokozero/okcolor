@@ -35,10 +35,12 @@ export function App() {
 
   let uiMessageOn: boolean = false;
 
-  let shapeFillStrokeInfo = {
-    "hasFill": false,
-    "hasStroke": false
+  type ShapeFillStrokeInfo = {
+    "hasFill": boolean,
+    "hasStroke": boolean
   };
+
+  let shapeFillStrokeInfo: ShapeFillStrokeInfo;
 
   let rgbValues: number[] = [0, 0, 0];
 
@@ -152,7 +154,53 @@ export function App() {
     // Set the fill style and draw a rectangle
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 15, picker_size);
+  }
 
+  function syncWithNewShapeFillStrokeInfo(newData) {
+    
+    let oldShapeFillStrokeInfo = shapeFillStrokeInfo;
+    shapeFillStrokeInfo = newData;
+    
+
+    if (oldShapeFillStrokeInfo !== undefined) { 
+      // If the old shape didn't have fill its radio button is disabled, so if the new one has it we enable it again.
+      if (!oldShapeFillStrokeInfo.hasFill && shapeFillStrokeInfo.hasFill) {
+        fillOrStrokeSelector.current.children.fill.disabled = false;
+        // return;
+      }
+      // If the old shape didn't have stroke its radio button is disabled, so if the new one has it we enable it again.
+      if (!oldShapeFillStrokeInfo.hasStroke && shapeFillStrokeInfo.hasStroke) {
+        fillOrStrokeSelector.current.children.stroke.disabled = false;
+        // return;
+      }
+    }
+    else {
+      fillOrStrokeSelector.current.children.fill.disabled = false;
+      fillOrStrokeSelector.current.children.stroke.disabled = false;
+    }
+    
+    if (currentFillOrStroke == "fill") {
+      if (!shapeFillStrokeInfo.hasFill) {
+        currentFillOrStroke = "stroke";
+        fillOrStrokeSelector.current.children.stroke.checked = true;
+        fillOrStrokeSelector.current.children.fill.disabled = true;
+      }
+      else if (!shapeFillStrokeInfo.hasStroke) {
+        fillOrStrokeSelector.current.children.fill.checked = true;
+        fillOrStrokeSelector.current.children.stroke.disabled = true;
+      }
+    }
+    else if (currentFillOrStroke == "stroke") {
+      if (!shapeFillStrokeInfo.hasStroke) {
+        currentFillOrStroke = "fill";
+        fillOrStrokeSelector.current.children.fill.checked = true;
+        fillOrStrokeSelector.current.children.stroke.disabled = true;
+      }
+      else if (!shapeFillStrokeInfo.hasFill) {
+        fillOrStrokeSelector.current.children.stroke.checked = true;
+        fillOrStrokeSelector.current.children.fill.disabled = true;
+      }
+    }
   }
 
   
@@ -373,7 +421,6 @@ export function App() {
 
     if (init) {
       // console.log("- Init function");
-
       renderHueSliderCanvas();
 
       setupHandler(canvasColorPicker.current);
@@ -381,7 +428,6 @@ export function App() {
       setupHandler(canvasOpacitySlider.current);
 
       init = false;
-
       // console.log("- End init function");
     }
 
@@ -390,37 +436,7 @@ export function App() {
 
       if (uiMessageOn) uiMessage.hide();
 
-      // If the previous shape didn't have fill its radio button is disabled, so if the new one has it we enable it again.
-      if (!shapeFillStrokeInfo.hasFill && event.data.pluginMessage.shapeFillStrokeInfo.hasFill && !init) {
-        fillOrStrokeSelector.current.children.fill.disabled = false;
-      }
-      // If the previous shape didn't have stroke its radio button is disabled, so if the new one has it we enable it again.
-      if (!shapeFillStrokeInfo.hasStroke && event.data.pluginMessage.shapeFillStrokeInfo.hasStroke && !init) {
-        fillOrStrokeSelector.current.children.stroke.disabled = false;
-      }
-
-      shapeFillStrokeInfo = event.data.pluginMessage.shapeFillStrokeInfo;
-
-      if (currentFillOrStroke == "fill") {
-        if (!shapeFillStrokeInfo.hasFill) {
-          currentFillOrStroke = "stroke";
-          fillOrStrokeSelector.current.children.stroke.checked = true;
-          fillOrStrokeSelector.current.children.fill.disabled = true;
-        }
-        else if (!shapeFillStrokeInfo.hasStroke) {
-          fillOrStrokeSelector.current.children.stroke.disabled = true;
-        }
-      }
-      else if (currentFillOrStroke == "stroke") {
-        if (!shapeFillStrokeInfo.hasStroke) {
-          currentFillOrStroke = "fill";
-          fillOrStrokeSelector.current.children.fill.checked = true;
-          fillOrStrokeSelector.current.children.stroke.disabled = true;
-        }
-        else if (!shapeFillStrokeInfo.hasFill) {
-          fillOrStrokeSelector.current.children.fill.disabled = true;
-        }
-      }
+      syncWithNewShapeFillStrokeInfo(event.data.pluginMessage.shapeFillStrokeInfo);
 
       rgbValues = event.data.pluginMessage.rgbValues;
       opacityValue.value = event.data.pluginMessage.opacityValue;
@@ -447,41 +463,11 @@ export function App() {
       renderColorPickerCanvas(rgbValues);
     }
 
-    else if (pluginMessage == "new shape fill stroke info") {
+    else if (pluginMessage == "new shapeFillStrokeInfo") {
 
       if (uiMessageOn) uiMessage.hide();
 
-      // If the previous shape didn't have fill its radio button is disabled, so if the new one has it we enable it again.
-      if (!shapeFillStrokeInfo.hasFill && event.data.pluginMessage.shapeFillStrokeInfo.hasFill && !init) {
-        fillOrStrokeSelector.current.children.fill.disabled = false;
-      }
-      // If the previous shape didn't have stroke its radio button is disabled, so if the new one has it we enable it again.
-      if (!shapeFillStrokeInfo.hasStroke && event.data.pluginMessage.shapeFillStrokeInfo.hasStroke && !init) {
-        fillOrStrokeSelector.current.children.stroke.disabled = false;
-      }
-
-      shapeFillStrokeInfo = event.data.pluginMessage.shapeFillStrokeInfo;
-
-      if (currentFillOrStroke == "fill") {
-        if (!shapeFillStrokeInfo.hasFill) {
-          currentFillOrStroke = "stroke";
-          fillOrStrokeSelector.current.children.stroke.checked = true;
-          fillOrStrokeSelector.current.children.fill.disabled = true;
-        }
-        else if (!shapeFillStrokeInfo.hasStroke) {
-          fillOrStrokeSelector.current.children.stroke.disabled = true;
-        }
-      }
-      else if (currentFillOrStroke == "stroke") {
-        if (!shapeFillStrokeInfo.hasStroke) {
-          currentFillOrStroke = "fill";
-          fillOrStrokeSelector.current.children.fill.checked = true;
-          fillOrStrokeSelector.current.children.stroke.disabled = true;
-        }
-        else if (!shapeFillStrokeInfo.hasFill) {
-          fillOrStrokeSelector.current.children.fill.disabled = true;
-        }
-      }
+      syncWithNewShapeFillStrokeInfo(event.data.pluginMessage.shapeFillStrokeInfo);
     }
 
     else if (pluginMessage == "Display UI Message") {
@@ -494,10 +480,10 @@ export function App() {
   return (
     <>
       <div ref={fillOrStrokeSelector}>
-        <input onChange={fillOrStrokeHandle} type="radio" id="fill" name="fill_or_stroke" value="fill" defaultChecked/>
+        <input onChange={fillOrStrokeHandle} type="radio" id="fill" name="fill_or_stroke" value="fill" disabled/>
         <label for="fill">Fill</label>
 
-        <input onChange={fillOrStrokeHandle} type="radio" id="stroke" name="fill_or_stroke" value="stroke"/>
+        <input onChange={fillOrStrokeHandle} type="radio" id="stroke" name="fill_or_stroke" value="stroke" disabled/>
         <label for="stroke">Stroke</label>
       </div>
 
