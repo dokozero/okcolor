@@ -83,6 +83,22 @@ function isSelectionValid(): boolean {
     sendUiMessageCodeToUI("noColorInShape");
     return false;
   }
+
+  if (figma.currentPage.selection[0].fills[0] !== undefined) {
+    if (figma.currentPage.selection[0].fills[0].type != "SOLID") {
+      sendUiMessageCodeToUI("noSolidColor");
+      return false;
+    }
+  }
+
+  if (figma.currentPage.selection[0].strokes[0] !== undefined) {
+    if (figma.currentPage.selection[0].strokes[0].type != "SOLID") {
+      sendUiMessageCodeToUI("noSolidColor");
+      return false;
+    }
+  }
+
+
   
   // If user has selected multiple shapes, we test if they all have at least all a fill or a stroke.
   // For example user has selected 3 shapes and 2 of them have only a stroke and the other only a fill, we don't allow the plugin to be used.
@@ -140,7 +156,7 @@ function sendUiMessageCodeToUI(uiMessageCode: string) {
 ** INIT
 */
 
-figma.showUI(__html__, {width: 280, height: 470, themeColors: false});
+figma.showUI(__html__, {width: 240, height: 400, themeColors: true});
 
 // To send the color of the shape on launch
 function init() {
