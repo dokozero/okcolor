@@ -5,6 +5,8 @@ import { colorConversion } from "../lib/bottosson/colorconversion";
 import { render, render_okhsl, render_static } from "../lib/bottosson/render";
 import { picker_size, eps } from "../lib/bottosson/constants";
 
+import { uiMessageTexts } from "./ui-messages";
+
 const okhxyValues = {
   hue: signal(0),
   x: signal(0),
@@ -21,6 +23,7 @@ export function App() {
 
   // We could use one canvas element but better no to avoid flickering when user change color model 
   const fillOrStrokeSelector = useRef(null);
+  const canvasUiMessage = useRef(null);
   const canvasColorPicker = useRef(null);
   const canvasHueSlider = useRef(null);
   const canvasOpacitySlider = useRef(null);
@@ -29,6 +32,8 @@ export function App() {
   const manipulatorOpacitySlider = useRef(null);
 
   let init: boolean = true;
+
+  let uiMessageOn: boolean = false;
 
   let shapeFillStrokeInfo = {
     "hasFill": false,
@@ -65,6 +70,26 @@ export function App() {
 
   function limitMouseHandlerValue(x) {
     return x < eps ? eps : (x > 1-eps ? 1-eps : x);
+  }
+
+  const uiMessage = {
+    hide() {
+      uiMessageOn = false;
+
+      manipulatorColorPicker.current.classList.remove("u-display-none");
+      canvasUiMessage.current.classList.add("u-display-none");
+    },
+    show(messageCode) {
+      uiMessageOn = true;
+
+      let ctx = canvasColorPicker.current.getContext("2d");
+      ctx.clearRect(0, 0, canvasColorPicker.current.width, canvasColorPicker.current.height);
+
+      manipulatorColorPicker.current.classList.add("u-display-none");
+
+      canvasUiMessage.current.classList.remove("u-display-none");
+      canvasUiMessage.current.children[0].innerHTML = uiMessageTexts[messageCode];
+    }
   }
   
 
@@ -344,8 +369,26 @@ export function App() {
   */
 
   onmessage = (event) => {
-    if (event.data.pluginMessage.message == "new shape color") {
+    const pluginMessage = event.data.pluginMessage.message;
+
+    if (init) {
+      // console.log("- Init function");
+
+      renderHueSliderCanvas();
+
+      setupHandler(canvasColorPicker.current);
+      setupHandler(canvasHueSlider.current);
+      setupHandler(canvasOpacitySlider.current);
+
+      init = false;
+
+      // console.log("- End init function");
+    }
+
+    if (pluginMessage == "new shape color") {
       // console.log("Update from backend - new shape color");
+
+      if (uiMessageOn) uiMessage.hide();
 
       // If the previous shape didn't have fill its radio button is disabled, so if the new one has it we enable it again.
       if (!shapeFillStrokeInfo.hasFill && event.data.pluginMessage.shapeFillStrokeInfo.hasFill && !init) {
@@ -383,27 +426,18 @@ export function App() {
       opacityValue.value = event.data.pluginMessage.opacityValue;
       updateOkhxyValuesFromRgbValues();
 
-      if (init) {
-        // console.log("- Init function");
-
-        renderHueSliderCanvas();
-
-        setupHandler(canvasColorPicker.current);
-        setupHandler(canvasHueSlider.current);
-        setupHandler(canvasOpacitySlider.current);
-
-        init = false;
-
-        // console.log("- End init function");
-      }
+      // Init function were here.
 
       renderOpacitySliderCanvas();
       updateManipulatorPositions.all();
       renderColorPickerCanvas(rgbValues);
     }
+
     // We have this separate message only when we change between fill and stroke with the same shape, this is to avoid doing again the test in "new shape color" on shapeFillStrokeInfo.
-    else if (event.data.pluginMessage.message == "current shape color") {
+    else if (pluginMessage == "current shape color") {
       // console.log("Update from backend - current shape color");
+
+      if (uiMessageOn) uiMessage.hide();
 
       rgbValues = event.data.pluginMessage.rgbValues;
       opacityValue.value = event.data.pluginMessage.opacityValue;
@@ -411,6 +445,47 @@ export function App() {
       renderOpacitySliderCanvas();
       updateManipulatorPositions.all();
       renderColorPickerCanvas(rgbValues);
+    }
+
+    else if (pluginMessage == "new shape fill stroke info") {
+
+      if (uiMessageOn) uiMessage.hide();
+
+      // If the previous shape didn't have fill its radio button is disabled, so if the new one has it we enable it again.
+      if (!shapeFillStrokeInfo.hasFill && event.data.pluginMessage.shapeFillStrokeInfo.hasFill && !init) {
+        fillOrStrokeSelector.current.children.fill.disabled = false;
+      }
+      // If the previous shape didn't have stroke its radio button is disabled, so if the new one has it we enable it again.
+      if (!shapeFillStrokeInfo.hasStroke && event.data.pluginMessage.shapeFillStrokeInfo.hasStroke && !init) {
+        fillOrStrokeSelector.current.children.stroke.disabled = false;
+      }
+
+      shapeFillStrokeInfo = event.data.pluginMessage.shapeFillStrokeInfo;
+
+      if (currentFillOrStroke == "fill") {
+        if (!shapeFillStrokeInfo.hasFill) {
+          currentFillOrStroke = "stroke";
+          fillOrStrokeSelector.current.children.stroke.checked = true;
+          fillOrStrokeSelector.current.children.fill.disabled = true;
+        }
+        else if (!shapeFillStrokeInfo.hasStroke) {
+          fillOrStrokeSelector.current.children.stroke.disabled = true;
+        }
+      }
+      else if (currentFillOrStroke == "stroke") {
+        if (!shapeFillStrokeInfo.hasStroke) {
+          currentFillOrStroke = "fill";
+          fillOrStrokeSelector.current.children.fill.checked = true;
+          fillOrStrokeSelector.current.children.stroke.disabled = true;
+        }
+        else if (!shapeFillStrokeInfo.hasFill) {
+          fillOrStrokeSelector.current.children.fill.disabled = true;
+        }
+      }
+    }
+
+    else if (pluginMessage == "Display UI Message") {
+      uiMessage.show(event.data.pluginMessage.uiMessageCode);
     }
   }
 
@@ -427,6 +502,10 @@ export function App() {
       </div>
 
       <div class="colorpicker">
+
+        <div ref={canvasUiMessage} class="colorpicker__message-wrapper u-display-none">
+          <p class="colorpicker__message-text"></p>
+        </div>
 
         <canvas ref={canvasColorPicker} class="colorpicker__canvas" id="okhxy_xy_canvas" width="257" height="257"></canvas>
 

@@ -12,6 +12,7 @@ export default defineConfig({
         main: resolve(__dirname, "ui/index.html")
       }
     },
+    emptyOutDir: false,
     outDir: "./dist/"
   }
 });
