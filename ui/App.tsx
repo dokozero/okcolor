@@ -7,6 +7,9 @@ import { eps } from "../lib/bottosson/constants";
 
 import { UIMessageTexts } from "./ui-messages";
 
+
+const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
+
 // We don't use the picker_size constant from the constants file because if we modify we got a display bug with the results from the render function in render.js
 const picker_size = 240;
 
@@ -23,14 +26,49 @@ const opacitySliderStyle = signal("");
 
 const opacityValue = signal(100);
 
+
+let init = true;
+
+let UIMessageOn = false;
+
+let currentColor = {
+  r: 255,
+  g: 255,
+  b: 255,
+  opacity: 0
+};
+
+// Default choice unless selected shape on launch has no fill.
+let currentFillOrStroke = "fill";
+let currentColorModel = "okhsl";
+
+let activeMouseHandler = null;
+
+// This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
+let mouseHandlerEventTargetId = "";
+
+let shapeInfos = {
+  hasFillStroke: {
+    fill: false,
+    stroke: false
+  },
+  colors: {
+    fill: {
+      r: 255,
+      g: 255,
+      b: 255,
+      opacity: 0,
+    },
+    stroke: {
+      r: 255,
+      g: 255,
+      b: 255,
+      opacity: 0
+    }
+  }
+}
+
 export function App() { 
-
-  /*
-  ** VARIABLES DECLARATIONS
-  */
-
-  const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
-
   // We could use one canvas element but better no to avoid flickering when user change color model 
   const fillOrStrokeSelector = useRef(null);
   const fillOrStrokeSelector_fill = useRef(null);
@@ -42,47 +80,10 @@ export function App() {
   const manipulatorColorPicker = useRef(null);
   const manipulatorHueSlider = useRef(null);
   const manipulatorOpacitySlider = useRef(null);
+  const opacityInput = useRef(null);
 
-  let init = true;
-
-  let UIMessageOn = false;
-
-  let currentColor = {
-    r: 255,
-    g: 255,
-    b: 255,
-    opacity: 0
-  };
-
-  // Default choice unless selected shape on launch has no fill.
-  let currentFillOrStroke = "fill";
-  let currentColorModel = "okhsl";
-
-  let activeMouseHandler = null;
-
-  // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
-  let mouseHandlerEventTargetId = "";
-
-  let shapeInfos = {
-    hasFillStroke: {
-      fill: false,
-      stroke: false
-    },
-    colors: {
-      fill: {
-        r: 255,
-        g: 255,
-        b: 255,
-        opacity: 0,
-      },
-      stroke: {
-        r: 255,
-        g: 255,
-        b: 255,
-        opacity: 0
-      }
-    }
-  }
+  console.log("Enter");
+  
 
 
   /*
@@ -121,6 +122,11 @@ export function App() {
       colorPickerUIMessage.current.classList.remove("u-display-none");
       colorPickerUIMessage.current.children[0].innerHTML = UIMessageTexts[messageCode];
     }
+  }
+
+  function updateOpacityValue(newValue: number) {
+    opacityValue.value = newValue;
+    opacityInput.current.value = `${opacityValue}%`;
   }
 
 
@@ -250,7 +256,7 @@ export function App() {
       currentColor = shapeInfos.colors.stroke;
     }
 
-    opacityValue.value = currentColor.opacity;
+    updateOpacityValue(currentColor.opacity);
 
     updateOkhxyValuesFromCurrentColor();
     renderOpacitySliderCanvas();
@@ -319,8 +325,7 @@ export function App() {
       }
       else if (mouseHandlerEventTargetId == "opacity-canvas") {
         canvas_y = event.clientX - rect.left;
-        opacityValue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 100);
-
+        updateOpacityValue(Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 100));
         currentColor.opacity = opacityValue.value;
 
         updateManipulatorPositions.opacitySlider();
@@ -353,12 +358,22 @@ export function App() {
   document.addEventListener("mouseleave", cancelMouseHandler);
 
 
+  function handleInputFocus(event) {
+    event.target.select();
+  }
 
-  function hxyInputHandle(event) {
+  function hxyInputHandle(event) {  
+    if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
+
     // console.log("hxy Input Handle");
 
-    let eventTargetId = event.target.id;
+    if (event.key != "Tab") { event.preventDefault(); }
+
+    let eventTargetId: string = event.target.id;
     let eventTargetValue = parseInt(event.target.value);
+
+    if (event.key == "ArrowUp") eventTargetValue++;
+    else if (event.key == "ArrowDown") eventTargetValue--;
     
     // We test user's value and adjust it if enter one outside allowed range.
     if (eventTargetId == "hue") {
@@ -373,6 +388,8 @@ export function App() {
     }
 
     okhxyValues[eventTargetId].value = eventTargetValue;
+
+    event.target.select();
 
     if (event.target.id == "hue") {
       let x = clamp(okhxyValues.x.value, 0.01, 99.99);
@@ -400,13 +417,27 @@ export function App() {
   }
 
   function opacityInputHandle(event) {
-    let eventTargetValue = clamp(parseInt(event.target.value), 0, 100);
+    if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
+    
+    console.log("opacity Input Handle"); 
+
+    if (event.key != "Tab") { event.preventDefault(); }
+
+    let eventTargetValue = parseInt(event.target.value);
+
+    if (event.key == "ArrowUp") eventTargetValue++;
+    else if (event.key == "ArrowDown") eventTargetValue--;
+
+    eventTargetValue = clamp(eventTargetValue, 0, 100);
 
     if (Number.isNaN(eventTargetValue)) {
       eventTargetValue = 100;
     }
 
-    opacityValue.value = eventTargetValue;
+    updateOpacityValue(eventTargetValue);
+
+    event.target.select();
+
     currentColor.opacity = opacityValue.value;
     updateManipulatorPositions.opacitySlider();
 
@@ -474,7 +505,7 @@ export function App() {
         currentColor = event.data.pluginMessage.shapeInfos.colors.stroke;
       }
 
-      opacityValue.value = currentColor.opacity;
+      updateOpacityValue(currentColor.opacity);
 
       updateOkhxyValuesFromCurrentColor();
       renderOpacitySliderCanvas();
@@ -523,13 +554,13 @@ export function App() {
             
             <div class="fill-stroke-selector__fill">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle ref={fillOrStrokeSelector_fill} cx="11" cy="11" r="10.5" fill="#504CFB" stroke="#8E8E8E"/>
+                <circle ref={fillOrStrokeSelector_fill} cx="11" cy="11" r="10.5" fill="#504CFB" stroke="#AAAAAA"/>
               </svg>
             </div>
 
             <div class="fill-stroke-selector__stroke">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path ref={fillOrStrokeSelector_stroke} d="M17.5 11C17.5 14.5899 14.5899 17.5 11 17.5C7.41015 17.5 4.5 14.5899 4.5 11C4.5 7.41015 7.41015 4.5 11 4.5C14.5899 4.5 17.5 7.41015 17.5 11ZM11 21.5C16.799 21.5 21.5 16.799 21.5 11C21.5 5.20101 16.799 0.5 11 0.5C5.20101 0.5 0.5 5.20101 0.5 11C0.5 16.799 5.20101 21.5 11 21.5Z" fill="#4CFBD1" stroke="#8E8E8E"/>
+                <path ref={fillOrStrokeSelector_stroke} d="M17.5 11C17.5 14.5899 14.5899 17.5 11 17.5C7.41015 17.5 4.5 14.5899 4.5 11C4.5 7.41015 7.41015 4.5 11 4.5C14.5899 4.5 17.5 7.41015 17.5 11ZM11 21.5C16.799 21.5 21.5 16.799 21.5 11C21.5 5.20101 16.799 0.5 11 0.5C5.20101 0.5 0.5 5.20101 0.5 11C0.5 16.799 5.20101 21.5 11 21.5Z" fill="#4CFBD1" stroke="#AAAAAA"/>
               </svg>
             </div>
 
@@ -572,15 +603,19 @@ export function App() {
         </div>
 
         <div class="u-flex" style="margin-top: 20px;">
-          <select onChange={colorModelHandle} name="color_model" id="color_model">
-            <option value="okhsv">OkHSV</option>
-            <option value="okhsl" selected>OkHSL</option>
-          </select>
+          <div class="select">
+            <select onChange={colorModelHandle} class="" name="color_model" id="color_model">
+              <option value="okhsv">OkHSV</option>
+              <option value="okhsl" selected>OkHSL</option>
+            </select>
+          </div>
 
-          <input class="valueInput" onChange={hxyInputHandle} id="hue" value={okhxyValues.hue} spellcheck={false} />
-          <input class="valueInput" onChange={hxyInputHandle} id="x" value={okhxyValues.x} spellcheck={false} />
-          <input class="valueInput" onChange={hxyInputHandle} id="y" value={okhxyValues.y} spellcheck={false} />
-          <input class="valueInput" onChange={opacityInputHandle} id="opacity" value={opacityValue} spellcheck={false} />
+          <div class="input u-flex" style="width: 100%;">
+            <input class="valueInput input__field" onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="hue" value={okhxyValues.hue} min="0" max="360" spellcheck={false} />
+            <input class="valueInput input__field" onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="x" value={okhxyValues.x} min="0" max="100" spellcheck={false} />
+            <input class="valueInput input__field" onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="y" value={okhxyValues.y} min="0" max="100" spellcheck={false} />
+            <input ref={opacityInput} class="valueInput input__field" onFocus={handleInputFocus} onKeyDown={opacityInputHandle} id="opacity" min="0" max="100" spellcheck={false}></input>
+          </div>
         </div>
 
       </div>
