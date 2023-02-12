@@ -4,45 +4,62 @@
 ** VARIABLES DECLARATIONS
 */
 
-type ShapeFillStrokeInfo = {
-  hasFill: boolean,
-  hasStroke: boolean
-};
-
-let shapeFillStrokeInfo: ShapeFillStrokeInfo;
-
-let currentFillOrStroke: string = "fill";
-let currentRgbValues: number[] = [];
-let opacityValue: number;
+let currentFillOrStroke = "fill";
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
-let itsAMe: boolean = false;
+let itsAMe = false;
+
+let shapeInfos = {
+  hasFillStroke: {
+    fill: false,
+    stroke: false
+  },
+  colors: {
+    fill: {
+      r: 255,
+      g: 255,
+      b: 255,
+      opacity: 0,
+    },
+    stroke: {
+      r: 255,
+      g: 255,
+      b: 255,
+      opacity: 0
+    }
+  }
+}
 
 
 /*
 ** HELPER FUNCTIONS
 */
 
-function updateShapeFillStrokeInfo(firstSelection: SceneNode) {
-  // Get infos if shape has fill and or stroke
+// TODO remove null case?
+function updateShapeInfos(firstSelection: SceneNode) {
 
-  let newShapeFillStrokeInfo: ShapeFillStrokeInfo = {
-    hasFill: false,
-    hasStroke: false
+  if (firstSelection.fills[0] !== undefined) {
+    shapeInfos.hasFillStroke.fill = true;
+    shapeInfos.colors.fill.r = firstSelection.fills[0].color.r * 255;
+    shapeInfos.colors.fill.g = firstSelection.fills[0].color.g * 255;
+    shapeInfos.colors.fill.b = firstSelection.fills[0].color.b * 255;
+    shapeInfos.colors.fill.opacity = Math.round(firstSelection.fills[0].opacity * 100);
+  }
+  else {
+    shapeInfos.hasFillStroke.fill = false;
   }
 
-  if (firstSelection.fills[0] !== undefined) newShapeFillStrokeInfo.hasFill = true;
-  if (firstSelection.strokes[0] !== undefined) newShapeFillStrokeInfo.hasStroke = true;
+  if (firstSelection.strokes[0] !== undefined) {
+    shapeInfos.hasFillStroke.stroke = true;
+    shapeInfos.colors.stroke.r = firstSelection.strokes[0].color.r * 255;
+    shapeInfos.colors.stroke.g = firstSelection.strokes[0].color.g * 255;
+    shapeInfos.colors.stroke.b = firstSelection.strokes[0].color.b * 255;
+    shapeInfos.colors.stroke.opacity = Math.round(firstSelection.strokes[0].opacity * 100);
+  }
+  else {
+    shapeInfos.hasFillStroke.stroke = false;
+  }
 
-  shapeFillStrokeInfo = newShapeFillStrokeInfo;
-}
-
-// TODO remove null case?
-function getShapeColor(shapeColor: any) {
-  currentRgbValues[0] = shapeColor.color.r * 255;
-  currentRgbValues[1] = shapeColor.color.g * 255;
-  currentRgbValues[2] = shapeColor.color.b * 255;
-  opacityValue = Math.round(shapeColor.opacity * 100);
 }
 
 function isSelectionValid(): boolean {
@@ -66,7 +83,7 @@ function isSelectionValid(): boolean {
   ];
   
   if (figma.currentPage.selection[0] === undefined) {
-    sendUiMessageCodeToUI("noSelection");
+    sendUIMessageCodeToUI("noSelection");
     return false;
   }
  
@@ -74,26 +91,26 @@ function isSelectionValid(): boolean {
   for (const node of figma.currentPage.selection) {
     // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
     if (notSupportedNodeTypes.includes(node.type)) {
-      sendUiMessageCodeToUI("notSupportedType");
+      sendUIMessageCodeToUI("notSupportedType");
       return false;
     }
   }
 
   if (figma.currentPage.selection[0].fills[0] === undefined && figma.currentPage.selection[0].strokes[0] === undefined) {
-    sendUiMessageCodeToUI("noColorInShape");
+    sendUIMessageCodeToUI("noColorInShape");
     return false;
   }
 
   if (figma.currentPage.selection[0].fills[0] !== undefined) {
     if (figma.currentPage.selection[0].fills[0].type != "SOLID") {
-      sendUiMessageCodeToUI("noSolidColor");
+      sendUIMessageCodeToUI("noSolidColor");
       return false;
     }
   }
 
   if (figma.currentPage.selection[0].strokes[0] !== undefined) {
     if (figma.currentPage.selection[0].strokes[0].type != "SOLID") {
-      sendUiMessageCodeToUI("noSolidColor");
+      sendUIMessageCodeToUI("noSolidColor");
       return false;
     }
   }
@@ -112,7 +129,7 @@ function isSelectionValid(): boolean {
     }
   
     if (figma.currentPage.selection.length != fills && figma.currentPage.selection.length != strokes) {
-      sendUiMessageCodeToUI("notAllShapesHaveFillOrStroke");
+      sendUIMessageCodeToUI("notAllShapesHaveFillOrStroke");
       return false;
     }
 
@@ -127,27 +144,15 @@ function isSelectionValid(): boolean {
 ** UPDATES TO FRONTEND
 */
 
-function sendNewShapeColorToUI(shapeColor: any) {
+function sendNewShapeColorToUI(shouldRenderColorPickerCanvas = false) {
   // console.log("BACKEND: send New Shape Color To UI");
-  getShapeColor(shapeColor);
-  figma.ui.postMessage({"shapeFillStrokeInfo": shapeFillStrokeInfo, "rgbValues": currentRgbValues, "opacityValue": opacityValue, "message": "new shape color"});
+  // figma.ui.postMessage({"shapeFillStrokeInfo": shapeFillStrokeInfo, "rgbValues": currentRgbValues, "opacityValue": opacityValue, "message": "new shape color"});
+  figma.ui.postMessage({"shapeInfos": shapeInfos, "currentFillOrStroke": currentFillOrStroke, "shouldRenderColorPickerCanvas": shouldRenderColorPickerCanvas, "message": "new shape color"});
 }
 
-// Difference with above function, this one send the other color of the shape (fill or stroke).
-function sendCurrentShapeColorToUI(shapeColor: any) {
-  // console.log("BACKEND: send Current Shape Color To UI");
-  getShapeColor(shapeColor);
-  figma.ui.postMessage({"rgbValues": currentRgbValues, "opacityValue": opacityValue, "message": "current shape color"});
-}
-
-function sendNewShapeFillStrokeInfoToUI() {
-  // console.log("BACKEND: send New Shape Fill Stroke Info To UI");
-  figma.ui.postMessage({"shapeFillStrokeInfo": shapeFillStrokeInfo, "message": "new shapeFillStrokeInfo"});
-}
-
-function sendUiMessageCodeToUI(uiMessageCode: string) {
-  // console.log("send UiMessageCode To UI");
-  figma.ui.postMessage({"message": "Display UI Message", "uiMessageCode": uiMessageCode});
+function sendUIMessageCodeToUI(UIMessageCode: string) {
+  // console.log("send UIMessageCode To UI");
+  figma.ui.postMessage({"message": "Display UI Message", "UIMessageCode": UIMessageCode});
 }
 
 
@@ -156,7 +161,7 @@ function sendUiMessageCodeToUI(uiMessageCode: string) {
 ** INIT
 */
 
-figma.showUI(__html__, {width: 240, height: 400, themeColors: true});
+figma.showUI(__html__, {width: 240, height: 360, themeColors: true});
 
 // To send the color of the shape on launch
 function init() {
@@ -165,16 +170,12 @@ function init() {
 
   let firstSelection: SceneNode = figma.currentPage.selection[0];
   
-  updateShapeFillStrokeInfo(firstSelection);
+  updateShapeInfos(firstSelection);
 
-  if (shapeFillStrokeInfo.hasFill) {
-    currentFillOrStroke = "fill";
-    sendNewShapeColorToUI(firstSelection.fills[0]);
-  }
-  else {
-    currentFillOrStroke = "stroke";
-    sendNewShapeColorToUI(firstSelection.strokes[0]);
-  }
+  if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
+  else { currentFillOrStroke = "stroke"; }
+
+  sendNewShapeColorToUI(true);
 }
 
 init();
@@ -193,27 +194,12 @@ figma.on("selectionchange", () => {
 
   let firstSelection: SceneNode = figma.currentPage.selection[0];
   
-  updateShapeFillStrokeInfo(firstSelection);
+  updateShapeInfos(firstSelection);
 
-  if (currentFillOrStroke == "fill") {
-    if (shapeFillStrokeInfo.hasFill) {
-      sendNewShapeColorToUI(firstSelection.fills[0]);
-    }
-    else {
-      currentFillOrStroke = "stroke";
-      sendNewShapeColorToUI(firstSelection.strokes[0]);
-    }
-  }
-  else if (currentFillOrStroke == "stroke") {
-    if (shapeFillStrokeInfo.hasStroke) {
-      sendNewShapeColorToUI(firstSelection.strokes[0]);
-    }
-    else {
-      currentFillOrStroke = "fill";
-      sendNewShapeColorToUI(firstSelection.fills[0]);
-    }
-  }
+  if (currentFillOrStroke == "fill" && !shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "stroke"; }
+  else if (currentFillOrStroke == "stroke" && !shapeInfos.hasFillStroke.stroke) { currentFillOrStroke = "fill"; }
 
+  sendNewShapeColorToUI(true);
 
 });
 
@@ -234,36 +220,23 @@ figma.on("documentchange", (event) => {
       let firstSelection: SceneNode = figma.currentPage.selection[0];
         
       // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
-      let oldShapeFillStrokeInfo = Object.assign({}, shapeFillStrokeInfo);
-      updateShapeFillStrokeInfo(firstSelection);
+      let oldHasFillStroke = Object.assign({}, shapeInfos.hasFillStroke);
+      updateShapeInfos(firstSelection);
 
-      if (JSON.stringify(oldShapeFillStrokeInfo) !== JSON.stringify(shapeFillStrokeInfo)) {
-        if (currentFillOrStroke == "fill" && !shapeFillStrokeInfo.hasFill) {
-          currentFillOrStroke = "stroke";
-          sendNewShapeColorToUI(firstSelection.strokes[0]);
+      if (JSON.stringify(oldHasFillStroke) !== JSON.stringify(shapeInfos.hasFillStroke)) {
+        if (currentFillOrStroke == "fill" && !shapeInfos.hasFillStroke.fill) {
+          currentFillOrStroke = "stroke"; 
         }
-        else if (currentFillOrStroke == "stroke" && !shapeFillStrokeInfo.hasStroke) {
+        else if (currentFillOrStroke == "stroke" && !shapeInfos.hasFillStroke.stroke) {
           currentFillOrStroke = "fill";
-          sendNewShapeColorToUI(firstSelection.fills[0]);
         }
-        sendNewShapeFillStrokeInfoToUI();
-        return;
       }
 
-      // This is to change the color in the plugin if the user change it from Figma.
-      if (currentFillOrStroke == "fill" && changeProperty == "fills") {
-        // console.log("Change fill color from Figma");
-        const shapeColor = firstSelection.fills[0];
-        if (shapeColor.color.r != currentRgbValues[0] || shapeColor.color.r != currentRgbValues[1] || shapeColor.color.b != currentRgbValues[2]) {
-          sendNewShapeColorToUI(shapeColor);
-        }
+      if ((currentFillOrStroke == "fill" && changeProperty == "strokes") || (currentFillOrStroke == "stroke" && changeProperty == "fills")) {
+        sendNewShapeColorToUI();
       }
-      else if (currentFillOrStroke == "stroke" && changeProperty == "strokes") {
-        // console.log("Change stroke color from Figma");
-        const shapeColor = firstSelection.strokes[0];
-        if (shapeColor.color.r != currentRgbValues[0] || shapeColor.color.r != currentRgbValues[1] || shapeColor.color.b != currentRgbValues[2]) {
-          sendNewShapeColorToUI(shapeColor);
-        } 
+      else {
+        sendNewShapeColorToUI(true);
       }
 
     }
@@ -282,74 +255,29 @@ figma.on("documentchange", (event) => {
 */
 
 figma.ui.onmessage = (msg) => {
-  if (msg.type == "update shape color") {
+  if (msg.type == "Update shape color") {
     // console.log("BACKEND: update shape color");
 
     itsAMe = true;
     
     for (const node of figma.currentPage.selection) {
-      if (msg.fillOrStroke == "fill") {
-        if ("fills" in node) {
-          const nodeFills = node.fills;
-          let nodeFillsCopy = JSON.parse(JSON.stringify(nodeFills));
+      let copyNode;
 
-          nodeFillsCopy[0].color.r = msg.rgbValues[0] / 255;
-          nodeFillsCopy[0].color.g = msg.rgbValues[1] / 255;
-          nodeFillsCopy[0].color.b = msg.rgbValues[2] / 255;
+      if ("fills" in node && currentFillOrStroke == "fill") { copyNode = JSON.parse(JSON.stringify(node.fills)); }
+      else if ("strokes" in node && currentFillOrStroke == "stroke") { copyNode = JSON.parse(JSON.stringify(node.strokes)); }
 
-          node.fills = nodeFillsCopy;
-        }
-      }
-      else if (msg.fillOrStroke == "stroke") {
-        if ("strokes" in node) {
-          const nodeStrokes = node.strokes;
-          let nodeStrokesCopy = JSON.parse(JSON.stringify(nodeStrokes));
+      copyNode[0].color.r = msg.newColor.r / 255;
+      copyNode[0].color.g = msg.newColor.g / 255;
+      copyNode[0].color.b = msg.newColor.b / 255;
+      copyNode[0].opacity = msg.newColor.opacity / 100;
 
-          nodeStrokesCopy[0].color.r = msg.rgbValues[0] / 255;
-          nodeStrokesCopy[0].color.g = msg.rgbValues[1] / 255;
-          nodeStrokesCopy[0].color.b = msg.rgbValues[2] / 255;
-
-          node.strokes = nodeStrokesCopy;
-        }
-      }
+      if ("fills" in node && currentFillOrStroke == "fill") { node.fills = copyNode; }
+      else if ("strokes" in node && currentFillOrStroke == "stroke") { node.strokes = copyNode; }
     }
+
   }
-  else if (msg.type == "update shape opacity") {
-    // We use this variable to prevent the triggering of figma.on "documentchange".
-    itsAMe = true;
-
-    for (const node of figma.currentPage.selection) {
-      if (msg.fillOrStroke == "fill") {
-        if ("fills" in node) {
-          const nodeFills = node.fills;
-          let nodeFillsCopy = JSON.parse(JSON.stringify(nodeFills));
-
-          nodeFillsCopy[0].opacity = msg.opacityValue / 100;
-          node.fills = nodeFillsCopy;
-        }
-      }
-      else if (msg.fillOrStroke == "stroke") {
-        if ("strokes" in node) {
-          const nodeStrokes = node.strokes;
-          let nodeStrokesCopy = JSON.parse(JSON.stringify(nodeStrokes));
-
-          nodeStrokesCopy[0].opacity = msg.opacityValue / 100;
-          node.strokes = nodeStrokesCopy;
-        }
-      }
-    }
-  }
-  else if (msg.type == "send me shape color") {
-    // console.log("BACKEND: send shape color");
-
-    currentFillOrStroke = msg.fillOrStroke;
-
-    if (msg.fillOrStroke == "fill") {
-      sendCurrentShapeColorToUI(figma.currentPage.selection[0].fills[0]);
-    }
-    else if (msg.fillOrStroke == "stroke") {
-      sendCurrentShapeColorToUI(figma.currentPage.selection[0].strokes[0]);
-    }
+  else if (msg.type == "Sync currentFillOrStroke") {
+    currentFillOrStroke = msg.currentFillOrStroke;
   }
 }
 
