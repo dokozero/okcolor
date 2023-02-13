@@ -24,8 +24,6 @@ const okhxyValues = {
 
 const opacitySliderStyle = signal("");
 
-const opacityValue = signal(100);
-
 
 let init = true;
 
@@ -124,9 +122,10 @@ export function App() {
     }
   }
 
+  // We use a function to update the opacity value in the input because we need to add the "%" sign and doing it directly in the value field with a fignal value doesn't work.
   function updateOpacityValue(newValue: number) {
-    opacityValue.value = newValue;
-    opacityInput.current.value = `${opacityValue}%`;
+    currentColor.opacity = newValue;
+    opacityInput.current.value = `${newValue}%`;
   }
 
 
@@ -214,7 +213,6 @@ export function App() {
   */
 
   const updateManipulatorPositions = {
-
     colorPicker() {
       // console.log("update Manipulator Positions - color picker");
       let x = okhxyValues.x.value / 100;
@@ -228,7 +226,7 @@ export function App() {
     },
     opacitySlider() {
       // console.log("update Manipulator Positions - opacity slider");
-      let opacity = opacityValue.value / 100;
+      let opacity = currentColor.opacity / 100;
       document.getElementById(manipulatorOpacitySlider.current.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)+6, -1));
     },
     all() {
@@ -236,7 +234,6 @@ export function App() {
       this.hueSlider();
       this.opacitySlider();
     }
-    
   }
 
 
@@ -326,7 +323,6 @@ export function App() {
       else if (mouseHandlerEventTargetId == "opacity-canvas") {
         canvas_y = event.clientX - rect.left;
         updateOpacityValue(Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 100));
-        currentColor.opacity = opacityValue.value;
 
         updateManipulatorPositions.opacitySlider();
       }
@@ -438,7 +434,6 @@ export function App() {
 
     event.target.select();
 
-    currentColor.opacity = opacityValue.value;
     updateManipulatorPositions.opacitySlider();
 
     sendNewShapeColorToBackend();
