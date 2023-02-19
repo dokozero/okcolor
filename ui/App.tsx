@@ -29,12 +29,14 @@ let init = true;
 
 let UIMessageOn = false;
 
-let currentColor = {
+let currentColorDefault = {
   r: 255,
   g: 255,
   b: 255,
   opacity: 0
 };
+
+let currentColor = currentColorDefault;
 
 // Default choice unless selected shape on launch has no fill.
 let currentFillOrStroke = "fill";
@@ -45,10 +47,10 @@ let activeMouseHandler = null;
 // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
 let mouseHandlerEventTargetId = "";
 
-let shapeInfos = {
+let shapeInfosDefault = {
   hasFillStroke: {
-    fill: false,
-    stroke: false
+    fill: true,
+    stroke: true
   },
   colors: {
     fill: {
@@ -66,6 +68,8 @@ let shapeInfos = {
   }
 }
 
+let shapeInfos = shapeInfosDefault;
+
 export function App() { 
   // We could use one canvas element but better no to avoid flickering when user change color model 
   const fillOrStrokeSelector = useRef(null);
@@ -79,6 +83,7 @@ export function App() {
   const manipulatorHueSlider = useRef(null);
   const manipulatorOpacitySlider = useRef(null);
   const opacityInput = useRef(null);
+  const bottomControls = useRef(null);
 
   console.log("Enter");
   
@@ -106,11 +111,17 @@ export function App() {
     hide() {
       UIMessageOn = false;
 
+      bottomControls.current.classList.remove("u-deactivated");
+
       manipulatorColorPicker.current.classList.remove("u-display-none");
       colorPickerUIMessage.current.classList.add("u-display-none");
     },
     show(messageCode) {
       UIMessageOn = true;
+
+      bottomControls.current.classList.add("u-deactivated");
+
+      resetInterface();
 
       let ctx = colorPicker.current.getContext("2d");
       ctx.clearRect(0, 0, colorPicker.current.width, colorPicker.current.height);
@@ -202,7 +213,6 @@ export function App() {
 
     if (!shapeInfos.hasFillStroke.fill || !shapeInfos.hasFillStroke.stroke) { fillOrStrokeSelector.current.classList.add("u-pointer-events-none"); }
     else { fillOrStrokeSelector.current.classList.remove("u-pointer-events-none"); }
-
   }
 
 
@@ -212,22 +222,37 @@ export function App() {
   ** UPDATES TO UI
   */
 
+  function resetInterface() {
+    okhxyValues.hue.value = 0;
+    okhxyValues.x.value = 0;
+    okhxyValues.y.value = 0;
+    updateOpacityValue(0);
+    currentColor = currentColorDefault;
+    shapeInfos = shapeInfosDefault;
+
+    fillOrStrokeSelector.current.setAttribute("data-active", "fill");
+    updateManipulatorPositions.all();
+    syncFillOrStrokeSelector();
+    renderOpacitySliderCanvas();
+    renderFillOrStrokeSelector();
+  }
+
   const updateManipulatorPositions = {
     colorPicker() {
       // console.log("update Manipulator Positions - color picker");
       let x = okhxyValues.x.value / 100;
       let y = okhxyValues.y.value / 100;
-      document.getElementById(manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y)));
+      manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y));
     },
     hueSlider() {
       // console.log("update Manipulator Positions - hue slider");
       let hue = okhxyValues.hue.value / 360;
-      document.getElementById(manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate((slider_size*hue)+6, -1));
+      manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate((slider_size*hue)+6, -1);
     },
     opacitySlider() {
       // console.log("update Manipulator Positions - opacity slider");
       let opacity = currentColor.opacity / 100;
-      document.getElementById(manipulatorOpacitySlider.current.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)+6, -1));
+      manipulatorOpacitySlider.current.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)+6, -1);
     },
     all() {
       this.colorPicker();
@@ -523,7 +548,6 @@ export function App() {
   return (
     <>
       <div class="c-color-picker">
-
         <div ref={colorPickerUIMessage} class="c-color-picker__message-wrapper u-display-none">
           <p class="c-color-picker__message-text"></p>
         </div>
@@ -538,9 +562,9 @@ export function App() {
             </g>
           </g>
         </svg>
-
       </div>
 
+      <div ref={bottomControls}>
         <div class="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
 
           <div ref={fillOrStrokeSelector} onClick={fillOrStrokeHandle} class="fill-stroke-selector" data-has-fill="true" data-has-stroke="true" data-active="fill" >
@@ -595,7 +619,7 @@ export function App() {
 
         </div>
 
-        <div class="c-bottom-control">
+        <div class="c-select-input-controls">
           <div class="select-wrapper">
             <select onChange={colorModelHandle} name="color_model" id="color_model">
               <option value="okhsv">OkHSV</option>
@@ -610,7 +634,7 @@ export function App() {
             <input ref={opacityInput} onFocus={handleInputFocus} onKeyDown={opacityInputHandle} id="opacity" min="0" max="100" spellcheck={false}></input>
           </div>
         </div>
-
+      </div>
     </>
   )
 }

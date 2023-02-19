@@ -11,8 +11,8 @@ let itsAMe = false;
 
 let shapeInfos = {
   hasFillStroke: {
-    fill: false,
-    stroke: false
+    fill: true,
+    stroke: true
   },
   colors: {
     fill: {
@@ -35,7 +35,6 @@ let shapeInfos = {
 ** HELPER FUNCTIONS
 */
 
-// TODO remove null case?
 function updateShapeInfos(firstSelection: SceneNode) {
 
   if (firstSelection.fills[0] !== undefined) {

@@ -110,7 +110,7 @@ body {
   }
 
 
-.c-bottom-control {
+.c-select-input-controls {
   display: grid;
   grid-template-columns: repeat(28,1fr);
   grid-template-rows: 28px;
@@ -230,6 +230,12 @@ select:hover {
 }
 
 .u-pointer-events-none { pointer-events: none; }
+
+.u-deactivated {
+  pointer-events: none;
+  opacity: 0.5;
+  filter: grayscale(1);
+}
 
 
 
