@@ -288,7 +288,7 @@ export function App() {
         mouseHandlerEventTargetId = event.target.id;
       }
 
-      if (mouseHandlerEventTargetId == "okhxy-xy-canvas") {
+      if (mouseHandlerEventTargetId == "okhxy-xy-picker") {
         canvas_x = event.clientX - rect.left;
         canvas_y = event.clientY - rect.top;
         okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/picker_size) * 100);
@@ -302,7 +302,7 @@ export function App() {
         renderFillOrStrokeSelector();
         renderOpacitySliderCanvas();
       }
-      else if (mouseHandlerEventTargetId == "okhxy-h-canvas") {
+      else if (mouseHandlerEventTargetId == "okhxy-h-slider") {
         canvas_y = event.clientX - rect.left;
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
@@ -320,7 +320,7 @@ export function App() {
 
         renderColorPickerCanvas();
       }
-      else if (mouseHandlerEventTargetId == "opacity-canvas") {
+      else if (mouseHandlerEventTargetId == "opacity-slider") {
         canvas_y = event.clientX - rect.left;
         updateOpacityValue(Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 100));
 
@@ -522,15 +522,15 @@ export function App() {
   
   return (
     <>
-      <div class="color-picker">
+      <div class="c-color-picker">
 
-        <div ref={colorPickerUIMessage} class="color-picker__message-wrapper u-display-none">
-          <p class="color-picker__message-text"></p>
+        <div ref={colorPickerUIMessage} class="c-color-picker__message-wrapper u-display-none">
+          <p class="c-color-picker__message-text"></p>
         </div>
 
-        <canvas ref={colorPicker} class="color-picker__canvas" id="okhxy-xy-canvas" width="240" height="240"></canvas>
+        <canvas ref={colorPicker} class="c-color-picker__canvas" id="okhxy-xy-picker" width="240" height="240"></canvas>
 
-        <svg class="color-picker__handler" width="240" height="240">
+        <svg class="c-color-picker__handler" width="240" height="240">
           <g transform="translate(0,0)">
             <g ref={manipulatorColorPicker} transform="translate(0,0)">
               <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.5" stroke="#ffffff" ></circle>
@@ -541,34 +541,32 @@ export function App() {
 
       </div>
 
-      <div class="bottom-controls">
-
-        <div class="u-flex" style="align-items: center;">
+        <div class="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
 
           <div ref={fillOrStrokeSelector} onClick={fillOrStrokeHandle} class="fill-stroke-selector" data-has-fill="true" data-has-stroke="true" data-active="fill" >
             
             <div class="fill-stroke-selector__fill">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle ref={fillOrStrokeSelector_fill} cx="11" cy="11" r="10.5" fill="#504CFB" stroke="#AAAAAA"/>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle ref={fillOrStrokeSelector_fill} cx="10" cy="10" r="9.5" fill="#FFFFFF" stroke="#AAAAAA"/>
               </svg>
             </div>
 
             <div class="fill-stroke-selector__stroke">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path ref={fillOrStrokeSelector_stroke} d="M17.5 11C17.5 14.5899 14.5899 17.5 11 17.5C7.41015 17.5 4.5 14.5899 4.5 11C4.5 7.41015 7.41015 4.5 11 4.5C14.5899 4.5 17.5 7.41015 17.5 11ZM11 21.5C16.799 21.5 21.5 16.799 21.5 11C21.5 5.20101 16.799 0.5 11 0.5C5.20101 0.5 0.5 5.20101 0.5 11C0.5 16.799 5.20101 21.5 11 21.5Z" fill="#4CFBD1" stroke="#AAAAAA"/>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path ref={fillOrStrokeSelector_stroke} d="M15.8 10C15.8 13.2033 13.2033 15.8 10 15.8C6.79675 15.8 4.2 13.2033 4.2 10C4.2 6.79675 6.79675 4.2 10 4.2C13.2033 4.2 15.8 6.79675 15.8 10ZM10 19.5C15.2467 19.5 19.5 15.2467 19.5 10C19.5 4.75329 15.2467 0.5 10 0.5C4.75329 0.5 0.5 4.75329 0.5 10C0.5 15.2467 4.75329 19.5 10 19.5Z" fill="#FFFFFF" stroke="#AAAAAA"/>
               </svg>
             </div>
 
           </div>
 
-          <div class="sliders" style="margin-left: auto;">
+          <div class="u-flex u-flex-col">
 
-            <div class="hue-slider">
-              <div class="hue-slider__canvas">
-                <div ref={hueSlider} id="okhxy-h-canvas"></div>
+            <div class="c-slider">
+              <div class="c-slider__canvas c-slider__canvas--hue-bg-img">
+                <div ref={hueSlider} class="u-w-full u-h-full" id="okhxy-h-slider"></div>
               </div>
 
-              <svg class="hue-slider__handler" width="160" height="12"> 
+              <svg class="c-slider__handler" width="160" height="12"> 
                 <g transform="translate(0,7)">
                   <g ref={manipulatorHueSlider} transform="translate(0,0)">
                     <circle cx="0" cy="0" r="4.5" fill="none" stroke-width="1.5" stroke="#ffffff" ></circle>
@@ -578,12 +576,12 @@ export function App() {
               </svg>
             </div>
 
-            <div class="opacity-slider">
-              <div class="opacity-slider__canvas" style={opacitySliderStyle}>
-                <div ref={opacitySlider} id="opacity-canvas"></div>
+            <div class="c-slider u-mt-14">
+              <div class="c-slider__canvas" style={opacitySliderStyle}>
+                <div ref={opacitySlider} class="u-w-full u-h-full" id="opacity-slider"></div>
               </div>
 
-              <svg class="opacity-slider__handler" width="160" height="12"> 
+              <svg class="c-slider__handler" width="160" height="12"> 
                 <g transform="translate(0,7)">
                   <g ref={manipulatorOpacitySlider} transform="translate(0,0)">
                     <circle cx="0" cy="0" r="4.5" fill="none" stroke-width="1.5" stroke="#ffffff" ></circle>
@@ -597,23 +595,21 @@ export function App() {
 
         </div>
 
-        <div class="u-flex" style="margin-top: 20px;">
-          <div class="select">
-            <select onChange={colorModelHandle} class="" name="color_model" id="color_model">
+        <div class="c-bottom-control">
+          <div class="select-wrapper">
+            <select onChange={colorModelHandle} name="color_model" id="color_model">
               <option value="okhsv">OkHSV</option>
               <option value="okhsl" selected>OkHSL</option>
             </select>
           </div>
 
-          <div class="input u-flex" style="width: 100%;">
-            <input class="valueInput input__field" onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="hue" value={okhxyValues.hue} min="0" max="360" spellcheck={false} />
-            <input class="valueInput input__field" onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="x" value={okhxyValues.x} min="0" max="100" spellcheck={false} />
-            <input class="valueInput input__field" onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="y" value={okhxyValues.y} min="0" max="100" spellcheck={false} />
-            <input ref={opacityInput} class="valueInput input__field" onFocus={handleInputFocus} onKeyDown={opacityInputHandle} id="opacity" min="0" max="100" spellcheck={false}></input>
+          <div class="input-wrapper u-flex u-w-full">
+            <input onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="hue" value={okhxyValues.hue} min="0" max="360" spellcheck={false} />
+            <input onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="x" value={okhxyValues.x} min="0" max="100" spellcheck={false} />
+            <input onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="y" value={okhxyValues.y} min="0" max="100" spellcheck={false} />
+            <input ref={opacityInput} onFocus={handleInputFocus} onKeyDown={opacityInputHandle} id="opacity" min="0" max="100" spellcheck={false}></input>
           </div>
         </div>
-
-      </div>
 
     </>
   )

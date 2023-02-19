@@ -161,7 +161,7 @@ function sendUIMessageCodeToUI(UIMessageCode: string) {
 ** INIT
 */
 
-figma.showUI(__html__, {width: 240, height: 360, themeColors: true});
+figma.showUI(__html__, {width: 240, height: 346, themeColors: true});
 
 // To send the color of the shape on launch
 function init() {
