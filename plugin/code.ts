@@ -64,7 +64,6 @@ function updateShapeInfos(firstSelection: SceneNode) {
 function isSelectionValid(): boolean {
 
   let notSupportedNodeTypes = [
-    "BOOLEAN_OPERATION",
     "CODE_BLOCK",
     "COMPONENT_SET",
     "CONNECTOR",
@@ -90,7 +89,7 @@ function isSelectionValid(): boolean {
   for (const node of figma.currentPage.selection) {
     // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
     if (notSupportedNodeTypes.includes(node.type)) {
-      sendUIMessageCodeToUI("notSupportedType");
+      sendUIMessageCodeToUI("notSupportedType", node.type);
       return false;
     }
   }
@@ -149,9 +148,9 @@ function sendNewShapeColorToUI(shouldRenderColorPickerCanvas = false) {
   figma.ui.postMessage({"shapeInfos": shapeInfos, "currentFillOrStroke": currentFillOrStroke, "shouldRenderColorPickerCanvas": shouldRenderColorPickerCanvas, "message": "new shape color"});
 }
 
-function sendUIMessageCodeToUI(UIMessageCode: string) {
+function sendUIMessageCodeToUI(UIMessageCode: string, nodeType: string = "") {
   // console.log("send UIMessageCode To UI");
-  figma.ui.postMessage({"message": "Display UI Message", "UIMessageCode": UIMessageCode});
+  figma.ui.postMessage({"message": "Display UI Message", "UIMessageCode": UIMessageCode, "nodeType": nodeType});
 }
 
 

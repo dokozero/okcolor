@@ -107,6 +107,13 @@ export function App() {
     return x < eps ? eps : (x > 1-eps ? 1-eps : x);
   }
 
+
+  
+
+  /* 
+  ** UPDATES TO UI
+  */
+
   const UIMessage = {
     hide() {
       UIMessageOn = false;
@@ -116,7 +123,7 @@ export function App() {
       manipulatorColorPicker.current.classList.remove("u-display-none");
       colorPickerUIMessage.current.classList.add("u-display-none");
     },
-    show(messageCode) {
+    show(messageCode: string, nodeType: string) {
       UIMessageOn = true;
 
       bottomControls.current.classList.add("u-deactivated");
@@ -129,7 +136,12 @@ export function App() {
       manipulatorColorPicker.current.classList.add("u-display-none");
 
       colorPickerUIMessage.current.classList.remove("u-display-none");
-      colorPickerUIMessage.current.children[0].innerHTML = UIMessageTexts[messageCode];
+
+      let message: string = UIMessageTexts[messageCode];
+      if (nodeType != "") {
+        message = message.replace("$SHAPE", nodeType.toLowerCase());
+      }
+      colorPickerUIMessage.current.children[0].innerHTML = message;
     }
   }
 
@@ -214,13 +226,6 @@ export function App() {
     if (!shapeInfos.hasFillStroke.fill || !shapeInfos.hasFillStroke.stroke) { fillOrStrokeSelector.current.classList.add("u-pointer-events-none"); }
     else { fillOrStrokeSelector.current.classList.remove("u-pointer-events-none"); }
   }
-
-
-  
-
-  /* 
-  ** UPDATES TO UI
-  */
 
   function resetInterface() {
     okhxyValues.hue.value = 0;
@@ -539,7 +544,7 @@ export function App() {
     }
 
     else if (pluginMessage == "Display UI Message") {
-      UIMessage.show(event.data.pluginMessage.UIMessageCode);
+      UIMessage.show(event.data.pluginMessage.UIMessageCode, event.data.pluginMessage.nodeType);
     }
   }
 
