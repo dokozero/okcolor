@@ -225,14 +225,17 @@ figma.on("documentchange", (event) => {
 
       if (JSON.stringify(oldHasFillStroke) !== JSON.stringify(shapeInfos.hasFillStroke)) {
         if (currentFillOrStroke == "fill" && !shapeInfos.hasFillStroke.fill) {
-          currentFillOrStroke = "stroke"; 
+          currentFillOrStroke = "stroke";
         }
         else if (currentFillOrStroke == "stroke" && !shapeInfos.hasFillStroke.stroke) {
           currentFillOrStroke = "fill";
         }
+        sendNewShapeColorToUI(true);
+        return;
       }
 
       if ((currentFillOrStroke == "fill" && changeProperty == "strokes") || (currentFillOrStroke == "stroke" && changeProperty == "fills")) {
+        // To avoid rendering color picker canvas if for example user is changing stroke color while the fill is selected in plugin's UI.
         sendNewShapeColorToUI();
       }
       else {
