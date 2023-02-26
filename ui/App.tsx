@@ -119,22 +119,16 @@ export function App() {
       UIMessageOn = false;
 
       bottomControls.current.classList.remove("u-deactivated");
-
       manipulatorColorPicker.current.classList.remove("u-display-none");
       colorPickerUIMessage.current.classList.add("u-display-none");
     },
     show(messageCode: string, nodeType: string) {
       UIMessageOn = true;
 
-      bottomControls.current.classList.add("u-deactivated");
-
       resetInterface();
 
-      let ctx = colorPicker.current.getContext("2d");
-      ctx.clearRect(0, 0, colorPicker.current.width, colorPicker.current.height);
-
+      bottomControls.current.classList.add("u-deactivated");
       manipulatorColorPicker.current.classList.add("u-display-none");
-
       colorPickerUIMessage.current.classList.remove("u-display-none");
 
       let message: string = UIMessageTexts[messageCode];
@@ -240,6 +234,9 @@ export function App() {
     syncFillOrStrokeSelector();
     renderOpacitySliderCanvas();
     renderFillOrStrokeSelector();
+
+    let ctx = colorPicker.current.getContext("2d");
+    ctx.clearRect(0, 0, colorPicker.current.width, colorPicker.current.height);
   }
 
   const updateManipulatorPositions = {
