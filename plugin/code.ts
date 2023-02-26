@@ -188,10 +188,13 @@ figma.on("selectionchange", () => {
 
 // If user change property of selected shape.
 figma.on("documentchange", (event) => {
+
+  if (itsAMe) { return; }
+
   const changeType = event.documentChanges[0].type;
   
-  if (changeType == "PROPERTY_CHANGE" && !itsAMe) {   
-    
+  if (changeType == "PROPERTY_CHANGE") {
+
     const changeProperty = event.documentChanges[0].properties[0];
     
     // We don't run the code if for example the user has changed the rotation of the shape.
@@ -225,10 +228,6 @@ figma.on("documentchange", (event) => {
     }
 
   }
-
-  if (itsAMe) {
-    itsAMe = false;
-  }
 });
 
 
@@ -236,6 +235,8 @@ figma.on("documentchange", (event) => {
 /* 
 ** UPDATES FROM FRONTEND
 */
+
+let timeoutId: number;
 
 figma.ui.onmessage = (msg) => {
   if (msg.type == "Update shape color") {
@@ -262,6 +263,10 @@ figma.ui.onmessage = (msg) => {
         node[type] = copyNode;
       }
     }
+
+    // We reset itsAMe value to false here because if we do it on the documentchange callback, when we move the hue cursor on FFFFFF or 000000 in OkHSL, this callback is not executed so itsAMe would stay on true and if for example user delete the fill of the shape we would get an error.
+    if (timeoutId) { clearTimeout(timeoutId); }
+    timeoutId = setTimeout(() => { itsAMe = false; }, 500);
 
   }
   else if (msg.type == "Sync currentFillOrStroke") {
