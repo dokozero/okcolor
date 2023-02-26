@@ -36,7 +36,7 @@ let currentColorDefault = {
   opacity: 0
 };
 
-let currentColor = currentColorDefault;
+let currentColor = Object.assign({}, currentColorDefault);
 
 // Default choice unless selected shape on launch has no fill.
 let currentFillOrStroke = "fill";
@@ -68,7 +68,7 @@ let shapeInfosDefault = {
   }
 }
 
-let shapeInfos = shapeInfosDefault;
+let shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
 
 export function App() { 
   // We could use one canvas element but better no to avoid flickering when user change color model 
@@ -232,8 +232,8 @@ export function App() {
     okhxyValues.x.value = 0;
     okhxyValues.y.value = 0;
     updateOpacityValue(0);
-    currentColor = currentColorDefault;
-    shapeInfos = shapeInfosDefault;
+    currentColor = Object.assign({}, currentColorDefault);
+    shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
 
     fillOrStrokeSelector.current.setAttribute("data-active", "fill");
     updateManipulatorPositions.all();
