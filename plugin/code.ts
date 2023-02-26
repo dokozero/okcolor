@@ -40,21 +40,18 @@ function updateShapeInfos(): boolean {
 
   shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
  
-  let notSupportedNodeTypes = [
-    "CODE_BLOCK",
-    "COMPONENT_SET",
-    "CONNECTOR",
-    "DOCUMENT",
-    "EMBED",
-    "GROUP",
-    "LINK_UNFURL",
-    "MEDIA",
-    "PAGE",
-    "SHAPE_WITH_TEXT",
-    "SLICE",
-    "STAMP",
-    "STICKY",
-    "WIDGET"
+  const supportedNodeTypes = [
+    "BOOLEAN_OPERATION",
+    "COMPONENT",
+    "ELLIPSE",
+    "FRAME",
+    "INSTANCE",
+    "LINE",
+    "POLYGON",
+    "RECTANGLE",
+    "STAR",
+    "TEXT",
+    "VECTOR",
   ];
 
   const selection = figma.currentPage.selection;
@@ -67,7 +64,7 @@ function updateShapeInfos(): boolean {
   // We use this for loop to either check if one thing is selected or multiple as use can for example select a group a shape, in that case we should block the plugin from being used.
   for (const node of selection) {
     // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
-    if (notSupportedNodeTypes.includes(node.type)) {
+    if (!supportedNodeTypes.includes(node.type)) {
       sendUIMessageCodeToUI("notSupportedType", node.type);
       return false;
     }
