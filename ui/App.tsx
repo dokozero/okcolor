@@ -85,9 +85,6 @@ export function App() {
   const opacityInput = useRef(null);
   const bottomControls = useRef(null);
 
-  console.log("Enter");
-  
-
 
   /*
   ** HELPER FUNCTIONS
@@ -261,12 +258,7 @@ export function App() {
 
     switchFillOrStrokeSelector();
 
-    if (currentFillOrStroke == "fill") {
-      currentColor = shapeInfos.colors.fill;
-    }
-    if (currentFillOrStroke == "stroke") {
-      currentColor = shapeInfos.colors.stroke;
-    }
+    currentColor = shapeInfos.colors[currentFillOrStroke];
 
     updateOpacityValue(currentColor.opacity);
 
@@ -406,18 +398,12 @@ export function App() {
       let x = clamp(okhxyValues.x.value, 0.01, 99.99);
       let y = clamp(okhxyValues.y.value, 0.01, 99.99);
       Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, x, y));
-    }
-    else {
-      Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value));
-    }
 
-    sendNewShapeColorToBackend();
-
-    if (event.target.id == "hue") {
       renderColorPickerCanvas();
       updateManipulatorPositions.hueSlider();
     }
     else {
+      Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value));
       updateManipulatorPositions.colorPicker();
     }
 
@@ -425,12 +411,14 @@ export function App() {
       renderOpacitySliderCanvas();
       renderFillOrStrokeSelector();
     }
+
+    sendNewShapeColorToBackend();
   }
 
   function opacityInputHandle(event) {
     if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
     
-    console.log("opacity Input Handle"); 
+    // console.log("opacity Input Handle"); 
 
     if (event.key != "Tab") { event.preventDefault(); }
 
@@ -450,7 +438,6 @@ export function App() {
     event.target.select();
 
     updateManipulatorPositions.opacitySlider();
-
     sendNewShapeColorToBackend();
   }
 
@@ -460,11 +447,12 @@ export function App() {
   */
 
   function sendNewShapeColorToBackend() {
-    // console.log("update Shape Color");
+    // console.log("send New Shape Color To Backend");
     parent.postMessage({ pluginMessage: { type: "Update shape color", "newColor": currentColor } }, '*');
   }
 
   function syncCurrentFillOrStrokeWithBackend() {
+    // console.log("sync CurrentFillOrStroke With Backend");
     parent.postMessage({ pluginMessage: { type: "Sync currentFillOrStroke", "currentFillOrStroke": currentFillOrStroke } }, '*');
   }
 
@@ -502,26 +490,16 @@ export function App() {
       
       currentFillOrStroke = event.data.pluginMessage.currentFillOrStroke;
       shapeInfos = event.data.pluginMessage.shapeInfos;
-      
-      
-      if (currentFillOrStroke == "fill") {
-        currentColor = event.data.pluginMessage.shapeInfos.colors.fill;
-      }
-      if (currentFillOrStroke == "stroke") {
-        currentColor = event.data.pluginMessage.shapeInfos.colors.stroke;
-      }
+      currentColor = event.data.pluginMessage.shapeInfos.colors[currentFillOrStroke];
 
       updateOpacityValue(currentColor.opacity);
-
       updateOkhxyValuesFromCurrentColor();
       renderOpacitySliderCanvas();
       updateManipulatorPositions.all();
       renderFillOrStrokeSelector();
 
       // We don't render colorPicker if for example user has just deleted the stroke of a shape that had both.
-      if (shouldRenderColorPickerCanvas) {
-        renderColorPickerCanvas();
-      }
+      if (shouldRenderColorPickerCanvas) { renderColorPickerCanvas(); }
     }
 
     else if (pluginMessage == "Display UI Message") {
