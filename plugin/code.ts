@@ -122,6 +122,10 @@ function updateShapeInfos(): boolean {
       sendUIMessageCodeToUI("notAllShapesHaveFillOrStroke");
       return false;
     }
+
+    // If for example two shapes are selected with a fill but one of them have a stroke, we set update shaeInfos accordingly.
+    if (strokesCount < fillsCount) { shapeInfos.hasFillStroke.stroke = false; }
+    else if (fillsCount < strokesCount) { shapeInfos.hasFillStroke.fill = false; }
   }
   
   return true;
