@@ -147,15 +147,11 @@ export function App() {
 
 
   function switchFillOrStrokeSelector() {
-    if (currentFillOrStroke == "fill") {
-      currentFillOrStroke = "stroke";
-      fillOrStrokeSelector.current.setAttribute("data-active", "stroke");
-    }
-    else {
-      currentFillOrStroke = "fill";
-      fillOrStrokeSelector.current.setAttribute("data-active", "fill");
-    }
-  }
+    // console.log("switch FillOrStrokeSelector");
+    
+    currentFillOrStroke = currentFillOrStroke === "fill" ? "stroke" : "fill";
+    fillOrStrokeSelector.current.setAttribute("data-active", currentFillOrStroke);
+  } 
 
 
   function updateOkhxyValuesFromCurrentColor() {
@@ -326,8 +322,8 @@ export function App() {
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
         // We do this to be abble to change the hue value on the color picker canvas when we have a white or black value. If we don't to this fix, the hue value will always be the same on the color picker canvas.
-        let x = clamp(okhxyValues.x.value, 0.1, 99.9);
-        let y = clamp(okhxyValues.y.value, 0.1, 99.9);
+        let x: number = clamp(okhxyValues.x.value, 0.1, 99.9);
+        let y: number = clamp(okhxyValues.y.value, 0.1, 99.9);
 
         Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, x, y));
 
@@ -478,16 +474,13 @@ export function App() {
   */
 
   onmessage = (event) => {
-    const pluginMessage = event.data.pluginMessage.message;
+    const pluginMessage: string = event.data.pluginMessage.message;
 
     if (init) {
-      // console.log("- Init function");
-
       setupHandler(colorPicker.current);
       setupHandler(hueSlider.current);
       setupHandler(opacitySlider.current);
 
-      // console.log("- End init function");
       init = false;
     }
 
@@ -495,7 +488,7 @@ export function App() {
       // console.log("Update from backend - new shape color");
 
       // This value is false by default.
-      let shouldRenderColorPickerCanvas = event.data.pluginMessage.shouldRenderColorPickerCanvas;
+      let shouldRenderColorPickerCanvas: boolean = event.data.pluginMessage.shouldRenderColorPickerCanvas;
 
       if (UIMessageOn) {
         UIMessage.hide();
