@@ -9,10 +9,10 @@ let currentFillOrStroke = "fill";
 // We use this variable to prevent the triggering of figma.on "documentchange".
 let itsAMe = false;
 
-let shapeInfos = {
+let shapeInfosDefault = {
   hasFillStroke: {
-    fill: true,
-    stroke: true
+    fill: false,
+    stroke: false
   },
   colors: {
     fill: {
@@ -30,39 +30,18 @@ let shapeInfos = {
   }
 }
 
+let shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
+
 
 /*
 ** HELPER FUNCTIONS
 */
 
-function updateShapeInfos(firstSelection: SceneNode) {
 
-  if (firstSelection.fills[0] !== undefined) {
-    shapeInfos.hasFillStroke.fill = true;
-    shapeInfos.colors.fill.r = firstSelection.fills[0].color.r * 255;
-    shapeInfos.colors.fill.g = firstSelection.fills[0].color.g * 255;
-    shapeInfos.colors.fill.b = firstSelection.fills[0].color.b * 255;
-    shapeInfos.colors.fill.opacity = Math.round(firstSelection.fills[0].opacity * 100);
-  }
-  else {
-    shapeInfos.hasFillStroke.fill = false;
-  }
+function updateShapeInfos(): boolean {
 
-  if (firstSelection.strokes[0] !== undefined) {
-    shapeInfos.hasFillStroke.stroke = true;
-    shapeInfos.colors.stroke.r = firstSelection.strokes[0].color.r * 255;
-    shapeInfos.colors.stroke.g = firstSelection.strokes[0].color.g * 255;
-    shapeInfos.colors.stroke.b = firstSelection.strokes[0].color.b * 255;
-    shapeInfos.colors.stroke.opacity = Math.round(firstSelection.strokes[0].opacity * 100);
-  }
-  else {
-    shapeInfos.hasFillStroke.stroke = false;
-  }
-
-}
-
-function isSelectionValid(): boolean {
-
+  shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
+ 
   let notSupportedNodeTypes = [
     "CODE_BLOCK",
     "COMPONENT_SET",
@@ -79,14 +58,16 @@ function isSelectionValid(): boolean {
     "STICKY",
     "WIDGET"
   ];
-  
-  if (figma.currentPage.selection[0] === undefined) {
+
+  const selection = figma.currentPage.selection;
+
+  if (!selection[0]) {
     sendUIMessageCodeToUI("noSelection");
     return false;
   }
- 
+
   // We use this for loop to either check if one thing is selected or multiple as use can for example select a group a shape, in that case we should block the plugin from being used.
-  for (const node of figma.currentPage.selection) {
+  for (const node of selection) {
     // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
     if (notSupportedNodeTypes.includes(node.type)) {
       sendUIMessageCodeToUI("notSupportedType", node.type);
@@ -94,46 +75,57 @@ function isSelectionValid(): boolean {
     }
   }
 
-  if (figma.currentPage.selection[0].fills[0] === undefined && figma.currentPage.selection[0].strokes[0] === undefined) {
+  const selectionFill = selection[0].fills[0];
+  const selectionStroke = selection[0].strokes[0];
+
+  if (!selectionFill && !selectionStroke) {
     sendUIMessageCodeToUI("noColorInShape");
     return false;
   }
 
-  if (figma.currentPage.selection[0].fills[0] !== undefined) {
-    if (figma.currentPage.selection[0].fills[0].type != "SOLID") {
-      sendUIMessageCodeToUI("noSolidColor");
-      return false;
-    }
+  // We the following 3 conditions, we allow for example to modify the color of a shape that have a gradient on its stroke and a solid fill or vice versa.
+  if (selectionFill?.type !== "SOLID" && selectionStroke?.type !== "SOLID") {
+    sendUIMessageCodeToUI("noSolidColor");
+    return false;
   }
 
-  if (figma.currentPage.selection[0].strokes[0] !== undefined) {
-    if (figma.currentPage.selection[0].strokes[0].type != "SOLID") {
-      sendUIMessageCodeToUI("noSolidColor");
-      return false;
-    }
+  if (selectionFill?.type === "SOLID") {
+    shapeInfos.hasFillStroke.fill = true;
+
+    shapeInfos.colors.fill.r = selectionFill.color.r * 255;
+    shapeInfos.colors.fill.g = selectionFill.color.g * 255;
+    shapeInfos.colors.fill.b = selectionFill.color.b * 255;
+    shapeInfos.colors.fill.opacity = Math.round(selectionFill.opacity * 100);
+  }
+
+  if (selectionStroke?.type === "SOLID") {
+    shapeInfos.hasFillStroke.stroke = true;
+
+    shapeInfos.colors.stroke.r = selectionStroke.color.r * 255;
+    shapeInfos.colors.stroke.g = selectionStroke.color.g * 255;
+    shapeInfos.colors.stroke.b = selectionStroke.color.b * 255;
+    shapeInfos.colors.stroke.opacity = Math.round(selectionStroke.opacity * 100);
   }
 
 
-  
-  // If user has selected multiple shapes, we test if they all have at least all a fill or a stroke.
-  // For example user has selected 3 shapes and 2 of them have only a stroke and the other only a fill, we don't allow the plugin to be used.
-  if (figma.currentPage.selection.length > 1) {
-    let fills: number = 0;
-    let strokes: number = 0;
+  // If user select multiple shape and not all of them have a stroke of a fill or if it's case but one of them is a gradient, we block the plugin.
+  if (selection.length > 1) {
+    let fillsCount = 0;
+    let strokesCount = 0;
     
-    for (const node of figma.currentPage.selection) {
-      if (node.fills[0] !== undefined) fills++;
-      if (node.strokes[0] !== undefined) strokes++;
+    for (const node of selection) {
+      if (node.fills[0]?.type === "SOLID") fillsCount++;
+      if (node.strokes[0]?.type === "SOLID") strokesCount++;
     }
   
-    if (figma.currentPage.selection.length != fills && figma.currentPage.selection.length != strokes) {
+    if (selection.length !== fillsCount && selection.length !== strokesCount) {
       sendUIMessageCodeToUI("notAllShapesHaveFillOrStroke");
       return false;
     }
-
   }
-
+  
   return true;
+
 }
 
 
@@ -164,11 +156,7 @@ figma.showUI(__html__, {width: 240, height: 346, themeColors: true});
 // To send the color of the shape on launch
 function init() {
 
-  if(!isSelectionValid()) return;
-
-  let firstSelection: SceneNode = figma.currentPage.selection[0];
-  
-  updateShapeInfos(firstSelection);
+  if (!updateShapeInfos()) return;
 
   if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
   else { currentFillOrStroke = "stroke"; }
@@ -188,11 +176,7 @@ init();
 figma.on("selectionchange", () => {
   // console.log('BACKEND: selection change');
   
-  if(!isSelectionValid()) return;
-
-  let firstSelection: SceneNode = figma.currentPage.selection[0];
-  
-  updateShapeInfos(firstSelection);
+  if (!updateShapeInfos()) return;
 
   if (currentFillOrStroke == "fill" && !shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "stroke"; }
   else if (currentFillOrStroke == "stroke" && !shapeInfos.hasFillStroke.stroke) { currentFillOrStroke = "fill"; }
@@ -212,14 +196,11 @@ figma.on("documentchange", (event) => {
     // We don't run the code if for example the user has changed the rotation of the shape.
     if (changeProperty == "fills" || changeProperty == "strokes") {
       // console.log('BACKEND: document change');
-
-      if(!isSelectionValid()) return;
-
-      let firstSelection: SceneNode = figma.currentPage.selection[0];
-        
+     
       // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
       let oldHasFillStroke = Object.assign({}, shapeInfos.hasFillStroke);
-      updateShapeInfos(firstSelection);
+ 
+      if (!updateShapeInfos()) return;
 
       if (JSON.stringify(oldHasFillStroke) !== JSON.stringify(shapeInfos.hasFillStroke)) {
         if (currentFillOrStroke == "fill" && !shapeInfos.hasFillStroke.fill) {
