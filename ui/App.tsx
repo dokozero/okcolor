@@ -212,7 +212,7 @@ export function App() {
     okhxyValues.x.value = 0;
     okhxyValues.y.value = 0;
     updateOpacityValue(0);
-    currentColor = Object.assign({}, currentColorDefault);
+    Object.assign(currentColor, currentColorDefault);
     shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
 
     fillOrStrokeSelector.current.setAttribute("data-active", "fill");
@@ -302,8 +302,6 @@ export function App() {
         okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/picker_size) * 100);
 
         Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value));
-
-        // Temp note - oklch code 1
         
         updateManipulatorPositions.colorPicker();
         renderFillOrStrokeSelector();
@@ -313,13 +311,7 @@ export function App() {
         canvas_y = event.clientX - rect.left;
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
-        // We do this to be abble to change the hue value on the color picker canvas when we have a white or black value. If we don't to this fix, the hue value will always be the same on the color picker canvas.
-        let x: number = clamp(okhxyValues.x.value, 0.1, 99.9);
-        let y: number = clamp(okhxyValues.y.value, 0.1, 99.9);
-
-        Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, x, y));
-
-        // Temp note - oklch code 2
+        Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value));
       
         updateManipulatorPositions.hueSlider();
         renderFillOrStrokeSelector();
@@ -395,9 +387,7 @@ export function App() {
     event.target.select();
 
     if (event.target.id == "hue") {
-      let x = clamp(okhxyValues.x.value, 0.01, 99.99);
-      let y = clamp(okhxyValues.y.value, 0.01, 99.99);
-      Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, x, y));
+      Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value));
 
       renderColorPickerCanvas();
       updateManipulatorPositions.hueSlider();
@@ -448,7 +438,15 @@ export function App() {
 
   function sendNewShapeColorToBackend() {
     // console.log("send New Shape Color To Backend");
-    parent.postMessage({ pluginMessage: { type: "Update shape color", "newColor": currentColor } }, '*');
+
+    let newColor = Object.assign({}, currentColor);
+
+    // We do this because in colorConversion() we clamp values to keep the HUE when we change color model for example. Problem is if we don't to this, in OkHSL when we have Lightness to 100 Figma will for example set a HEX like FEFFEF instead of FFFFFF. That is not the case in OkHSV or with black.
+    if (okhxyValues.y.value == 100) {
+      newColor.r = newColor.g = newColor.b = 255;
+    }
+
+    parent.postMessage({ pluginMessage: { type: "Update shape color", "newColor": newColor } }, '*');
   }
 
   function syncCurrentFillOrStrokeWithBackend() {

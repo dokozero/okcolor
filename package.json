@@ -1,7 +1,7 @@
 {
   "name": "okcolor",
   "version": "1.0.0",
-  "description": "Your Figma Plugin",
+  "description": "A Figma plugin to get OK colors",
   "main": "code.js",
   "scripts": {
     "build-plugin": "vite build --config vitePlugin.config.ts",
