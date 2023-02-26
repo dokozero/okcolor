@@ -241,20 +241,29 @@ figma.ui.onmessage = (msg) => {
     // console.log("BACKEND: update shape color");
 
     itsAMe = true;
+
+    const newColor_r = msg.newColor.r / 255;
+    const newColor_g = msg.newColor.g / 255;
+    const newColor_b = msg.newColor.b / 255;
+    const newColor_opacity = msg.newColor.opacity / 100;
+    
+    let copyNode;
+    
+    const type = currentFillOrStroke + "s";
     
     for (const node of figma.currentPage.selection) {
-      let copyNode;
 
-      if ("fills" in node && currentFillOrStroke == "fill") { copyNode = JSON.parse(JSON.stringify(node.fills)); }
-      else if ("strokes" in node && currentFillOrStroke == "stroke") { copyNode = JSON.parse(JSON.stringify(node.strokes)); }
 
-      copyNode[0].color.r = msg.newColor.r / 255;
-      copyNode[0].color.g = msg.newColor.g / 255;
-      copyNode[0].color.b = msg.newColor.b / 255;
-      copyNode[0].opacity = msg.newColor.opacity / 100;
+      if (type in node) {
+        copyNode = JSON.parse(JSON.stringify(node[type]));
+        
+        copyNode[0].color.r = newColor_r;
+        copyNode[0].color.g = newColor_g;
+        copyNode[0].color.b = newColor_b;
+        copyNode[0].opacity = newColor_opacity;
 
-      if ("fills" in node && currentFillOrStroke == "fill") { node.fills = copyNode; }
-      else if ("strokes" in node && currentFillOrStroke == "stroke") { node.strokes = copyNode; }
+        node[type] = copyNode;
+      }
     }
 
   }
