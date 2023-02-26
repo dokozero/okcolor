@@ -52,6 +52,8 @@ function updateShapeInfos(): boolean {
     "STAR",
     "TEXT",
     "VECTOR",
+    "SHAPE_WITH_TEXT",
+    "HIGHLIGHT"
   ];
 
   const selection = figma.currentPage.selection;
