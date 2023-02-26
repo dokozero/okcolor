@@ -1,8 +1,2 @@
-# Node
-*.log
-*.log.*
+.DS_Store
 node_modules
-
-out/
-dist/
-code.js
