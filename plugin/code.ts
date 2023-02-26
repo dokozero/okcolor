@@ -1,5 +1,3 @@
-// @ts-nochec k
-
 /*
 ** VARIABLES DECLARATIONS
 */
@@ -250,14 +248,10 @@ figma.ui.onmessage = (msg) => {
     const newColor_g = msg.newColor.g / 255;
     const newColor_b = msg.newColor.b / 255;
     const newColor_opacity = msg.newColor.opacity / 100;
-    
     let copyNode;
-    
     const type = currentFillOrStroke + "s";
     
     for (const node of figma.currentPage.selection) {
-
-
       if (type in node) {
         copyNode = JSON.parse(JSON.stringify(node[type]));
         

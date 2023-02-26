@@ -93,7 +93,7 @@ export function App() {
   ** HELPER FUNCTIONS
   */
 
-  function clamp(num, min, max) {
+  function clamp(num: number, min: number, max: number): number {
     if (num < min) {
       return min;
     }
@@ -103,7 +103,7 @@ export function App() {
     return num;
   }
 
-  function limitMouseHandlerValue(x) {
+  function limitMouseHandlerValue(x: number): number {
     return x < eps ? eps : (x > 1-eps ? 1-eps : x);
   }
 
