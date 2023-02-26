@@ -200,26 +200,19 @@ export function App() {
   }
 
   function renderFillOrStrokeSelector() {
-    if (shapeInfos.hasFillStroke.fill) {
-      fillOrStrokeSelector_fill.current.setAttribute("fill", `rgb(${shapeInfos.colors.fill.r}, ${shapeInfos.colors.fill.g}, ${shapeInfos.colors.fill.b})`);
+    if (shapeInfos.hasFillStroke.fill && shapeInfos.hasFillStroke.stroke) {
+      fillOrStrokeSelector.current.classList.remove("u-pointer-events-none");
+    } else {
+      fillOrStrokeSelector.current.classList.add("u-pointer-events-none");
     }
-    if (shapeInfos.hasFillStroke.stroke) {
-      fillOrStrokeSelector_stroke.current.setAttribute("fill", `rgb(${shapeInfos.colors.stroke.r}, ${shapeInfos.colors.stroke.g}, ${shapeInfos.colors.stroke.b})`);
-    }
+    
+    fillOrStrokeSelector.current.setAttribute("data-has-fill", shapeInfos.hasFillStroke.fill);
+    fillOrStrokeSelector.current.setAttribute("data-has-stroke", shapeInfos.hasFillStroke.stroke);
+    
+    fillOrStrokeSelector_fill.current.setAttribute("fill", shapeInfos.hasFillStroke.fill ? `rgb(${shapeInfos.colors.fill.r}, ${shapeInfos.colors.fill.g}, ${shapeInfos.colors.fill.b})` : "none");
+    fillOrStrokeSelector_stroke.current.setAttribute("fill", shapeInfos.hasFillStroke.stroke ? `rgb(${shapeInfos.colors.stroke.r}, ${shapeInfos.colors.stroke.g}, ${shapeInfos.colors.stroke.b})` : "none");
   }
 
-  function syncFillOrStrokeSelector() {
-    // console.log("syncWithNewShapeFillStrokeInfo");
-
-    if (shapeInfos.hasFillStroke.fill) { fillOrStrokeSelector.current.setAttribute("data-has-fill", "true") }
-    else { fillOrStrokeSelector.current.setAttribute("data-has-fill", "false") }
-
-    if (shapeInfos.hasFillStroke.stroke) { fillOrStrokeSelector.current.setAttribute("data-has-stroke", "true") }
-    else { fillOrStrokeSelector.current.setAttribute("data-has-stroke", "false") }
-
-    if (!shapeInfos.hasFillStroke.fill || !shapeInfos.hasFillStroke.stroke) { fillOrStrokeSelector.current.classList.add("u-pointer-events-none"); }
-    else { fillOrStrokeSelector.current.classList.remove("u-pointer-events-none"); }
-  }
 
   function resetInterface() {
     okhxyValues.hue.value = 0;
@@ -231,7 +224,6 @@ export function App() {
 
     fillOrStrokeSelector.current.setAttribute("data-active", "fill");
     updateManipulatorPositions.all();
-    syncFillOrStrokeSelector();
     renderOpacitySliderCanvas();
     renderFillOrStrokeSelector();
 
@@ -518,8 +510,7 @@ export function App() {
       currentFillOrStroke = event.data.pluginMessage.currentFillOrStroke;
       shapeInfos = event.data.pluginMessage.shapeInfos;
       
-      syncFillOrStrokeSelector();
-
+      
       if (currentFillOrStroke == "fill") {
         currentColor = event.data.pluginMessage.shapeInfos.colors.fill;
       }
