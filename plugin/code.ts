@@ -54,7 +54,6 @@ function shapeInfosResetDefault() {
 function updateShapeInfos(): boolean {
 
   shapeInfosResetDefault();
-  currentFillOrStroke = "fill";
  
   const supportedNodeTypes = [
     "BOOLEAN_OPERATION",
@@ -192,6 +191,8 @@ init();
 // If user change shape selection.
 figma.on("selectionchange", () => {
   // console.log('BACKEND: selection change');
+
+  currentFillOrStroke = "fill";
   
   if (!updateShapeInfos()) return;
 
