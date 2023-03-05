@@ -159,12 +159,36 @@ export function App() {
 
   function updateOkhxyValuesFromCurrentRgba() {
     // console.log("convert Rgb To Okhxy Values");
+
+    let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
+
+    // We do these test to be abble to keep the hue between the color model change.
+    if (okhxyValues.isWhite || okhxyValues.isBlack || okhxyValues.isGray) {
+      const clampX = clamp(okhxyValues.x.value, 1, 99);
+      const clampY = clamp(okhxyValues.y.value, 1, 99);
+
+      shapeColor = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, clampX, clampY);
+    }
     
-    const newOkhxy = colorConversion("srgb", currentColorModel, shapeInfos.colors[currentFillOrStroke].rgba[0], shapeInfos.colors[currentFillOrStroke].rgba[1], shapeInfos.colors[currentFillOrStroke].rgba[2]);
+    const newOkhxy = colorConversion("srgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2]);
+
+    if (okhxyValues.isWhite) {
+      okhxyValues.x.value = 0;
+      okhxyValues.y.value = 100;
+    }
+    else if (okhxyValues.isBlack) {
+      okhxyValues.x.value = 0;
+      okhxyValues.y.value = 0;
+    }
+    else if (okhxyValues.isGray) {
+      okhxyValues.x.value = 0;
+    }
+    else {
+      okhxyValues.x.value = newOkhxy[1];
+      okhxyValues.y.value = newOkhxy[2];
+    }
 
     okhxyValues.hue.value = newOkhxy[0];
-    okhxyValues.x.value = newOkhxy[1];
-    okhxyValues.y.value = newOkhxy[2];
   }
 
   function updateCurrentRgbaFromOkhxyValues() {
@@ -175,22 +199,20 @@ export function App() {
     okhxyValues.isBlack = false;
     okhxyValues.isGray = false;
 
-    // We do this to be able to change the hue value on the color picker canvas when we have a white or black value. If we don't to this fix, the hue value will always be the same on the color picker canvas.
-    // And to keep the hue if we change to another color model with a pure white or black color.
-
+    // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
     if (okhxyValues.x.value == 0 && (okhxyValues.y.value > 1 && okhxyValues.y.value < 99)) {
       okhxyValues.isGray = true;
     }
     else if (okhxyValues.y.value == 0) {
       okhxyValues.isBlack = true;
     }
-    else if (currentColorModel == "okhsl" && okhxyValues.y.value == 100) {
-      okhxyValues.isWhite = true;
-    }
-    else if (currentColorModel == "okhsv" && okhxyValues.y.value == 100 && okhxyValues.x.value == 0) {
-      okhxyValues.isWhite = true;
+    else if (okhxyValues.y.value == 100) {
+      if (currentColorModel == "okhsl" || (currentColorModel == "okhsv" && okhxyValues.x.value == 0)) {
+        okhxyValues.isWhite = true;
+      }
     }
     
+    // No need to call colorConversion() if we have a white or black color.
     if (!okhxyValues.isWhite && !okhxyValues.isBlack) {
       newRgb = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
     }
@@ -215,6 +237,7 @@ export function App() {
     // If we don't to this and for exemple we start the plugin with a [0, 0, 0] fill, the color picker hue will be red while the hue picker will be orange. Seems to be an inconsistency with the render functions.
     if (shapeColor.slice(0, 3).every(val => val === 0)) { shapeColor.fill(0.01, 0, 3); }
 
+    // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
     if (okhxyValues.isWhite || okhxyValues.isBlack || okhxyValues.isGray) {
       const clampX = clamp(okhxyValues.x.value, 1, 99);
       const clampY = clamp(okhxyValues.y.value, 1, 99);
