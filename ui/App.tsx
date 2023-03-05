@@ -1,5 +1,6 @@
 import { signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
+import { h } from 'preact';
 
 import { colorConversion } from "../lib/bottosson/colorconversion";
 import { render, render_okhsl } from "../lib/bottosson/render";
@@ -17,74 +18,72 @@ const picker_size = 240;
 const slider_size = 148;
 
 const okhxyValues = {
+  isWhite: false,
+  isBlack: false,
+  isGray: false,
   hue: signal(0),
   x: signal(0),
-  y: signal(0)
+  y: signal(0),
 };
 
 const opacitySliderStyle = signal("");
 
+type RgbaColor = [number, number, number, number];
 
-let init = true;
+type Colors = {
+  [key: string]: {
+    rgba: RgbaColor;
+  };
+}
 
-let UIMessageOn = false;
+interface ShapeInfos {
+  hasFillStroke: {
+    fill: boolean;
+    stroke: boolean;
+  };
+  colors: Colors;
+}
 
-let currentColorDefault = {
-  r: 255,
-  g: 255,
-  b: 255,
-  opacity: 0
-};
-
-let currentColor = Object.assign({}, currentColorDefault);
-
-// Default choice unless selected shape on launch has no fill.
-let currentFillOrStroke = "fill";
-let currentColorModel = "okhsl";
-
-let activeMouseHandler = null;
-
-// This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
-let mouseHandlerEventTargetId = "";
-
-let shapeInfosDefault = {
+let shapeInfos: ShapeInfos = {
   hasFillStroke: {
     fill: true,
     stroke: true
   },
   colors: {
     fill: {
-      r: 255,
-      g: 255,
-      b: 255,
-      opacity: 0,
+      rgba: [255, 255, 255, 0]
     },
     stroke: {
-      r: 255,
-      g: 255,
-      b: 255,
-      opacity: 0
+      rgba: [255, 255, 255, 0]
     }
   }
 }
 
-let shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
+let init = true;
+let UIMessageOn = false;
+
+// Default choice unless selected shape on launch has no fill.
+let currentFillOrStroke = "fill";
+let currentColorModel = "okhsl";
+let activeMouseHandler: Function | undefined;
+
+// This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
+let mouseHandlerEventTargetId = "";
 
 export function App() { 
   // We could use one canvas element but better no to avoid flickering when user change color model 
-  const fillOrStrokeSelector = useRef(null);
-  const fillOrStrokeSelector_fill = useRef(null);
-  const fillOrStrokeSelector_stroke = useRef(null);
-  const colorPickerUIMessage = useRef(null);
-  const colorPicker = useRef(null);
-  const hueSlider = useRef(null);
-  const opacitySlider = useRef(null);
-  const manipulatorColorPicker = useRef(null);
-  const manipulatorHueSlider = useRef(null);
-  const manipulatorOpacitySlider = useRef(null);
-  const opacityInput = useRef(null);
-  const bottomControls = useRef(null);
-
+  const fillOrStrokeSelector = useRef<HTMLDivElement>(null);
+  const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null);
+  const fillOrStrokeSelector_stroke = useRef<SVGPathElement>(null);
+  const colorPickerUIMessage = useRef<HTMLDivElement>(null);
+  const colorPicker = useRef<HTMLCanvasElement>(null);
+  const hueSlider = useRef<HTMLDivElement>(null);
+  const opacitySlider = useRef<HTMLDivElement>(null);
+  const manipulatorColorPicker = useRef<SVGGElement>(null);
+  const manipulatorHueSlider = useRef<SVGGElement>(null);
+  const manipulatorOpacitySlider = useRef<SVGGElement>(null);
+  const opacityInput = useRef<HTMLInputElement>(null);
+  const bottomControls = useRef<HTMLDivElement>(null);
 
   /*
   ** HELPER FUNCTIONS
@@ -104,6 +103,13 @@ export function App() {
     return x < eps ? eps : (x > 1-eps ? 1-eps : x);
   }
 
+  function shapeInfosResetDefault() {
+    shapeInfos.hasFillStroke.fill = true,
+    shapeInfos.hasFillStroke.stroke = true,
+    shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
+    shapeInfos.colors.stroke.rgba = [255, 255, 255, 0]
+  }
+
 
   
 
@@ -115,31 +121,31 @@ export function App() {
     hide() {
       UIMessageOn = false;
 
-      bottomControls.current.classList.remove("u-deactivated");
-      manipulatorColorPicker.current.classList.remove("u-display-none");
-      colorPickerUIMessage.current.classList.add("u-display-none");
+      bottomControls.current!.classList.remove("u-deactivated");
+      manipulatorColorPicker.current!.classList.remove("u-display-none");
+      colorPickerUIMessage.current!.classList.add("u-display-none");
     },
     show(messageCode: string, nodeType: string) {
       UIMessageOn = true;
 
       resetInterface();
 
-      bottomControls.current.classList.add("u-deactivated");
-      manipulatorColorPicker.current.classList.add("u-display-none");
-      colorPickerUIMessage.current.classList.remove("u-display-none");
+      bottomControls.current!.classList.add("u-deactivated");
+      manipulatorColorPicker.current!.classList.add("u-display-none");
+      colorPickerUIMessage.current!.classList.remove("u-display-none");
 
       let message: string = UIMessageTexts[messageCode];
       if (nodeType != "") {
         message = message.replace("$SHAPE", nodeType.toLowerCase());
       }
-      colorPickerUIMessage.current.children[0].innerHTML = message;
+      colorPickerUIMessage.current!.children[0].innerHTML = message;
     }
   }
 
   // We use a function to update the opacity value in the input because we need to add the "%" sign and doing it directly in the value field with a fignal value doesn't work.
   function updateOpacityValue(newValue: number) {
-    currentColor.opacity = newValue;
-    opacityInput.current.value = `${newValue}%`;
+    shapeInfos.colors[currentFillOrStroke].rgba[3] = newValue;
+    opacityInput.current!.value = `${newValue}%`;
   }
 
 
@@ -147,63 +153,107 @@ export function App() {
     // console.log("switch FillOrStrokeSelector");
     
     currentFillOrStroke = currentFillOrStroke === "fill" ? "stroke" : "fill";
-    fillOrStrokeSelector.current.setAttribute("data-active", currentFillOrStroke);
+    fillOrStrokeSelector.current!.setAttribute("data-active", currentFillOrStroke);
   } 
 
 
-  function updateOkhxyValuesFromCurrentColor() {
+  function updateOkhxyValuesFromCurrentRgba() {
     // console.log("convert Rgb To Okhxy Values");
-
-    let newOkhxy = colorConversion("srgb", currentColorModel, currentColor.r, currentColor.g, currentColor.b);
+    
+    const newOkhxy = colorConversion("srgb", currentColorModel, shapeInfos.colors[currentFillOrStroke].rgba[0], shapeInfos.colors[currentFillOrStroke].rgba[1], shapeInfos.colors[currentFillOrStroke].rgba[2]);
 
     okhxyValues.hue.value = newOkhxy[0];
     okhxyValues.x.value = newOkhxy[1];
     okhxyValues.y.value = newOkhxy[2];
   }
 
+  function updateCurrentRgbaFromOkhxyValues() {
+
+    let newRgb: [number, number, number] = [0, 0, 0];
+
+    okhxyValues.isWhite = false;
+    okhxyValues.isBlack = false;
+    okhxyValues.isGray = false;
+
+    // We do this to be able to change the hue value on the color picker canvas when we have a white or black value. If we don't to this fix, the hue value will always be the same on the color picker canvas.
+    // And to keep the hue if we change to another color model with a pure white or black color.
+
+    if (okhxyValues.x.value == 0 && (okhxyValues.y.value > 1 && okhxyValues.y.value < 99)) {
+      okhxyValues.isGray = true;
+    }
+    else if (okhxyValues.y.value == 0) {
+      okhxyValues.isBlack = true;
+    }
+    else if (currentColorModel == "okhsl" && okhxyValues.y.value == 100) {
+      okhxyValues.isWhite = true;
+    }
+    else if (currentColorModel == "okhsv" && okhxyValues.y.value == 100 && okhxyValues.x.value == 0) {
+      okhxyValues.isWhite = true;
+    }
+    
+    if (!okhxyValues.isWhite && !okhxyValues.isBlack) {
+      newRgb = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
+    }
+    else if (okhxyValues.isWhite) {
+      newRgb = [255, 255, 255];
+    }
+    else if (okhxyValues.isBlack) {
+      newRgb = [0, 0, 0];
+    }
+
+    shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
+  }
+
 
   function renderColorPickerCanvas() {
     // console.log("render Color Picker Canvas");
 
-    let results;
-    let ctx = colorPicker.current.getContext("2d");
+    let renderResult;
+    let ctx = colorPicker.current!.getContext("2d");
+    let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
 
     // If we don't to this and for exemple we start the plugin with a [0, 0, 0] fill, the color picker hue will be red while the hue picker will be orange. Seems to be an inconsistency with the render functions.
-    if (currentColor.r == 0 && currentColor.g == 0 && currentColor.b == 0) {
-      currentColor.r = currentColor.g = currentColor.b = 0.01;
+    if (shapeColor.slice(0, 3).every(val => val === 0)) { shapeColor.fill(0.01, 0, 3); }
+
+    if (okhxyValues.isWhite || okhxyValues.isBlack || okhxyValues.isGray) {
+      const clampX = clamp(okhxyValues.x.value, 1, 99);
+      const clampY = clamp(okhxyValues.y.value, 1, 99);
+
+      shapeColor = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, clampX, clampY);
     }
 
     if (currentColorModel == "okhsl") {
-      results = render_okhsl(currentColor.r, currentColor.g, currentColor.b);
-      ctx.putImageData(results["okhsl_sl"], 0, 0);
+      renderResult = render_okhsl(shapeColor[0], shapeColor[1], shapeColor[2]);
+      ctx!.putImageData(renderResult["okhsl_sl"], 0, 0);
     }
     else if (currentColorModel == "okhsv") {
-      results = render(currentColor.r, currentColor.g, currentColor.b);
-      ctx.putImageData(results["okhsv_sv"], 0, 0);
+      renderResult = render(shapeColor[0], shapeColor[1], shapeColor[2]);
+      ctx!.putImageData(renderResult["okhsv_sv"], 0, 0);
     }
     // else if (colorModel == "oklch") {
-    //   results = render(currentColor.r, currentColor.r, currentColor.r);
+    //   results = render(tempColor[0], tempColor[1], tempColor[2]);
     //   ctx.putImageData(results["oklch_lc"], 0, 0);
     // }
   }
 
   function renderOpacitySliderCanvas() {
     // console.log("render opacity Slider Canvas");
-    opacitySliderStyle.value = `background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 1)), url(${opacitysliderBackgroundImg})`;
+
+    opacitySliderStyle.value = `background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${shapeInfos.colors[currentFillOrStroke].rgba[0]}, ${shapeInfos.colors[currentFillOrStroke].rgba[1]}, ${shapeInfos.colors[currentFillOrStroke].rgba[2]}, 1)), url(${opacitysliderBackgroundImg})`;
   }
 
   function renderFillOrStrokeSelector() {
     if (shapeInfos.hasFillStroke.fill && shapeInfos.hasFillStroke.stroke) {
-      fillOrStrokeSelector.current.classList.remove("u-pointer-events-none");
+      fillOrStrokeSelector.current!.classList.remove("u-pointer-events-none");
     } else {
-      fillOrStrokeSelector.current.classList.add("u-pointer-events-none");
+      fillOrStrokeSelector.current!.classList.add("u-pointer-events-none");
     }
     
-    fillOrStrokeSelector.current.setAttribute("data-has-fill", shapeInfos.hasFillStroke.fill);
-    fillOrStrokeSelector.current.setAttribute("data-has-stroke", shapeInfos.hasFillStroke.stroke);
-    
-    fillOrStrokeSelector_fill.current.setAttribute("fill", shapeInfos.hasFillStroke.fill ? `rgb(${shapeInfos.colors.fill.r}, ${shapeInfos.colors.fill.g}, ${shapeInfos.colors.fill.b})` : "none");
-    fillOrStrokeSelector_stroke.current.setAttribute("fill", shapeInfos.hasFillStroke.stroke ? `rgb(${shapeInfos.colors.stroke.r}, ${shapeInfos.colors.stroke.g}, ${shapeInfos.colors.stroke.b})` : "none");
+    fillOrStrokeSelector.current!.setAttribute("data-has-fill", shapeInfos.hasFillStroke.fill.toString());
+    fillOrStrokeSelector.current!.setAttribute("data-has-stroke", shapeInfos.hasFillStroke.stroke.toString());
+
+    fillOrStrokeSelector_fill.current!.setAttribute("fill", shapeInfos.hasFillStroke.fill ? `rgb(${shapeInfos.colors.fill.rgba[0]}, ${shapeInfos.colors.fill.rgba[1]}, ${shapeInfos.colors.fill.rgba[2]})` : "none");
+    fillOrStrokeSelector_stroke.current!.setAttribute("fill", shapeInfos.hasFillStroke.stroke ? `rgb(${shapeInfos.colors.stroke.rgba[0]}, ${shapeInfos.colors.stroke.rgba[1]}, ${shapeInfos.colors.stroke.rgba[2]})` : "none");
   }
 
 
@@ -212,16 +262,15 @@ export function App() {
     okhxyValues.x.value = 0;
     okhxyValues.y.value = 0;
     updateOpacityValue(0);
-    Object.assign(currentColor, currentColorDefault);
-    shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
+    shapeInfosResetDefault();
 
-    fillOrStrokeSelector.current.setAttribute("data-active", "fill");
+    fillOrStrokeSelector.current!.setAttribute("data-active", "fill");
     updateManipulatorPositions.all();
     renderOpacitySliderCanvas();
     renderFillOrStrokeSelector();
 
-    let ctx = colorPicker.current.getContext("2d");
-    ctx.clearRect(0, 0, colorPicker.current.width, colorPicker.current.height);
+    let ctx = colorPicker.current!.getContext("2d");
+    ctx!.clearRect(0, 0, colorPicker.current!.width, colorPicker.current!.height);
   }
 
   const updateManipulatorPositions = {
@@ -229,17 +278,17 @@ export function App() {
       // console.log("update Manipulator Positions - color picker");
       let x = okhxyValues.x.value / 100;
       let y = okhxyValues.y.value / 100;
-      manipulatorColorPicker.current.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y));
+      manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y));
     },
     hueSlider() {
       // console.log("update Manipulator Positions - hue slider");
       let hue = okhxyValues.hue.value / 360;
-      manipulatorHueSlider.current.transform.baseVal.getItem(0).setTranslate((slider_size*hue)+6, -1);
+      manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*hue)+6, -1);
     },
     opacitySlider() {
       // console.log("update Manipulator Positions - opacity slider");
-      let opacity = currentColor.opacity / 100;
-      manipulatorOpacitySlider.current.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)+6, -1);
+      let opacity = shapeInfos.colors[currentFillOrStroke].rgba[3] / 100;
+      manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)+6, -1);
     },
     all() {
       this.colorPicker();
@@ -258,11 +307,9 @@ export function App() {
 
     switchFillOrStrokeSelector();
 
-    currentColor = shapeInfos.colors[currentFillOrStroke];
+    updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
 
-    updateOpacityValue(currentColor.opacity);
-
-    updateOkhxyValuesFromCurrentColor();
+    updateOkhxyValuesFromCurrentRgba();
     renderOpacitySliderCanvas();
     updateManipulatorPositions.all();
     renderColorPickerCanvas();
@@ -271,28 +318,30 @@ export function App() {
   }
 
 
-  function colorModelHandle(event) {
+  function colorModelHandle(event: h.JSX.TargetedEvent<HTMLSelectElement, Event>) {
     // console.log("color Model Handle");
 
-    currentColorModel = event.target.value;
+    currentColorModel = (event.target as HTMLSelectElement).value;
     
-    updateOkhxyValuesFromCurrentColor();
+    updateOkhxyValuesFromCurrentRgba();
     updateManipulatorPositions.colorPicker();
     renderColorPickerCanvas();
   }
 
 
-  function setupHandler(canvas) {
+  function setupHandler(canvas: HTMLCanvasElement | HTMLDivElement) {
     // console.log("setup Handler - " + canvas.id);
 
-    const mouseHandler = (event) => {
+    const mouseHandler = (event: MouseEvent) => {
       let rect = canvas.getBoundingClientRect();
 
       let canvas_x: number;
       let canvas_y: number;
 
+      const eventTarget = event.target as HTMLCanvasElement | HTMLDivElement;
+
       if (mouseHandlerEventTargetId == "") {
-        mouseHandlerEventTargetId = event.target.id;
+        mouseHandlerEventTargetId = eventTarget.id;
       }
 
       if (mouseHandlerEventTargetId == "okhxy-xy-picker") {
@@ -301,7 +350,7 @@ export function App() {
         okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/picker_size) * 100);
         okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/picker_size) * 100);
 
-        Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value));
+        updateCurrentRgbaFromOkhxyValues();
         
         updateManipulatorPositions.colorPicker();
         renderFillOrStrokeSelector();
@@ -311,8 +360,8 @@ export function App() {
         canvas_y = event.clientX - rect.left;
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
-        Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value));
-      
+        updateCurrentRgbaFromOkhxyValues();
+
         updateManipulatorPositions.hueSlider();
         renderFillOrStrokeSelector();
         renderOpacitySliderCanvas();
@@ -330,21 +379,23 @@ export function App() {
 
     };
 
-    canvas.addEventListener("mousedown", function(event) {
-      activeMouseHandler = mouseHandler;
-      activeMouseHandler(event);
+    canvas.addEventListener("mousedown", {
+      handleEvent: function(event: MouseEvent) {
+        activeMouseHandler = mouseHandler;
+        activeMouseHandler(event);
+      }
     });
   }
 
-  document.addEventListener("mousemove", function(event) {
-    if (activeMouseHandler !== null) {
+  document.addEventListener("mousemove", function(event: MouseEvent) {
+    if (activeMouseHandler) {
       activeMouseHandler(event);  
     }
   });
 
   function cancelMouseHandler() {
-    if (activeMouseHandler !== null) {
-      activeMouseHandler = null;
+    if (activeMouseHandler) {
+      activeMouseHandler = undefined;
       mouseHandlerEventTargetId = "";
     }
   }
@@ -353,19 +404,23 @@ export function App() {
   document.addEventListener("mouseleave", cancelMouseHandler);
 
 
-  function handleInputFocus(event) {
-    event.target.select();
+  function handleInputFocus(event: FocusEvent) {
+    (event.target as HTMLInputElement).select();
   }
 
-  function hxyInputHandle(event) {  
+  function hxyInputHandle(event: KeyboardEvent) {  
     if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
 
     // console.log("hxy Input Handle");
 
     if (event.key != "Tab") { event.preventDefault(); }
 
-    let eventTargetId: string = event.target.id;
-    let eventTargetValue = parseInt(event.target.value);
+    const eventTarget = event.target as HTMLInputElement;
+
+    let eventTargetId: string = eventTarget.id;
+    let eventTargetValue = parseInt(eventTarget.value);
+
+    if (Number.isNaN(eventTargetValue)) { eventTargetValue = 0; }
 
     if (event.key == "ArrowUp") eventTargetValue++;
     else if (event.key == "ArrowDown") eventTargetValue--;
@@ -378,54 +433,49 @@ export function App() {
       eventTargetValue = clamp(eventTargetValue, 0, 100);
     }
 
-    if (Number.isNaN(eventTargetValue)) {
-      eventTargetValue = 0;
+    if (eventTargetId == "hue" || eventTargetId == "x" || eventTargetId == "y") {
+      okhxyValues[eventTargetId].value = eventTargetValue;
     }
 
-    okhxyValues[eventTargetId].value = eventTargetValue;
+    eventTarget.select();
+    
+    updateCurrentRgbaFromOkhxyValues();
 
-    event.target.select();
-
-    if (event.target.id == "hue") {
-      Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value));
-
+    if (eventTarget.id == "hue") {
       renderColorPickerCanvas();
       updateManipulatorPositions.hueSlider();
     }
-    else {
-      Object.assign(currentColor, colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value));
+    else if (eventTarget.id == "x" || eventTarget.id == "y") {
       updateManipulatorPositions.colorPicker();
     }
 
-    if (event.target.id != "opacity") {
-      renderOpacitySliderCanvas();
-      renderFillOrStrokeSelector();
-    }
+    renderOpacitySliderCanvas();
+    renderFillOrStrokeSelector();
 
     sendNewShapeColorToBackend();
   }
 
-  function opacityInputHandle(event) {
+  function opacityInputHandle(event: KeyboardEvent) {
     if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
     
     // console.log("opacity Input Handle"); 
 
     if (event.key != "Tab") { event.preventDefault(); }
 
-    let eventTargetValue = parseInt(event.target.value);
+    const eventTarget = event.target as HTMLInputElement;
+
+    let eventTargetValue = parseInt(eventTarget.value);
+
+    if (Number.isNaN(eventTargetValue)) { eventTargetValue = 100; }
 
     if (event.key == "ArrowUp") eventTargetValue++;
     else if (event.key == "ArrowDown") eventTargetValue--;
 
     eventTargetValue = clamp(eventTargetValue, 0, 100);
 
-    if (Number.isNaN(eventTargetValue)) {
-      eventTargetValue = 100;
-    }
-
     updateOpacityValue(eventTargetValue);
 
-    event.target.select();
+    eventTarget.select();
 
     updateManipulatorPositions.opacitySlider();
     sendNewShapeColorToBackend();
@@ -438,15 +488,7 @@ export function App() {
 
   function sendNewShapeColorToBackend() {
     // console.log("send New Shape Color To Backend");
-
-    let newColor = Object.assign({}, currentColor);
-
-    // We do this because in colorConversion() we clamp values to keep the HUE when we change color model for example. Problem is if we don't to this, in OkHSL when we have Lightness to 100 Figma will for example set a HEX like FEFFEF instead of FFFFFF. That is not the case in OkHSV or with black.
-    if (okhxyValues.y.value == 100) {
-      newColor.r = newColor.g = newColor.b = 255;
-    }
-
-    parent.postMessage({ pluginMessage: { type: "Update shape color", "newColor": newColor } }, '*');
+    parent.postMessage({ pluginMessage: { type: "Update shape color", "newColor": shapeInfos.colors[currentFillOrStroke].rgba } }, '*');
   }
 
   function syncCurrentFillOrStrokeWithBackend() {
@@ -463,9 +505,9 @@ export function App() {
     const pluginMessage: string = event.data.pluginMessage.message;
 
     if (init) {
-      setupHandler(colorPicker.current);
-      setupHandler(hueSlider.current);
-      setupHandler(opacitySlider.current);
+      setupHandler(colorPicker.current!);
+      setupHandler(hueSlider.current!);
+      setupHandler(opacitySlider.current!);
 
       init = false;
     }
@@ -487,11 +529,12 @@ export function App() {
       }
       
       currentFillOrStroke = event.data.pluginMessage.currentFillOrStroke;
-      shapeInfos = event.data.pluginMessage.shapeInfos;
-      currentColor = event.data.pluginMessage.shapeInfos.colors[currentFillOrStroke];
+      shapeInfos = JSON.parse(JSON.stringify(event.data.pluginMessage.shapeInfos));
 
-      updateOpacityValue(currentColor.opacity);
-      updateOkhxyValuesFromCurrentColor();
+      updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
+      updateOkhxyValuesFromCurrentRgba();
+
+      
       renderOpacitySliderCanvas();
       updateManipulatorPositions.all();
       renderFillOrStrokeSelector();

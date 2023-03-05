@@ -7,38 +7,54 @@ let currentFillOrStroke = "fill";
 // We use this variable to prevent the triggering of figma.on "documentchange".
 let itsAMe = false;
 
-let shapeInfosDefault = {
+type RgbaColor = [number, number, number, number];
+
+type Colors = {
+  [key: string]: {
+    rgba: RgbaColor;
+  };
+}
+
+interface ShapeInfos {
+  hasFillStroke: {
+    fill: boolean;
+    stroke: boolean;
+  };
+  colors: Colors;
+}
+
+let shapeInfos: ShapeInfos = {
   hasFillStroke: {
     fill: false,
     stroke: false
   },
   colors: {
     fill: {
-      r: 255,
-      g: 255,
-      b: 255,
-      opacity: 0,
+      rgba: [255, 255, 255, 0]
     },
     stroke: {
-      r: 255,
-      g: 255,
-      b: 255,
-      opacity: 0
+      rgba: [255, 255, 255, 0]
     }
   }
 }
-
-let shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
 
 
 /*
 ** HELPER FUNCTIONS
 */
 
+function shapeInfosResetDefault() {
+  shapeInfos.hasFillStroke.fill = false,
+  shapeInfos.hasFillStroke.stroke = false,
+  shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
+  shapeInfos.colors.stroke.rgba = [255, 255, 255, 0]
+}
+
 
 function updateShapeInfos(): boolean {
 
-  shapeInfos = JSON.parse(JSON.stringify(shapeInfosDefault));
+  shapeInfosResetDefault();
+  currentFillOrStroke = "fill";
  
   const supportedNodeTypes = [
     "BOOLEAN_OPERATION",
@@ -89,19 +105,19 @@ function updateShapeInfos(): boolean {
   if (selectionFill?.type === "SOLID") {
     shapeInfos.hasFillStroke.fill = true;
 
-    shapeInfos.colors.fill.r = selectionFill.color.r * 255;
-    shapeInfos.colors.fill.g = selectionFill.color.g * 255;
-    shapeInfos.colors.fill.b = selectionFill.color.b * 255;
-    shapeInfos.colors.fill.opacity = Math.round(selectionFill.opacity * 100);
+    shapeInfos.colors.fill.rgba[0] = selectionFill.color.r * 255;
+    shapeInfos.colors.fill.rgba[1] = selectionFill.color.g * 255;
+    shapeInfos.colors.fill.rgba[2] = selectionFill.color.b * 255;
+    shapeInfos.colors.fill.rgba[3] = Math.round(selectionFill.opacity * 100);
   }
 
   if (selectionStroke?.type === "SOLID") {
     shapeInfos.hasFillStroke.stroke = true;
 
-    shapeInfos.colors.stroke.r = selectionStroke.color.r * 255;
-    shapeInfos.colors.stroke.g = selectionStroke.color.g * 255;
-    shapeInfos.colors.stroke.b = selectionStroke.color.b * 255;
-    shapeInfos.colors.stroke.opacity = Math.round(selectionStroke.opacity * 100);
+    shapeInfos.colors.stroke.rgba[0] = selectionStroke.color.r * 255;
+    shapeInfos.colors.stroke.rgba[1] = selectionStroke.color.g * 255;
+    shapeInfos.colors.stroke.rgba[2] = selectionStroke.color.b * 255;
+    shapeInfos.colors.stroke.rgba[3] = Math.round(selectionStroke.opacity * 100);
   }
 
 
@@ -244,10 +260,10 @@ figma.ui.onmessage = (msg) => {
 
     itsAMe = true;
 
-    const newColor_r = msg.newColor.r / 255;
-    const newColor_g = msg.newColor.g / 255;
-    const newColor_b = msg.newColor.b / 255;
-    const newColor_opacity = msg.newColor.opacity / 100;
+    const newColor_r = msg.newColor[0] / 255;
+    const newColor_g = msg.newColor[1] / 255;
+    const newColor_b = msg.newColor[2] / 255;
+    const newColor_opacity = msg.newColor[3] / 100;
     let copyNode;
     const type = currentFillOrStroke + "s";
     
