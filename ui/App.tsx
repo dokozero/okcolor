@@ -46,8 +46,8 @@ interface ShapeInfos {
 
 let shapeInfos: ShapeInfos = {
   hasFillStroke: {
-    fill: true,
-    stroke: true
+    fill: false,
+    stroke: false
   },
   colors: {
     fill: {
@@ -108,6 +108,26 @@ export function App() {
     shapeInfos.hasFillStroke.stroke = true,
     shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
     shapeInfos.colors.stroke.rgba = [255, 255, 255, 0]
+  }
+
+  function checkIfOkhxyIsWhiteBlackOrGray() {
+    okhxyValues.isWhite = false;
+    okhxyValues.isBlack = false;
+    okhxyValues.isGray = false;
+
+    // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
+    if (okhxyValues.x.value == 0 && (okhxyValues.y.value > 1 && okhxyValues.y.value < 99)) {
+      okhxyValues.isGray = true;
+    }
+    else if (okhxyValues.y.value == 0) {
+      okhxyValues.isBlack = true;
+    }
+    else if (okhxyValues.y.value == 100) {
+      if (currentColorModel == "okhsl" || (currentColorModel == "okhsv" && okhxyValues.x.value == 0)) {
+        okhxyValues.isWhite = true;
+      }
+    }
+
   }
 
 
@@ -194,23 +214,6 @@ export function App() {
   function updateCurrentRgbaFromOkhxyValues() {
 
     let newRgb: [number, number, number] = [0, 0, 0];
-
-    okhxyValues.isWhite = false;
-    okhxyValues.isBlack = false;
-    okhxyValues.isGray = false;
-
-    // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
-    if (okhxyValues.x.value == 0 && (okhxyValues.y.value > 1 && okhxyValues.y.value < 99)) {
-      okhxyValues.isGray = true;
-    }
-    else if (okhxyValues.y.value == 0) {
-      okhxyValues.isBlack = true;
-    }
-    else if (okhxyValues.y.value == 100) {
-      if (currentColorModel == "okhsl" || (currentColorModel == "okhsv" && okhxyValues.x.value == 0)) {
-        okhxyValues.isWhite = true;
-      }
-    }
     
     // No need to call colorConversion() if we have a white or black color.
     if (!okhxyValues.isWhite && !okhxyValues.isBlack) {
@@ -377,6 +380,7 @@ export function App() {
         okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/picker_size) * 100);
         okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/picker_size) * 100);
 
+        checkIfOkhxyIsWhiteBlackOrGray();
         updateCurrentRgbaFromOkhxyValues();
         
         updateManipulatorPositions.colorPicker();
@@ -387,6 +391,7 @@ export function App() {
         canvas_y = event.clientX - rect.left;
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
+        checkIfOkhxyIsWhiteBlackOrGray();
         updateCurrentRgbaFromOkhxyValues();
 
         updateManipulatorPositions.hueSlider();
@@ -465,6 +470,7 @@ export function App() {
 
     eventTarget.select();
     
+    checkIfOkhxyIsWhiteBlackOrGray();
     updateCurrentRgbaFromOkhxyValues();
 
     if (eventTarget.id == "hue") {
@@ -562,13 +568,12 @@ export function App() {
 
       updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
       updateOkhxyValuesFromCurrentRgba();
-
       
       renderOpacitySliderCanvas();
       updateManipulatorPositions.all();
       renderFillOrStrokeSelector();
 
-      // We don't render colorPicker if for example user has just deleted the stroke of a shape that had both.
+      // We don't render colorPicker if for example user has just deleted the stroke of a shape that had both fill and stroke.
       if (shouldRenderColorPickerCanvas) { renderColorPickerCanvas(); }
     }
 
