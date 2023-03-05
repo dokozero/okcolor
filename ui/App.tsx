@@ -439,7 +439,6 @@ export function App() {
     if (event.key != "Tab") { event.preventDefault(); }
 
     const eventTarget = event.target as HTMLInputElement;
-
     let eventTargetId: string = eventTarget.id;
     let eventTargetValue = parseInt(eventTarget.value);
 
@@ -486,7 +485,6 @@ export function App() {
     if (event.key != "Tab") { event.preventDefault(); }
 
     const eventTarget = event.target as HTMLInputElement;
-
     let eventTargetValue = parseInt(eventTarget.value);
 
     if (Number.isNaN(eventTargetValue)) { eventTargetValue = 100; }
@@ -538,6 +536,10 @@ export function App() {
     if (pluginMessage == "new shape color") {
       // console.log("Update from backend - new shape color");
 
+      okhxyValues.isWhite = false;
+      okhxyValues.isBlack = false;
+      okhxyValues.isGray = false;
+
       // This value is false by default.
       let shouldRenderColorPickerCanvas: boolean = event.data.pluginMessage.shouldRenderColorPickerCanvas;
 
@@ -585,8 +587,8 @@ export function App() {
         <svg class="c-color-picker__handler" width="240" height="240">
           <g transform="translate(0,0)">
             <g ref={manipulatorColorPicker} transform="translate(0,0)">
-              <circle cx="0" cy="0" r="5" fill="none" stroke-width="1.5" stroke="#ffffff" ></circle>
-              <circle cx="0" cy="0" r="6" fill="none" stroke-width="1" stroke="#e0e0e0" ></circle>
+              <circle cx="0" cy="0" r="5" fill="none" stroke-width="3" stroke="#555555" ></circle>
+              <circle cx="0" cy="0" r="5" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
             </g>
           </g>
         </svg>
@@ -621,8 +623,8 @@ export function App() {
               <svg class="c-slider__handler" width="160" height="12"> 
                 <g transform="translate(0,7)">
                   <g ref={manipulatorHueSlider} transform="translate(0,0)">
-                    <circle cx="0" cy="0" r="4.5" fill="none" stroke-width="1.5" stroke="#ffffff" ></circle>
-                    <circle cx="0" cy="0" r="5.5" fill="none" stroke-width="1" stroke="#e0e0e0" ></circle>
+                    <circle cx="0" cy="0" r="5" fill="none" stroke-width="3" stroke="#555555" ></circle>
+                    <circle cx="0" cy="0" r="5" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
                   </g>
                 </g>
               </svg>
@@ -636,8 +638,8 @@ export function App() {
               <svg class="c-slider__handler" width="160" height="12"> 
                 <g transform="translate(0,7)">
                   <g ref={manipulatorOpacitySlider} transform="translate(0,0)">
-                    <circle cx="0" cy="0" r="4.5" fill="none" stroke-width="1.5" stroke="#ffffff" ></circle>
-                    <circle cx="0" cy="0" r="5.5" fill="none" stroke-width="1" stroke="#e0e0e0" ></circle>
+                    <circle cx="0" cy="0" r="5" fill="none" stroke-width="3" stroke="#555555" ></circle>
+                    <circle cx="0" cy="0" r="5" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
                   </g>
                 </g>
               </svg>
