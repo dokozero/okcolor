@@ -162,7 +162,7 @@ export function App() {
 
     let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
 
-    // We do these test to be abble to keep the hue between the color model change.
+    // We do these tests to be abble to keep the hue between the color model change when we have a white, black or gray value.
     if (okhxyValues.isWhite || okhxyValues.isBlack || okhxyValues.isGray) {
       const clampX = clamp(okhxyValues.x.value, 1, 99);
       const clampY = clamp(okhxyValues.y.value, 1, 99);
@@ -327,6 +327,10 @@ export function App() {
 
   function fillOrStrokeHandle() {
     // console.log("fill Or Stroke Handle");
+
+    okhxyValues.isWhite = false;
+    okhxyValues.isBlack = false;
+    okhxyValues.isGray = false;
 
     switchFillOrStrokeSelector();
 
