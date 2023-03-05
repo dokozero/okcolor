@@ -116,7 +116,7 @@ export function App() {
     okhxyValues.isGray = false;
 
     // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
-    if (okhxyValues.x.value == 0 && (okhxyValues.y.value > 1 && okhxyValues.y.value < 99)) {
+    if (okhxyValues.x.value == 0 && (okhxyValues.y.value >= 1 && okhxyValues.y.value <= 99)) {
       okhxyValues.isGray = true;
     }
     else if (okhxyValues.y.value == 0) {
