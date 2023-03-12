@@ -96,18 +96,18 @@ export function App() {
       return max;
     }
     return num;
-  }
+  };
 
   const limitMouseHandlerValue = function(x: number): number {
     return x < eps ? eps : (x > 1-eps ? 1-eps : x);
-  }
+  };
 
   const shapeInfosResetDefault = function() {
     shapeInfos.hasFillStroke.fill = true,
     shapeInfos.hasFillStroke.stroke = true,
     shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
     shapeInfos.colors.stroke.rgba = [255, 255, 255, 0]
-  }
+  };
 
   const checkIfOkhxyIsWhiteBlackOrGray = function() {
     okhxyValues.isWhite = false;
@@ -126,8 +126,7 @@ export function App() {
         okhxyValues.isWhite = true;
       }
     }
-
-  }
+  };
 
 
   
@@ -159,13 +158,13 @@ export function App() {
       }
       colorPickerUIMessage.current!.children[0].innerHTML = message;
     }
-  }
+  };
 
   // We use a function to update the opacity value in the input because we need to add the "%" sign and doing it directly in the value field with a fignal value doesn't work.
   const updateOpacityValue = function(newValue: number) {
     shapeInfos.colors[currentFillOrStroke].rgba[3] = newValue;
     opacityInput.current!.value = `${newValue}%`;
-  }
+  };
 
 
   const switchFillOrStrokeSelector = function() {
@@ -173,7 +172,7 @@ export function App() {
     
     currentFillOrStroke = currentFillOrStroke === "fill" ? "stroke" : "fill";
     fillOrStrokeSelector.current!.setAttribute("data-active", currentFillOrStroke);
-  } 
+  } ;
 
 
   const updateOkhxyValuesFromCurrentRgba = function() {
@@ -208,7 +207,7 @@ export function App() {
     }
 
     okhxyValues.hue.value = newOkhxy[0];
-  }
+  };
 
   const updateCurrentRgbaFromOkhxyValues = function() {
 
@@ -226,7 +225,7 @@ export function App() {
     }
 
     shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
-  }
+  };
 
 
   const renderColorPickerCanvas = function() {
@@ -259,13 +258,13 @@ export function App() {
     //   results = render(tempColor[0], tempColor[1], tempColor[2]);
     //   ctx.putImageData(results["oklch_lc"], 0, 0);
     // }
-  }
+  };
 
   const renderOpacitySliderCanvas = function() {
     // console.log("render opacity Slider Canvas");
 
     opacitySliderStyle.value = `background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${shapeInfos.colors[currentFillOrStroke].rgba[0]}, ${shapeInfos.colors[currentFillOrStroke].rgba[1]}, ${shapeInfos.colors[currentFillOrStroke].rgba[2]}, 1)), url(${opacitysliderBackgroundImg})`;
-  }
+  };
 
   const renderFillOrStrokeSelector = function() {
     if (shapeInfos.hasFillStroke.fill && shapeInfos.hasFillStroke.stroke) {
@@ -279,7 +278,7 @@ export function App() {
 
     fillOrStrokeSelector_fill.current!.setAttribute("fill", shapeInfos.hasFillStroke.fill ? `rgb(${shapeInfos.colors.fill.rgba[0]}, ${shapeInfos.colors.fill.rgba[1]}, ${shapeInfos.colors.fill.rgba[2]})` : "none");
     fillOrStrokeSelector_stroke.current!.setAttribute("fill", shapeInfos.hasFillStroke.stroke ? `rgb(${shapeInfos.colors.stroke.rgba[0]}, ${shapeInfos.colors.stroke.rgba[1]}, ${shapeInfos.colors.stroke.rgba[2]})` : "none");
-  }
+  };
 
 
   const resetInterface = function() {
@@ -296,7 +295,7 @@ export function App() {
 
     let ctx = colorPicker.current!.getContext("2d");
     ctx!.clearRect(0, 0, colorPicker.current!.width, colorPicker.current!.height);
-  }
+  };
 
   const updateManipulatorPositions = {
     colorPicker() {
@@ -320,7 +319,7 @@ export function App() {
       this.hueSlider();
       this.opacitySlider();
     }
-  }
+  };
 
 
   /* 
@@ -344,7 +343,7 @@ export function App() {
     renderColorPickerCanvas();
 
     syncCurrentFillOrStrokeWithBackend();
-  }
+  };
 
 
   const colorModelHandle = function(event: any) {
@@ -355,7 +354,7 @@ export function App() {
     updateOkhxyValuesFromCurrentRgba();
     updateManipulatorPositions.colorPicker();
     renderColorPickerCanvas();
-  }
+  };
 
 
   const setupHandler = function(canvas: HTMLCanvasElement | HTMLDivElement) {
@@ -416,7 +415,7 @@ export function App() {
         activeMouseHandler(event);
       }
     });
-  }
+  };
 
   document.addEventListener("mousemove", (event: MouseEvent) => {
     if (activeMouseHandler) {
@@ -429,7 +428,7 @@ export function App() {
       activeMouseHandler = undefined;
       mouseHandlerEventTargetId = "";
     }
-  }
+  };
 
   document.addEventListener("mouseup", cancelMouseHandler);
   document.addEventListener("mouseleave", cancelMouseHandler);
@@ -437,7 +436,7 @@ export function App() {
 
   const handleInputFocus = function(event: FocusEvent) {
     (event.target as HTMLInputElement).select();
-  }
+  };
 
   const hxyInputHandle = function(event: KeyboardEvent) {  
     if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
@@ -484,7 +483,7 @@ export function App() {
     renderFillOrStrokeSelector();
 
     sendNewShapeColorToBackend();
-  }
+  };
 
   const opacityInputHandle = function(event: KeyboardEvent) {
     if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
@@ -509,7 +508,7 @@ export function App() {
 
     updateManipulatorPositions.opacitySlider();
     sendNewShapeColorToBackend();
-  }
+  };
 
 
   /* 
@@ -519,12 +518,12 @@ export function App() {
   const sendNewShapeColorToBackend = function() {
     // console.log("send New Shape Color To Backend");
     parent.postMessage({ pluginMessage: { type: "Update shape color", "newColor": shapeInfos.colors[currentFillOrStroke].rgba } }, '*');
-  }
+  };
 
   const syncCurrentFillOrStrokeWithBackend = function() {
     // console.log("sync CurrentFillOrStroke With Backend");
     parent.postMessage({ pluginMessage: { type: "Sync currentFillOrStroke", "currentFillOrStroke": currentFillOrStroke } }, '*');
-  }
+  };
 
 
   /* 
@@ -579,7 +578,7 @@ export function App() {
     else if (pluginMessage == "Display UI Message") {
       UIMessage.show(event.data.pluginMessage.UIMessageCode, event.data.pluginMessage.nodeType);
     }
-  }
+  };
 
 
   
@@ -674,5 +673,5 @@ export function App() {
         </div>
       </div>
     </>
-  )
+  );
 }

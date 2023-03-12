@@ -48,7 +48,7 @@ const shapeInfosResetDefault = function() {
   shapeInfos.hasFillStroke.stroke = false,
   shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
   shapeInfos.colors.stroke.rgba = [255, 255, 255, 0]
-}
+};
 
 
 const updateShapeInfos = function(): boolean {
@@ -142,7 +142,7 @@ const updateShapeInfos = function(): boolean {
   
   return true;
 
-}
+};
 
 
 
@@ -154,12 +154,12 @@ const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
   // console.log("BACKEND: send New Shape Color To UI");
   // figma.ui.postMessage({"shapeFillStrokeInfo": shapeFillStrokeInfo, "rgbValues": currentRgbValues, "opacityValue": opacityValue, "message": "new shape color"});
   figma.ui.postMessage({"shapeInfos": shapeInfos, "currentFillOrStroke": currentFillOrStroke, "shouldRenderColorPickerCanvas": shouldRenderColorPickerCanvas, "message": "new shape color"});
-}
+};
 
 const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string = "") {
   // console.log("send UIMessageCode To UI");
   figma.ui.postMessage({"message": "Display UI Message", "UIMessageCode": UIMessageCode, "nodeType": nodeType});
-}
+};
 
 
 
@@ -178,7 +178,7 @@ const init = function() {
   else { currentFillOrStroke = "stroke"; }
 
   sendNewShapeColorToUI(true);
-}
+};
 
 init();
 
@@ -289,5 +289,5 @@ figma.ui.onmessage = (msg) => {
   else if (msg.type == "Sync currentFillOrStroke") {
     currentFillOrStroke = msg.currentFillOrStroke;
   }
-}
+};
 
