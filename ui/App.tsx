@@ -2,7 +2,7 @@ import { signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
 
 import { colorConversion } from "../lib/bottosson/colorconversion";
-import { render, render_okhsl } from "../lib/bottosson/render";
+import { render_okhsv, render_okhsl } from "../lib/bottosson/render";
 import { eps } from "../lib/bottosson/constants";
 
 import { UIMessageTexts } from "./ui-messages";
@@ -227,74 +227,62 @@ export function App() {
     shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
   };
 
+  const render = {
+    colorPickerCanvas() {
+      // console.log("render Color Picker Canvas");
 
-  const renderColorPickerCanvas = function() {
-    // console.log("render Color Picker Canvas");
+      let renderResult;
+      let ctx = colorPicker.current!.getContext("2d");
+      let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
 
-    let renderResult;
-    let ctx = colorPicker.current!.getContext("2d");
-    let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
+      // If we don't to this and for exemple we start the plugin with a [0, 0, 0] fill, the color picker hue will be red while the hue picker will be orange. Seems to be an inconsistency with the render functions.
+      if (shapeColor.slice(0, 3).every(val => val === 0)) { shapeColor.fill(0.01, 0, 3); }
 
-    // If we don't to this and for exemple we start the plugin with a [0, 0, 0] fill, the color picker hue will be red while the hue picker will be orange. Seems to be an inconsistency with the render functions.
-    if (shapeColor.slice(0, 3).every(val => val === 0)) { shapeColor.fill(0.01, 0, 3); }
+      // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
+      if (okhxyValues.isWhite || okhxyValues.isBlack || okhxyValues.isGray) {
+        const clampX = clamp(okhxyValues.x.value, 1, 99);
+        const clampY = clamp(okhxyValues.y.value, 1, 99);
 
-    // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
-    if (okhxyValues.isWhite || okhxyValues.isBlack || okhxyValues.isGray) {
-      const clampX = clamp(okhxyValues.x.value, 1, 99);
-      const clampY = clamp(okhxyValues.y.value, 1, 99);
+        shapeColor = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, clampX, clampY);
+      }
 
-      shapeColor = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, clampX, clampY);
+      if (currentColorModel == "okhsl") {
+        renderResult = render_okhsl(shapeColor[0], shapeColor[1], shapeColor[2]);
+        ctx!.putImageData(renderResult["okhsl_sl"], 0, 0);
+      }
+      else if (currentColorModel == "okhsv") {
+        renderResult = render_okhsv(shapeColor[0], shapeColor[1], shapeColor[2]);
+        ctx!.putImageData(renderResult["okhsv_sv"], 0, 0);
+      }
+      // else if (colorModel == "oklch") {
+      //   results = render(tempColor[0], tempColor[1], tempColor[2]);
+      //   ctx.putImageData(results["oklch_lc"], 0, 0);
+      // }
+    },
+    fillOrStrokeSelector() {
+      // console.log("render fillOrStroke Selector");
+
+      if (shapeInfos.hasFillStroke.fill && shapeInfos.hasFillStroke.stroke) {
+        fillOrStrokeSelector.current!.classList.remove("u-pointer-events-none");
+      } else {
+        fillOrStrokeSelector.current!.classList.add("u-pointer-events-none");
+      }
+      
+      fillOrStrokeSelector.current!.setAttribute("data-has-fill", shapeInfos.hasFillStroke.fill.toString());
+      fillOrStrokeSelector.current!.setAttribute("data-has-stroke", shapeInfos.hasFillStroke.stroke.toString());
+  
+      fillOrStrokeSelector_fill.current!.setAttribute("fill", shapeInfos.hasFillStroke.fill ? `rgb(${shapeInfos.colors.fill.rgba[0]}, ${shapeInfos.colors.fill.rgba[1]}, ${shapeInfos.colors.fill.rgba[2]})` : "none");
+      fillOrStrokeSelector_stroke.current!.setAttribute("fill", shapeInfos.hasFillStroke.stroke ? `rgb(${shapeInfos.colors.stroke.rgba[0]}, ${shapeInfos.colors.stroke.rgba[1]}, ${shapeInfos.colors.stroke.rgba[2]})` : "none");
+    },
+    opacitySliderCanvas() {
+      // console.log("render opacity Slider Canvas");
+      opacitySliderStyle.value = `background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${shapeInfos.colors[currentFillOrStroke].rgba[0]}, ${shapeInfos.colors[currentFillOrStroke].rgba[1]}, ${shapeInfos.colors[currentFillOrStroke].rgba[2]}, 1)), url(${opacitysliderBackgroundImg})`;
+    },
+    all() {
+      this.colorPickerCanvas();
+      this.fillOrStrokeSelector();
+      this.opacitySliderCanvas();
     }
-
-    if (currentColorModel == "okhsl") {
-      renderResult = render_okhsl(shapeColor[0], shapeColor[1], shapeColor[2]);
-      ctx!.putImageData(renderResult["okhsl_sl"], 0, 0);
-    }
-    else if (currentColorModel == "okhsv") {
-      renderResult = render(shapeColor[0], shapeColor[1], shapeColor[2]);
-      ctx!.putImageData(renderResult["okhsv_sv"], 0, 0);
-    }
-    // else if (colorModel == "oklch") {
-    //   results = render(tempColor[0], tempColor[1], tempColor[2]);
-    //   ctx.putImageData(results["oklch_lc"], 0, 0);
-    // }
-  };
-
-  const renderOpacitySliderCanvas = function() {
-    // console.log("render opacity Slider Canvas");
-
-    opacitySliderStyle.value = `background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${shapeInfos.colors[currentFillOrStroke].rgba[0]}, ${shapeInfos.colors[currentFillOrStroke].rgba[1]}, ${shapeInfos.colors[currentFillOrStroke].rgba[2]}, 1)), url(${opacitysliderBackgroundImg})`;
-  };
-
-  const renderFillOrStrokeSelector = function() {
-    if (shapeInfos.hasFillStroke.fill && shapeInfos.hasFillStroke.stroke) {
-      fillOrStrokeSelector.current!.classList.remove("u-pointer-events-none");
-    } else {
-      fillOrStrokeSelector.current!.classList.add("u-pointer-events-none");
-    }
-    
-    fillOrStrokeSelector.current!.setAttribute("data-has-fill", shapeInfos.hasFillStroke.fill.toString());
-    fillOrStrokeSelector.current!.setAttribute("data-has-stroke", shapeInfos.hasFillStroke.stroke.toString());
-
-    fillOrStrokeSelector_fill.current!.setAttribute("fill", shapeInfos.hasFillStroke.fill ? `rgb(${shapeInfos.colors.fill.rgba[0]}, ${shapeInfos.colors.fill.rgba[1]}, ${shapeInfos.colors.fill.rgba[2]})` : "none");
-    fillOrStrokeSelector_stroke.current!.setAttribute("fill", shapeInfos.hasFillStroke.stroke ? `rgb(${shapeInfos.colors.stroke.rgba[0]}, ${shapeInfos.colors.stroke.rgba[1]}, ${shapeInfos.colors.stroke.rgba[2]})` : "none");
-  };
-
-
-  const resetInterface = function() {
-    okhxyValues.hue.value = 0;
-    okhxyValues.x.value = 0;
-    okhxyValues.y.value = 0;
-    updateOpacityValue(0);
-    shapeInfosResetDefault();
-
-    fillOrStrokeSelector.current!.setAttribute("data-active", "fill");
-    updateManipulatorPositions.all();
-    renderOpacitySliderCanvas();
-    renderFillOrStrokeSelector();
-
-    let ctx = colorPicker.current!.getContext("2d");
-    ctx!.clearRect(0, 0, colorPicker.current!.width, colorPicker.current!.height);
   };
 
   const updateManipulatorPositions = {
@@ -321,6 +309,22 @@ export function App() {
     }
   };
 
+  const resetInterface = function() {
+    okhxyValues.hue.value = 0;
+    okhxyValues.x.value = 0;
+    okhxyValues.y.value = 0;
+    updateOpacityValue(0);
+    shapeInfosResetDefault();
+
+    fillOrStrokeSelector.current!.setAttribute("data-active", "fill");
+    updateManipulatorPositions.all();
+    render.opacitySliderCanvas();
+    render.fillOrStrokeSelector();
+
+    let ctx = colorPicker.current!.getContext("2d");
+    ctx!.clearRect(0, 0, colorPicker.current!.width, colorPicker.current!.height);
+  };
+
 
   /* 
   ** UPDATES FROM UI
@@ -338,9 +342,9 @@ export function App() {
     updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
 
     updateOkhxyValuesFromCurrentRgba();
-    renderOpacitySliderCanvas();
+    render.opacitySliderCanvas();
     updateManipulatorPositions.all();
-    renderColorPickerCanvas();
+    render.colorPickerCanvas();
 
     syncCurrentFillOrStrokeWithBackend();
   };
@@ -353,7 +357,7 @@ export function App() {
     
     updateOkhxyValuesFromCurrentRgba();
     updateManipulatorPositions.colorPicker();
-    renderColorPickerCanvas();
+    render.colorPickerCanvas();
   };
 
 
@@ -382,8 +386,8 @@ export function App() {
         updateCurrentRgbaFromOkhxyValues();
         
         updateManipulatorPositions.colorPicker();
-        renderFillOrStrokeSelector();
-        renderOpacitySliderCanvas();
+        render.fillOrStrokeSelector();
+        render.opacitySliderCanvas();
       }
       else if (mouseHandlerEventTargetId == "okhxy-h-slider") {
         canvas_y = event.clientX - rect.left;
@@ -393,10 +397,7 @@ export function App() {
         updateCurrentRgbaFromOkhxyValues();
 
         updateManipulatorPositions.hueSlider();
-        renderFillOrStrokeSelector();
-        renderOpacitySliderCanvas();
-
-        renderColorPickerCanvas();
+        render.all();
       }
       else if (mouseHandlerEventTargetId == "opacity-slider") {
         canvas_y = event.clientX - rect.left;
@@ -472,15 +473,15 @@ export function App() {
     updateCurrentRgbaFromOkhxyValues();
 
     if (eventTarget.id == "hue") {
-      renderColorPickerCanvas();
+      render.colorPickerCanvas();
       updateManipulatorPositions.hueSlider();
     }
     else if (eventTarget.id == "x" || eventTarget.id == "y") {
       updateManipulatorPositions.colorPicker();
     }
 
-    renderOpacitySliderCanvas();
-    renderFillOrStrokeSelector();
+    render.opacitySliderCanvas();
+    render.fillOrStrokeSelector();
 
     sendNewShapeColorToBackend();
   };
@@ -567,12 +568,12 @@ export function App() {
       updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
       updateOkhxyValuesFromCurrentRgba();
       
-      renderOpacitySliderCanvas();
+      render.opacitySliderCanvas();
       updateManipulatorPositions.all();
-      renderFillOrStrokeSelector();
+      render.fillOrStrokeSelector();
 
       // We don't render colorPicker if for example user has just deleted the stroke of a shape that had both fill and stroke.
-      if (shouldRenderColorPickerCanvas) { renderColorPickerCanvas(); }
+      if (shouldRenderColorPickerCanvas) { render.colorPickerCanvas(); }
     }
 
     else if (pluginMessage == "Display UI Message") {
