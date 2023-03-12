@@ -79,8 +79,8 @@ export function App() {
   const hueSlider = useRef<HTMLDivElement>(null);
   const opacitySlider = useRef<HTMLDivElement>(null);
   const manipulatorColorPicker = useRef<SVGGElement>(null);
-  const manipulatorHueSlider = useRef<SVGGElement>(null);
-  const manipulatorOpacitySlider = useRef<SVGGElement>(null);
+  const manipulatorHueSlider = useRef<SVGSVGElement>(null);
+  const manipulatorOpacitySlider = useRef<SVGSVGElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
   const bottomControls = useRef<HTMLDivElement>(null);
 
@@ -295,12 +295,12 @@ export function App() {
     hueSlider() {
       // console.log("update Manipulator Positions - hue slider");
       let hue = okhxyValues.hue.value / 360;
-      manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*hue)+6, -1);
+      manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*hue)-1, -1);
     },
     opacitySlider() {
       // console.log("update Manipulator Positions - opacity slider");
       let opacity = shapeInfos.colors[currentFillOrStroke].rgba[3] / 100;
-      manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)+6, -1);
+      manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)-1, -1);
     },
     all() {
       this.colorPicker();
@@ -390,7 +390,7 @@ export function App() {
         render.opacitySliderCanvas();
       }
       else if (mouseHandlerEventTargetId == "okhxy-h-slider") {
-        canvas_y = event.clientX - rect.left;
+        canvas_y = event.clientX - rect.left - 7;
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
         checkIfOkhxyIsWhiteBlackOrGray();
@@ -400,7 +400,7 @@ export function App() {
         render.all();
       }
       else if (mouseHandlerEventTargetId == "opacity-slider") {
-        canvas_y = event.clientX - rect.left;
+        canvas_y = event.clientX - rect.left - 7;
         updateOpacityValue(Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 100));
 
         updateManipulatorPositions.opacitySlider();
@@ -593,11 +593,9 @@ export function App() {
         <canvas ref={colorPicker} class="c-color-picker__canvas" id="okhxy-xy-picker" width="240" height="240"></canvas>
 
         <svg class="c-color-picker__handler" width="240" height="240">
-          <g transform="translate(0,0)">
-            <g ref={manipulatorColorPicker} transform="translate(0,0)">
-              <circle cx="0" cy="0" r="5" fill="none" stroke-width="3" stroke="#555555" ></circle>
-              <circle cx="0" cy="0" r="5" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
-            </g>
+          <g ref={manipulatorColorPicker} transform="translate(0,0)">
+            <circle cx="0" cy="0" r="4.8" fill="none" stroke-width="2.8" stroke="#555555" ></circle>
+            <circle cx="0" cy="0" r="4.8" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
           </g>
         </svg>
       </div>
@@ -628,14 +626,12 @@ export function App() {
                 <div ref={hueSlider} class="u-w-full u-h-full" id="okhxy-h-slider"></div>
               </div>
 
-              <svg class="c-slider__handler" width="160" height="12"> 
-                <g transform="translate(0,7)">
-                  <g ref={manipulatorHueSlider} transform="translate(0,0)">
-                    <circle cx="0" cy="0" r="5" fill="none" stroke-width="3" stroke="#555555" ></circle>
-                    <circle cx="0" cy="0" r="5" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
-                  </g>
-                </g>
-              </svg>
+              <div class="c-slider__handler">
+                <svg ref={manipulatorHueSlider} transform="translate(0,0)" width="14" height="14">
+                  <circle cx="7" cy="7" r="4.8" fill="none" stroke-width="2.8" stroke="#555555" ></circle>
+                  <circle cx="7" cy="7" r="4.8" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
+                </svg>
+              </div>
             </div>
 
             <div class="c-slider u-mt-14">
@@ -643,14 +639,12 @@ export function App() {
                 <div ref={opacitySlider} class="u-w-full u-h-full" id="opacity-slider"></div>
               </div>
 
-              <svg class="c-slider__handler" width="160" height="12"> 
-                <g transform="translate(0,7)">
-                  <g ref={manipulatorOpacitySlider} transform="translate(0,0)">
-                    <circle cx="0" cy="0" r="5" fill="none" stroke-width="3" stroke="#555555" ></circle>
-                    <circle cx="0" cy="0" r="5" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
-                  </g>
-                </g>
-              </svg>
+              <div class="c-slider__handler">
+                <svg ref={manipulatorOpacitySlider} transform="translate(0,0)" width="14" height="14">
+                  <circle cx="7" cy="7" r="4.8" fill="none" stroke-width="2.8" stroke="#555555" ></circle>
+                  <circle cx="7" cy="7" r="4.8" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
+                </svg>
+              </div>
             </div>
 
           </div>
