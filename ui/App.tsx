@@ -1,6 +1,5 @@
 import { signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
-import { h } from 'preact';
 
 import { colorConversion } from "../lib/bottosson/colorconversion";
 import { render, render_okhsl } from "../lib/bottosson/render";
@@ -348,7 +347,7 @@ export function App() {
   }
 
 
-  function colorModelHandle(event: h.JSX.TargetedEvent<HTMLSelectElement, Event>) {
+  function colorModelHandle(event: any) {
     // console.log("color Model Handle");
 
     currentColorModel = (event.target as HTMLSelectElement).value;
