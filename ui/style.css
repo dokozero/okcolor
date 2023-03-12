@@ -48,8 +48,10 @@ body {
   }
   .c-color-picker__canvas {
     background: var(--figma-color-bg-secondary);
-    border-bottom: solid 1px var(--figma-color-border, #e5e5e5)
   }
+    .c-color-picker__canvas--deactivated {
+      border-bottom: solid 1px var(--figma-color-border);
+    }
   .c-color-picker__handler {
     pointer-events: none;
   }

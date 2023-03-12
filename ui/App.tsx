@@ -139,6 +139,7 @@ export function App() {
     hide() {
       UIMessageOn = false;
 
+      colorPicker.current!.classList.remove("c-color-picker__canvas--deactivated");
       bottomControls.current!.classList.remove("u-deactivated");
       manipulatorColorPicker.current!.classList.remove("u-display-none");
       colorPickerUIMessage.current!.classList.add("u-display-none");
@@ -148,6 +149,7 @@ export function App() {
 
       resetInterface();
 
+      colorPicker.current!.classList.add("c-color-picker__canvas--deactivated");
       bottomControls.current!.classList.add("u-deactivated");
       manipulatorColorPicker.current!.classList.add("u-display-none");
       colorPickerUIMessage.current!.classList.remove("u-display-none");
