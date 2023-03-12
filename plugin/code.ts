@@ -43,7 +43,7 @@ let shapeInfos: ShapeInfos = {
 ** HELPER FUNCTIONS
 */
 
-function shapeInfosResetDefault() {
+const shapeInfosResetDefault = function() {
   shapeInfos.hasFillStroke.fill = false,
   shapeInfos.hasFillStroke.stroke = false,
   shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
@@ -51,7 +51,7 @@ function shapeInfosResetDefault() {
 }
 
 
-function updateShapeInfos(): boolean {
+const updateShapeInfos = function(): boolean {
 
   shapeInfosResetDefault();
  
@@ -150,13 +150,13 @@ function updateShapeInfos(): boolean {
 ** UPDATES TO FRONTEND
 */
 
-function sendNewShapeColorToUI(shouldRenderColorPickerCanvas = false) {
+const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
   // console.log("BACKEND: send New Shape Color To UI");
   // figma.ui.postMessage({"shapeFillStrokeInfo": shapeFillStrokeInfo, "rgbValues": currentRgbValues, "opacityValue": opacityValue, "message": "new shape color"});
   figma.ui.postMessage({"shapeInfos": shapeInfos, "currentFillOrStroke": currentFillOrStroke, "shouldRenderColorPickerCanvas": shouldRenderColorPickerCanvas, "message": "new shape color"});
 }
 
-function sendUIMessageCodeToUI(UIMessageCode: string, nodeType: string = "") {
+const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string = "") {
   // console.log("send UIMessageCode To UI");
   figma.ui.postMessage({"message": "Display UI Message", "UIMessageCode": UIMessageCode, "nodeType": nodeType});
 }
@@ -170,7 +170,7 @@ function sendUIMessageCodeToUI(UIMessageCode: string, nodeType: string = "") {
 figma.showUI(__html__, {width: 240, height: 346, themeColors: true});
 
 // To send the color of the shape on launch
-function init() {
+const init = function() {
 
   if (!updateShapeInfos()) return;
 

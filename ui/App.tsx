@@ -88,7 +88,7 @@ export function App() {
   ** HELPER FUNCTIONS
   */
 
-  function clamp(num: number, min: number, max: number): number {
+  const clamp = function(num: number, min: number, max: number): number {
     if (num < min) {
       return min;
     }
@@ -98,18 +98,18 @@ export function App() {
     return num;
   }
 
-  function limitMouseHandlerValue(x: number): number {
+  const limitMouseHandlerValue = function(x: number): number {
     return x < eps ? eps : (x > 1-eps ? 1-eps : x);
   }
 
-  function shapeInfosResetDefault() {
+  const shapeInfosResetDefault = function() {
     shapeInfos.hasFillStroke.fill = true,
     shapeInfos.hasFillStroke.stroke = true,
     shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
     shapeInfos.colors.stroke.rgba = [255, 255, 255, 0]
   }
 
-  function checkIfOkhxyIsWhiteBlackOrGray() {
+  const checkIfOkhxyIsWhiteBlackOrGray = function() {
     okhxyValues.isWhite = false;
     okhxyValues.isBlack = false;
     okhxyValues.isGray = false;
@@ -162,13 +162,13 @@ export function App() {
   }
 
   // We use a function to update the opacity value in the input because we need to add the "%" sign and doing it directly in the value field with a fignal value doesn't work.
-  function updateOpacityValue(newValue: number) {
+  const updateOpacityValue = function(newValue: number) {
     shapeInfos.colors[currentFillOrStroke].rgba[3] = newValue;
     opacityInput.current!.value = `${newValue}%`;
   }
 
 
-  function switchFillOrStrokeSelector() {
+  const switchFillOrStrokeSelector = function() {
     // console.log("switch FillOrStrokeSelector");
     
     currentFillOrStroke = currentFillOrStroke === "fill" ? "stroke" : "fill";
@@ -176,7 +176,7 @@ export function App() {
   } 
 
 
-  function updateOkhxyValuesFromCurrentRgba() {
+  const updateOkhxyValuesFromCurrentRgba = function() {
     // console.log("convert Rgb To Okhxy Values");
 
     let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
@@ -210,7 +210,7 @@ export function App() {
     okhxyValues.hue.value = newOkhxy[0];
   }
 
-  function updateCurrentRgbaFromOkhxyValues() {
+  const updateCurrentRgbaFromOkhxyValues = function() {
 
     let newRgb: [number, number, number] = [0, 0, 0];
     
@@ -229,7 +229,7 @@ export function App() {
   }
 
 
-  function renderColorPickerCanvas() {
+  const renderColorPickerCanvas = function() {
     // console.log("render Color Picker Canvas");
 
     let renderResult;
@@ -261,13 +261,13 @@ export function App() {
     // }
   }
 
-  function renderOpacitySliderCanvas() {
+  const renderOpacitySliderCanvas = function() {
     // console.log("render opacity Slider Canvas");
 
     opacitySliderStyle.value = `background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${shapeInfos.colors[currentFillOrStroke].rgba[0]}, ${shapeInfos.colors[currentFillOrStroke].rgba[1]}, ${shapeInfos.colors[currentFillOrStroke].rgba[2]}, 1)), url(${opacitysliderBackgroundImg})`;
   }
 
-  function renderFillOrStrokeSelector() {
+  const renderFillOrStrokeSelector = function() {
     if (shapeInfos.hasFillStroke.fill && shapeInfos.hasFillStroke.stroke) {
       fillOrStrokeSelector.current!.classList.remove("u-pointer-events-none");
     } else {
@@ -282,7 +282,7 @@ export function App() {
   }
 
 
-  function resetInterface() {
+  const resetInterface = function() {
     okhxyValues.hue.value = 0;
     okhxyValues.x.value = 0;
     okhxyValues.y.value = 0;
@@ -327,7 +327,7 @@ export function App() {
   ** UPDATES FROM UI
   */
 
-  function fillOrStrokeHandle() {
+  const fillOrStrokeHandle = function() {
     // console.log("fill Or Stroke Handle");
 
     okhxyValues.isWhite = false;
@@ -347,7 +347,7 @@ export function App() {
   }
 
 
-  function colorModelHandle(event: any) {
+  const colorModelHandle = function(event: any) {
     // console.log("color Model Handle");
 
     currentColorModel = (event.target as HTMLSelectElement).value;
@@ -358,7 +358,7 @@ export function App() {
   }
 
 
-  function setupHandler(canvas: HTMLCanvasElement | HTMLDivElement) {
+  const setupHandler = function(canvas: HTMLCanvasElement | HTMLDivElement) {
     // console.log("setup Handler - " + canvas.id);
 
     const mouseHandler = (event: MouseEvent) => {
@@ -411,20 +411,20 @@ export function App() {
     };
 
     canvas.addEventListener("mousedown", {
-      handleEvent: function(event: MouseEvent) {
+      handleEvent: (event: MouseEvent) => {
         activeMouseHandler = mouseHandler;
         activeMouseHandler(event);
       }
     });
   }
 
-  document.addEventListener("mousemove", function(event: MouseEvent) {
+  document.addEventListener("mousemove", (event: MouseEvent) => {
     if (activeMouseHandler) {
       activeMouseHandler(event);  
     }
   });
 
-  function cancelMouseHandler() {
+  const cancelMouseHandler = function() {
     if (activeMouseHandler) {
       activeMouseHandler = undefined;
       mouseHandlerEventTargetId = "";
@@ -435,11 +435,11 @@ export function App() {
   document.addEventListener("mouseleave", cancelMouseHandler);
 
 
-  function handleInputFocus(event: FocusEvent) {
+  const handleInputFocus = function(event: FocusEvent) {
     (event.target as HTMLInputElement).select();
   }
 
-  function hxyInputHandle(event: KeyboardEvent) {  
+  const hxyInputHandle = function(event: KeyboardEvent) {  
     if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
 
     // console.log("hxy Input Handle");
@@ -486,7 +486,7 @@ export function App() {
     sendNewShapeColorToBackend();
   }
 
-  function opacityInputHandle(event: KeyboardEvent) {
+  const opacityInputHandle = function(event: KeyboardEvent) {
     if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
     
     // console.log("opacity Input Handle"); 
@@ -516,12 +516,12 @@ export function App() {
   ** UPDATES TO BACKEND
   */
 
-  function sendNewShapeColorToBackend() {
+  const sendNewShapeColorToBackend = function() {
     // console.log("send New Shape Color To Backend");
     parent.postMessage({ pluginMessage: { type: "Update shape color", "newColor": shapeInfos.colors[currentFillOrStroke].rgba } }, '*');
   }
 
-  function syncCurrentFillOrStrokeWithBackend() {
+  const syncCurrentFillOrStrokeWithBackend = function() {
     // console.log("sync CurrentFillOrStroke With Backend");
     parent.postMessage({ pluginMessage: { type: "Sync currentFillOrStroke", "currentFillOrStroke": currentFillOrStroke } }, '*');
   }
