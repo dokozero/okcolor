@@ -1,14 +1,14 @@
 ![Easier color palettes and accessibility](readme-banner.webp)
 
 # OkColor
-This is a plugin for Figma, direct link: (waiting Figma's validation).
+This is a plugin for Figma, see community page: (waiting Figma's validation).
 
 Creating a balanced color palette with Figma's color picker is not an easy task, same for managing accessible colors. OkColor is a plugin with an improved HSL/HSB color picker that allows you to easily use uniform color spaces.
 
 ## What's wrong with HSL?
-In short, it is not perceptually uniform so if you try to create a color palette (with the same hue) by using the "L" param (from 0 to 100 with a step of 10 for example), you will not get a uniform progression. For example with the green hue 120º, in the dark colors, you'll see more differences than in the lighter ones.
+In short, it is not perceptually uniform so if you try to create a color palette (with the same hue) by using the “L” param (from 0 to 100 with a step of 10 for example), you will not get a uniform progression. For example with the green hue 120º, in the dark colors, you'll see more differences than in the lighter ones.
 
-HSL color pickers in tools like Figma are not specifically made to be uniform, but because of its name it can be confusing. In HSL the luminosity param is relative to the selected hue, so for example between these colors: HSL(60, 100, 100) and HSL(240, 100, 100), even if they have the same "L" value, the perceived lightness will not be the same.
+HSL color pickers in tools like Figma are not specifically made to be uniform, but because of its name it can be confusing. In HSL the luminosity param is relative to the selected hue, so for example between these colors: HSL(60, 100, 100) and HSL(240, 100, 100), even if they have the same “L” value, the perceived lightness will not be the same.
 
 Not only that but if you try to create let's say a palette of 10 colors from the hue 100º to 190º with the same incremental value, you'll end up with a palette that perceptually has too many green colors.
 
@@ -46,9 +46,9 @@ Note that the hue in OkColor doesn't map the hue of HSL/HSB in Figma, for exampl
 
 It also doesn't support shapes with gradient colors, but you can for example change the color of a shape with a solid fill and a gradient stroke.
 
-Finally, keep in mind that OkHSL and OkHSV are made for the sRGB gamut, technically they will still work if Figma is in “Unmanaged” mode and you work on a P3 screen, but for more precise P3 work you can use for example https://oklch.com/, which is also based on the work of the creator of OkHSL and OkHSV.
+Finally, keep in mind that OkHSL and OkHSV are made for the sRGB gamut, technically they will still work if Figma is in “Unmanaged” mode and you work on a P3 screen, but for more precise P3 work you can use for example <a href="https://oklch.com/" target="_blank" rel="noopener">oklch.com</a>, which is also based on the work of the creator of OkHSL and OkHSV.
 
 ## Links
-This plugin use the rendering and color conversion functions ([source code](https://github.com/bottosson/bottosson.github.io/tree/master/misc/colorpicker)) made by Björn Ottosson who created OkLAB which it's the base for OkHSL and OkHSV (which he also created).
+This plugin use the rendering and color conversion functions (<a href="https://github.com/bottosson/bottosson.github.io/tree/master/misc/colorpicker" target="_blank" rel="noopener">source code</a>) made by Björn Ottosson who created OkLAB which it's the base for OkHSL and OkHSV (which he also created).
 
-To know more about uniform color spaces, I recommend checking his original article: [Oksvh and Okhsl](https://bottosson.github.io/posts/colorpicker/). You can also try this online app made by the same author to easily compare different color pickers: [Interactive color picker comparison](https://bottosson.github.io/misc/colorpicker/).
+To know more about uniform color spaces, I recommend checking his original article: <a href="https://bottosson.github.io/posts/colorpicker/" target="_blank" rel="noopener">Oksvh and Okhsl</a>. You can also try this online app made by the same author to easily compare different color pickers: <a href="https://bottosson.github.io/misc/colorpicker/" target="_blank" rel="noopener">Interactive color picker comparison</a>.
