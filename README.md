@@ -6,9 +6,9 @@ This is a plugin for Figma, see community page: (waiting Figma's validation).
 Creating a balanced color palette with Figma's color picker is not an easy task, same for managing accessible colors. OkColor is a plugin with an improved HSL/HSB color picker that allows you to easily use uniform color spaces.
 
 ## What's wrong with HSL?
-In short, it is not perceptually uniform so if you try to create a color palette (with the same hue) by using the “L” param (from 0 to 100 with a step of 10 for example), you will not get a uniform progression. For example with the green hue 120º, in the dark colors, you'll see more differences than in the lighter ones.
+In short, **it is not perceptually uniform** so if you try to create a color palette (with the same hue) by using the “L” param (from 0 to 100 with a step of 10 for example), you will not get a uniform progression. For example with the green hue 120º, in the dark colors, you'll see more differences than in the lighter ones.
 
-HSL color pickers in tools like Figma are not specifically made to be uniform, but because of its name it can be confusing. In HSL the luminosity param is relative to the selected hue, so for example between these colors: HSL(60, 100, 100) and HSL(240, 100, 100), even if they have the same “L” value, the perceived lightness will not be the same.
+HSL color pickers in tools like Figma are not specifically made to be uniform, but because of its name it can be confusing. In HSL the luminosity param **is relative to the selected hue**, so for example between these colors: HSL(60, 100, 100) and HSL(240, 100, 100), even if they have the same “L” value, the perceived lightness will not be the same.
 
 Not only that but if you try to create let's say a palette of 10 colors from the hue 100º to 190º with the same incremental value, you'll end up with a palette that perceptually has too many green colors.
 
@@ -17,7 +17,7 @@ Last but not least, with HSL (and HSB) we have a hue shift problem (known as the
 ## OkColor solves these problems
 OkColor is an improved color picker that allows you to easily use OkHSL and OkHSV (more on that after) which are perceptually uniform color spaces.
 
-Unlike normal HSL, with OkHSL the perceived luminosity of different colors with the same “L” value will look the same no matter their hue and saturation.
+Unlike normal HSL, with OkHSL the perceived luminosity of different colors with the same “L” value **will look the same no matter their hue and saturation.**
 
 With this advantage, color palette creation and contrast checking are easier, for example, let's say you have a blue in OkHSL with a hue of 255º and a saturation of 95, to create a color palette of this color from black to white, you just have to use the luminosity param and you can be sure that for example “30” will mean “Blue300”, or better: “Blue30” as in this case the number is linked to a param you can easily change (Material Design v3 use this notation also now).
 
@@ -35,7 +35,7 @@ To be fair, OkHSL's luminosity param is not 100% precise (more like 99%). If for
 
 With OkHSL(0, 100, 50) and a white text on it, we get a contrast of 5.09:1, but with OkHSL(170, 100, 50) we have 4.23:1 and while it's close to 4.5, if you really want to be precise, instead of 50 I recommend a difference of 52. For the AAA level on normal text, I recommend a difference of 65.
 
-Note that this problem is also found in other uniform color pickers like HSLuv for example.
+Note that this problem is also found in other uniform color pickers like HSLuv for example, and in the end is still better than normal HSL where the difference is much bigger.
 
 ## Useful details
 You can use Figma's HEX input while OkColor is open, it will react to any color changes made on Figma, you can for example also open Figma's color picker and move the cursor to see how OkHSL/OkHSV behave (or the opposite).
