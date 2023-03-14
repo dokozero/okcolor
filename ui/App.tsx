@@ -441,80 +441,76 @@ export function App() {
     (event.target as HTMLInputElement).select();
   };
 
-  const hxyInputHandle = function(event: KeyboardEvent) {  
-    if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
+  const inputHandler = function(event: KeyboardEvent | FocusEvent) {
+    const inputHandlesAllowedKeys = ["ArrowUp", "ArrowDown", "Enter", "Tab", "Escape"];
+    const key = "key" in event ? event.key : "";
 
-    // console.log("hxy Input Handle");
-
-    if (event.key != "Tab") { event.preventDefault(); }
+    if (!inputHandlesAllowedKeys.includes(key) && event.type !== "blur") { return; }
+    
+    // console.log("InputHandler");
+    
+    if (key != "Tab") { event.preventDefault(); }
 
     const eventTarget = event.target as HTMLInputElement;
-    let eventTargetId: string = eventTarget.id;
+    const eventTargetId: string = eventTarget.id;
     let eventTargetValue = parseInt(eventTarget.value);
     
-    // We have to update the signal before all the tests because if we don't we'll have some issues. For example if user set 0 on an input then -10 the signal will not update after the test because il will already be at 0 and thus will not refresh (from Preact's doc: "A signal will only update if you assign a new value to it").
+    // If not a number we insert back the old value.
+    if (Number.isNaN(eventTargetValue)) {
+      if (eventTargetId == "hue" || eventTargetId == "x" || eventTargetId == "y") {
+        eventTarget.value = okhxyValues[eventTargetId].value.toString();
+      }
+      else if (eventTargetId == "opacity") {
+        updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
+      }
+      if (event.type != "blur") { eventTarget.select(); }
+      return;
+    }
+    
+    if (key == "ArrowUp") { eventTargetValue++; }
+    else if (key == "ArrowDown") { eventTargetValue--; }
+    
+    // We adjust user's value in case it's outside of the allowed range.
+    const maxValue = eventTargetId == "hue" ? 360 : 100;
+    eventTargetValue = clamp(eventTargetValue, 0, maxValue);
+    
+    let oldValue: number;
+
     if (eventTargetId == "hue" || eventTargetId == "x" || eventTargetId == "y") {
-      okhxyValues[eventTargetId].value = eventTargetValue;
+      oldValue = okhxyValues[eventTargetId].value;
+
+      // We have to update input's value like this because if we don't we'll have some issues. For example if user set 0 on an input then -10 the signal will not update after the test because il will already be at 0 and thus will not refresh (from Preact's doc: "A signal will only update if you assign a new value to it"). Another example, without this code if user try to enter "5t" more than two times, the input value will stay at "5t".
+      if (key != "Escape" && okhxyValues[eventTargetId].value != eventTargetValue) {
+        okhxyValues[eventTargetId].value = eventTargetValue;
+      }
+      else {
+        eventTarget.value = oldValue.toString();
+      }
+
+      checkIfOkhxyIsWhiteBlackOrGray();
+      updateCurrentRgbaFromOkhxyValues();
+
+      if (eventTargetId == "hue") {
+        render.colorPickerCanvas();
+        updateManipulatorPositions.hueSlider();
+      }
+      else if (eventTargetId == "x" || eventTargetId == "y") {
+        updateManipulatorPositions.colorPicker();
+      }
+
+      render.opacitySliderCanvas();
+      render.fillOrStrokeSelector();
     }
-    
-    if (Number.isNaN(eventTargetValue)) { eventTargetValue = 0; }
-      
-    if (event.key == "ArrowUp") eventTargetValue++;
-    else if (event.key == "ArrowDown") eventTargetValue--;
-    
-    // We test user's value and adjust it if enter one outside allowed range.
-    if (eventTargetId == "hue") {
-      eventTargetValue = clamp(eventTargetValue, 0, 360);
-    }
-    else if (eventTargetId == "x" || eventTargetId == "y") {
-      eventTargetValue = clamp(eventTargetValue, 0, 100);
+    else if (eventTargetId == "opacity") {
+      oldValue = shapeInfos.colors[currentFillOrStroke].rgba[3];
+
+      if (key != "Escape") { updateOpacityValue(eventTargetValue); }
+      else { updateOpacityValue(oldValue); }
+  
+      updateManipulatorPositions.opacitySlider();
     }
 
-    if (eventTargetId == "hue" || eventTargetId == "x" || eventTargetId == "y") {
-      okhxyValues[eventTargetId].value = eventTargetValue;
-    }
-
-    eventTarget.select();
-    
-    checkIfOkhxyIsWhiteBlackOrGray();
-    updateCurrentRgbaFromOkhxyValues();
-
-    if (eventTarget.id == "hue") {
-      render.colorPickerCanvas();
-      updateManipulatorPositions.hueSlider();
-    }
-    else if (eventTarget.id == "x" || eventTarget.id == "y") {
-      updateManipulatorPositions.colorPicker();
-    }
-
-    render.opacitySliderCanvas();
-    render.fillOrStrokeSelector();
-
-    sendNewShapeColorToBackend();
-  };
-
-  const opacityInputHandle = function(event: KeyboardEvent) {
-    if (event.key != "ArrowUp" && event.key != "ArrowDown" && event.key != "Enter" && event.key != "Tab") return;
-    
-    // console.log("opacity Input Handle"); 
-
-    if (event.key != "Tab") { event.preventDefault(); }
-
-    const eventTarget = event.target as HTMLInputElement;
-    let eventTargetValue = parseInt(eventTarget.value);
-
-    if (Number.isNaN(eventTargetValue)) { eventTargetValue = 100; }
-
-    if (event.key == "ArrowUp") eventTargetValue++;
-    else if (event.key == "ArrowDown") eventTargetValue--;
-
-    eventTargetValue = clamp(eventTargetValue, 0, 100);
-
-    updateOpacityValue(eventTargetValue);
-
-    eventTarget.select();
-
-    updateManipulatorPositions.opacitySlider();
+    if (event.type != "blur") { eventTarget.select(); }
     sendNewShapeColorToBackend();
   };
 
@@ -667,10 +663,10 @@ export function App() {
           </div>
 
           <div class="input-wrapper u-flex u-w-full">
-            <input onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="hue" value={okhxyValues.hue} min="0" max="360" spellcheck={false} />
-            <input onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="x" value={okhxyValues.x} min="0" max="100" spellcheck={false} />
-            <input onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="y" value={okhxyValues.y} min="0" max="100" spellcheck={false} />
-            <input ref={opacityInput} onFocus={handleInputFocus} onKeyDown={opacityInputHandle} id="opacity" min="0" max="100" spellcheck={false} />
+            <input onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="hue" value={okhxyValues.hue} spellcheck={false} />
+            <input onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="x" value={okhxyValues.x} spellcheck={false} />
+            <input onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="y" value={okhxyValues.y} spellcheck={false} />
+            <input ref={opacityInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="opacity" spellcheck={false} />
           </div>
         </div>
       </div>
