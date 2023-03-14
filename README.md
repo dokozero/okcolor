@@ -1,7 +1,7 @@
 ![Easier color palettes and accessibility](readme-banner.webp)
 
 # OkColor
-This is a plugin for Figma, see community page: (waiting Figma's validation).
+This is a plugin for Figma, [see community page](https://www.figma.com/community/plugin/1173638098109123591/OkColor) (waiting Figma's validation).
 
 Creating a balanced color palette with Figma's color picker is not an easy task, same for managing accessible colors. OkColor is a plugin with an improved HSL/HSB color picker that allows you to easily use uniform color spaces.
 
