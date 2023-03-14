@@ -451,9 +451,14 @@ export function App() {
     const eventTarget = event.target as HTMLInputElement;
     let eventTargetId: string = eventTarget.id;
     let eventTargetValue = parseInt(eventTarget.value);
-
+    
+    // We have to update the signal before all the tests because if we don't we'll have some issues. For example if user set 0 on an input then -10 the signal will not update after the test because il will already be at 0 and thus will not refresh (from Preact's doc: "A signal will only update if you assign a new value to it").
+    if (eventTargetId == "hue" || eventTargetId == "x" || eventTargetId == "y") {
+      okhxyValues[eventTargetId].value = eventTargetValue;
+    }
+    
     if (Number.isNaN(eventTargetValue)) { eventTargetValue = 0; }
-
+      
     if (event.key == "ArrowUp") eventTargetValue++;
     else if (event.key == "ArrowDown") eventTargetValue--;
     
@@ -665,7 +670,7 @@ export function App() {
             <input onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="hue" value={okhxyValues.hue} min="0" max="360" spellcheck={false} />
             <input onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="x" value={okhxyValues.x} min="0" max="100" spellcheck={false} />
             <input onFocus={handleInputFocus} onKeyDown={hxyInputHandle} id="y" value={okhxyValues.y} min="0" max="100" spellcheck={false} />
-            <input ref={opacityInput} onFocus={handleInputFocus} onKeyDown={opacityInputHandle} id="opacity" min="0" max="100" spellcheck={false}></input>
+            <input ref={opacityInput} onFocus={handleInputFocus} onKeyDown={opacityInputHandle} id="opacity" min="0" max="100" spellcheck={false} />
           </div>
         </div>
       </div>
