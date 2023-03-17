@@ -42,13 +42,13 @@ You can use Figma's HEX input while OkColor is open and it will react to any col
 
 The plugin doesn't support shapes with multiple colors and if you select one, the plugin will take the first color of the list (from the bottom).
 
-Note that the hues in OkColor doesn't map the ones of HSL/HSB in Figma, for example here 0º doesn't mean pure red.
+Note that the hues in OkColor don't map the ones of HSL/HSB in Figma, for example here 0º doesn't mean pure red.
 
 It also doesn't support shapes with gradient colors, but you can for example change the color of a shape with a solid fill and a gradient stroke.
 
 Finally, keep in mind that OkHSL and OkHSV are made for the sRGB gamut, technically they will still work if Figma is in “Unmanaged” mode and you have a P3 screen, but for more precise P3 work you can use for example [oklch.com](https://oklch.com/), which is also based on the work of OkHSL/OkHSV creator.
 
 ## Links
-This plugin use the rendering and color conversion functions ([source code](https://github.com/bottosson/bottosson.github.io/tree/master/misc/colorpicker)) made by Björn Ottosson.
+This plugin uses the rendering and color conversion functions ([source code](https://github.com/bottosson/bottosson.github.io/tree/master/misc/colorpicker)) made by Björn Ottosson.
 
 To know more about uniform color spaces, I recommend checking his original article: [Oksvh and Okhsl](https://bottosson.github.io/posts/colorpicker/). You can also try this online app made by the same author to easily compare different color pickers: [Interactive color picker comparison](https://bottosson.github.io/misc/colorpicker/).
