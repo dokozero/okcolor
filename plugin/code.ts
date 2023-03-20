@@ -196,8 +196,8 @@ figma.on("selectionchange", () => {
   
   if (!updateShapeInfos()) return;
 
-  if (currentFillOrStroke == "fill" && !shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "stroke"; }
-  else if (currentFillOrStroke == "stroke" && !shapeInfos.hasFillStroke.stroke) { currentFillOrStroke = "fill"; }
+  if (currentFillOrStroke === "fill" && !shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "stroke"; }
+  else if (currentFillOrStroke === "stroke" && !shapeInfos.hasFillStroke.stroke) { currentFillOrStroke = "fill"; }
 
   sendNewShapeColorToUI(true);
 
@@ -210,12 +210,12 @@ figma.on("documentchange", (event) => {
 
   const changeType = event.documentChanges[0].type;
   
-  if (changeType == "PROPERTY_CHANGE") {
+  if (changeType === "PROPERTY_CHANGE") {
 
     const changeProperty = event.documentChanges[0].properties[0];
     
     // We don't run the code if for example the user has changed the rotation of the shape.
-    if (changeProperty == "fills" || changeProperty == "strokes") {
+    if (changeProperty === "fills" || changeProperty === "strokes") {
       // console.log('BACKEND: document change');
      
       // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
@@ -224,17 +224,17 @@ figma.on("documentchange", (event) => {
       if (!updateShapeInfos()) return;
 
       if (JSON.stringify(oldHasFillStroke) !== JSON.stringify(shapeInfos.hasFillStroke)) {
-        if (currentFillOrStroke == "fill" && !shapeInfos.hasFillStroke.fill) {
+        if (currentFillOrStroke === "fill" && !shapeInfos.hasFillStroke.fill) {
           currentFillOrStroke = "stroke";
         }
-        else if (currentFillOrStroke == "stroke" && !shapeInfos.hasFillStroke.stroke) {
+        else if (currentFillOrStroke === "stroke" && !shapeInfos.hasFillStroke.stroke) {
           currentFillOrStroke = "fill";
         }
         sendNewShapeColorToUI(true);
         return;
       }
 
-      if ((currentFillOrStroke == "fill" && changeProperty == "strokes") || (currentFillOrStroke == "stroke" && changeProperty == "fills")) {
+      if ((currentFillOrStroke === "fill" && changeProperty === "strokes") || (currentFillOrStroke === "stroke" && changeProperty === "fills")) {
         // To avoid rendering color picker canvas if for example user is changing stroke color while the fill is selected in plugin's UI.
         sendNewShapeColorToUI();
       }
@@ -256,7 +256,7 @@ figma.on("documentchange", (event) => {
 let timeoutId: number;
 
 figma.ui.onmessage = (msg) => {
-  if (msg.type == "Update shape color") {
+  if (msg.type === "Update shape color") {
     // console.log("BACKEND: update shape color");
 
     itsAMe = true;
@@ -286,7 +286,7 @@ figma.ui.onmessage = (msg) => {
     timeoutId = setTimeout(() => { itsAMe = false; }, 500);
 
   }
-  else if (msg.type == "Sync currentFillOrStroke") {
+  else if (msg.type === "Sync currentFillOrStroke") {
     currentFillOrStroke = msg.currentFillOrStroke;
   }
 };

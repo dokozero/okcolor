@@ -118,14 +118,14 @@ export function App() {
     okhxyValues.isGray = false;
 
     // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
-    if (okhxyValues.x.value == 0 && (okhxyValues.y.value >= 1 && okhxyValues.y.value <= 99)) {
+    if (okhxyValues.x.value === 0 && (okhxyValues.y.value >= 1 && okhxyValues.y.value <= 99)) {
       okhxyValues.isGray = true;
     }
-    else if (okhxyValues.y.value == 0) {
+    else if (okhxyValues.y.value === 0) {
       okhxyValues.isBlack = true;
     }
-    else if (okhxyValues.y.value == 100) {
-      if (currentColorModel == "okhsl" || (currentColorModel == "okhsv" && okhxyValues.x.value == 0)) {
+    else if (okhxyValues.y.value === 100) {
+      if (currentColorModel === "okhsl" || (currentColorModel === "okhsv" && okhxyValues.x.value === 0)) {
         okhxyValues.isWhite = true;
       }
     }
@@ -158,7 +158,7 @@ export function App() {
       colorPickerUIMessage.current!.classList.remove("u-display-none");
 
       let message: string = UIMessageTexts[messageCode];
-      if (nodeType != "") {
+      if (nodeType !== "") {
         message = message.replace("$SHAPE", nodeType.toLowerCase());
       }
       colorPickerUIMessage.current!.children[0].innerHTML = message;
@@ -256,15 +256,15 @@ export function App() {
         shapeColor = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, clampX, clampY);
       }
 
-      if (currentColorModel == "okhsl") {
+      if (currentColorModel === "okhsl") {
         renderResult = render_okhsl(shapeColor[0], shapeColor[1], shapeColor[2]);
         ctx!.putImageData(renderResult["okhsl_sl"], 0, 0);
       }
-      else if (currentColorModel == "okhsv") {
+      else if (currentColorModel === "okhsv") {
         renderResult = render_okhsv(shapeColor[0], shapeColor[1], shapeColor[2]);
         ctx!.putImageData(renderResult["okhsv_sv"], 0, 0);
       }
-      // else if (colorModel == "oklch") {
+      // else if (colorModel === "oklch") {
       //   results = render(tempColor[0], tempColor[1], tempColor[2]);
       //   ctx.putImageData(results["oklch_lc"], 0, 0);
       // }
@@ -388,11 +388,11 @@ export function App() {
 
       const eventTarget = event.target as HTMLCanvasElement | HTMLDivElement;
 
-      if (mouseHandlerEventTargetId == "") {
+      if (mouseHandlerEventTargetId === "") {
         mouseHandlerEventTargetId = eventTarget.id;
       }
 
-      if (mouseHandlerEventTargetId == "okhxy-xy-picker") {
+      if (mouseHandlerEventTargetId === "okhxy-xy-picker") {
         canvas_x = event.clientX - rect.left;
         canvas_y = event.clientY - rect.top;
         okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/picker_size) * 100);
@@ -405,7 +405,7 @@ export function App() {
         render.fillOrStrokeSelector();
         render.opacitySliderCanvas();
       }
-      else if (mouseHandlerEventTargetId == "okhxy-h-slider") {
+      else if (mouseHandlerEventTargetId === "okhxy-h-slider") {
         canvas_y = event.clientX - rect.left - 7;
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
@@ -415,7 +415,7 @@ export function App() {
         updateManipulatorPositions.hueSlider();
         render.all();
       }
-      else if (mouseHandlerEventTargetId == "opacity-slider") {
+      else if (mouseHandlerEventTargetId === "opacity-slider") {
         canvas_y = event.clientX - rect.left - 7;
         updateOpacityValue(Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 100));
 
@@ -460,18 +460,18 @@ export function App() {
   document.addEventListener("mouseenter", () => { mouseInsideDocument = true; });
 
   const inputHandler = function(event: KeyboardEvent | FocusEvent) {
-    
+
     // To handle rare case where user could have entered a new value on an input but without validating it (like pressing "Enter") and then selecting another shape, without this check the new value of the input would be set on the new shape as the blur event would still trigger when user click on it.
-    if (event.type == "blur" && mouseInsideDocument == false) { return; }
+    if (event.type === "blur" && mouseInsideDocument === false) { return; }
 
     const inputHandlesAllowedKeys = ["ArrowUp", "ArrowDown", "Enter", "Tab", "Escape"];
     const key = "key" in event ? event.key : "";
 
-    if (!inputHandlesAllowedKeys.includes(key) && event.type != "blur") { return; }
+    if (!inputHandlesAllowedKeys.includes(key) && event.type !== "blur") { return; }
     
     // console.log("InputHandler");
     
-    if (key != "Tab") { event.preventDefault(); }
+    if (key !== "Tab") { event.preventDefault(); }
 
     const eventTarget = event.target as HTMLInputElement;
     const eventTargetId: string = eventTarget.id;
@@ -479,30 +479,30 @@ export function App() {
     
     // If not a number we insert back the old value.
     if (Number.isNaN(eventTargetValue)) {
-      if (eventTargetId == "hue" || eventTargetId == "x" || eventTargetId == "y") {
+      if (eventTargetId === "hue" || eventTargetId === "x" || eventTargetId === "y") {
         eventTarget.value = okhxyValues[eventTargetId].value.toString();
       }
-      else if (eventTargetId == "opacity") {
+      else if (eventTargetId === "opacity") {
         updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
       }
-      if (event.type != "blur") { eventTarget.select(); }
+      if (event.type !== "blur") { eventTarget.select(); }
       return;
     }
     
-    if (key == "ArrowUp") { eventTargetValue++; }
-    else if (key == "ArrowDown") { eventTargetValue--; }
+    if (key === "ArrowUp") { eventTargetValue++; }
+    else if (key === "ArrowDown") { eventTargetValue--; }
     
     // We adjust user's value in case it's outside of the allowed range.
-    const maxValue = eventTargetId == "hue" ? 360 : 100;
+    const maxValue = eventTargetId === "hue" ? 360 : 100;
     eventTargetValue = clamp(eventTargetValue, 0, maxValue);
     
     let oldValue: number;
 
-    if (eventTargetId == "hue" || eventTargetId == "x" || eventTargetId == "y") {
+    if (eventTargetId === "hue" || eventTargetId === "x" || eventTargetId === "y") {
       oldValue = okhxyValues[eventTargetId].value;
 
       // We have to update input's value like this because if we don't we'll have some issues. For example if user set 0 on an input then -10 the signal will not update after the test because il will already be at 0 and thus will not refresh (from Preact's doc: "A signal will only update if you assign a new value to it"). Another example, without this code if user try to enter "5t" more than two times, the input value will stay at "5t".
-      if (key != "Escape" && okhxyValues[eventTargetId].value != eventTargetValue) {
+      if (key !== "Escape" && okhxyValues[eventTargetId].value !== eventTargetValue) {
         okhxyValues[eventTargetId].value = eventTargetValue;
       }
       else {
@@ -512,27 +512,27 @@ export function App() {
       checkIfOkhxyIsWhiteBlackOrGray();
       updateCurrentRgbaFromOkhxyValues();
 
-      if (eventTargetId == "hue") {
+      if (eventTargetId === "hue") {
         render.colorPickerCanvas();
         updateManipulatorPositions.hueSlider();
       }
-      else if (eventTargetId == "x" || eventTargetId == "y") {
+      else if (eventTargetId === "x" || eventTargetId === "y") {
         updateManipulatorPositions.colorPicker();
       }
 
       render.opacitySliderCanvas();
       render.fillOrStrokeSelector();
     }
-    else if (eventTargetId == "opacity") {
+    else if (eventTargetId === "opacity") {
       oldValue = shapeInfos.colors[currentFillOrStroke].rgba[3];
 
-      if (key != "Escape") { updateOpacityValue(eventTargetValue); }
+      if (key !== "Escape") { updateOpacityValue(eventTargetValue); }
       else { updateOpacityValue(oldValue); }
   
       updateManipulatorPositions.opacitySlider();
     }
 
-    if (event.type != "blur") { eventTarget.select(); }
+    if (event.type !== "blur") { eventTarget.select(); }
     sendNewShapeColorToBackend();
   };
 
@@ -567,7 +567,7 @@ export function App() {
       init = false;
     }
 
-    if (pluginMessage == "new shape color") {
+    if (pluginMessage === "new shape color") {
       // console.log("Update from backend - new shape color");
 
       okhxyValues.isWhite = false;
@@ -582,7 +582,7 @@ export function App() {
         shouldRenderColorPickerCanvas = true;
       }
 
-      if (currentFillOrStroke != event.data.pluginMessage.currentFillOrStroke) {
+      if (currentFillOrStroke !== event.data.pluginMessage.currentFillOrStroke) {
         switchFillOrStrokeSelector();
         shouldRenderColorPickerCanvas = true;
       }
@@ -601,7 +601,7 @@ export function App() {
       if (shouldRenderColorPickerCanvas) { render.colorPickerCanvas(); }
     }
 
-    else if (pluginMessage == "Display UI Message") {
+    else if (pluginMessage === "Display UI Message") {
       UIMessage.show(event.data.pluginMessage.UIMessageCode, event.data.pluginMessage.nodeType);
     }
   };
