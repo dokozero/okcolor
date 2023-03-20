@@ -69,6 +69,9 @@ let activeMouseHandler: Function | undefined;
 // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
 let mouseHandlerEventTargetId = "";
 
+// Necessary for inputHandler(), see there for explications.
+let mouseInsideDocument: boolean;
+
 export function App() { 
   // We could use one canvas element but better no to avoid flickering when user change color model 
   const fillOrStrokeSelector = useRef<HTMLDivElement>(null);
@@ -441,11 +444,19 @@ export function App() {
     (event.target as HTMLInputElement).select();
   };
 
+  // We need this value for inputHandler().
+  document.addEventListener("mouseleave", () => { mouseInsideDocument = false; });
+  document.addEventListener("mouseenter", () => { mouseInsideDocument = true; });
+
   const inputHandler = function(event: KeyboardEvent | FocusEvent) {
+    
+    // To handle rare case where user could have entered a new value on an input but without validating it (like pressing "Enter") and then selecting another shape, without this check the new value of the input would be set on the new shape as the blur event would still trigger when user click on it.
+    if (event.type == "blur" && mouseInsideDocument == false) { return; }
+
     const inputHandlesAllowedKeys = ["ArrowUp", "ArrowDown", "Enter", "Tab", "Escape"];
     const key = "key" in event ? event.key : "";
 
-    if (!inputHandlesAllowedKeys.includes(key) && event.type !== "blur") { return; }
+    if (!inputHandlesAllowedKeys.includes(key) && event.type != "blur") { return; }
     
     // console.log("InputHandler");
     
