@@ -195,6 +195,11 @@ export function App() {
     
     const newOkhxy = colorConversion("srgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2]);
 
+    // We have to update these values before updating them with the real value to handle this case: because Preact signals doesn't update if we give them the same value they already have, if user change the value on input, for example the hue from 100 to 50, doesn't validate it (like pressing "Enter") then select another shape, if this new one had also a hue of 100 the hue input will show "50" and not 100. By doing this simple increment we ensure that this case will not happen.
+    okhxyValues.hue.value++;
+    okhxyValues.x.value++;
+    okhxyValues.y.value++;
+
     if (okhxyValues.isWhite) {
       okhxyValues.x.value = 0;
       okhxyValues.y.value = 100;
@@ -315,9 +320,15 @@ export function App() {
   };
 
   const resetInterface = function() {
+    // We have to update these values before reseting them to 0 to handle this case: because Preact signals doesn't update if we give them the same value they already have, if user select a shape with an input valu already to 0 like saturation (x), change it to another value like 10, doesn't validate it (like pressing "Enter"), then unselect the shape, the input will keep the "10" and not update to "0". By doing this simple increment we ensure that this case will not happen.
+    okhxyValues.hue.value++;
+    okhxyValues.x.value++;
+    okhxyValues.y.value++;
+
     okhxyValues.hue.value = 0;
     okhxyValues.x.value = 0;
     okhxyValues.y.value = 0;
+
     updateOpacityValue(0);
     shapeInfosResetDefault();
 
