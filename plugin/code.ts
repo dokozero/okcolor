@@ -1,3 +1,5 @@
+import { picker_size } from "../lib/bottosson/constants";
+
 /*
 ** VARIABLES DECLARATIONS
 */
@@ -167,11 +169,10 @@ const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string =
 ** INIT
 */
 
-figma.showUI(__html__, {width: 240, height: 346, themeColors: true});
+figma.showUI(__html__, {width: picker_size, height: 346, themeColors: true});
 
 // To send the color of the shape on launch
 const init = function() {
-
   if (!updateShapeInfos()) return;
 
   if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }

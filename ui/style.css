@@ -17,8 +17,8 @@ body {
 
 .c-color-picker {
   position: relative;
-  width: 240px;
-  height: 240px;
+  width: 241px; /* We use 241 and not 240 as the color picker render function need and uneven value (see in constants.js). */
+  height: 241px;
 }
   .c-color-picker__message-wrapper {
     z-index: 1;

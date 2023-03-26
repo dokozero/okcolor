@@ -3,15 +3,12 @@ import { useRef } from "preact/hooks";
 
 import { colorConversion } from "../lib/bottosson/colorconversion";
 import { render_okhsv, render_okhsl } from "../lib/bottosson/render";
-import { eps } from "../lib/bottosson/constants";
+import { picker_size, eps } from "../lib/bottosson/constants";
 
 import { UIMessageTexts } from "./ui-messages";
 
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
-
-// We don't use the picker_size constant from the constants file because if we modify we got a display bug with the results from the render function in render.js
-const picker_size = 240;
 
 // We use a different value for the slider as they take less room.
 const slider_size = 148;
@@ -615,9 +612,9 @@ export function App() {
           <p class="c-color-picker__message-text"></p>
         </div>
 
-        <canvas ref={colorPicker} class="c-color-picker__canvas" id="okhxy-xy-picker" width="240" height="240"></canvas>
+        <canvas ref={colorPicker} class="c-color-picker__canvas" id="okhxy-xy-picker" width={picker_size} height={picker_size}></canvas>
 
-        <svg class="c-color-picker__handler" width="240" height="240">
+        <svg class="c-color-picker__handler" width={picker_size} height={picker_size}>
           <g ref={manipulatorColorPicker} transform="translate(0,0)">
             <circle cx="0" cy="0" r="4.8" fill="none" stroke-width="2.8" stroke="#555555" ></circle>
             <circle cx="0" cy="0" r="4.8" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
