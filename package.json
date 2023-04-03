@@ -1,8 +1,7 @@
 {
   "name": "okcolor",
-  "version": "1.0",
+  "version": "2.0",
   "description": "A Figma plugin to get OK Colors",
-  "main": "code.js",
   "scripts": {
     "build-plugin": "vite build --config vitePlugin.config.ts",
     "build-ui": "vite build --config viteUI.config.ts",
@@ -10,18 +9,18 @@
     "watch-ui": "npm run build-ui -- --watch",
     "build": "npm run build-ui && npm run build-plugin"
   },
-  "author": "",
-  "license": "",
   "dependencies": {
     "@preact/signals": "^1.1.3",
-    "preact": "^10.13.1"
+    "culori": "^3.1.0",
+    "preact": "^10.13.2"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.62.0",
     "@preact/preset-vite": "^2.5.0",
-    "@types/node": "^18.15.3",
-    "typescript": "^4.9.5",
-    "vite": "^4.1.4",
-    "vite-plugin-singlefile": "^0.13.3"
+    "@types/culori": "^2.0.0",
+    "@types/node": "^18.15.11",
+    "typescript": "^5.0.3",
+    "vite": "^4.2.1",
+    "vite-plugin-singlefile": "^0.13.5"
   }
 }

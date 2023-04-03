@@ -1,11 +1,14 @@
 import { signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
 
-import { colorConversion } from "../lib/bottosson/colorconversion";
-import { render_okhsv, render_okhsl } from "../lib/bottosson/render";
-import { picker_size, eps } from "../lib/bottosson/constants";
+import { clampChroma } from "../node_modules/culori/bundled/culori.mjs";
 
-import { UIMessageTexts } from "./ui-messages";
+import { colorConversion } from "./utils/colorconversion";
+import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale } from "./utils/constant";
+
+import { UIMessageTexts } from "./utils/ui-messages";
+import { renderImageData } from "./utils/renderImageData";
+import { clampNumber, limitMouseHandlerValue } from "./utils/others";
 
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
@@ -26,18 +29,14 @@ const opacitySliderStyle = signal("");
 
 type RgbaColor = [number, number, number, number];
 
-type Colors = {
-  [key: string]: {
-    rgba: RgbaColor;
-  };
-}
-
 interface ShapeInfos {
   hasFillStroke: {
     fill: boolean;
     stroke: boolean;
   };
-  colors: Colors;
+  colors: {
+    [key: string]: { rgba: RgbaColor; }
+  };
 }
 
 let shapeInfos: ShapeInfos = {
@@ -88,20 +87,6 @@ export function App() {
   ** HELPER FUNCTIONS
   */
 
-  const clamp = function(num: number, min: number, max: number): number {
-    if (num < min) {
-      return min;
-    }
-    else if (num > max) {
-      return max;
-    }
-    return num;
-  };
-
-  const limitMouseHandlerValue = function(x: number): number {
-    return x < eps ? eps : (x > 1-eps ? 1-eps : x);
-  };
-
   const shapeInfosResetDefault = function() {
     shapeInfos.hasFillStroke.fill = true,
     shapeInfos.hasFillStroke.stroke = true,
@@ -109,31 +94,24 @@ export function App() {
     shapeInfos.colors.stroke.rgba = [255, 255, 255, 0]
   };
 
-  const checkIfOkhxyIsWhiteBlackOrGray = function() {
-    okhxyValues.isWhite = false;
-    okhxyValues.isBlack = false;
-    okhxyValues.isGray = false;
-
-    // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
-    if (okhxyValues.x.value === 0 && (okhxyValues.y.value >= 1 && okhxyValues.y.value <= 99)) {
-      okhxyValues.isGray = true;
-    }
-    else if (okhxyValues.y.value === 0) {
-      okhxyValues.isBlack = true;
-    }
-    else if (okhxyValues.y.value === 100) {
-      if (currentColorModel === "okhsl" || (currentColorModel === "okhsv" && okhxyValues.x.value === 0)) {
-        okhxyValues.isWhite = true;
-      }
-    }
-  };
-
 
   
-
   /* 
   ** UPDATES TO UI
   */
+
+  const scaleColorPickerCanvas = function() {
+    if (currentColorModel === "oklch") {
+      colorPicker.current!.style.transform = `scale(${lowResFactorOklch})`;
+      colorPicker.current!.width = lowResPickerSizeOklch;
+      colorPicker.current!.height = lowResPickerSizeOklch;
+    }
+    else {
+      colorPicker.current!.style.transform = `scale(${lowResFactor})`;
+      colorPicker.current!.width = lowResPickerSize;
+      colorPicker.current!.height = lowResPickerSize;
+    }
+  }
 
   const UIMessage = {
     hide() {
@@ -168,7 +146,6 @@ export function App() {
     opacityInput.current!.value = `${newValue}%`;
   };
 
-
   const switchFillOrStrokeSelector = function() {
     // console.log("switch FillOrStrokeSelector");
     
@@ -176,19 +153,10 @@ export function App() {
     fillOrStrokeSelector.current!.setAttribute("data-active", currentFillOrStroke);
   } ;
 
-
   const updateOkhxyValuesFromCurrentRgba = function() {
     // console.log("convert Rgb To Okhxy Values");
 
     let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
-
-    // We do these tests to be abble to keep the hue between the color model change when we have a white, black or gray value.
-    if (okhxyValues.isWhite || okhxyValues.isBlack || okhxyValues.isGray) {
-      const clampX = clamp(okhxyValues.x.value, 1, 99);
-      const clampY = clamp(okhxyValues.y.value, 1, 99);
-
-      shapeColor = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, clampX, clampY);
-    }
     
     const newOkhxy = colorConversion("srgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2]);
 
@@ -197,74 +165,29 @@ export function App() {
     okhxyValues.x.value++;
     okhxyValues.y.value++;
 
-    if (okhxyValues.isWhite) {
-      okhxyValues.x.value = 0;
-      okhxyValues.y.value = 100;
-    }
-    else if (okhxyValues.isBlack) {
-      okhxyValues.x.value = 0;
-      okhxyValues.y.value = 0;
-    }
-    else if (okhxyValues.isGray) {
-      okhxyValues.x.value = 0;
-    }
-    else {
-      okhxyValues.x.value = newOkhxy[1];
-      okhxyValues.y.value = newOkhxy[2];
-    }
-
     okhxyValues.hue.value = newOkhxy[0];
+    okhxyValues.x.value = newOkhxy[1];
+    okhxyValues.y.value = newOkhxy[2];
+
   };
 
   const updateCurrentRgbaFromOkhxyValues = function() {
+    //console.log("update Current Rgba From Okhxy Values")
 
-    let newRgb: [number, number, number] = [0, 0, 0];
-    
-    // No need to call colorConversion() if we have a white or black color.
-    if (!okhxyValues.isWhite && !okhxyValues.isBlack) {
-      newRgb = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
-    }
-    else if (okhxyValues.isWhite) {
-      newRgb = [255, 255, 255];
-    }
-    else if (okhxyValues.isBlack) {
-      newRgb = [0, 0, 0];
-    }
-
+    let newRgb = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
     shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
   };
 
   const render = {
     colorPickerCanvas() {
       // console.log("render Color Picker Canvas");
-
       let renderResult;
       let ctx = colorPicker.current!.getContext("2d");
-      let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
 
-      // If we don't to this and for exemple we start the plugin with a [0, 0, 0] fill, the color picker hue will be red while the hue picker will be orange. Seems to be an inconsistency with the render functions.
-      if (shapeColor.slice(0, 3).every(val => val === 0)) { shapeColor.fill(0.01, 0, 3); }
+      const isDarkMode = document.documentElement.classList.contains("figma-dark") ? true : false;
 
-      // We do these tests in order to be able to change the hue on the color picker canvas when we have a white, black or gray color. If we don't to this fix, the hue value will always be the same on the color picker canvas.
-      if (okhxyValues.isWhite || okhxyValues.isBlack || okhxyValues.isGray) {
-        const clampX = clamp(okhxyValues.x.value, 1, 99);
-        const clampY = clamp(okhxyValues.y.value, 1, 99);
-
-        shapeColor = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, clampX, clampY);
-      }
-
-      if (currentColorModel === "okhsl") {
-        renderResult = render_okhsl(shapeColor[0], shapeColor[1], shapeColor[2]);
-        ctx!.putImageData(renderResult["okhsl_sl"], 0, 0);
-      }
-      else if (currentColorModel === "okhsv") {
-        renderResult = render_okhsv(shapeColor[0], shapeColor[1], shapeColor[2]);
-        ctx!.putImageData(renderResult["okhsv_sv"], 0, 0);
-      }
-      // else if (colorModel === "oklch") {
-      //   results = render(tempColor[0], tempColor[1], tempColor[2]);
-      //   ctx.putImageData(results["oklch_lc"], 0, 0);
-      // }
+      renderResult = renderImageData(okhxyValues.hue.value, currentColorModel, isDarkMode);
+      ctx!.putImageData(renderResult, 0, 0);
     },
     fillOrStrokeSelector() {
       // console.log("render fillOrStroke Selector");
@@ -297,7 +220,10 @@ export function App() {
       // console.log("update Manipulator Positions - color picker");
       let x = okhxyValues.x.value / 100;
       let y = okhxyValues.y.value / 100;
-      manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(picker_size*x, picker_size*(1-y));
+
+      if (currentColorModel === "oklch") { x *= oklchChromaScale; }
+
+      manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(pickerSize*x, pickerSize*(1-y));
     },
     hueSlider() {
       // console.log("update Manipulator Positions - hue slider");
@@ -339,16 +265,13 @@ export function App() {
   };
 
 
+
   /* 
   ** UPDATES FROM UI
   */
 
   const fillOrStrokeHandle = function() {
     // console.log("fill Or Stroke Handle");
-
-    okhxyValues.isWhite = false;
-    okhxyValues.isBlack = false;
-    okhxyValues.isGray = false;
 
     switchFillOrStrokeSelector();
 
@@ -362,17 +285,17 @@ export function App() {
     syncCurrentFillOrStrokeWithBackend();
   };
 
-
   const colorModelHandle = function(event: any) {
     // console.log("color Model Handle");
 
     currentColorModel = (event.target as HTMLSelectElement).value;
+
+    scaleColorPickerCanvas();
     
     updateOkhxyValuesFromCurrentRgba();
     updateManipulatorPositions.colorPicker();
     render.colorPickerCanvas();
   };
-
 
   const setupHandler = function(canvas: HTMLCanvasElement | HTMLDivElement) {
     // console.log("setup Handler - " + canvas.id);
@@ -392,10 +315,19 @@ export function App() {
       if (mouseHandlerEventTargetId === "okhxy-xy-picker") {
         canvas_x = event.clientX - rect.left;
         canvas_y = event.clientY - rect.top;
-        okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/picker_size) * 100);
-        okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/picker_size) * 100);
+        okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/pickerSize) * 100);
+        okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/pickerSize) * 100);
 
-        checkIfOkhxyIsWhiteBlackOrGray();
+        if (currentColorModel === "oklch") {
+          const newChromaValue = Math.round((limitMouseHandlerValue(canvas_x/pickerSize) * 100) / oklchChromaScale);
+          const clamped = clampChroma({ mode: 'oklch', l: okhxyValues.y.value/100, c: newChromaValue/100, h: okhxyValues.hue.value }, 'oklch');
+
+          okhxyValues.x.value = Math.round(clamped.c*100);
+        }
+        else {
+          okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/pickerSize) * 100);
+        }
+
         updateCurrentRgbaFromOkhxyValues();
         
         updateManipulatorPositions.colorPicker();
@@ -406,7 +338,15 @@ export function App() {
         canvas_y = event.clientX - rect.left - 7;
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
-        checkIfOkhxyIsWhiteBlackOrGray();
+        if (currentColorModel === "oklch") {
+          const clamped = clampChroma({ mode: 'oklch', l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, 'oklch');
+
+          if ( okhxyValues.x.value > clamped.c*100) {
+            okhxyValues.x.value = Math.round(clamped.c*100);
+            updateManipulatorPositions.colorPicker();
+          }
+        }
+
         updateCurrentRgbaFromOkhxyValues();
 
         updateManipulatorPositions.hueSlider();
@@ -474,7 +414,7 @@ export function App() {
     const eventTargetId: string = eventTarget.id;
     let eventTargetValue = parseInt(eventTarget.value);
     
-    // If not a number we insert back the old value.
+    // If Not a Number we insert back the old value.
     if (Number.isNaN(eventTargetValue)) {
       if (eventTargetId === "hue" || eventTargetId === "x" || eventTargetId === "y") {
         eventTarget.value = okhxyValues[eventTargetId].value.toString();
@@ -491,7 +431,7 @@ export function App() {
     
     // We adjust user's value in case it's outside of the allowed range.
     const maxValue = eventTargetId === "hue" ? 360 : 100;
-    eventTargetValue = clamp(eventTargetValue, 0, maxValue);
+    eventTargetValue = clampNumber(eventTargetValue, 0, maxValue);
     
     let oldValue: number;
 
@@ -506,14 +446,21 @@ export function App() {
         eventTarget.value = oldValue.toString();
       }
 
-      checkIfOkhxyIsWhiteBlackOrGray();
+      // checkIfOkhxyIsWhiteBlackOrGray();
       updateCurrentRgbaFromOkhxyValues();
+
+      if (currentColorModel === "oklch") {
+        const clamped = clampChroma({ mode: 'oklch', l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, 'oklch');
+
+        okhxyValues.x.value = Math.round(clamped.c*100);
+      }
 
       if (eventTargetId === "hue") {
         render.colorPickerCanvas();
         updateManipulatorPositions.hueSlider();
       }
-      else if (eventTargetId === "x" || eventTargetId === "y") {
+      
+      if (eventTargetId === "x" || eventTargetId === "y" || currentColorModel === "oklch") {
         updateManipulatorPositions.colorPicker();
       }
 
@@ -534,6 +481,7 @@ export function App() {
   };
 
 
+
   /* 
   ** UPDATES TO BACKEND
   */
@@ -549,6 +497,7 @@ export function App() {
   };
 
 
+
   /* 
   ** UPDATES FROM BACKEND
   */
@@ -561,15 +510,13 @@ export function App() {
       setupHandler(hueSlider.current!);
       setupHandler(opacitySlider.current!);
 
+      scaleColorPickerCanvas();
+
       init = false;
     }
 
-    if (pluginMessage === "new shape color") {
+    if (pluginMessage === "newShapeColor") {
       // console.log("Update from backend - new shape color");
-
-      okhxyValues.isWhite = false;
-      okhxyValues.isBlack = false;
-      okhxyValues.isGray = false;
 
       // This value is false by default.
       let shouldRenderColorPickerCanvas: boolean = event.data.pluginMessage.shouldRenderColorPickerCanvas;
@@ -598,7 +545,7 @@ export function App() {
       if (shouldRenderColorPickerCanvas) { render.colorPickerCanvas(); }
     }
 
-    else if (pluginMessage === "Display UI Message") {
+    else if (pluginMessage === "displayUIMessage") {
       UIMessage.show(event.data.pluginMessage.UIMessageCode, event.data.pluginMessage.nodeType);
     }
   };
@@ -607,14 +554,14 @@ export function App() {
   
   return (
     <>
-      <div class="c-color-picker">
+      <div class="c-color-picker" style={`width: ${pickerSize}px; height: ${pickerSize}px;`}>
         <div ref={colorPickerUIMessage} class="c-color-picker__message-wrapper u-display-none">
           <p class="c-color-picker__message-text"></p>
         </div>
 
-        <canvas ref={colorPicker} class="c-color-picker__canvas" id="okhxy-xy-picker" width={picker_size} height={picker_size}></canvas>
+        <canvas ref={colorPicker} class="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
 
-        <svg class="c-color-picker__handler" width={picker_size} height={picker_size}>
+        <svg class="c-color-picker__handler" width={pickerSize} height={pickerSize}>
           <g ref={manipulatorColorPicker} transform="translate(0,0)">
             <circle cx="0" cy="0" r="4.8" fill="none" stroke-width="2.8" stroke="#555555" ></circle>
             <circle cx="0" cy="0" r="4.8" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
@@ -678,6 +625,7 @@ export function App() {
             <select onChange={colorModelHandle} name="color_model" id="color_model">
               <option value="okhsv">OkHSV</option>
               <option value="okhsl" selected>OkHSL</option>
+              <option value="oklch">OkLCH</option>
             </select>
           </div>
 

@@ -1,4 +1,4 @@
-import { picker_size } from "../lib/bottosson/constants";
+import { pickerSize } from "../ui/utils/constant";
 
 /*
 ** VARIABLES DECLARATIONS
@@ -11,18 +11,14 @@ let itsAMe = false;
 
 type RgbaColor = [number, number, number, number];
 
-type Colors = {
-  [key: string]: {
-    rgba: RgbaColor;
-  };
-}
-
 interface ShapeInfos {
   hasFillStroke: {
     fill: boolean;
     stroke: boolean;
   };
-  colors: Colors;
+  colors: {
+    [key: string]: { rgba: RgbaColor; }
+  };
 }
 
 let shapeInfos: ShapeInfos = {
@@ -41,6 +37,7 @@ let shapeInfos: ShapeInfos = {
 }
 
 
+
 /*
 ** HELPER FUNCTIONS
 */
@@ -51,7 +48,6 @@ const shapeInfosResetDefault = function() {
   shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
   shapeInfos.colors.stroke.rgba = [255, 255, 255, 0]
 };
-
 
 const updateShapeInfos = function(): boolean {
 
@@ -155,12 +151,12 @@ const updateShapeInfos = function(): boolean {
 const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
   // console.log("BACKEND: send New Shape Color To UI");
   // figma.ui.postMessage({"shapeFillStrokeInfo": shapeFillStrokeInfo, "rgbValues": currentRgbValues, "opacityValue": opacityValue, "message": "new shape color"});
-  figma.ui.postMessage({"shapeInfos": shapeInfos, "currentFillOrStroke": currentFillOrStroke, "shouldRenderColorPickerCanvas": shouldRenderColorPickerCanvas, "message": "new shape color"});
+  figma.ui.postMessage({"message": "newShapeColor", "shapeInfos": shapeInfos, "currentFillOrStroke": currentFillOrStroke, "shouldRenderColorPickerCanvas": shouldRenderColorPickerCanvas});
 };
 
 const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string = "") {
   // console.log("send UIMessageCode To UI");
-  figma.ui.postMessage({"message": "Display UI Message", "UIMessageCode": UIMessageCode, "nodeType": nodeType});
+  figma.ui.postMessage({"message": "DisplayUIMessage", "UIMessageCode": UIMessageCode, "nodeType": nodeType});
 };
 
 
@@ -169,7 +165,7 @@ const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string =
 ** INIT
 */
 
-figma.showUI(__html__, {width: picker_size, height: 346, themeColors: true});
+figma.showUI(__html__, {width: pickerSize, height: 346, themeColors: true});
 
 // To send the color of the shape on launch
 const init = function() {
@@ -291,4 +287,3 @@ figma.ui.onmessage = (msg) => {
     currentFillOrStroke = msg.currentFillOrStroke;
   }
 };
-

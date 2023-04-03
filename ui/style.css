@@ -17,8 +17,6 @@ body {
 
 .c-color-picker {
   position: relative;
-  width: 241px; /* We use 241 and not 240 as the color picker render function need and uneven value (see in constants.js). */
-  height: 241px;
 }
   .c-color-picker__message-wrapper {
     z-index: 1;
@@ -47,6 +45,7 @@ body {
     position: absolute;
   }
   .c-color-picker__canvas {
+    transform-origin: left top;
     background: var(--figma-color-bg-secondary);
   }
     .c-color-picker__canvas--deactivated {
