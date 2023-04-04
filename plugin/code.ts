@@ -5,6 +5,7 @@ import { pickerSize, debugMode } from "../ui/utils/constants";
 */
 
 let currentFillOrStroke = "fill";
+let currentColorModel: string;
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
 let itsAMe = false;
@@ -151,6 +152,15 @@ const updateShapeInfos = function(): boolean {
 ** UPDATES TO FRONTEND
 */
 
+const initUI = async function() {
+  if (debugMode) { console.log("PLUGIN: initUI())"); }
+
+  currentColorModel = await figma.clientStorage.getAsync("currentColorModel") || "okhsl";
+  
+  figma.ui.postMessage({"message": "init", "currentColorModel": currentColorModel});
+  sendNewShapeColorToUI(true);
+};
+
 const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
   if (debugMode) { console.log(`PLUGIN: sendNewShapeColorToUI(${shouldRenderColorPickerCanvas})`); }
   
@@ -180,7 +190,7 @@ const init = function() {
   if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
   else { currentFillOrStroke = "stroke"; }
 
-  sendNewShapeColorToUI(true);
+  initUI();
 };
 
 init();
@@ -293,5 +303,8 @@ figma.ui.onmessage = (msg) => {
   }
   else if (msg.type === "syncCurrentFillOrStroke") {
     currentFillOrStroke = msg.currentFillOrStroke;
+  }
+  else if (msg.type === "syncCurrentColorModel") {
+    figma.clientStorage.setAsync("currentColorModel", msg.currentColorModel);
   }
 };

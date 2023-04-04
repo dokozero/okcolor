@@ -53,12 +53,11 @@ let shapeInfos: ShapeInfos = {
   }
 }
 
-let init = true;
 let UIMessageOn = false;
 
 // Default choice unless selected shape on launch has no fill.
 let currentFillOrStroke = "fill";
-let currentColorModel = "okhsl";
+let currentColorModel: string;
 let activeMouseHandler: Function | undefined;
 
 // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
@@ -81,6 +80,7 @@ export function App() {
   const manipulatorHueSlider = useRef<SVGSVGElement>(null);
   const manipulatorOpacitySlider = useRef<SVGSVGElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
+  const colorModelSelect = useRef<HTMLSelectElement>(null);
 
 
   /*
@@ -323,6 +323,8 @@ export function App() {
 
     currentColorModel = (event.target as HTMLSelectElement).value;
 
+    syncCurrentColorModelWithBackend();
+
     scaleColorPickerCanvas();
     
     updateOkhxyValuesFromCurrentRgba();
@@ -526,6 +528,12 @@ export function App() {
     parent.postMessage({ pluginMessage: { type: "syncCurrentFillOrStroke", "currentFillOrStroke": currentFillOrStroke } }, '*');
   };
 
+  const syncCurrentColorModelWithBackend = function() {
+    if (debugMode) { console.log("UI: syncCurrentColorModelWithBackend()"); }
+
+    parent.postMessage({ pluginMessage: { type: "syncCurrentColorModel", "currentColorModel": currentColorModel } }, '*');
+  }
+
 
 
   /* 
@@ -537,16 +545,15 @@ export function App() {
 
     if (debugMode) { console.log(`UI: onmessage - "${pluginMessage}"`); }
 
-    if (init) {
-      if (debugMode) { console.log("UI: Update from plugin - init"); }
-
+    if (pluginMessage === "init") {
       setupHandler(colorPickerCanvas.current!);
       setupHandler(hueSlider.current!);
       setupHandler(opacitySlider.current!);
 
-      scaleColorPickerCanvas();
+      currentColorModel = event.data.pluginMessage.currentColorModel;
+      colorModelSelect.current!.value = currentColorModel;
 
-      init = false;
+      scaleColorPickerCanvas();
     }
 
     if (pluginMessage === "newShapeColor") {
@@ -654,11 +661,12 @@ export function App() {
 
         <div class="c-select-input-controls">
           <div class="select-wrapper">
-            <select onChange={colorModelHandle} name="color_model" id="color_model">
+            <select ref={colorModelSelect} onChange={colorModelHandle} name="color_model" id="color_model">
               <option value="okhsv">OkHSV</option>
-              <option value="okhsl" selected>OkHSL</option>
+              <option value="okhsl">OkHSL</option>
               <option value="oklch">OkLCH</option>
             </select>
+
           </div>
 
           <div class="input-wrapper u-flex u-w-full">
