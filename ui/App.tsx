@@ -315,7 +315,7 @@ export function App() {
     updateManipulatorPositions.all();
     render.colorPickerCanvas();
 
-    syncCurrentFillOrStrokeWithBackend();
+    syncCurrentFillOrStrokeWithPlugin();
   };
 
   const colorModelHandle = function(event: any) {
@@ -323,7 +323,7 @@ export function App() {
 
     currentColorModel = (event.target as HTMLSelectElement).value;
 
-    syncCurrentColorModelWithBackend();
+    syncCurrentColorModelWithPlugin();
 
     scaleColorPickerCanvas();
     
@@ -390,7 +390,7 @@ export function App() {
         updateManipulatorPositions.opacitySlider();
       }
 
-      sendNewShapeColorToBackend();
+      sendNewShapeColorToPlugin();
 
     };
 
@@ -507,29 +507,29 @@ export function App() {
     }
 
     if (event.type !== "blur") { eventTarget.select(); }
-    sendNewShapeColorToBackend();
+    sendNewShapeColorToPlugin();
   };
 
 
 
   /* 
-  ** UPDATES TO BACKEND
+  ** UPDATES TO PLUGIN
   */
 
-  const sendNewShapeColorToBackend = function() {
-    if (debugMode) { console.log("UI: sendNewShapeColorToBackend()"); }
+  const sendNewShapeColorToPlugin = function() {
+    if (debugMode) { console.log("UI: sendNewShapeColorToPlugin()"); }
 
     parent.postMessage({ pluginMessage: { type: "updateShapeColor", "newColor": shapeInfos.colors[currentFillOrStroke].rgba } }, '*');
   };
 
-  const syncCurrentFillOrStrokeWithBackend = function() {
-    if (debugMode) { console.log("UI: syncCurrentFillOrStrokeWithBackend()"); }
+  const syncCurrentFillOrStrokeWithPlugin = function() {
+    if (debugMode) { console.log("UI: syncCurrentFillOrStrokeWithPlugin()"); }
 
     parent.postMessage({ pluginMessage: { type: "syncCurrentFillOrStroke", "currentFillOrStroke": currentFillOrStroke } }, '*');
   };
 
-  const syncCurrentColorModelWithBackend = function() {
-    if (debugMode) { console.log("UI: syncCurrentColorModelWithBackend()"); }
+  const syncCurrentColorModelWithPlugin = function() {
+    if (debugMode) { console.log("UI: syncCurrentColorModelWithPlugin()"); }
 
     parent.postMessage({ pluginMessage: { type: "syncCurrentColorModel", "currentColorModel": currentColorModel } }, '*');
   }
@@ -537,7 +537,7 @@ export function App() {
 
 
   /* 
-  ** UPDATES FROM BACKEND
+  ** UPDATES FROM PLUGIN
   */
 
   onmessage = (event) => {
