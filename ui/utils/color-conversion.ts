@@ -15,7 +15,7 @@ export function colorConversion(from: string, to: string, param1: number, param2
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch;
   let result: [number, number, number] = [0, 0, 0];
 
-  // We do this before calling convertToRgb() to send back the correct peak values. If we don't to this, the to_srgb color conversion function will not send peak rgb values when needed.
+  // We do this before calling convertToRgb() to send back the correct peak values. If we don't to this, convertToRgb() will not send peak rgb values when needed.
   if (from === "okhsl" || from === "okhsv") {
 
     const pickColorRgb: { [key: string]: [number, number, number] } = {
@@ -59,29 +59,29 @@ export function colorConversion(from: string, to: string, param1: number, param2
   }
 
   // convertToRgb() needs these values between 0 and 1.
-  if (to === "srgb") {
+  if (to === "rgb") {
       param2 = param2 / 100;
       param3 = param3 / 100;
   }
 
   // Same here, we need the RGB values between 0 and 1.
-  if (from === "srgb") {
+  if (from === "rgb") {
     param1 = param1 / 255;
     param2 = param2 / 255;
     param3 = param3 / 255;
   }
 
 
-  // We have to use formatHex for converting from sRGB because if not we get wrong saturation values (like 0.5 instead of 1).
-  if (from === "okhsl" && to === "srgb") { culoriResult = convertToRgb({mode: "okhsl", h: param1, s: param2, l: param3}); }
-  else if (from === "okhsv" && to === "srgb") { culoriResult = convertToRgb({mode: "okhsv", h: param1, s: param2, v: param3}); }
-  else if (from === "oklch" && to === "srgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }
-  else if (from === "srgb" && to === "okhsl") { culoriResult = convertToOkhsl(formatHex({mode: "rgb", r: param1, g: param2, b: param3})); }
-  else if (from === "srgb" && to === "okhsv") { culoriResult = convertToOkhsv(formatHex({mode: "rgb", r: param1, g: param2, b: param3})); }
-  else if (from === "srgb" && to === "oklch") { culoriResult = convertToOklch(formatHex({mode: "rgb", r: param1, g: param2, b: param3})); }
+  // We have to use formatHex for converting from RGB because if not we get wrong saturation values (like 0.5 instead of 1).
+  if (from === "okhsl" && to === "rgb") { culoriResult = convertToRgb({mode: "okhsl", h: param1, s: param2, l: param3}); }
+  else if (from === "okhsv" && to === "rgb") { culoriResult = convertToRgb({mode: "okhsv", h: param1, s: param2, v: param3}); }
+  else if (from === "oklch" && to === "rgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }
+  else if (from === "rgb" && to === "okhsl") { culoriResult = convertToOkhsl(formatHex({mode: "rgb", r: param1, g: param2, b: param3})); }
+  else if (from === "rgb" && to === "okhsv") { culoriResult = convertToOkhsv(formatHex({mode: "rgb", r: param1, g: param2, b: param3})); }
+  else if (from === "rgb" && to === "oklch") { culoriResult = convertToOklch(formatHex({mode: "rgb", r: param1, g: param2, b: param3})); }
 
 
-  if (to === "srgb") {
+  if (to === "rgb") {
     if (param3 === 0) {
       // If we have a black color (luminosity / value = 0), convertToRgb() return NaN for the RGB values so we fix this.
       result[0] = 0;
@@ -111,10 +111,10 @@ export function colorConversion(from: string, to: string, param1: number, param2
   }
 
   // If we have a black or white color, we will not get a hue so we set it to 0.
-  if (from === "srgb" && Number.isNaN(result[0])) {
+  if (from === "rgb" && Number.isNaN(result[0])) {
     result[0] = 0;
   }
-  // else if (from === "srgb" && to === "oklch") {
+  // else if (from === "rgb" && to === "oklch") {
 
   //   // Temporary fix of #0000FF being out of the triangle shape (same problem with oklch.com, see https://github.com/evilmartians/oklch-picker/issues/78. Might come from CuloriJS, but on https://bottosson.github.io/misc/colorpicker/#0000ff we have it also, if we insert #0000FF in the HEx input then change the H input on OkLCH from 265 back to 264, the OkLCH triangle shape doesn't render the same.)
   //   if (param1 <= 5/255 && param2 <= 5/255 && param3 <= 255/255) {
