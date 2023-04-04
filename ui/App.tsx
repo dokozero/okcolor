@@ -74,14 +74,13 @@ export function App() {
   const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null);
   const fillOrStrokeSelector_stroke = useRef<SVGPathElement>(null);
   const colorPickerUIMessage = useRef<HTMLDivElement>(null);
-  const colorPicker = useRef<HTMLCanvasElement>(null);
+  const colorPickerCanvas = useRef<HTMLCanvasElement>(null);
   const hueSlider = useRef<HTMLDivElement>(null);
   const opacitySlider = useRef<HTMLDivElement>(null);
   const manipulatorColorPicker = useRef<SVGGElement>(null);
   const manipulatorHueSlider = useRef<SVGSVGElement>(null);
   const manipulatorOpacitySlider = useRef<SVGSVGElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
-  const bottomControls = useRef<HTMLDivElement>(null);
 
   /*
   ** HELPER FUNCTIONS
@@ -102,14 +101,14 @@ export function App() {
 
   const scaleColorPickerCanvas = function() {
     if (currentColorModel === "oklch") {
-      colorPicker.current!.style.transform = `scale(${lowResFactorOklch})`;
-      colorPicker.current!.width = lowResPickerSizeOklch;
-      colorPicker.current!.height = lowResPickerSizeOklch;
+      colorPickerCanvas.current!.style.transform = `scale(${lowResFactorOklch})`;
+      colorPickerCanvas.current!.width = lowResPickerSizeOklch;
+      colorPickerCanvas.current!.height = lowResPickerSizeOklch;
     }
     else {
-      colorPicker.current!.style.transform = `scale(${lowResFactor})`;
-      colorPicker.current!.width = lowResPickerSize;
-      colorPicker.current!.height = lowResPickerSize;
+      colorPickerCanvas.current!.style.transform = `scale(${lowResFactor})`;
+      colorPickerCanvas.current!.width = lowResPickerSize;
+      colorPickerCanvas.current!.height = lowResPickerSize;
     }
   }
 
@@ -117,8 +116,7 @@ export function App() {
     hide() {
       UIMessageOn = false;
 
-      colorPicker.current!.classList.remove("c-color-picker__canvas--deactivated");
-      bottomControls.current!.classList.remove("u-deactivated");
+      document.body.classList.remove("deactivated");
       manipulatorColorPicker.current!.classList.remove("u-display-none");
       colorPickerUIMessage.current!.classList.add("u-display-none");
     },
@@ -127,8 +125,7 @@ export function App() {
 
       resetInterface();
 
-      colorPicker.current!.classList.add("c-color-picker__canvas--deactivated");
-      bottomControls.current!.classList.add("u-deactivated");
+      document.body.classList.add("deactivated");
       manipulatorColorPicker.current!.classList.add("u-display-none");
       colorPickerUIMessage.current!.classList.remove("u-display-none");
 
@@ -182,7 +179,7 @@ export function App() {
     colorPickerCanvas() {
       // console.log("render Color Picker Canvas");
       let renderResult;
-      let ctx = colorPicker.current!.getContext("2d");
+      let ctx = colorPickerCanvas.current!.getContext("2d");
 
       const isDarkMode = document.documentElement.classList.contains("figma-dark") ? true : false;
 
@@ -260,8 +257,8 @@ export function App() {
     render.opacitySliderCanvas();
     render.fillOrStrokeSelector();
 
-    let ctx = colorPicker.current!.getContext("2d");
-    ctx!.clearRect(0, 0, colorPicker.current!.width, colorPicker.current!.height);
+    let ctx = colorPickerCanvas.current!.getContext("2d");
+    ctx!.clearRect(0, 0, colorPickerCanvas.current!.width, colorPickerCanvas.current!.height);
   };
 
 
@@ -506,7 +503,7 @@ export function App() {
     const pluginMessage: string = event.data.pluginMessage.message;
 
     if (init) {
-      setupHandler(colorPicker.current!);
+      setupHandler(colorPickerCanvas.current!);
       setupHandler(hueSlider.current!);
       setupHandler(opacitySlider.current!);
 
@@ -559,7 +556,7 @@ export function App() {
           <p class="c-color-picker__message-text"></p>
         </div>
 
-        <canvas ref={colorPicker} class="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
+        <canvas ref={colorPickerCanvas} class="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
 
         <svg class="c-color-picker__handler" width={pickerSize} height={pickerSize}>
           <g ref={manipulatorColorPicker} transform="translate(0,0)">
@@ -569,10 +566,10 @@ export function App() {
         </svg>
       </div>
 
-      <div ref={bottomControls}>
+      <div class="c-bottom-controls">
         <div class="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
 
-          <div ref={fillOrStrokeSelector} onClick={fillOrStrokeHandle} class="fill-stroke-selector" data-has-fill="true" data-has-stroke="true" data-active="fill" >
+          <div class="fill-stroke-selector" ref={fillOrStrokeSelector} onClick={fillOrStrokeHandle} data-has-fill="true" data-has-stroke="true" data-active="fill" >
             
             <div class="fill-stroke-selector__fill">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

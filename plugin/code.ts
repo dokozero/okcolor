@@ -156,7 +156,7 @@ const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
 
 const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string = "") {
   // console.log("send UIMessageCode To UI");
-  figma.ui.postMessage({"message": "DisplayUIMessage", "UIMessageCode": UIMessageCode, "nodeType": nodeType});
+  figma.ui.postMessage({"message": "displayUIMessage", "UIMessageCode": UIMessageCode, "nodeType": nodeType});
 };
 
 
