@@ -142,7 +142,6 @@ body.deactivated .c-bottom-controls {
   grid-column-end: span 20;
   border: 1px solid transparent;
   border-radius: 2px;
-  box-sizing: border-box;
   margin-top: 1px;
   margin-bottom: 1px;
 }
@@ -150,9 +149,8 @@ body.deactivated .c-bottom-controls {
 select,
 input {
   width: 100%;
-  height: 100%;
   flex-grow: 1;
-  padding: 7px;
+  padding: 7px 6px;
   border: 1px solid transparent;
   border-radius: 2px;
   font-family: "Inter", sans-serif;
@@ -162,6 +160,10 @@ input {
   color: var(--figma-color-text, #333333);
   background-color: transparent;
   cursor: default;
+}
+select {
+  /* We set the height to 100% only for the select and not the input because it would make a 1 px gap between the outer border of input-wrapper and the left borders of the nested input when hovering. */
+  height: 100%;
 }
 select:focus,
 input:focus {
@@ -176,7 +178,7 @@ select {
 }
 
 input#opacity {
-  flex: 0 0 48px;
+  flex: 0 0 44px;
 }
 
 

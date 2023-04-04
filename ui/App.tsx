@@ -8,7 +8,7 @@ import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowR
 
 import { UIMessageTexts } from "./utils/ui-messages";
 import { renderImageData } from "./utils/render-image-data";
-import { clampNumber, limitMouseHandlerValue } from "./utils/others";
+import { clampNumber, limitMouseHandlerValue, roundOneDecimal } from "./utils/others";
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
 
@@ -127,7 +127,7 @@ export function App() {
       okhxyValues.x.value = 0;
     }
     else if (okhxyValues.x.value/100 > clamped.c) {
-      okhxyValues.x.value = Math.round(clamped.c*100);
+      okhxyValues.x.value = roundOneDecimal(clamped.c*100);
     }
   }
 
@@ -356,7 +356,7 @@ export function App() {
         okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/pickerSize) * 100);
         
         if (currentColorModel === "oklch") {
-          okhxyValues.x.value = Math.round((limitMouseHandlerValue(canvas_x/pickerSize) * 100) / oklchChromaScale);
+          okhxyValues.x.value = roundOneDecimal((limitMouseHandlerValue(canvas_x/pickerSize) * 100) / oklchChromaScale);
           clampOkhxyValuesChroma();
         }
         else {
@@ -444,7 +444,17 @@ export function App() {
 
     const eventTarget = event.target as HTMLInputElement;
     const eventTargetId: string = eventTarget.id;
-    let eventTargetValue = parseInt(eventTarget.value);
+
+    let eventTargetValue: number;
+
+    if (currentColorModel === "oklch" && eventTargetId === "x") {
+      // If we are in OkLCH and user is changing the chroma value, he can enter a decimal value hence the parseFloat().
+      eventTargetValue = roundOneDecimal(parseFloat(eventTarget.value));
+    }
+    else {
+      // For all others inputs, we parse the value with parseInt to remove the decimals if user uses them.
+      eventTargetValue = parseInt(eventTarget.value);
+    }
     
     // If Not a Number we insert back the old value.
     if (Number.isNaN(eventTargetValue)) {
@@ -458,8 +468,15 @@ export function App() {
       return;
     }
     
-    if (key === "ArrowUp") { eventTargetValue++; }
-    else if (key === "ArrowDown") { eventTargetValue--; }
+    // If we are in OkLCH and user is changing the chroma value, we use 0.1 for a more precise choice.
+    if (currentColorModel === "oklch" && eventTargetId === "x") {
+      if (key === "ArrowUp") { eventTargetValue += 0.1; }
+      else if (key === "ArrowDown") { eventTargetValue -= 0.1; }
+    }
+    else {
+      if (key === "ArrowUp") { eventTargetValue++; }
+      else if (key === "ArrowDown") { eventTargetValue--; }
+    }
     
     // We adjust user's value in case it's outside of the allowed range.
     const maxValue = eventTargetId === "hue" ? 360 : 100;
@@ -472,7 +489,8 @@ export function App() {
 
       // We have to update input's value like this because if we don't we'll have some issues. For example if user set 0 on an input then -10 the signal will not update after the test because il will already be at 0 and thus will not refresh (from Preact's doc: "A signal will only update if you assign a new value to it"). Another example, without this code if user try to enter "5t" more than two times, the input value will stay at "5t".
       if (key !== "Escape" && okhxyValues[eventTargetId].value !== eventTargetValue) {
-        okhxyValues[eventTargetId].value = eventTargetValue;
+        // use roundOneDecimal() again because in some case we can have values like "3.8000000000000003" when using the up or down arrow keys.
+        okhxyValues[eventTargetId].value = roundOneDecimal(eventTargetValue);
       }
       else {
         eventTarget.value = oldValue.toString();

@@ -24,3 +24,9 @@ export const limitMouseHandlerValue = function(value: number): number {
     return value;
   }
 };
+
+export const roundOneDecimal = function(value: number):number {
+  if (debugMode) { console.log("UI: roundOneDecimal()"); }
+  
+  return Math.round(value * 10) / 10;
+};

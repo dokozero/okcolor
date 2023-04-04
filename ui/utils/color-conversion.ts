@@ -2,7 +2,7 @@ import { converter, formatHex } from "../../node_modules/culori/bundled/culori.m
 import type { Rgb, Okhsl, Okhsv, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
 
 import { debugMode } from "./constants";
-import { clampNumber } from "./others";
+import { clampNumber, roundOneDecimal } from "./others";
 
 const convertToRgb = converter('rgb');
 const convertToOkhsl = converter('okhsl');
@@ -106,7 +106,7 @@ export function colorConversion(from: string, to: string, param1: number, param2
   }
   else if (to === "oklch") {
     result[0] = Math.round(culoriResult.h);
-    result[1] = Math.round(culoriResult.c*100);
+    result[1] = roundOneDecimal(culoriResult.c*100);
     result[2] = Math.round(culoriResult.l*100);
   }
 
