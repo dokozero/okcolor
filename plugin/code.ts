@@ -1,4 +1,4 @@
-import { pickerSize } from "../ui/utils/constant";
+import { pickerSize, debugMode } from "../ui/utils/constants";
 
 /*
 ** VARIABLES DECLARATIONS
@@ -43,6 +43,8 @@ let shapeInfos: ShapeInfos = {
 */
 
 const shapeInfosResetDefault = function() {
+  if (debugMode) { console.log("PLUGIN: shapeInfosResetDefault()"); }
+
   shapeInfos.hasFillStroke.fill = false,
   shapeInfos.hasFillStroke.stroke = false,
   shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
@@ -50,6 +52,7 @@ const shapeInfosResetDefault = function() {
 };
 
 const updateShapeInfos = function(): boolean {
+  if (debugMode) { console.log("PLUGIN: updateShapeInfos()"); }
 
   shapeInfosResetDefault();
  
@@ -149,13 +152,14 @@ const updateShapeInfos = function(): boolean {
 */
 
 const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
-  // console.log("BACKEND: send New Shape Color To UI");
-  // figma.ui.postMessage({"shapeFillStrokeInfo": shapeFillStrokeInfo, "rgbValues": currentRgbValues, "opacityValue": opacityValue, "message": "new shape color"});
+  if (debugMode) { console.log(`PLUGIN: sendNewShapeColorToUI(${shouldRenderColorPickerCanvas})`); }
+  
   figma.ui.postMessage({"message": "newShapeColor", "shapeInfos": shapeInfos, "currentFillOrStroke": currentFillOrStroke, "shouldRenderColorPickerCanvas": shouldRenderColorPickerCanvas});
 };
 
 const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string = "") {
-  // console.log("send UIMessageCode To UI");
+  if (debugMode) { console.log(`PLUGIN: sendUIMessageCodeToUI(${UIMessageCode}, ${nodeType})`); }
+
   figma.ui.postMessage({"message": "displayUIMessage", "UIMessageCode": UIMessageCode, "nodeType": nodeType});
 };
 
@@ -169,6 +173,8 @@ figma.showUI(__html__, {width: pickerSize, height: 346, themeColors: true});
 
 // To send the color of the shape on launch
 const init = function() {
+  if (debugMode) { console.log("PLUGIN: init()"); }
+
   if (!updateShapeInfos()) return;
 
   if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
@@ -187,7 +193,7 @@ init();
 
 // If user change shape selection.
 figma.on("selectionchange", () => {
-  // console.log('BACKEND: selection change');
+  if (debugMode) { console.log("PLUGIN: figma.on selectionchange"); }
 
   currentFillOrStroke = "fill";
   
@@ -202,18 +208,19 @@ figma.on("selectionchange", () => {
 
 // If user change property of selected shape.
 figma.on("documentchange", (event) => {
-
+  
   if (itsAMe) { return; }
-
+  
   const changeType = event.documentChanges[0].type;
   
   if (changeType === "PROPERTY_CHANGE") {
-
+    
     const changeProperty = event.documentChanges[0].properties[0];
     
     // We don't run the code if for example the user has changed the rotation of the shape.
     if (changeProperty === "fills" || changeProperty === "strokes") {
-      // console.log('BACKEND: document change');
+
+      if (debugMode) { console.log("PLUGIN: figma.on documentchange"); }
      
       // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
       let oldHasFillStroke = Object.assign({}, shapeInfos.hasFillStroke);
@@ -253,8 +260,9 @@ figma.on("documentchange", (event) => {
 let timeoutId: number;
 
 figma.ui.onmessage = (msg) => {
-  if (msg.type === "Update shape color") {
-    // console.log("BACKEND: update shape color");
+  if (debugMode) { console.log(`PLUGIN: figma.ui.onmessage - "${msg.type}"`); }
+
+  if (msg.type === "updateShapeColor") {
 
     itsAMe = true;
 
@@ -283,7 +291,7 @@ figma.ui.onmessage = (msg) => {
     timeoutId = setTimeout(() => { itsAMe = false; }, 500);
 
   }
-  else if (msg.type === "Sync currentFillOrStroke") {
+  else if (msg.type === "syncCurrentFillOrStroke") {
     currentFillOrStroke = msg.currentFillOrStroke;
   }
 };

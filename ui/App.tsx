@@ -3,13 +3,12 @@ import { useRef } from "preact/hooks";
 
 import { clampChroma } from "../node_modules/culori/bundled/culori.mjs";
 
-import { colorConversion } from "./utils/colorconversion";
-import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale } from "./utils/constant";
+import { colorConversion } from "./utils/color-conversion";
+import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale, debugMode } from "./utils/constants";
 
 import { UIMessageTexts } from "./utils/ui-messages";
-import { renderImageData } from "./utils/renderImageData";
+import { renderImageData } from "./utils/render-image-data";
 import { clampNumber, limitMouseHandlerValue } from "./utils/others";
-
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
 
@@ -69,6 +68,7 @@ let mouseHandlerEventTargetId = "";
 let mouseInsideDocument: boolean;
 
 export function App() { 
+
   // We could use one canvas element but better no to avoid flickering when user change color model 
   const fillOrStrokeSelector = useRef<HTMLDivElement>(null);
   const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null);
@@ -82,11 +82,14 @@ export function App() {
   const manipulatorOpacitySlider = useRef<SVGSVGElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
 
+
   /*
   ** HELPER FUNCTIONS
   */
 
   const shapeInfosResetDefault = function() {
+    if (debugMode) { console.log("UI: shapeInfosResetDefault()"); }
+
     shapeInfos.hasFillStroke.fill = true,
     shapeInfos.hasFillStroke.stroke = true,
     shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
@@ -100,6 +103,8 @@ export function App() {
   */
 
   const scaleColorPickerCanvas = function() {
+    if (debugMode) { console.log("UI: scaleColorPickerCanvas()"); }
+
     if (currentColorModel === "oklch") {
       colorPickerCanvas.current!.style.transform = `scale(${lowResFactorOklch})`;
       colorPickerCanvas.current!.width = lowResPickerSizeOklch;
@@ -113,6 +118,8 @@ export function App() {
   }
 
   const clampOkhxyValuesChroma = function() {
+    if (debugMode) { console.log("UI: clampOkhxyValuesChroma()"); }
+
     const clamped = clampChroma({ mode: 'oklch', l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, 'oklch');
 
     // If we send a pure black to clampChroma (l and c to 0), clamped.c will be undefined.
@@ -126,6 +133,8 @@ export function App() {
 
   const UIMessage = {
     hide() {
+      if (debugMode) { console.log("UI: UIMessage.hide()"); }
+
       UIMessageOn = false;
 
       document.body.classList.remove("deactivated");
@@ -133,6 +142,8 @@ export function App() {
       colorPickerUIMessage.current!.classList.add("u-display-none");
     },
     show(messageCode: string, nodeType: string) {
+      if (debugMode) { console.log(`UI: UIMessage.show(${messageCode}, ${nodeType})`); }
+
       UIMessageOn = true;
 
       resetInterface();
@@ -151,19 +162,21 @@ export function App() {
 
   // We use a function to update the opacity value in the input because we need to add the "%" sign and doing it directly in the value field with a fignal value doesn't work.
   const updateOpacityValue = function(newValue: number) {
+    if (debugMode) { console.log(`UI: updateOpacityValue(${newValue})`); }
+
     shapeInfos.colors[currentFillOrStroke].rgba[3] = newValue;
     opacityInput.current!.value = `${newValue}%`;
   };
 
   const switchFillOrStrokeSelector = function() {
-    // console.log("switch FillOrStrokeSelector");
+    if (debugMode) { console.log("UI: switchFillOrStrokeSelector()"); }
     
     currentFillOrStroke = currentFillOrStroke === "fill" ? "stroke" : "fill";
     fillOrStrokeSelector.current!.setAttribute("data-active", currentFillOrStroke);
   } ;
 
   const updateOkhxyValuesFromCurrentRgba = function() {
-    // console.log("convert Rgb To Okhxy Values");
+    if (debugMode) { console.log("UI: updateOkhxyValuesFromCurrentRgba()"); }
 
     let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
     
@@ -181,7 +194,7 @@ export function App() {
   };
 
   const updateCurrentRgbaFromOkhxyValues = function() {
-    //console.log("update Current Rgba From Okhxy Values")
+    if (debugMode) { console.log("UI: updateCurrentRgbaFromOkhxyValues()"); }
 
     let newRgb = colorConversion(currentColorModel, "srgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
     shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
@@ -189,7 +202,8 @@ export function App() {
 
   const render = {
     colorPickerCanvas() {
-      // console.log("render Color Picker Canvas");
+      if (debugMode) { console.log("UI: render.colorPickerCanvas()"); }
+
       let renderResult;
       let ctx = colorPickerCanvas.current!.getContext("2d");
 
@@ -199,7 +213,7 @@ export function App() {
       ctx!.putImageData(renderResult, 0, 0);
     },
     fillOrStrokeSelector() {
-      // console.log("render fillOrStroke Selector");
+      if (debugMode) { console.log("UI: render.fillOrStrokeSelector()"); }
 
       if (shapeInfos.hasFillStroke.fill && shapeInfos.hasFillStroke.stroke) {
         fillOrStrokeSelector.current!.classList.remove("u-pointer-events-none");
@@ -214,10 +228,13 @@ export function App() {
       fillOrStrokeSelector_stroke.current!.setAttribute("fill", shapeInfos.hasFillStroke.stroke ? `rgb(${shapeInfos.colors.stroke.rgba[0]}, ${shapeInfos.colors.stroke.rgba[1]}, ${shapeInfos.colors.stroke.rgba[2]})` : "none");
     },
     opacitySliderCanvas() {
-      // console.log("render opacity Slider Canvas");
+      if (debugMode) { console.log("UI: render.opacitySliderCanvas()"); }
+
       opacitySliderStyle.value = `background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${shapeInfos.colors[currentFillOrStroke].rgba[0]}, ${shapeInfos.colors[currentFillOrStroke].rgba[1]}, ${shapeInfos.colors[currentFillOrStroke].rgba[2]}, 1)), url(${opacitysliderBackgroundImg})`;
     },
     all() {
+      if (debugMode) { console.log("UI: render.all()"); }
+
       this.colorPickerCanvas();
       this.fillOrStrokeSelector();
       this.opacitySliderCanvas();
@@ -226,7 +243,8 @@ export function App() {
 
   const updateManipulatorPositions = {
     colorPicker() {
-      // console.log("update Manipulator Positions - color picker");
+      if (debugMode) { console.log("UI: updateManipulatorPositions.colorPicker()"); }
+
       let x = okhxyValues.x.value / 100;
       let y = okhxyValues.y.value / 100;
 
@@ -235,16 +253,20 @@ export function App() {
       manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(pickerSize*x, pickerSize*(1-y));
     },
     hueSlider() {
-      // console.log("update Manipulator Positions - hue slider");
+      if (debugMode) { console.log("UI: updateManipulatorPositions.hueSlider()"); }
+
       let hue = okhxyValues.hue.value / 360;
       manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*hue)-1, -1);
     },
     opacitySlider() {
-      // console.log("update Manipulator Positions - opacity slider");
+      if (debugMode) { console.log("UI: updateManipulatorPositions.opacitySlider()"); }
+
       let opacity = shapeInfos.colors[currentFillOrStroke].rgba[3] / 100;
       manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)-1, -1);
     },
     all() {
+      if (debugMode) { console.log("UI: updateManipulatorPositions.all()"); }
+
       this.colorPicker();
       this.hueSlider();
       this.opacitySlider();
@@ -252,6 +274,8 @@ export function App() {
   };
 
   const resetInterface = function() {
+    if (debugMode) { console.log("UI: resetInterface()"); }
+
     // We have to update these values before reseting them to 0 to handle this case: because Preact signals doesn't update if we give them the same value they already have, if user select a shape with an input valu already to 0 like saturation (x), change it to another value like 10, doesn't validate it (like pressing "Enter"), then unselect the shape, the input will keep the "10" and not update to "0". By doing this simple increment we ensure that this case will not happen.
     okhxyValues.hue.value++;
     okhxyValues.x.value++;
@@ -280,7 +304,7 @@ export function App() {
   */
 
   const fillOrStrokeHandle = function() {
-    // console.log("fill Or Stroke Handle");
+    if (debugMode) { console.log("UI: fillOrStrokeHandle()"); }
 
     switchFillOrStrokeSelector();
 
@@ -295,7 +319,7 @@ export function App() {
   };
 
   const colorModelHandle = function(event: any) {
-    // console.log("color Model Handle");
+    if (debugMode) { console.log("UI: colorModelHandle()"); }
 
     currentColorModel = (event.target as HTMLSelectElement).value;
 
@@ -308,9 +332,11 @@ export function App() {
 
 
   const setupHandler = function(canvas: HTMLCanvasElement | HTMLDivElement) {
-    // console.log("setup Handler - " + canvas.id);
+    if (debugMode) { console.log("UI: setupHandler() - " + canvas.id); }
 
     const mouseHandler = (event: MouseEvent) => {
+      if (debugMode) { console.log("UI: mouseHandler() - " + canvas.id); }
+
       let rect = canvas.getBoundingClientRect();
 
       let canvas_x: number;
@@ -392,6 +418,8 @@ export function App() {
 
 
   const handleInputFocus = function(event: FocusEvent) {
+    if (debugMode) { console.log("UI: handleInputFocus()"); }
+
     (event.target as HTMLInputElement).select();
   };
 
@@ -400,6 +428,7 @@ export function App() {
   document.addEventListener("mouseenter", () => { mouseInsideDocument = true; });
 
   const inputHandler = function(event: KeyboardEvent | FocusEvent) {
+    if (debugMode) { console.log("UI: InputHandler()"); }
 
     // To handle rare case where user could have entered a new value on an input but without validating it (like pressing "Enter") and then selecting another shape, without this check the new value of the input would be set on the new shape as the blur event would still trigger when user click on it.
     if (event.type === "blur" && mouseInsideDocument === false) { return; }
@@ -408,8 +437,6 @@ export function App() {
     const key = "key" in event ? event.key : "";
 
     if (!inputHandlesAllowedKeys.includes(key) && event.type !== "blur") { return; }
-    
-    // console.log("InputHandler");
     
     if (key !== "Tab") { event.preventDefault(); }
 
@@ -488,13 +515,15 @@ export function App() {
   */
 
   const sendNewShapeColorToBackend = function() {
-    // console.log("send New Shape Color To Backend");
-    parent.postMessage({ pluginMessage: { type: "Update shape color", "newColor": shapeInfos.colors[currentFillOrStroke].rgba } }, '*');
+    if (debugMode) { console.log("UI: sendNewShapeColorToBackend()"); }
+
+    parent.postMessage({ pluginMessage: { type: "updateShapeColor", "newColor": shapeInfos.colors[currentFillOrStroke].rgba } }, '*');
   };
 
   const syncCurrentFillOrStrokeWithBackend = function() {
-    // console.log("sync CurrentFillOrStroke With Backend");
-    parent.postMessage({ pluginMessage: { type: "Sync currentFillOrStroke", "currentFillOrStroke": currentFillOrStroke } }, '*');
+    if (debugMode) { console.log("UI: syncCurrentFillOrStrokeWithBackend()"); }
+
+    parent.postMessage({ pluginMessage: { type: "syncCurrentFillOrStroke", "currentFillOrStroke": currentFillOrStroke } }, '*');
   };
 
 
@@ -506,7 +535,11 @@ export function App() {
   onmessage = (event) => {
     const pluginMessage: string = event.data.pluginMessage.message;
 
+    if (debugMode) { console.log(`UI: onmessage - "${pluginMessage}"`); }
+
     if (init) {
+      if (debugMode) { console.log("UI: Update from plugin - init"); }
+
       setupHandler(colorPickerCanvas.current!);
       setupHandler(hueSlider.current!);
       setupHandler(opacitySlider.current!);
@@ -517,8 +550,6 @@ export function App() {
     }
 
     if (pluginMessage === "newShapeColor") {
-      // console.log("Update from backend - new shape color");
-
       // This value is false by default.
       let shouldRenderColorPickerCanvas: boolean = event.data.pluginMessage.shouldRenderColorPickerCanvas;
 

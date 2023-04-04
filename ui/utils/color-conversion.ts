@@ -1,6 +1,7 @@
 import { converter, formatHex } from "../../node_modules/culori/bundled/culori.mjs";
 import type { Rgb, Okhsl, Okhsv, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
 
+import { debugMode } from "./constants";
 import { clampNumber } from "./others";
 
 const convertToRgb = converter('rgb');
@@ -9,7 +10,7 @@ const convertToOkhsv = converter('okhsv');
 const convertToOklch = converter('oklch');
 
 export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number): [number, number, number] {
-  // console.log(from, to, param1, param2, param3);
+  if (debugMode) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch;
   let result: [number, number, number] = [0, 0, 0];
@@ -121,7 +122,5 @@ export function colorConversion(from: string, to: string, param1: number, param2
   //   }
   // }
 
-  // console.log("🚀 ~ file: colorconversion.ts:131 ~ colorConversion ~ result:", result)
-  
   return result;
 }

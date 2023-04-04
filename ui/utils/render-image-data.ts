@@ -1,4 +1,4 @@
-import { lowResPickerSize, lowResPickerSizeOklch, oklchChromaScale } from "./constant";
+import { lowResPickerSize, lowResPickerSizeOklch, oklchChromaScale, debugMode } from "./constants";
 
 import { converter, clampChroma } from "../../node_modules/culori/bundled/culori.mjs";
 import type { Rgb, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
@@ -6,6 +6,7 @@ import type { Rgb, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
 let convertToRgb = converter('rgb');
 
 export function renderImageData(hue: number, colorModel: string, isDarkMode: boolean): ImageData {
+  if (debugMode) { console.log("UI: renderImageData()"); }
 
   let imageData: ImageData;
   let okhxyX: number;
