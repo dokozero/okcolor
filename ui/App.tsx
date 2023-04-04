@@ -551,6 +551,10 @@ export function App() {
       setupHandler(opacitySlider.current!);
 
       currentColorModel = event.data.pluginMessage.currentColorModel;
+
+      // We do this to avoid flickering on loading.
+      colorModelSelect.current!.style.opacity = "1";
+
       colorModelSelect.current!.value = currentColorModel;
 
       scaleColorPickerCanvas();
@@ -661,7 +665,7 @@ export function App() {
 
         <div class="c-select-input-controls">
           <div class="select-wrapper">
-            <select ref={colorModelSelect} onChange={colorModelHandle} name="color_model" id="color_model">
+            <select ref={colorModelSelect} onChange={colorModelHandle} name="color_model" id="color_model" style="opacity: 0;">
               <option value="okhsv">OkHSV</option>
               <option value="okhsl">OkHSL</option>
               <option value="oklch">OkLCH</option>

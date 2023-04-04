@@ -149,16 +149,13 @@ const updateShapeInfos = function(): boolean {
 
 
 /* 
-** UPDATES TO FRONTEND
+** UPDATES TO UI
 */
 
-const initUI = async function() {
-  if (debugMode) { console.log("PLUGIN: initUI())"); }
-
-  currentColorModel = await figma.clientStorage.getAsync("currentColorModel") || "okhsl";
+const sendInitToUI = function() {
+  if (debugMode) { console.log("PLUGIN: sendInitToUI())"); }
   
   figma.ui.postMessage({"message": "init", "currentColorModel": currentColorModel});
-  sendNewShapeColorToUI(true);
 };
 
 const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
@@ -182,15 +179,18 @@ const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string =
 figma.showUI(__html__, {width: pickerSize, height: 346, themeColors: true});
 
 // To send the color of the shape on launch
-const init = function() {
+const init = async function() {
   if (debugMode) { console.log("PLUGIN: init()"); }
+
+  currentColorModel = await figma.clientStorage.getAsync("currentColorModel") || "okhsl";
+  sendInitToUI();
 
   if (!updateShapeInfos()) return;
 
   if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
   else { currentFillOrStroke = "stroke"; }
 
-  initUI();
+  sendNewShapeColorToUI(true);
 };
 
 init();
@@ -264,7 +264,7 @@ figma.on("documentchange", (event) => {
 
 
 /* 
-** UPDATES FROM FRONTEND
+** UPDATES FROM UI
 */
 
 let timeoutId: number;
