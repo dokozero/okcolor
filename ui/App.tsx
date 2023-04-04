@@ -112,6 +112,18 @@ export function App() {
     }
   }
 
+  const clampOkhxyValuesChroma = function() {
+    const clamped = clampChroma({ mode: 'oklch', l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, 'oklch');
+
+    // If we send a pure black to clampChroma (l and c to 0), clamped.c will be undefined.
+    if (!clamped.c) {
+      okhxyValues.x.value = 0;
+    }
+    else if (okhxyValues.x.value/100 > clamped.c) {
+      okhxyValues.x.value = Math.round(clamped.c*100);
+    }
+  }
+
   const UIMessage = {
     hide() {
       UIMessageOn = false;
@@ -294,6 +306,7 @@ export function App() {
     render.colorPickerCanvas();
   };
 
+
   const setupHandler = function(canvas: HTMLCanvasElement | HTMLDivElement) {
     // console.log("setup Handler - " + canvas.id);
 
@@ -312,14 +325,11 @@ export function App() {
       if (mouseHandlerEventTargetId === "okhxy-xy-picker") {
         canvas_x = event.clientX - rect.left;
         canvas_y = event.clientY - rect.top;
-        okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/pickerSize) * 100);
         okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/pickerSize) * 100);
-
+        
         if (currentColorModel === "oklch") {
-          const newChromaValue = Math.round((limitMouseHandlerValue(canvas_x/pickerSize) * 100) / oklchChromaScale);
-          const clamped = clampChroma({ mode: 'oklch', l: okhxyValues.y.value/100, c: newChromaValue/100, h: okhxyValues.hue.value }, 'oklch');
-
-          okhxyValues.x.value = Math.round(clamped.c*100);
+          okhxyValues.x.value = Math.round((limitMouseHandlerValue(canvas_x/pickerSize) * 100) / oklchChromaScale);
+          clampOkhxyValuesChroma();
         }
         else {
           okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/pickerSize) * 100);
@@ -336,12 +346,8 @@ export function App() {
         okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
 
         if (currentColorModel === "oklch") {
-          const clamped = clampChroma({ mode: 'oklch', l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, 'oklch');
-
-          if ( okhxyValues.x.value > clamped.c*100) {
-            okhxyValues.x.value = Math.round(clamped.c*100);
-            updateManipulatorPositions.colorPicker();
-          }
+          clampOkhxyValuesChroma();
+          updateManipulatorPositions.colorPicker();
         }
 
         updateCurrentRgbaFromOkhxyValues();
@@ -442,21 +448,19 @@ export function App() {
       else {
         eventTarget.value = oldValue.toString();
       }
-
-      // checkIfOkhxyIsWhiteBlackOrGray();
-      updateCurrentRgbaFromOkhxyValues();
-
+      
       if (currentColorModel === "oklch") {
-        const clamped = clampChroma({ mode: 'oklch', l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, 'oklch');
-
-        okhxyValues.x.value = Math.round(clamped.c*100);
+        clampOkhxyValuesChroma();
       }
+
+      updateCurrentRgbaFromOkhxyValues();
 
       if (eventTargetId === "hue") {
         render.colorPickerCanvas();
         updateManipulatorPositions.hueSlider();
       }
       
+      // We test if currentColorModel === "oklch" because if we modify the hue there is a chance that the chroma value is now out of range and thus we need to update the color picker.
       if (eventTargetId === "x" || eventTargetId === "y" || currentColorModel === "oklch") {
         updateManipulatorPositions.colorPicker();
       }

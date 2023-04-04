@@ -1,4 +1,4 @@
-import { converter, formatHex, clampChroma } from "../../node_modules/culori/bundled/culori.mjs";
+import { converter, formatHex } from "../../node_modules/culori/bundled/culori.mjs";
 import type { Rgb, Okhsl, Okhsv, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
 
 import { clampNumber } from "./others";
@@ -9,6 +9,8 @@ const convertToOkhsv = converter('okhsv');
 const convertToOklch = converter('oklch');
 
 export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number): [number, number, number] {
+  // console.log(from, to, param1, param2, param3);
+
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch;
   let result: [number, number, number] = [0, 0, 0];
 
@@ -55,26 +57,21 @@ export function colorConversion(from: string, to: string, param1: number, param2
     }
   }
 
+  // convertToRgb() needs these values between 0 and 1.
   if (to === "srgb") {
-      // convertToRgb() needs these values between 0 and 1.
       param2 = param2 / 100;
       param3 = param3 / 100;
   }
 
+  // Same here, we need the RGB values between 0 and 1.
   if (from === "srgb") {
     param1 = param1 / 255;
     param2 = param2 / 255;
     param3 = param3 / 255;
   }
 
-  let clamped: Oklch;
 
-  if (from === "oklch") {
-    clamped = clampChroma({ mode: 'oklch', l: param3, c: param2, h: param1 }, 'oklch');
-    param2 = clamped.c;
-  }
-
-  // We have to use formatHex for converting from srgb because if not we get wrong saturation values (like 0.5 instead of 1).
+  // We have to use formatHex for converting from sRGB because if not we get wrong saturation values (like 0.5 instead of 1).
   if (from === "okhsl" && to === "srgb") { culoriResult = convertToRgb({mode: "okhsl", h: param1, s: param2, l: param3}); }
   else if (from === "okhsv" && to === "srgb") { culoriResult = convertToRgb({mode: "okhsv", h: param1, s: param2, v: param3}); }
   else if (from === "oklch" && to === "srgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }
@@ -85,7 +82,7 @@ export function colorConversion(from: string, to: string, param1: number, param2
 
   if (to === "srgb") {
     if (param3 === 0) {
-      // If we have a black color (luminosity / value = 0), convertToRgb() return NaN for the RGb values so we fix this.
+      // If we have a black color (luminosity / value = 0), convertToRgb() return NaN for the RGB values so we fix this.
       result[0] = 0;
       result[1] = 0;
       result[2] = 0;
@@ -124,5 +121,7 @@ export function colorConversion(from: string, to: string, param1: number, param2
   //   }
   // }
 
+  // console.log("🚀 ~ file: colorconversion.ts:131 ~ colorConversion ~ result:", result)
+  
   return result;
 }
