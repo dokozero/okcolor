@@ -182,7 +182,14 @@ figma.showUI(__html__, {width: pickerSize, height: 346, themeColors: true});
 const init = async function() {
   if (debugMode) { console.log("PLUGIN: init()"); }
 
-  currentColorModel = await figma.clientStorage.getAsync("currentColorModel") || "okhsl";
+  // Get the currentColorModel value from the clientStorage and set it to "okhsl" if it's not in there.
+  currentColorModel = await figma.clientStorage.getAsync("currentColorModel");
+
+  // We could just test if currentColorModel is undefined (when user first launch the plugin) but with this test, if for any reason the currentColorModel value in the clientStorage is a different string than "okhsv", "okhsl" or "oklch", we set it to okhsl (could come from a Figma bug that change the value but it shouldn't occurs).
+  if (currentColorModel !== "okhsv" && currentColorModel !== "okhsl" && currentColorModel !== "oklch") {
+    currentColorModel = "okhsl";
+  }
+
   sendInitToUI();
 
   if (!updateShapeInfos()) return;
