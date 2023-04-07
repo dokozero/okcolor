@@ -328,7 +328,7 @@ export function App() {
     scaleColorPickerCanvas();
     
     updateOkhxyValuesFromCurrentRgba();
-    updateManipulatorPositions.colorPicker();
+    updateManipulatorPositions.all();
     render.colorPickerCanvas();
   };
 
