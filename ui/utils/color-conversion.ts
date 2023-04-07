@@ -4,10 +4,10 @@ import type { Rgb, Okhsl, Okhsv, Oklch } from "../../node_modules/culori/bundled
 import { debugMode } from "./constants";
 import { clampNumber, roundOneDecimal } from "./others";
 
-const convertToRgb = converter('rgb');
-const convertToOkhsl = converter('okhsl');
-const convertToOkhsv = converter('okhsv');
-const convertToOklch = converter('oklch');
+const convertToRgb = converter("rgb");
+const convertToOkhsl = converter("okhsl");
+const convertToOkhsv = converter("okhsv");
+const convertToOklch = converter("oklch");
 
 export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number): [number, number, number] {
   if (debugMode) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }

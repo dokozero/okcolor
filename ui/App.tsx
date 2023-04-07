@@ -120,7 +120,7 @@ export function App() {
   const clampOkhxyValuesChroma = function() {
     if (debugMode) { console.log("UI: clampOkhxyValuesChroma()"); }
 
-    const clamped = clampChroma({ mode: 'oklch', l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, 'oklch');
+    const clamped = clampChroma({ mode: "oklch", l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, "oklch");
 
     // If we send a pure black to clampChroma (l and c to 0), clamped.c will be undefined.
     if (!clamped.c) {
@@ -537,19 +537,19 @@ export function App() {
   const sendNewShapeColorToPlugin = function() {
     if (debugMode) { console.log("UI: sendNewShapeColorToPlugin()"); }
 
-    parent.postMessage({ pluginMessage: { type: "updateShapeColor", "newColor": shapeInfos.colors[currentFillOrStroke].rgba } }, '*');
+    parent.postMessage({ pluginMessage: { type: "updateShapeColor", "newColor": shapeInfos.colors[currentFillOrStroke].rgba } }, "*");
   };
 
   const syncCurrentFillOrStrokeWithPlugin = function() {
     if (debugMode) { console.log("UI: syncCurrentFillOrStrokeWithPlugin()"); }
 
-    parent.postMessage({ pluginMessage: { type: "syncCurrentFillOrStroke", "currentFillOrStroke": currentFillOrStroke } }, '*');
+    parent.postMessage({ pluginMessage: { type: "syncCurrentFillOrStroke", "currentFillOrStroke": currentFillOrStroke } }, "*");
   };
 
   const syncCurrentColorModelWithPlugin = function() {
     if (debugMode) { console.log("UI: syncCurrentColorModelWithPlugin()"); }
 
-    parent.postMessage({ pluginMessage: { type: "syncCurrentColorModel", "currentColorModel": currentColorModel } }, '*');
+    parent.postMessage({ pluginMessage: { type: "syncCurrentColorModel", "currentColorModel": currentColorModel } }, "*");
   }
 
 

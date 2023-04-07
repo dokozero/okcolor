@@ -90,7 +90,7 @@ export function renderImageData(hue: number, colorModel: string, isDarkMode: boo
             numberOfTotalClampChromaTests++;
           }
 
-          clamped = clampChroma({ mode: 'oklch', l: luminosity, c: chroma, h: hue }, 'oklch');
+          clamped = clampChroma({ mode: "oklch", l: luminosity, c: chroma, h: hue }, "oklch");
           
           if (chroma > clamped.c) {
             chroma = clamped.c;
