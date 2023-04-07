@@ -3,7 +3,9 @@ import { lowResPickerSize, lowResPickerSizeOklch, oklchChromaScale, debugMode } 
 import { converter, clampChroma } from "../../node_modules/culori/bundled/culori.mjs";
 import type { Rgb, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
 
-let convertToRgb = converter('rgb');
+const localDebugMode = false;
+
+const convertToRgb = converter("rgb");
 
 export function renderImageData(hue: number, colorModel: string, isDarkMode: boolean): ImageData {
   if (debugMode) { console.log("UI: renderImageData()"); }
@@ -40,6 +42,13 @@ export function renderImageData(hue: number, colorModel: string, isDarkMode: boo
     }
   }
   else if (colorModel === "oklch") {
+
+    // For local debug if needed.
+    let numberOfClampChromaTestsForCurrentLine = 0;
+    let numberOfTotalClampChromaTests = 0;
+    let numberOfRenderedPixelsForCurrentLine = 0;
+    let numberOfTotalRenderedPixels = 0;
+
     imageData = new ImageData(lowResPickerSizeOklch, lowResPickerSizeOklch);
     
     let chromaIsClamped = false;
@@ -58,29 +67,39 @@ export function renderImageData(hue: number, colorModel: string, isDarkMode: boo
 
     let bgColor = convertToRgb({mode: "oklch", h: hue, c: 1, l: bgColorLuminosity});
 
-    let previousClampedChroma = 0;
-
-    // let numberOfClampChromaCalls = 0;
-    // let numberOfconvertToRgbCalls = 0;
-
     let chroma: number;
     let luminosity: number;
+    let previousClampedChroma = 0;
 
     for (let y = 0; y < lowResPickerSizeOklch; y++) {
-      for (let x = 0; x < lowResPickerSizeOklch; x++) {
 
+      if (localDebugMode) {
+        console.log("-");
+        console.log("Luminosity = " + ((lowResPickerSizeOklch - y) / lowResPickerSizeOklch));
+        numberOfRenderedPixelsForCurrentLine = 0;
+      }
+
+      for (let x = 0; x < lowResPickerSizeOklch; x++) {
         chroma = x / (lowResPickerSizeOklch * oklchChromaScale);
         luminosity = (lowResPickerSizeOklch - y) / lowResPickerSizeOklch;
         
         if (!chromaIsClamped && chroma > previousClampedChroma) {
-          // numberOfClampChromaCalls++;
+
+          if (localDebugMode) {
+            numberOfClampChromaTestsForCurrentLine++;
+            numberOfTotalClampChromaTests++;
+          }
+
           clamped = clampChroma({ mode: 'oklch', l: luminosity, c: chroma, h: hue }, 'oklch');
-
-          if ( chroma > clamped.c) {
+          
+          if (chroma > clamped.c) {
             chroma = clamped.c;
-
             chromaIsClamped = true;
-            previousClampedChroma = clamped.c;
+
+            // We store this value to avoid testing the chroma if we don't have reached the previous value. The 0.005 is to avoid rendering a bit too far when we render the curve from the pick chroma to black.
+            previousClampedChroma = clamped.c - 0.005;
+
+            if (localDebugMode) { console.log("Number of clamp chroma tests = " + numberOfClampChromaTestsForCurrentLine); }
           }
         }
   
@@ -93,18 +112,33 @@ export function renderImageData(hue: number, colorModel: string, isDarkMode: boo
           imageData.data[pixelIndex + 3] = 255;
         }
         else {
+          if (localDebugMode) {
+            numberOfRenderedPixelsForCurrentLine++;
+            numberOfTotalRenderedPixels++;
+          }
+
           rgbColor = convertToRgb({mode: "oklch", h: hue, c: chroma, l: luminosity});
-          // numberOfconvertToRgbCalls++;
           imageData.data[pixelIndex] = rgbColor.r * 255;
           imageData.data[pixelIndex + 1] = rgbColor.g * 255;
           imageData.data[pixelIndex + 2] = rgbColor.b * 255;
           imageData.data[pixelIndex + 3] = 255;
         }
       }
+      
+      if (localDebugMode) {
+        console.log("Number of rendered pixles for current line = " + numberOfRenderedPixelsForCurrentLine);
+        numberOfClampChromaTestsForCurrentLine = 0;
+      }
+      
       chromaIsClamped = false;
     }
 
-    // console.log(numberOfClampChromaCalls, numberOfconvertToRgbCalls);
+    if (localDebugMode) {
+      console.log("---");
+      console.log("Done");
+      console.log("Number of total clamp chroma tests = " + numberOfTotalClampChromaTests);
+      console.log("Number of total rendered pixels = " + numberOfTotalRenderedPixels);
+    }
   
   }
 
