@@ -39,6 +39,36 @@ let shapeInfos: ShapeInfos = {
 
 
 
+/* 
+** INIT
+*/
+
+figma.showUI(__html__, {width: pickerSize, height: 346, themeColors: true});
+
+// To send the color of the shape on launch, we call it when the UI is ready, see above figma.ui.onmessage
+const init = async function() {
+  if (debugMode) { console.log("PLUGIN: init()"); }
+
+  // Get the currentColorModel value from the clientStorage and set it to "okhsl" if it's not in there.
+  currentColorModel = await figma.clientStorage.getAsync("currentColorModel");
+
+  // We could just test if currentColorModel is undefined (when user first launch the plugin) but with this test, if for any reason the currentColorModel value in the clientStorage is a different string than "okhsv", "okhsl" or "oklch", we set it to okhsl (could come from a Figma bug that change the value but it shouldn't occurs).
+  if (currentColorModel !== "okhsv" && currentColorModel !== "okhsl" && currentColorModel !== "oklch") {
+    currentColorModel = "okhsl";
+  }
+
+  sendInitToUI();
+
+  if (!updateShapeInfos()) return;
+
+  if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
+  else { currentFillOrStroke = "stroke"; }
+
+  sendNewShapeColorToUI(true);
+};
+
+
+
 /*
 ** HELPER FUNCTIONS
 */
@@ -173,38 +203,6 @@ const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string =
 
 
 /* 
-** INIT
-*/
-
-figma.showUI(__html__, {width: pickerSize, height: 346, themeColors: true});
-
-// To send the color of the shape on launch
-const init = async function() {
-  if (debugMode) { console.log("PLUGIN: init()"); }
-
-  // Get the currentColorModel value from the clientStorage and set it to "okhsl" if it's not in there.
-  currentColorModel = await figma.clientStorage.getAsync("currentColorModel");
-
-  // We could just test if currentColorModel is undefined (when user first launch the plugin) but with this test, if for any reason the currentColorModel value in the clientStorage is a different string than "okhsv", "okhsl" or "oklch", we set it to okhsl (could come from a Figma bug that change the value but it shouldn't occurs).
-  if (currentColorModel !== "okhsv" && currentColorModel !== "okhsl" && currentColorModel !== "oklch") {
-    currentColorModel = "okhsl";
-  }
-
-  sendInitToUI();
-
-  if (!updateShapeInfos()) return;
-
-  if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
-  else { currentFillOrStroke = "stroke"; }
-
-  sendNewShapeColorToUI(true);
-};
-
-init();
-
-
-
-/* 
 ** UPDATES FROM FIGMA
 */
 
@@ -279,7 +277,11 @@ let timeoutId: number;
 figma.ui.onmessage = (msg) => {
   if (debugMode) { console.log(`PLUGIN: figma.ui.onmessage - "${msg.type}"`); }
 
-  if (msg.type === "updateShapeColor") {
+  if (msg.type === "init") {
+    // We wait the UI is fully loaded before sending the init infos back to the UI, see the useEffect on the UI code.
+    init();
+  }
+  else if (msg.type === "updateShapeColor") {
 
     itsAMe = true;
 

@@ -7,7 +7,7 @@ const localDebugMode = false;
 
 const convertToRgb = converter("rgb");
 
-export function renderImageData(hue: number, colorModel: string, isDarkMode: boolean): ImageData {
+export function renderImageData(hue: number, colorModel: string): ImageData {
   if (debugMode) { console.log("UI: renderImageData()"); }
 
   let imageData: ImageData;
@@ -58,7 +58,7 @@ export function renderImageData(hue: number, colorModel: string, isDarkMode: boo
     
     let bgColorLuminosity = 0;
 
-    if (isDarkMode) {
+    if (document.documentElement.classList.contains("figma-dark")) {
       bgColorLuminosity = 35;
     }
     else {

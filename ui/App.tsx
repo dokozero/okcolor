@@ -1,5 +1,5 @@
 import { signal } from "@preact/signals";
-import { useRef } from "preact/hooks";
+import { useRef, useEffect } from "preact/hooks";
 
 import { clampChroma } from "../node_modules/culori/bundled/culori.mjs";
 
@@ -8,7 +8,7 @@ import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowR
 
 import { UIMessageTexts } from "./utils/ui-messages";
 import { renderImageData } from "./utils/render-image-data";
-import { clampNumber, limitMouseHandlerValue, roundOneDecimal } from "./utils/others";
+import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundOneDecimal } from "./utils/others";
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
 
@@ -16,9 +16,6 @@ const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg
 const slider_size = 148;
 
 const okhxyValues = {
-  isWhite: false,
-  isBlack: false,
-  isGray: false,
   hue: signal(0),
   x: signal(0),
   y: signal(0),
@@ -53,6 +50,8 @@ let shapeInfos: ShapeInfos = {
   }
 }
 
+let colorPickerCanvas2dContext: CanvasRenderingContext2D | null = null;
+
 let UIMessageOn = false;
 
 // Default choice unless selected shape on launch has no fill.
@@ -63,12 +62,26 @@ let activeMouseHandler: Function | undefined;
 // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
 let mouseHandlerEventTargetId = "";
 
-// Necessary for inputHandler(), see there for explications.
 let mouseInsideDocument: boolean;
+
+let shiftKeyPressed = false;
+let ctrlKeyPressed = false;
+
+let prevCanvasX: number | undefined;
+let prevCanvasY: number | undefined;
+
+let moveVerticallyOnly = false;
+let moveHorizontallyOnly = false;
 
 export function App() { 
 
-  // We could use one canvas element but better no to avoid flickering when user change color model 
+  useEffect(() => {
+    colorPickerCanvas2dContext = colorPickerCanvas.current!.getContext("2d");
+
+    // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
+    parent.postMessage({ pluginMessage: { type: "init"} }, "*");
+  }, []);
+
   const fillOrStrokeSelector = useRef<HTMLDivElement>(null);
   const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null);
   const fillOrStrokeSelector_stroke = useRef<SVGPathElement>(null);
@@ -81,6 +94,7 @@ export function App() {
   const manipulatorOpacitySlider = useRef<SVGSVGElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
+
 
 
   /*
@@ -204,13 +218,7 @@ export function App() {
     colorPickerCanvas() {
       if (debugMode) { console.log("UI: render.colorPickerCanvas()"); }
 
-      let renderResult;
-      let ctx = colorPickerCanvas.current!.getContext("2d");
-
-      const isDarkMode = document.documentElement.classList.contains("figma-dark") ? true : false;
-
-      renderResult = renderImageData(okhxyValues.hue.value, currentColorModel, isDarkMode);
-      ctx!.putImageData(renderResult, 0, 0);
+      colorPickerCanvas2dContext!.putImageData(renderImageData(okhxyValues.hue.value, currentColorModel), 0, 0);
     },
     fillOrStrokeSelector() {
       if (debugMode) { console.log("UI: render.fillOrStrokeSelector()"); }
@@ -293,8 +301,7 @@ export function App() {
     render.opacitySliderCanvas();
     render.fillOrStrokeSelector();
 
-    let ctx = colorPickerCanvas.current!.getContext("2d");
-    ctx!.clearRect(0, 0, colorPickerCanvas.current!.width, colorPickerCanvas.current!.height);
+    colorPickerCanvas2dContext!.clearRect(0, 0, colorPickerCanvas.current!.width, colorPickerCanvas.current!.height);
   };
 
 
@@ -302,6 +309,44 @@ export function App() {
   /* 
   ** UPDATES FROM UI
   */
+
+  document.addEventListener("mouseenter", () => {
+    mouseInsideDocument = true;
+
+    // We set the focus back to the plugin window if user clicked outside of it, like this he doesn't need to click inside in order to use the shift or control keys.
+    if (document.hasFocus() === false) {
+      window.focus();
+    }
+  });
+
+  document.addEventListener("mouseleave", () => {
+    mouseInsideDocument = false;
+  });
+
+  // We want to know if user has one of these two keys down because in mouseHandler() we constrain the color picker manipulator depending on them.
+  document.addEventListener("keydown", (event) => {
+    // We test the key pressed but also if the mouse is inside the plugin, because if it's not, then if user press the shift key on Figma the plugin will set shiftKeyPressed to true and if after user move the manipulator on the color picker, mouseHandler() will think the shift key is still pressed because the keyup event callback didn't ran as the window focus was lost when user clicked outside of plugin's window.
+    if (event.key === "Shift" && mouseInsideDocument) {
+      shiftKeyPressed = true;
+    }
+    else if (event.key === "Control" && mouseInsideDocument) {
+      ctrlKeyPressed = true;
+    }
+  });
+
+  document.addEventListener("keyup", (event) => {
+    if (event.key === "Shift") {
+      shiftKeyPressed = false;
+      prevCanvasX = undefined;
+      prevCanvasY = undefined;
+      moveVerticallyOnly = false;
+      moveHorizontallyOnly = false;
+    }
+    else if (event.key === "Control") {
+      ctrlKeyPressed = false;
+    }
+  });
+
 
   const fillOrStrokeHandle = function() {
     if (debugMode) { console.log("UI: fillOrStrokeHandle()"); }
@@ -332,35 +377,73 @@ export function App() {
     render.colorPickerCanvas();
   };
 
-
   const setupHandler = function(canvas: HTMLCanvasElement | HTMLDivElement) {
     if (debugMode) { console.log("UI: setupHandler() - " + canvas.id); }
 
     const mouseHandler = (event: MouseEvent) => {
       if (debugMode) { console.log("UI: mouseHandler() - " + canvas.id); }
 
-      let rect = canvas.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
 
-      let canvas_x: number;
-      let canvas_y: number;
-
-      const eventTarget = event.target as HTMLCanvasElement | HTMLDivElement;
-
+      let canvasX: number;
+      let canvasY: number;
+    
       if (mouseHandlerEventTargetId === "") {
-        mouseHandlerEventTargetId = eventTarget.id;
+        mouseHandlerEventTargetId = (event.target as HTMLCanvasElement | HTMLDivElement).id;
       }
 
       if (mouseHandlerEventTargetId === "okhxy-xy-picker") {
-        canvas_x = event.clientX - rect.left;
-        canvas_y = event.clientY - rect.top;
-        okhxyValues.y.value = Math.round(limitMouseHandlerValue(1 - canvas_y/pickerSize) * 100);
-        
-        if (currentColorModel === "oklch") {
-          okhxyValues.x.value = roundOneDecimal((limitMouseHandlerValue(canvas_x/pickerSize) * 100) / oklchChromaScale);
-          clampOkhxyValuesChroma();
+        canvasX = event.clientX - rect.left;
+        canvasY = event.clientY - rect.top;
+
+        // With this code we can set the moveVerticallyOnly or moveHorizontallyOnly to true depending on his mouse movement (for example, if he is moving more vertically than horizontally then we set moveVerticallyOnly to true).
+        if (shiftKeyPressed && !moveVerticallyOnly && !moveHorizontallyOnly) {
+          if (prevCanvasX === undefined && prevCanvasY === undefined) {
+            prevCanvasX = canvasX;
+            prevCanvasY = canvasY;
+          }
+          else {
+            const movement = is2DMovementMoreVerticalOrHorizontal(prevCanvasX!, prevCanvasY!, canvasX, canvasY);
+            if (movement === "vertical") { moveVerticallyOnly = true; }
+            else if (movement === "horizontal") { moveHorizontallyOnly = true; }
+          }
         }
-        else {
-          okhxyValues.x.value = Math.round(limitMouseHandlerValue(canvas_x/pickerSize) * 100);
+
+        if ((shiftKeyPressed && moveVerticallyOnly) || !shiftKeyPressed) {
+          const newYValue = Math.round(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100);
+
+          if (ctrlKeyPressed && newYValue % 5 === 0) {
+            okhxyValues.y.value = newYValue;
+          }
+          else if (!ctrlKeyPressed) {
+            okhxyValues.y.value = newYValue;
+          }
+
+          if (currentColorModel === "oklch") {
+            clampOkhxyValuesChroma();
+          }
+        }
+
+        if ((shiftKeyPressed && moveHorizontallyOnly) || !shiftKeyPressed) {
+          const newXValue = Math.round(limitMouseHandlerValue(canvasX/pickerSize) * 100);
+
+          if (currentColorModel === "oklch") {
+            if (ctrlKeyPressed) {
+              okhxyValues.x.value = Math.round(newXValue / oklchChromaScale);
+            }
+            else if (!ctrlKeyPressed) {
+              okhxyValues.x.value = roundOneDecimal(newXValue / oklchChromaScale);
+            }
+            clampOkhxyValuesChroma();
+          }
+          else {
+            if (ctrlKeyPressed && newXValue % 5 === 0) {
+              okhxyValues.x.value = newXValue;
+            }
+            else if (!ctrlKeyPressed) {
+              okhxyValues.x.value = newXValue;
+            }
+          }
         }
 
         updateCurrentRgbaFromOkhxyValues();
@@ -370,8 +453,8 @@ export function App() {
         render.opacitySliderCanvas();
       }
       else if (mouseHandlerEventTargetId === "okhxy-h-slider") {
-        canvas_y = event.clientX - rect.left - 7;
-        okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 360);
+        canvasY = event.clientX - rect.left - 7;
+        okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvasY/slider_size) * 360);
 
         if (currentColorModel === "oklch") {
           clampOkhxyValuesChroma();
@@ -384,8 +467,8 @@ export function App() {
         render.all();
       }
       else if (mouseHandlerEventTargetId === "opacity-slider") {
-        canvas_y = event.clientX - rect.left - 7;
-        updateOpacityValue(Math.round(limitMouseHandlerValue(canvas_y/slider_size) * 100));
+        canvasY = event.clientX - rect.left - 7;
+        updateOpacityValue(Math.round(limitMouseHandlerValue(canvasY/slider_size) * 100));
 
         updateManipulatorPositions.opacitySlider();
       }
@@ -408,15 +491,12 @@ export function App() {
     }
   });
 
-  const cancelMouseHandler = function() {
+  document.addEventListener("mouseup", () => {
     if (activeMouseHandler) {
       activeMouseHandler = undefined;
       mouseHandlerEventTargetId = "";
     }
-  };
-
-  document.addEventListener("mouseup", cancelMouseHandler);
-  document.addEventListener("mouseleave", cancelMouseHandler);
+  });
 
 
   const handleInputFocus = function(event: FocusEvent) {
@@ -424,10 +504,6 @@ export function App() {
 
     (event.target as HTMLInputElement).select();
   };
-
-  // We need this value for inputHandler().
-  document.addEventListener("mouseleave", () => { mouseInsideDocument = false; });
-  document.addEventListener("mouseenter", () => { mouseInsideDocument = true; });
 
   const inputHandler = function(event: KeyboardEvent | FocusEvent) {
     if (debugMode) { console.log("UI: InputHandler()"); }
@@ -446,6 +522,8 @@ export function App() {
     const eventTargetId: string = eventTarget.id;
 
     let eventTargetValue: number;
+
+    let incrementValue: number;
 
     if (currentColorModel === "oklch" && eventTargetId === "x") {
       // If we are in OkLCH and user is changing the chroma value, he can enter a decimal value hence the parseFloat().
@@ -467,16 +545,19 @@ export function App() {
       if (event.type !== "blur") { eventTarget.select(); }
       return;
     }
-    
+
     // If we are in OkLCH and user is changing the chroma value, we use 0.1 for a more precise choice.
     if (currentColorModel === "oklch" && eventTargetId === "x") {
-      if (key === "ArrowUp") { eventTargetValue += 0.1; }
-      else if (key === "ArrowDown") { eventTargetValue -= 0.1; }
+      if (shiftKeyPressed) { incrementValue = 1; }
+      else { incrementValue = 0.1; }
     }
     else {
-      if (key === "ArrowUp") { eventTargetValue++; }
-      else if (key === "ArrowDown") { eventTargetValue--; }
+      if (shiftKeyPressed) { incrementValue = 5; }
+      else { incrementValue = 1; }
     }
+
+    if (key === "ArrowUp") { eventTargetValue += incrementValue; }
+    else if (key === "ArrowDown") { eventTargetValue -= incrementValue; }
     
     // We adjust user's value in case it's outside of the allowed range.
     const maxValue = eventTargetId === "hue" ? 360 : 100;
