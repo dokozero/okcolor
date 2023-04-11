@@ -223,17 +223,16 @@ figma.on("selectionchange", () => {
 
 // If user change property of selected shape.
 figma.on("documentchange", (event) => {
-  
   if (itsAMe) { return; }
   
   const changeType = event.documentChanges[0].type;
   
   if (changeType === "PROPERTY_CHANGE") {
-    
     const changeProperty = event.documentChanges[0].properties[0];
     
     // We don't run the code if for example the user has changed the rotation of the shape.
-    if (changeProperty === "fills" || changeProperty === "strokes") {
+    // We take into account "strokeWeight" to handle the case where the user add a stroke but then remove it with cmd+z, that event has for some reasons the changeProperty "strokeWeight" and not "stroke".
+    if (changeProperty === "fills" || changeProperty === "strokes" || changeProperty === "strokeWeight") {
 
       if (debugMode) { console.log("PLUGIN: figma.on documentchange"); }
      
