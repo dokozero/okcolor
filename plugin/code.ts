@@ -37,6 +37,28 @@ let shapeInfos: ShapeInfos = {
   }
 }
 
+const supportedNodeTypes = [
+  "BOOLEAN_OPERATION",
+  "COMPONENT",
+  "ELLIPSE",
+  "FRAME",
+  "INSTANCE",
+  "LINE",
+  "POLYGON",
+  "RECTANGLE",
+  "STAR",
+  "TEXT",
+  "VECTOR",
+  "SHAPE_WITH_TEXT",
+  "HIGHLIGHT"
+];
+
+const changePropertiesToReactTo = [
+  "fills",
+  "fillStyleId",
+  "strokes",
+  "strokeWeight"
+];
 
 
 /* 
@@ -87,22 +109,6 @@ const updateShapeInfos = function(): boolean {
 
   shapeInfosResetDefault();
  
-  const supportedNodeTypes = [
-    "BOOLEAN_OPERATION",
-    "COMPONENT",
-    "ELLIPSE",
-    "FRAME",
-    "INSTANCE",
-    "LINE",
-    "POLYGON",
-    "RECTANGLE",
-    "STAR",
-    "TEXT",
-    "VECTOR",
-    "SHAPE_WITH_TEXT",
-    "HIGHLIGHT"
-  ];
-
   const selection = figma.currentPage.selection;
 
   if (!selection[0]) {
@@ -232,7 +238,8 @@ figma.on("documentchange", (event) => {
     
     // We don't run the code if for example the user has changed the rotation of the shape.
     // We take into account "strokeWeight" to handle the case where the user add a stroke but then remove it with cmd+z, that event has for some reasons the changeProperty "strokeWeight" and not "stroke".
-    if (changeProperty === "fills" || changeProperty === "strokes" || changeProperty === "strokeWeight") {
+    // For "fillStyleId", it's to take into account if user has a shape with a color style and he change it to another or if he uses the eyedropper thus removing the color style.
+    if (changePropertiesToReactTo.includes(changeProperty)) {
 
       if (debugMode) { console.log("PLUGIN: figma.on documentchange"); }
      
