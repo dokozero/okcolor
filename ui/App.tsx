@@ -313,9 +313,15 @@ export function App() {
   document.addEventListener("mouseenter", () => {
     mouseInsideDocument = true;
 
-    // We set the focus back to the plugin window if user clicked outside of it, like this he doesn't need to click inside in order to use the shift or control keys.
     if (document.hasFocus() === false) {
+      // We set the focus back to the plugin window if user clicked outside of it, like this he doesn't need to click inside in order to use the shift or control keys.
       window.focus();
+
+      // We test if shiftKeyPressed is true and set it to false to prevent this case: if user launches the plugin, enter the mouse inside (thus making it focus), leave the plugin, move a shape with shift key pressed in Figma (event listerner on the plugin will then trigger and set shiftKeyPressed to true), then come back to the plugin, the shiftKeyPressed will still be true event if is not pressing it anymore because the keyup event will not be triggered as the focus was lost when user moved the sahep in Figma.
+      // We could test if the mouse is inside on the keydown event but then we will not be able to use the shift key to change the inputs values (by steps of 5 for some of them, check inputHandler()).
+      // Same for ctrlKeyPressed even if it is not used as much than shift in Figma.
+      shiftKeyPressed = shiftKeyPressed ? false : shiftKeyPressed;
+      ctrlKeyPressed = ctrlKeyPressed ? false : ctrlKeyPressed;
     }
   });
 
@@ -325,11 +331,10 @@ export function App() {
 
   // We want to know if user has one of these two keys down because in mouseHandler() we constrain the color picker manipulator depending on them.
   document.addEventListener("keydown", (event) => {
-    // We test the key pressed but also if the mouse is inside the plugin, because if it's not, then if user press the shift key on Figma the plugin will set shiftKeyPressed to true and if after user move the manipulator on the color picker, mouseHandler() will think the shift key is still pressed because the keyup event callback didn't ran as the window focus was lost when user clicked outside of plugin's window.
-    if (event.key === "Shift" && mouseInsideDocument) {
+    if (event.key === "Shift") {
       shiftKeyPressed = true;
     }
-    else if (event.key === "Control" && mouseInsideDocument) {
+    else if (event.key === "Control") {
       ctrlKeyPressed = true;
     }
   });
