@@ -1,3 +1,4 @@
+import { render } from "preact";
 import { signal } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
 
@@ -788,3 +789,5 @@ export function App() {
     </>
   );
 }
+
+render(<App />, document.getElementById("root") as HTMLElement);
