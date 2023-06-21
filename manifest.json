@@ -7,5 +7,9 @@
     "figjam"
   ],
   "main": "./dist/plugin/code.js",
-  "ui": "./dist/ui/index.html"
+  "ui": "./dist/ui/index.html",
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "reasoning": ""
+  }
 }
