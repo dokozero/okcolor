@@ -802,8 +802,8 @@ export function App() {
 
         <div class="c-css-colors">
 
-          <div class="u-flex">
-            <p class="c-css-colors__title" onClick={ () => setShowCssColorCodes(!showCssColorCodes) }>CSS color codes</p>
+          <div class="c-css-colors__title-wrapper" onClick={ () => setShowCssColorCodes(!showCssColorCodes) }>
+            <p class="c-css-colors__title">CSS color codes</p>
             
             <div class="c-css-colors__arrow-icon">
               <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" fill="#fff" stroke="none"></path></svg>
@@ -811,7 +811,7 @@ export function App() {
           </div>
 
           {showCssColorCodes && (
-            <div class="u-mt-12 u-px-8">
+            <div class="c-css-colors__input-wraper">
               <div class="input-wrapper" onMouseEnter={() => setShowCopyActionCurrentModelInput(true)} onMouseLeave={() => setShowCopyActionCurrentModelInput(false)}>
                 <input type="text" value="oklch(58.53% 0.195 258.5)" />
                 { showCopyActionCurrentModelInput && <div class="c-css-colors__copy-action">Copy</div> }

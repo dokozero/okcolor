@@ -213,20 +213,28 @@ body.deactivated .c-bottom-controls {
 
 .c-css-colors {
   margin-top: 8px;
-  padding-top: 16px;
-  padding-bottom: 8px;
   border-top: 1px solid var(--figma-color-border);
   font-size: 11px;
   font-weight: 500;
   /* color: var(--figma-color-text-secondary); */
   color: var(--figma-color-text);
 }
-  .c-css-colors__title {
-    padding-left: 16px;
-    padding-right: 16px; 
+  .c-css-colors__title-wrapper {
+    display: flex;
+    padding-top: 16px;
+    padding-bottom: 16px;
   }
-  .c-css-colors__title:hover {
+  .c-css-colors__title-wrapper:hover {
     cursor: pointer;
+  }
+    .c-css-colors__title {
+      padding-left: 16px;
+      padding-right: 16px; 
+    }
+  .c-css-colors__input-wraper {
+    margin-top: -4px;
+    padding-left: 8px;
+    padding-right: 8px;
   }
     .c-css-colors__copy-action {
       margin-right: 8px;
