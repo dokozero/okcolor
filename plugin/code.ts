@@ -6,6 +6,7 @@ import { pickerSize, debugMode } from "../ui/utils/constants";
 
 let currentFillOrStroke = "fill";
 let currentColorModel: string;
+let showCssColorCodes: boolean;
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
 let itsAMe = false;
@@ -59,35 +60,6 @@ const changePropertiesToReactTo = [
   "strokes",
   "strokeWeight"
 ];
-
-
-/* 
-** INIT
-*/
-
-figma.showUI(__html__, {width: pickerSize, height: 346, themeColors: true});
-
-// To send the color of the shape on launch, we call it when the UI is ready, see above figma.ui.onmessage
-const init = async function() {
-  if (debugMode) { console.log("PLUGIN: init()"); }
-
-  // Get the currentColorModel value from the clientStorage and set it to "okhsl" if it's not in there.
-  currentColorModel = await figma.clientStorage.getAsync("currentColorModel");
-
-  // We could just test if currentColorModel is undefined (when user first launch the plugin) but with this test, if for any reason the currentColorModel value in the clientStorage is a different string than "okhsv", "okhsl" or "oklch", we set it to okhsl (could come from a Figma bug that change the value but it shouldn't occurs).
-  if (currentColorModel !== "okhsv" && currentColorModel !== "okhsl" && currentColorModel !== "oklch") {
-    currentColorModel = "okhsl";
-  }
-
-  sendInitToUI();
-
-  if (!updateShapeInfos()) return;
-
-  if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
-  else { currentFillOrStroke = "stroke"; }
-
-  sendNewShapeColorToUI(true);
-};
 
 
 
@@ -191,7 +163,7 @@ const updateShapeInfos = function(): boolean {
 const sendInitToUI = function() {
   if (debugMode) { console.log("PLUGIN: sendInitToUI())"); }
   
-  figma.ui.postMessage({"message": "init", "currentColorModel": currentColorModel});
+  figma.ui.postMessage({"message": "init", "data": {"currentColorModel": currentColorModel, "showCssColorCodes": showCssColorCodes} });
 };
 
 const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
@@ -322,4 +294,52 @@ figma.ui.onmessage = (msg) => {
   else if (msg.type === "syncCurrentColorModel") {
     figma.clientStorage.setAsync("currentColorModel", msg.currentColorModel);
   }
+  else if (msg.type === "syncShowCssColorCodes") {
+    if (msg.showCssColorCodes) {
+      figma.ui.resize(pickerSize, 490);
+    }
+    else {
+      figma.ui.resize(pickerSize, 392);
+    }
+    figma.clientStorage.setAsync("showCssColorCodes", msg.showCssColorCodes);
+  }
+};
+
+
+
+/* 
+** INIT
+*/
+
+figma.showUI(__html__, {width: pickerSize, height: 392, themeColors: true});
+
+// To send the color of the shape on launch, we call it when the UI is ready, see above figma.ui.onmessage
+const init = async function() {
+  if (debugMode) { console.log("PLUGIN: init()"); }
+
+  // Get the currentColorModel value from the clientStorage and set it to "okhsl" if it's not in there.
+  currentColorModel = await figma.clientStorage.getAsync("currentColorModel");
+
+  // We could just test if currentColorModel is undefined (when user first launch the plugin) but with this test, if for any reason the currentColorModel value in the clientStorage is a different string than "okhsv", "okhsl" or "oklch", we set it to okhsl (could come from a Figma bug that change the value but it shouldn't occurs).
+  if (currentColorModel !== "okhsv" && currentColorModel !== "okhsl" && currentColorModel !== "oklch") {
+    currentColorModel = "okhsl";
+  }
+
+  showCssColorCodes = await figma.clientStorage.getAsync("showCssColorCodes");
+
+  if(showCssColorCodes === undefined) {
+    showCssColorCodes = false;
+  }
+  if (showCssColorCodes) {
+    figma.ui.resize(pickerSize, 490);
+  }
+
+  sendInitToUI();
+
+  if (!updateShapeInfos()) return;
+
+  if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
+  else { currentFillOrStroke = "stroke"; }
+
+  sendNewShapeColorToUI(true);
 };

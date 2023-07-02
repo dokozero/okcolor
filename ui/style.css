@@ -7,6 +7,78 @@
 body {
   margin: 0;
   background-color: var(--figma-color-bg);
+  font-family: "Inter", sans-serif;
+}
+
+p {
+  margin: 0;
+}
+
+
+.select-wrapper,
+.input-wrapper {
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: 28px;
+  align-items: center;
+}
+
+.input-wrapper {
+  border: 1px solid transparent;
+}
+
+.input-wrapper:hover,
+select:hover {
+  border: 1px solid var(--figma-color-border, rgba(0, 0, 0, .1));
+}
+
+.input-wrapper:hover input:not(:first-child),
+.input-wrapper:focus-within input:not(:first-child) {
+  border-left-color: var(--figma-color-border, rgba(0, 0, 0, .1));
+}
+
+.input-wrapper:focus-within {
+  height: 30px;
+  margin-top: 0;
+  margin-bottom: 0;
+  border: 1px solid var(--figma-color-border-selected);
+  outline: 1px solid var(--figma-color-border-selected);
+}
+
+select,
+input {
+  width: 100%;
+  height: 100%;
+  padding: 7px 6px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--figma-color-text);
+  background-color: transparent;
+  cursor: default;
+}
+select {
+  /* We set the height to 100% only for the select and not the input because it would make a 1 px gap between the outer border of input-wrapper and the left borders of the nested input when hovering. */
+  height: 100%;
+}
+select:focus,
+input:focus {
+  outline: none;
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg class='svg' width='8' height='7' viewBox='0 0 8 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.646 5.354l-3-3 .708-.708L4 4.293l2.646-2.647.708.708-3 3L4 5.707l-.354-.353z' fill-rule='evenodd' fill-opacity='1' fill='%23888' stroke='none'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 90% 45%;
+}
+
+input#opacity {
+  flex: 0 0 44px;
 }
 
 
@@ -33,7 +105,6 @@ body.deactivated .c-color-picker {
       margin: 0;
       padding: 16px;
       width: 100%;
-      font-family: "Inter", sans-serif;
       font-size: 14px;
       font-weight: 400;
       letter-spacing: 0.01em;
@@ -118,87 +189,51 @@ body.deactivated .c-bottom-controls {
   grid-template-rows: 28px;
   align-items: center;
   position: relative;
-  height: 28px;
   padding-left: 8px;
   padding-right: 8px;
   margin-top: 12px;
 }
+  .c-select-input-controls__select-wrapper,
+  .c-select-input-controls__input-wrapper {
+    height: 100%;
+  }
 
-.select-wrapper,
-.input-wrapper {
-  display: flex;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-}
+  .c-select-input-controls__select-wrapper {
+    grid-column-start: 1;
+    grid-column-end: span 8;
+  }
+  .c-select-input-controls__input-wrapper {
+    grid-column-end: span 20;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+  }
 
-.select-wrapper {
-  grid-column-start: 1;
-  grid-column-end: span 8;
-}
 
-.input-wrapper {
-  grid-column-end: span 20;
-  border: 1px solid transparent;
-  border-radius: 2px;
-  margin-top: 1px;
-  margin-bottom: 1px;
-}
-
-select,
-input {
-  width: 100%;
-  flex-grow: 1;
-  padding: 7px 6px;
-  border: 1px solid transparent;
-  border-radius: 2px;
-  font-family: "Inter", sans-serif;
+.c-css-colors {
+  margin-top: 8px;
+  padding-top: 16px;
+  padding-bottom: 8px;
+  border-top: 1px solid var(--figma-color-border);
   font-size: 11px;
-  font-weight: 400;
-  line-height: 100%;
-  color: var(--figma-color-text, #333333);
-  background-color: transparent;
-  cursor: default;
+  font-weight: 500;
+  /* color: var(--figma-color-text-secondary); */
+  color: var(--figma-color-text);
 }
-select {
-  /* We set the height to 100% only for the select and not the input because it would make a 1 px gap between the outer border of input-wrapper and the left borders of the nested input when hovering. */
-  height: 100%;
-}
-select:focus,
-input:focus {
-  outline: none;
-}
-
-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg class='svg' width='8' height='7' viewBox='0 0 8 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.646 5.354l-3-3 .708-.708L4 4.293l2.646-2.647.708.708-3 3L4 5.707l-.354-.353z' fill-rule='evenodd' fill-opacity='1' fill='%23888' stroke='none'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: 90% 45%;
-}
-
-input#opacity {
-  flex: 0 0 44px;
-}
-
-
-.input-wrapper:hover,
-select:hover {
-  border: 1px solid var(--figma-color-border, rgba(0, 0, 0, .1));
-}
-
-.input-wrapper:hover input:not(:first-child),
-.input-wrapper:focus-within input:not(:first-child) {
-  border-left-color: var(--figma-color-border, rgba(0, 0, 0, .1));
-}
-
-.input-wrapper:focus-within {
-  height: 30px;
-  margin-top: 0;
-  margin-bottom: 0;
-  border: 1px solid var(--figma-color-border-selected);
-  outline: 1px solid var(--figma-color-border-selected);
-}
+  .c-css-colors__title {
+    padding-left: 16px;
+    padding-right: 16px; 
+  }
+  .c-css-colors__title:hover {
+    cursor: pointer;
+  }
+    .c-css-colors__copy-action {
+      margin-right: 8px;
+    }
+    .c-css-colors__copy-action:hover {
+      cursor: pointer;
+    }
 
 
 
@@ -218,6 +253,7 @@ select:hover {
 .u-w-full { width: 100%; }
 .u-h-full { height: 100%; }
 
+.u-mt-4 { margin-top: 4px; }
 .u-mt-12 {margin-top: 12px;}
 .u-mt-14 {margin-top: 14px;}
 .u-mt-16 {margin-top: 16px;}

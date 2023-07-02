@@ -1,6 +1,6 @@
 import { render } from "preact";
 import { signal } from "@preact/signals";
-import { useRef, useEffect } from "preact/hooks";
+import { useRef, useEffect, useState } from "preact/hooks";
 
 import { clampChroma } from "../node_modules/culori/bundled/culori.mjs";
 
@@ -74,7 +74,11 @@ let prevCanvasY: number | undefined;
 let moveVerticallyOnly = false;
 let moveHorizontallyOnly = false;
 
-export function App() { 
+export function App() {
+  const [showCssColorCodes, setShowCssColorCodes] = useState<boolean>();
+  const [showCopyActionCurrentModelInput, setShowCopyActionCurrentModelInput] = useState(false);
+  const [showCopyActionRgbInput, setShowCopyActionRgbInput] = useState(false);
+  const [showCopyActionHexInput, setShowCopyActionHexInput] = useState(false);
 
   useEffect(() => {
     colorPickerCanvas2dContext = colorPickerCanvas.current!.getContext("2d");
@@ -639,6 +643,15 @@ export function App() {
     parent.postMessage({ pluginMessage: { type: "syncCurrentColorModel", "currentColorModel": currentColorModel } }, "*");
   }
 
+  useEffect(() => {   
+    if (debugMode) { console.log("UI: syncShowCssColorCodes()"); }
+    
+    // We check first if showCssColorCodes if undefined because we don't want to sync with the plugin on first render.
+    if (showCssColorCodes !== undefined) {
+     parent.postMessage({ pluginMessage: { type: "syncShowCssColorCodes", "showCssColorCodes": showCssColorCodes } }, "*");
+    }
+  }, [showCssColorCodes]);
+
 
 
   /* 
@@ -655,7 +668,8 @@ export function App() {
       setupHandler(hueSlider.current!);
       setupHandler(opacitySlider.current!);
 
-      currentColorModel = event.data.pluginMessage.currentColorModel;
+      currentColorModel = event.data.pluginMessage.data.currentColorModel;
+      setShowCssColorCodes(event.data.pluginMessage.data.showCssColorCodes);
 
       // We do this to avoid flickering on loading.
       colorModelSelect.current!.style.opacity = "1";
@@ -769,7 +783,7 @@ export function App() {
         </div>
 
         <div class="c-select-input-controls">
-          <div class="select-wrapper">
+          <div class="select-wrapper c-select-input-controls__select-wrapper">
             <select ref={colorModelSelect} onChange={colorModelHandle} name="color_model" id="color_model" style="opacity: 0;">
               <option value="okhsv">OkHSV</option>
               <option value="okhsl">OkHSL</option>
@@ -778,14 +792,46 @@ export function App() {
 
           </div>
 
-          <div class="input-wrapper u-flex u-w-full">
+          <div class="input-wrapper c-select-input-controls__input-wrapper">
             <input onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="hue" value={okhxyValues.hue} spellcheck={false} />
             <input onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="x" value={okhxyValues.x} spellcheck={false} />
             <input onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="y" value={okhxyValues.y} spellcheck={false} />
             <input ref={opacityInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="opacity" spellcheck={false} />
           </div>
         </div>
+
+        <div class="c-css-colors">
+
+          <div class="u-flex">
+            <p class="c-css-colors__title" onClick={ () => setShowCssColorCodes(!showCssColorCodes) }>CSS color codes</p>
+            
+            <div class="c-css-colors__arrow-icon">
+              <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" fill="#fff" stroke="none"></path></svg>
+            </div>
+          </div>
+
+          {showCssColorCodes && (
+            <div class="u-mt-12 u-px-8">
+              <div class="input-wrapper" onMouseEnter={() => setShowCopyActionCurrentModelInput(true)} onMouseLeave={() => setShowCopyActionCurrentModelInput(false)}>
+                <input type="text" value="oklch(58.53% 0.195 258.5)" />
+                { showCopyActionCurrentModelInput && <div class="c-css-colors__copy-action">Copy</div> }
+              </div>
+
+              <div class="input-wrapper u-mt-4" onMouseEnter={() => setShowCopyActionRgbInput(true)} onMouseLeave={() => setShowCopyActionRgbInput(false)}>
+                <input type="text" value="rgb(201, 130, 259)" />
+                { showCopyActionRgbInput && <div class="c-css-colors__copy-action">Copy</div> }
+              </div>
+
+              <div class="input-wrapper u-mt-4" onMouseEnter={() => setShowCopyActionHexInput(true)} onMouseLeave={() => setShowCopyActionHexInput(false)}>
+                <input type="text" value="#501CFB" />
+                { showCopyActionHexInput && <div class="c-css-colors__copy-action">Copy</div> }
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
+
     </>
   );
 }
