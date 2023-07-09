@@ -5,7 +5,7 @@ This is a plugin for Figma, [see its community page](https://www.figma.com/commu
 
 –
 
-Creating a balanced and accessible color palette with Figma is not an easy task, color pickers like HSB and HSL are not best suited for these tasks. To fix that, OkColor brings uniform color models for a more convenient way to manipulate colors.
+Creating a balanced and accessible color palette with Figma is not an easy task, color models like HSB and HSL are not best suited for these tasks. To fix that, OkColor brings more uniform and predictable color models for a more convenient way to manipulate colors.
 
 In short, with a color model like OkHSL, you can easily create perceptually uniform color palettes, and do more advanced things with OkLCH.
 
