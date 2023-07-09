@@ -1,6 +1,6 @@
 import { render } from "preact";
-import { signal } from "@preact/signals";
-import { useRef, useEffect, useState } from "preact/hooks";
+import { signal, effect } from "@preact/signals";
+import { useRef, useEffect } from "preact/hooks";
 
 import { clampChroma } from "../node_modules/culori/bundled/culori.mjs";
 
@@ -9,7 +9,7 @@ import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowR
 
 import { UIMessageTexts } from "./utils/ui-messages";
 import { renderImageData } from "./utils/render-image-data";
-import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundOneDecimal } from "./utils/others";
+import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundOneDecimal, copyToClipboard } from "./utils/others";
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
 
@@ -21,6 +21,22 @@ const okhxyValues = {
   x: signal(0),
   y: signal(0),
 };
+
+const showCssColorCodes = signal<boolean>();
+
+
+
+
+
+
+// TODO useSignal for all signals? https://preactjs.com/guide/v10/signals/
+
+
+
+
+
+
+
 
 const opacitySliderStyle = signal("");
 
@@ -74,14 +90,67 @@ let prevCanvasY: number | undefined;
 let moveVerticallyOnly = false;
 let moveHorizontallyOnly = false;
 
-export function App() {
-  const [showCssColorCodes, setShowCssColorCodes] = useState<boolean>();
-  const [showCopyActionCurrentModelInput, setShowCopyActionCurrentModelInput] = useState(false);
-  const [showCopyActionRgbInput, setShowCopyActionRgbInput] = useState(false);
-  const [showCopyActionHexInput, setShowCopyActionHexInput] = useState(false);
 
+function CssColorCodes() {
+
+  console.log("render CssCodeShow");
+  
+  effect(() => {
+    if (debugMode) { console.log("UI: syncShowCssColorCodes()"); }
+    
+    // We check first if showCssColorCodes if undefined because we don't want to sync with the plugin on first render.
+    if (showCssColorCodes.value !== undefined) {
+     parent.postMessage({ pluginMessage: { type: "syncShowCssColorCodes", "showCssColorCodes": showCssColorCodes.value } }, "*");
+    }
+  });
+
+  return (
+
+    <div class="c-css-colors">
+
+      <div class="c-css-colors__title-wrapper" onClick={ () => {showCssColorCodes.value = !showCssColorCodes.value} }>
+        <div>CSS color codes</div>
+        
+        <div class={"c-css-colors__arrow-icon" + (showCssColorCodes.value ? " c-css-colors__arrow-icon--open" : "")}>
+          <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" fill="#fff" stroke="none"></path></svg>
+        </div>
+      </div>
+
+      {/* TODO: Support esc key to cancel focus on inputs */}
+
+      { showCssColorCodes.value && (
+        <div class="c-css-colors__input-wraper">
+          <div class="input-wrapper">
+            <input type="text" value="oklch(58.53% 0.195 258.5)" />
+            <div onClick={() => copyToClipboard("The string")} class="c-css-colors__copy-action">Copy</div>
+          </div>
+
+          <div class="input-wrapper u-mt-4">
+            <input type="text" value="rgb(201, 130, 259)" />
+            <div class="c-css-colors__copy-action">Copy</div>
+          </div>
+
+          <div class="input-wrapper u-mt-4">
+            <input type="text" value="#501CFB" />
+            <div class="c-css-colors__copy-action">Copy</div>
+          </div>
+        </div>
+      )}
+
+    </div>
+
+  );
+
+}
+
+
+
+export function App() {
+
+  console.log("render App");
+  
   useEffect(() => {
-    colorPickerCanvas2dContext = colorPickerCanvas.current!.getContext("2d");
+    colorPickerCanvas2dContext = colorPickerCanvas.current!.getContext("2d");    
 
     // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
     parent.postMessage({ pluginMessage: { type: "init"} }, "*");
@@ -643,15 +712,6 @@ export function App() {
     parent.postMessage({ pluginMessage: { type: "syncCurrentColorModel", "currentColorModel": currentColorModel } }, "*");
   }
 
-  useEffect(() => {   
-    if (debugMode) { console.log("UI: syncShowCssColorCodes()"); }
-    
-    // We check first if showCssColorCodes if undefined because we don't want to sync with the plugin on first render.
-    if (showCssColorCodes !== undefined) {
-     parent.postMessage({ pluginMessage: { type: "syncShowCssColorCodes", "showCssColorCodes": showCssColorCodes } }, "*");
-    }
-  }, [showCssColorCodes]);
-
 
 
   /* 
@@ -669,7 +729,8 @@ export function App() {
       setupHandler(opacitySlider.current!);
 
       currentColorModel = event.data.pluginMessage.data.currentColorModel;
-      setShowCssColorCodes(event.data.pluginMessage.data.showCssColorCodes);
+      showCssColorCodes.value = event.data.pluginMessage.data.showCssColorCodes;
+      
 
       // We do this to avoid flickering on loading.
       colorModelSelect.current!.style.opacity = "1";
@@ -711,7 +772,6 @@ export function App() {
       UIMessage.show(event.data.pluginMessage.UIMessageCode, event.data.pluginMessage.nodeType);
     }
   };
-
 
   
   return (
@@ -800,36 +860,8 @@ export function App() {
           </div>
         </div>
 
-        <div class="c-css-colors">
+        <CssColorCodes/>
 
-          <div class="c-css-colors__title-wrapper" onClick={ () => setShowCssColorCodes(!showCssColorCodes) }>
-            <p class="c-css-colors__title">CSS color codes</p>
-            
-            <div class="c-css-colors__arrow-icon">
-              <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" fill="#fff" stroke="none"></path></svg>
-            </div>
-          </div>
-
-          {showCssColorCodes && (
-            <div class="c-css-colors__input-wraper">
-              <div class="input-wrapper" onMouseEnter={() => setShowCopyActionCurrentModelInput(true)} onMouseLeave={() => setShowCopyActionCurrentModelInput(false)}>
-                <input type="text" value="oklch(58.53% 0.195 258.5)" />
-                { showCopyActionCurrentModelInput && <div class="c-css-colors__copy-action">Copy</div> }
-              </div>
-
-              <div class="input-wrapper u-mt-4" onMouseEnter={() => setShowCopyActionRgbInput(true)} onMouseLeave={() => setShowCopyActionRgbInput(false)}>
-                <input type="text" value="rgb(201, 130, 259)" />
-                { showCopyActionRgbInput && <div class="c-css-colors__copy-action">Copy</div> }
-              </div>
-
-              <div class="input-wrapper u-mt-4" onMouseEnter={() => setShowCopyActionHexInput(true)} onMouseLeave={() => setShowCopyActionHexInput(false)}>
-                <input type="text" value="#501CFB" />
-                { showCopyActionHexInput && <div class="c-css-colors__copy-action">Copy</div> }
-              </div>
-            </div>
-          )}
-
-        </div>
       </div>
 
     </>

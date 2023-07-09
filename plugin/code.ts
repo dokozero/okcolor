@@ -294,7 +294,7 @@ figma.ui.onmessage = (msg) => {
   else if (msg.type === "syncCurrentColorModel") {
     figma.clientStorage.setAsync("currentColorModel", msg.currentColorModel);
   }
-  else if (msg.type === "syncShowCssColorCodes") {
+  else if (msg.type === "syncShowCssColorCodes") {  
     if (msg.showCssColorCodes) {
       figma.ui.resize(pickerSize, 490);
     }
