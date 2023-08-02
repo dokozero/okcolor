@@ -1,13 +1,15 @@
 import { lowResPickerSize, lowResPickerSizeOklch, oklchChromaScale, debugMode } from "./constants";
 
-import { converter, clampChroma } from "../../node_modules/culori/bundled/culori.mjs";
+import { converter, clampChromaInGamut } from "../../node_modules/culori/bundled/culori.mjs";
 import type { Rgb, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
 
 const localDebugMode = false;
 
+let colorSpace = "p3";
+
 const convertToRgb = converter("rgb");
 
-export function renderImageData(hue: number, colorModel: string): ImageData {
+export const renderImageData = function(hue: number, colorModel: string): ImageData {
   if (debugMode) { console.log("UI: renderImageData()"); }
 
   let imageData: ImageData;
@@ -43,22 +45,35 @@ export function renderImageData(hue: number, colorModel: string): ImageData {
   }
   else if (colorModel === "oklch") {
 
+    let currentTheme: string;
+
+    if (document.documentElement.classList.contains("figma-dark")) {
+      currentTheme = "dark";
+    }
+    else {
+      currentTheme = "light";
+    }
+
     // For local debug if needed.
-    let numberOfClampChromaTestsForCurrentLine = 0;
-    let numberOfTotalClampChromaTests = 0;
     let numberOfRenderedPixelsForCurrentLine = 0;
     let numberOfTotalRenderedPixels = 0;
 
     imageData = new ImageData(lowResPickerSizeOklch, lowResPickerSizeOklch);
     
-    let chromaIsClamped = false;
-    let clamped: Oklch;
     let rgbColor: Rgb;
     let pixelIndex: number;
     
     let bgColorLuminosity = 0;
 
-    if (document.documentElement.classList.contains("figma-dark")) {
+    let chroma: number;
+    let luminosity: number;
+
+    let whitePixelRendered = false;
+
+    let sRGBMaxChroma: Oklch;
+    let P3MaxChroma: Oklch;
+
+    if (currentTheme === "dark") {
       bgColorLuminosity = 35;
     }
     else {
@@ -66,10 +81,6 @@ export function renderImageData(hue: number, colorModel: string): ImageData {
     }
 
     let bgColor = convertToRgb({mode: "oklch", h: hue, c: 1, l: bgColorLuminosity});
-
-    let chroma: number;
-    let luminosity: number;
-    let previousClampedChroma = 0;
 
     for (let y = 0; y < lowResPickerSizeOklch; y++) {
 
@@ -79,33 +90,24 @@ export function renderImageData(hue: number, colorModel: string): ImageData {
         numberOfRenderedPixelsForCurrentLine = 0;
       }
 
+      luminosity = (lowResPickerSizeOklch - y) / lowResPickerSizeOklch;
+
+      sRGBMaxChroma = clampChromaInGamut({ mode: "oklch", l: luminosity, c: 0.37, h: hue }, "oklch", "rgb");
+      P3MaxChroma = clampChromaInGamut({ mode: "oklch", l: luminosity, c: 0.37, h: hue }, "oklch", "p3");
+
       for (let x = 0; x < lowResPickerSizeOklch; x++) {
         chroma = x / (lowResPickerSizeOklch * oklchChromaScale);
-        luminosity = (lowResPickerSizeOklch - y) / lowResPickerSizeOklch;
-        
-        if (!chromaIsClamped && chroma > previousClampedChroma) {
-
-          if (localDebugMode) {
-            numberOfClampChromaTestsForCurrentLine++;
-            numberOfTotalClampChromaTests++;
-          }
-
-          clamped = clampChroma({ mode: "oklch", l: luminosity, c: chroma, h: hue }, "oklch");
-          
-          if (chroma > clamped.c) {
-            chroma = clamped.c;
-            chromaIsClamped = true;
-
-            // We store this value to avoid testing the chroma if we don't have reached the previous value. The 0.005 is to avoid rendering a bit too far when we render the curve from the pick chroma to black.
-            previousClampedChroma = clamped.c - 0.005;
-
-            if (localDebugMode) { console.log("Number of clamp chroma tests = " + numberOfClampChromaTestsForCurrentLine); }
-          }
-        }
   
         pixelIndex = (y * lowResPickerSizeOklch + x) * 4;
 
-        if (chromaIsClamped) {
+        if (chroma > sRGBMaxChroma.c && !whitePixelRendered && colorSpace === "p3") {
+          imageData.data[pixelIndex] = 255;
+          imageData.data[pixelIndex + 1] = 255;
+          imageData.data[pixelIndex + 2] = 255;
+          imageData.data[pixelIndex + 3] = 255;
+          whitePixelRendered = true;
+        }
+        else if ((colorSpace === "p3" && chroma > P3MaxChroma.c) || (colorSpace === "srgb" && chroma > sRGBMaxChroma.c)) {
           imageData.data[pixelIndex] = bgColor.r;
           imageData.data[pixelIndex + 1] = bgColor.g;
           imageData.data[pixelIndex + 2] = bgColor.b;
@@ -127,20 +129,20 @@ export function renderImageData(hue: number, colorModel: string): ImageData {
       
       if (localDebugMode) {
         console.log("Number of rendered pixles for current line = " + numberOfRenderedPixelsForCurrentLine);
-        numberOfClampChromaTestsForCurrentLine = 0;
       }
       
-      chromaIsClamped = false;
+      // chromaIsClampedSrgb = false;
+      // chromaIsClampedP3 = false;
+      whitePixelRendered = false;
     }
 
     if (localDebugMode) {
       console.log("---");
       console.log("Done");
-      console.log("Number of total clamp chroma tests = " + numberOfTotalClampChromaTests);
       console.log("Number of total rendered pixels = " + numberOfTotalRenderedPixels);
     }
   
   }
 
-  return imageData;
-}
+  return imageData!;
+};

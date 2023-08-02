@@ -1,13 +1,16 @@
-import { converter, formatHex } from "../../node_modules/culori/bundled/culori.mjs";
+import { converter } from "../../node_modules/culori/bundled/culori.mjs";
 import type { Rgb, Okhsl, Okhsv, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
 
 import { debugMode } from "./constants";
 import { clampNumber, roundOneDecimal } from "./others";
 
 const convertToRgb = converter("rgb");
+const convertToP3 = converter("p3");
 const convertToOkhsl = converter("okhsl");
 const convertToOkhsv = converter("okhsv");
 const convertToOklch = converter("oklch");
+
+let colorSpace = "p3";
 
 export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number): [number, number, number] {
   if (debugMode) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }
@@ -71,15 +74,27 @@ export function colorConversion(from: string, to: string, param1: number, param2
     param3 = param3 / 255;
   }
 
+  let colorFunctionSpace: string;
+
+  if (colorSpace === "p3") {
+    colorFunctionSpace = "display-p3";
+  }
+  else {
+    colorFunctionSpace = "srgb";
+  }
 
   // We have to use formatHex for converting from RGB because if not we get wrong saturation values (like 0.5 instead of 1).
-  if (from === "okhsl" && to === "rgb") { culoriResult = convertToRgb({mode: "okhsl", h: param1, s: param2, l: param3}); }
-  else if (from === "okhsv" && to === "rgb") { culoriResult = convertToRgb({mode: "okhsv", h: param1, s: param2, v: param3}); }
-  else if (from === "oklch" && to === "rgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }
-  else if (from === "rgb" && to === "okhsl") { culoriResult = convertToOkhsl(formatHex({mode: "rgb", r: param1, g: param2, b: param3})); }
-  else if (from === "rgb" && to === "okhsv") { culoriResult = convertToOkhsv(formatHex({mode: "rgb", r: param1, g: param2, b: param3})); }
-  else if (from === "rgb" && to === "oklch") { culoriResult = convertToOklch(formatHex({mode: "rgb", r: param1, g: param2, b: param3})); }
+  if (from === "okhsl" && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "okhsl", h: param1, s: param2, l: param3}); }
+  else if (from === "okhsv" && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "okhsv", h: param1, s: param2, v: param3}); }
+  else if (from === "oklch" && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }
 
+  else if (from === "okhsl" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "okhsl", h: param1, s: param2, l: param3}); }
+  else if (from === "okhsv" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "okhsv", h: param1, s: param2, v: param3}); }
+  else if (from === "oklch" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "oklch", h: param1, c: param2, l: param3}); }
+
+  else if (from === "rgb" && to === "okhsl") { culoriResult = convertToOkhsl(`color(${colorFunctionSpace} ${param1} ${param2} ${param3})`); }
+  else if (from === "rgb" && to === "okhsv") { culoriResult = convertToOkhsv(`color(${colorFunctionSpace} ${param1} ${param2} ${param3})`); }
+  else if (from === "rgb" && to === "oklch") { culoriResult = convertToOklch(`color(${colorFunctionSpace} ${param1} ${param2} ${param3})`); }
 
   if (to === "rgb") {
     if (param3 === 0) {

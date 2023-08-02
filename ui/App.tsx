@@ -2,7 +2,7 @@ import { render } from "preact";
 import { signal, effect } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
 
-import { clampChroma } from "../node_modules/culori/bundled/culori.mjs";
+import { clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
 
 import { colorConversion } from "./utils/color-conversion";
 import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale, debugMode } from "./utils/constants";
@@ -25,6 +25,8 @@ const okhxyValues = {
 const showCssColorCodes = signal<boolean>();
 
 
+
+let colorSpace = "p3";
 
 
 
@@ -208,9 +210,9 @@ export function App() {
   const clampOkhxyValuesChroma = function() {
     if (debugMode) { console.log("UI: clampOkhxyValuesChroma()"); }
 
-    const clamped = clampChroma({ mode: "oklch", l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, "oklch");
+    const clamped = clampChromaInGamut({ mode: "oklch", l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, "oklch", colorSpace);
 
-    // If we send a pure black to clampChroma (l and c to 0), clamped.c will be undefined.
+    // If we send a pure black to clampChromaInGamut (l and c to 0), clamped.c will be undefined.
     if (!clamped.c) {
       okhxyValues.x.value = 0;
     }
