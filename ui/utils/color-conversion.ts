@@ -92,8 +92,9 @@ export function colorConversion(from: string, to: string, param1: number, param2
   else if (from === "okhsv" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "okhsv", h: param1, s: param2, v: param3}); }
   else if (from === "oklch" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "oklch", h: param1, c: param2, l: param3}); }
 
-  else if (from === "rgb" && to === "okhsl") { culoriResult = convertToOkhsl(`color(${colorFunctionSpace} ${param1} ${param2} ${param3})`); }
-  else if (from === "rgb" && to === "okhsv") { culoriResult = convertToOkhsv(`color(${colorFunctionSpace} ${param1} ${param2} ${param3})`); }
+  // We alway use srgb for OkHSL and OkHSV because they are not intended to be used in P3 and if we try, we get out of range value like a saturation of 103.
+  else if (from === "rgb" && to === "okhsl") { culoriResult = convertToOkhsl(`color(srgb ${param1} ${param2} ${param3})`); }
+  else if (from === "rgb" && to === "okhsv") { culoriResult = convertToOkhsv(`color(srgb ${param1} ${param2} ${param3})`); }
   else if (from === "rgb" && to === "oklch") { culoriResult = convertToOklch(`color(${colorFunctionSpace} ${param1} ${param2} ${param3})`); }
 
   if (to === "rgb") {
