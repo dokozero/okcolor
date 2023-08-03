@@ -18,6 +18,25 @@ export function colorConversion(from: string, to: string, param1: number, param2
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch;
   let result: [number, number, number] = [0, 0, 0];
 
+  // No need to go all through color conversion if we have a white of black color, we can manually find the corresponding values.
+  // Also this is useful because if the color is white and we don't do this, we'll get a value with a hue of 90 and a saturation of 56 in OkHSL.
+  if (from === "rgb") {
+    if (param1 > 254 && param2 > 254 && param3 > 254) {
+      result[0] = 0;
+      result[1] = 0;
+      result[2] = 100;
+
+      return result;
+    }
+    else if (param1 === 0 && param2 === 0 && param3 === 0) {
+      result[0] = 0;
+      result[1] = 0;
+      result[2] = 0;
+      
+      return result;
+    }
+  }
+
   // We do this before calling convertToRgb() to send back the correct peak values. If we don't to this, convertToRgb() will not send peak rgb values when needed.
   if (from === "okhsl" || from === "okhsv") {
 
@@ -126,16 +145,9 @@ export function colorConversion(from: string, to: string, param1: number, param2
     result[2] = Math.round(culoriResult.l*100);
   }
 
-  // If we have a black or white color, we will not get a hue so we set it to 0.
-  if (from === "rgb" && Number.isNaN(result[0])) {
-    result[0] = 0;
-  }
-  // else if (from === "rgb" && to === "oklch") {
-
-  //   // Temporary fix of #0000FF being out of the triangle shape (same problem with oklch.com, see https://github.com/evilmartians/oklch-picker/issues/78. Might come from CuloriJS, but on https://bottosson.github.io/misc/colorpicker/#0000ff we have it also, if we insert #0000FF in the HEx input then change the H input on OkLCH from 265 back to 264, the OkLCH triangle shape doesn't render the same.)
-  //   if (param1 <= 5/255 && param2 <= 5/255 && param3 <= 255/255) {
-  //     result[0] = 265;
-  //   }
+  // Temporary fix of #0000FF being out of the triangle shape (same problem with oklch.com, see https://github.com/evilmartians/oklch-picker/issues/78. Might come from CuloriJS, but on https://bottosson.github.io/misc/colorpicker/#0000ff we have it also, if we insert #0000FF in the HEx input then change the H input on OkLCH from 265 back to 264, the OkLCH triangle shape doesn't render the same.)
+  // if (from === "rgb" && to === "oklch" && param1 <= 5/255 && param2 <= 5/255 && param3 <= 255/255) {
+  //  result[0] = 265;
   // }
 
   return result;
