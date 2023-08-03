@@ -211,7 +211,7 @@ body.deactivated .c-bottom-controls {
   }
 
 
-.c-css-colors {
+.c-color-codes {
   margin-top: 8px;
   border-top: 1px solid var(--figma-color-border);
   font-size: 11px;
@@ -219,40 +219,41 @@ body.deactivated .c-bottom-controls {
   /* color: var(--figma-color-text-secondary); */
   color: var(--figma-color-text);
 }
-  .c-css-colors__title-wrapper {
+  .c-color-codes__title-wrapper {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 16px;
   }
-  .c-css-colors__title-wrapper:hover {
+  .c-color-codes__title-wrapper:hover {
     cursor: pointer;
   }
-    .c-css-colors__arrow-icon {
+    .c-color-codes__arrow-icon {
       position: relative;
       top: 2px;
       opacity: 0.5;
+      fill: var(--figma-color-text);
     }
-    .c-css-colors__title-wrapper:hover .c-css-colors__arrow-icon {
+    .c-color-codes__title-wrapper:hover .c-color-codes__arrow-icon {
       opacity: 1;
     }
-    .c-css-colors__arrow-icon--open {
+    .c-color-codes__arrow-icon--open {
       top: 0px;
       transform: rotate(-180deg);
     }
-  .c-css-colors__input-wraper {
+  .c-color-codes__input-wraper {
     margin-top: -4px;
     padding-left: 8px;
     padding-right: 8px;
   }
-    .c-css-colors__copy-action {
+    .c-color-codes__copy-action {
       margin-right: 8px;
       visibility: hidden;
     }
-    .c-css-colors__input-wraper .input-wrapper:hover .c-css-colors__copy-action {
+    .c-color-codes__input-wraper .input-wrapper:hover .c-color-codes__copy-action {
       visibility: visible;
     }
-    .c-css-colors__copy-action:hover {
+    .c-color-codes__copy-action:hover {
       cursor: pointer;
     }
 

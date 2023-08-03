@@ -108,33 +108,33 @@ function CssColorCodes() {
 
   return (
 
-    <div class="c-css-colors">
+    <div class="c-color-codes">
 
-      <div class="c-css-colors__title-wrapper" onClick={ () => {showCssColorCodes.value = !showCssColorCodes.value} }>
-        <div>CSS color codes</div>
+      <div class="c-color-codes__title-wrapper" onClick={ () => {showCssColorCodes.value = !showCssColorCodes.value} }>
+        <div>Color Codes</div>
         
-        <div class={"c-css-colors__arrow-icon" + (showCssColorCodes.value ? " c-css-colors__arrow-icon--open" : "")}>
-          <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" fill="#fff" stroke="none"></path></svg>
+        <div class={"c-color-codes__arrow-icon" + (showCssColorCodes.value ? " c-color-codes__arrow-icon--open" : "")}>
+          <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" stroke="none"></path></svg>
         </div>
       </div>
 
       {/* TODO: Support esc key to cancel focus on inputs */}
 
       { showCssColorCodes.value && (
-        <div class="c-css-colors__input-wraper">
+        <div class="c-color-codes__input-wraper">
           <div class="input-wrapper">
             <input type="text" value="oklch(58.53% 0.195 258.5)" />
-            <div onClick={() => copyToClipboard("The string")} class="c-css-colors__copy-action">Copy</div>
+            <div onClick={() => copyToClipboard("The string")} class="c-color-codes__copy-action">Copy</div>
           </div>
 
           <div class="input-wrapper u-mt-4">
             <input type="text" value="rgb(201, 130, 259)" />
-            <div class="c-css-colors__copy-action">Copy</div>
+            <div class="c-color-codes__copy-action">Copy</div>
           </div>
 
           <div class="input-wrapper u-mt-4">
             <input type="text" value="#501CFB" />
-            <div class="c-css-colors__copy-action">Copy</div>
+            <div class="c-color-codes__copy-action">Copy</div>
           </div>
         </div>
       )}
