@@ -2,7 +2,7 @@ import { render } from "preact";
 import { signal, effect } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
 
-import { clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
+import { inGamut, clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
 
 import { colorConversion } from "./utils/color-conversion";
 import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale, debugMode } from "./utils/constants";
@@ -10,6 +10,9 @@ import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowR
 import { UIMessageTexts } from "./utils/ui-messages";
 import { renderImageData } from "./utils/render-image-data";
 import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundOneDecimal, copyToClipboard } from "./utils/others";
+
+const inGamutSrgb = inGamut("rgb");
+const inGamutP3 = inGamut("p3");
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
 
@@ -75,7 +78,7 @@ let UIMessageOn = false;
 
 // Default choice unless selected shape on launch has no fill.
 let currentFillOrStroke = "fill";
-let currentColorModel: string;
+let currentColorModel: "oklch" | "okhsl" | "okhsv";
 let activeMouseHandler: Function | undefined;
 
 // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
@@ -170,6 +173,7 @@ export function App() {
   const manipulatorOpacitySlider = useRef<SVGSVGElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
+  const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
 
 
 
@@ -288,6 +292,24 @@ export function App() {
 
     let newRgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
     shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
+  };
+
+  const updateColorSpaceLabelInColorPicker = function() {
+    if (debugMode) { console.log("UI: updateColorSpaceLabelInColorPicker()"); }
+    
+    if (currentColorModel === "oklch") {
+      colorSpaceOfCurrentColor.current!.classList.remove("u-display-none");
+
+      if (inGamutSrgb(`oklch(${okhxyValues.y.value/100} ${okhxyValues.x.value/100} ${okhxyValues.hue.value})`)) {
+        colorSpaceOfCurrentColor.current!.innerHTML = "sRGB";
+      }
+      else if (inGamutP3(`oklch(${okhxyValues.y.value/100} ${(okhxyValues.x.value/100)-0.001} ${okhxyValues.hue.value})`)) {
+        colorSpaceOfCurrentColor.current!.innerHTML = "P3";
+      }
+    }
+    else {
+      colorSpaceOfCurrentColor.current!.classList.add("u-display-none");
+    }
   };
 
   const render = {
@@ -448,14 +470,17 @@ export function App() {
     if (debugMode) { console.log("UI: colorModelHandle()"); }
 
     currentColorModel = (event.target as HTMLSelectElement).value;
-
+    
     syncCurrentColorModelWithPlugin();
-
+    
     scaleColorPickerCanvas();
+    
     
     updateOkhxyValuesFromCurrentRgba();
     updateManipulatorPositions.all();
     render.colorPickerCanvas();
+
+    updateColorSpaceLabelInColorPicker();
   };
 
   const setupHandler = function(canvas: HTMLCanvasElement | HTMLDivElement) {
@@ -527,6 +552,8 @@ export function App() {
           }
         }
 
+        updateColorSpaceLabelInColorPicker();
+
         updateCurrentRgbaFromOkhxyValues();
         
         updateManipulatorPositions.colorPicker();
@@ -541,6 +568,8 @@ export function App() {
           clampOkhxyValuesChroma();
           updateManipulatorPositions.colorPicker();
         }
+
+        updateColorSpaceLabelInColorPicker();
 
         updateCurrentRgbaFromOkhxyValues();
 
@@ -662,6 +691,8 @@ export function App() {
         clampOkhxyValuesChroma();
       }
 
+      updateColorSpaceLabelInColorPicker();
+
       updateCurrentRgbaFromOkhxyValues();
 
       if (eventTargetId === "hue") {
@@ -761,10 +792,13 @@ export function App() {
 
       updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
       updateOkhxyValuesFromCurrentRgba();
+
       
       render.opacitySliderCanvas();
       updateManipulatorPositions.all();
       render.fillOrStrokeSelector();
+
+      updateColorSpaceLabelInColorPicker();
 
       // We don't render colorPicker if for example user has just deleted the stroke of a shape that had both fill and stroke.
       if (shouldRenderColorPickerCanvas) { render.colorPickerCanvas(); }
@@ -782,6 +816,8 @@ export function App() {
         <div ref={colorPickerUIMessage} class="c-color-picker__message-wrapper u-display-none">
           <p class="c-color-picker__message-text"></p>
         </div>
+
+        <div ref={colorSpaceOfCurrentColor} class="c-color-picker__color-space"></div>
 
         <canvas ref={colorPickerCanvas} class="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
 

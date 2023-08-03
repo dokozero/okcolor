@@ -5,7 +5,7 @@ import { pickerSize, debugMode } from "../ui/utils/constants";
 */
 
 let currentFillOrStroke = "fill";
-let currentColorModel: string;
+let currentColorModel: "oklch" | "okhsl" | "okhsv";
 let showCssColorCodes: boolean;
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
@@ -95,6 +95,7 @@ const updateShapeInfos = function(): boolean {
       sendUIMessageCodeToUI("notSupportedType", node.type);
       return false;
     }
+    
   }
 
   const selectionFill = selection[0].fills[0];
