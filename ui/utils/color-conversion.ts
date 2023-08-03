@@ -2,7 +2,7 @@ import { converter } from "../../node_modules/culori/bundled/culori.mjs";
 import type { Rgb, Okhsl, Okhsv, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
 
 import { debugMode } from "./constants";
-import { clampNumber, roundOneDecimal } from "./others";
+import { clampNumber, roundWithDecimal } from "./others";
 
 const convertToRgb = converter("rgb");
 const convertToP3 = converter("p3");
@@ -10,9 +10,7 @@ const convertToOkhsl = converter("okhsl");
 const convertToOkhsv = converter("okhsv");
 const convertToOklch = converter("oklch");
 
-let colorSpace = "p3";
-
-export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number): [number, number, number] {
+export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number, colorSpace: string): [number, number, number] {
   if (debugMode) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch;
@@ -141,7 +139,7 @@ export function colorConversion(from: string, to: string, param1: number, param2
   }
   else if (to === "oklch") {
     result[0] = Math.round(culoriResult.h);
-    result[1] = roundOneDecimal(culoriResult.c*100);
+    result[1] = roundWithDecimal(culoriResult.c*100, 1);
     result[2] = Math.round(culoriResult.l*100);
   }
 

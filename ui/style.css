@@ -8,6 +8,7 @@ body {
   margin: 0;
   background-color: var(--figma-color-bg);
   font-family: "Inter", sans-serif;
+  user-select: none;
 }
 
 p {
@@ -241,16 +242,17 @@ body.deactivated .c-bottom-controls {
   }
     .c-color-codes__arrow-icon {
       position: relative;
-      top: 2px;
+      top: 0px;
       opacity: 0.5;
+      transform: rotate(-180deg);
       fill: var(--figma-color-text);
     }
     .c-color-codes__title-wrapper:hover .c-color-codes__arrow-icon {
       opacity: 1;
     }
     .c-color-codes__arrow-icon--open {
-      top: 0px;
-      transform: rotate(-180deg);
+      top: 2px;
+      transform: rotate(0deg);
     }
   .c-color-codes__input-wraper {
     margin-top: -4px;

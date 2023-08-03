@@ -2,14 +2,15 @@ import { render } from "preact";
 import { signal, effect } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
 
-import { inGamut, clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
+import { formatHex, inGamut, clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
 
 import { colorConversion } from "./utils/color-conversion";
 import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale, debugMode } from "./utils/constants";
 
 import { UIMessageTexts } from "./utils/ui-messages";
 import { renderImageData } from "./utils/render-image-data";
-import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundOneDecimal, copyToClipboard } from "./utils/others";
+import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, copyToClipboard } from "./utils/others";
+
 
 const inGamutSrgb = inGamut("rgb");
 const inGamutP3 = inGamut("p3");
@@ -27,21 +28,7 @@ const okhxyValues = {
 
 const showCssColorCodes = signal<boolean>();
 
-
-
 let colorSpace = "p3";
-
-
-
-
-// TODO useSignal for all signals? https://preactjs.com/guide/v10/signals/
-
-
-
-
-
-
-
 
 const opacitySliderStyle = signal("");
 
@@ -95,9 +82,7 @@ let prevCanvasY: number | undefined;
 let moveVerticallyOnly = false;
 let moveHorizontallyOnly = false;
 
-
-function CssColorCodes() {
-
+const CssColorCodes = function({colorCode_currentColorModelInput, colorCode_color, colorCode_rgba, colorCode_hex}) {
   console.log("render CssCodeShow");
   
   effect(() => {
@@ -123,24 +108,27 @@ function CssColorCodes() {
 
       {/* TODO: Support esc key to cancel focus on inputs */}
 
-      { showCssColorCodes.value && (
-        <div class="c-color-codes__input-wraper">
-          <div class="input-wrapper">
-            <input type="text" value="oklch(58.53% 0.195 258.5)" />
-            <div onClick={() => copyToClipboard("The string")} class="c-color-codes__copy-action">Copy</div>
-          </div>
-
-          <div class="input-wrapper u-mt-4">
-            <input type="text" value="rgb(201, 130, 259)" />
-            <div class="c-color-codes__copy-action">Copy</div>
-          </div>
-
-          <div class="input-wrapper u-mt-4">
-            <input type="text" value="#501CFB" />
-            <div class="c-color-codes__copy-action">Copy</div>
-          </div>
+      <div class={"c-color-codes__input-wraper " + (showCssColorCodes.value ? "" : " u-display-none")}>
+        <div class="input-wrapper">
+          <input ref={colorCode_currentColorModelInput} type="text" />
+          <div onClick={() => copyToClipboard(colorCode_currentColorModelInput.current.value)} class="c-color-codes__copy-action">Copy</div>
         </div>
-      )}
+
+        <div class="input-wrapper u-mt-4">
+          <input ref={colorCode_color} type="text" />
+          <div onClick={() => copyToClipboard(colorCode_color.current.value)} class="c-color-codes__copy-action">Copy</div>
+        </div>
+
+        <div class="input-wrapper u-mt-4">
+          <input ref={colorCode_rgba} type="text" />
+          <div onClick={() => copyToClipboard(colorCode_rgba.current.value)} class="c-color-codes__copy-action">Copy</div>
+        </div>
+
+        <div class="input-wrapper u-mt-4">
+          <input ref={colorCode_hex} type="text" />
+          <div onClick={() => copyToClipboard(colorCode_hex.current.value)} class="c-color-codes__copy-action">Copy</div>
+        </div>
+      </div>
 
     </div>
 
@@ -150,7 +138,7 @@ function CssColorCodes() {
 
 
 
-export function App() {
+export const App = function() {
 
   console.log("render App");
   
@@ -161,6 +149,7 @@ export function App() {
     parent.postMessage({ pluginMessage: { type: "init"} }, "*");
   }, []);
 
+  // TODO - Put outside of the function?
   const fillOrStrokeSelector = useRef<HTMLDivElement>(null);
   const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null);
   const fillOrStrokeSelector_stroke = useRef<SVGPathElement>(null);
@@ -174,6 +163,11 @@ export function App() {
   const opacityInput = useRef<HTMLInputElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
   const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
+
+  const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null);
+  const colorCode_color = useRef<HTMLInputElement>(null);
+  const colorCode_rgba = useRef<HTMLInputElement>(null);
+  const colorCode_hex = useRef<HTMLInputElement>(null);
 
 
 
@@ -221,7 +215,7 @@ export function App() {
       okhxyValues.x.value = 0;
     }
     else if (okhxyValues.x.value/100 > clamped.c) {
-      okhxyValues.x.value = roundOneDecimal(clamped.c*100);
+      okhxyValues.x.value = roundWithDecimal(clamped.c*100, 1);
     }
   }
 
@@ -274,7 +268,7 @@ export function App() {
 
     let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
     
-    const newOkhxy = colorConversion("rgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2]);
+    const newOkhxy = colorConversion("rgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2], colorSpace);
 
     // We have to update these values before updating them with the real value to handle this case: because Preact signals doesn't update if we give them the same value they already have, if user change the value on input, for example the hue from 100 to 50, doesn't validate it (like pressing "Enter") then select another shape, if this new one had also a hue of 100 the hue input will show "50" and not 100. By doing this simple increment we ensure that this case will not happen.
     okhxyValues.hue.value++;
@@ -284,13 +278,54 @@ export function App() {
     okhxyValues.hue.value = newOkhxy[0];
     okhxyValues.x.value = newOkhxy[1];
     okhxyValues.y.value = newOkhxy[2];
-
   };
+
+  const updateColorCodeInputs = function(){
+    if (debugMode) { console.log("UI: updateColorCodeInputs()"); }
+
+    const rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
+
+    let clamped;
+    let rgbSrgb;
+
+    // We don't clamp chroma with the models that don't use it because they already work in sRGB.
+    if (currentColorModel === "oklch") {
+      clamped = clampChromaInGamut({ mode: currentColorModel, l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, "oklch", "rgb");
+      rgbSrgb = colorConversion(currentColorModel, "rgb", clamped.h, clamped.c*100, clamped.l*100, "rgb");
+    }
+    else {
+      rgbSrgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "rgb");
+    }
+
+    const opacity = shapeInfos.colors[currentFillOrStroke].rgba[3]/100;
+
+    if (currentColorModel === "oklch") {
+      colorCode_currentColorModelInput.current!.value = `oklch(${okhxyValues.y.value}% ${roundWithDecimal(okhxyValues.x.value/100, 3)} ${okhxyValues.hue}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+    }
+    else if (currentColorModel === "okhsl") {
+      colorCode_currentColorModelInput.current!.value = `{mode: "", h: ${okhxyValues.hue.value}, s: ${okhxyValues.x.value}, l: ${okhxyValues.y.value}}`;
+    }
+    else if (currentColorModel === "okhsv") {
+      colorCode_currentColorModelInput.current!.value = `{mode: "", h: ${okhxyValues.hue.value}, s: ${okhxyValues.x.value}, v: ${okhxyValues.y.value}}`;
+    }
+
+    if (currentColorModel === "oklch") {
+      colorCode_color.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3[0]/255, 2)} ${roundWithDecimal(rgbP3[1]/255, 2)} ${roundWithDecimal(rgbP3[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_rgba.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
+      colorCode_hex.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`);
+    }
+    else {
+      colorCode_color.current!.value = `color(srgb ${roundWithDecimal(rgbSrgb[0]/255, 2)} ${roundWithDecimal(rgbSrgb[1]/255, 2)} ${roundWithDecimal(rgbSrgb[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_rgba.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
+      colorCode_hex.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`);
+    }
+
+  }
 
   const updateCurrentRgbaFromOkhxyValues = function() {
     if (debugMode) { console.log("UI: updateCurrentRgbaFromOkhxyValues()"); }
 
-    let newRgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value);
+    let newRgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
     shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
   };
 
@@ -462,6 +497,10 @@ export function App() {
     render.opacitySliderCanvas();
     updateManipulatorPositions.all();
     render.colorPickerCanvas();
+    
+    updateColorCodeInputs();
+    
+    updateColorSpaceLabelInColorPicker();
 
     syncCurrentFillOrStrokeWithPlugin();
   };
@@ -475,10 +514,11 @@ export function App() {
     
     scaleColorPickerCanvas();
     
-    
     updateOkhxyValuesFromCurrentRgba();
     updateManipulatorPositions.all();
     render.colorPickerCanvas();
+
+    updateColorCodeInputs();
 
     updateColorSpaceLabelInColorPicker();
   };
@@ -538,7 +578,7 @@ export function App() {
               okhxyValues.x.value = Math.round(newXValue / oklchChromaScale);
             }
             else if (!ctrlKeyPressed) {
-              okhxyValues.x.value = roundOneDecimal(newXValue / oklchChromaScale);
+              okhxyValues.x.value = roundWithDecimal(newXValue / oklchChromaScale, 1);
             }
             clampOkhxyValuesChroma();
           }
@@ -551,6 +591,8 @@ export function App() {
             }
           }
         }
+
+        updateColorCodeInputs();
 
         updateColorSpaceLabelInColorPicker();
 
@@ -569,6 +611,8 @@ export function App() {
           updateManipulatorPositions.colorPicker();
         }
 
+        updateColorCodeInputs();
+
         updateColorSpaceLabelInColorPicker();
 
         updateCurrentRgbaFromOkhxyValues();
@@ -582,6 +626,8 @@ export function App() {
 
         updateManipulatorPositions.opacitySlider();
       }
+
+      updateColorCodeInputs();
 
       sendNewShapeColorToPlugin();
 
@@ -637,7 +683,7 @@ export function App() {
 
     if (currentColorModel === "oklch" && eventTargetId === "x") {
       // If we are in OkLCH and user is changing the chroma value, he can enter a decimal value hence the parseFloat().
-      eventTargetValue = roundOneDecimal(parseFloat(eventTarget.value));
+      eventTargetValue = roundWithDecimal(parseFloat(eventTarget.value), 1);
     }
     else {
       // For all others inputs, we parse the value with parseInt to remove the decimals if user uses them.
@@ -680,8 +726,8 @@ export function App() {
 
       // We have to update input's value like this because if we don't we'll have some issues. For example if user set 0 on an input then -10 the signal will not update after the test because il will already be at 0 and thus will not refresh (from Preact's doc: "A signal will only update if you assign a new value to it"). Another example, without this code if user try to enter "5t" more than two times, the input value will stay at "5t".
       if (key !== "Escape" && okhxyValues[eventTargetId].value !== eventTargetValue) {
-        // use roundOneDecimal() again because in some case we can have values like "3.8000000000000003" when using the up or down arrow keys.
-        okhxyValues[eventTargetId].value = roundOneDecimal(eventTargetValue);
+        // We use roundWithDecimal() again because in some case we can have values like "3.8000000000000003" when using the up or down arrow keys.
+        okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 1);
       }
       else {
         eventTarget.value = oldValue.toString();
@@ -690,6 +736,8 @@ export function App() {
       if (currentColorModel === "oklch") {
         clampOkhxyValuesChroma();
       }
+
+      updateColorCodeInputs();
 
       updateColorSpaceLabelInColorPicker();
 
@@ -715,6 +763,8 @@ export function App() {
       else { updateOpacityValue(oldValue); }
   
       updateManipulatorPositions.opacitySlider();
+
+      updateColorCodeInputs();
     }
 
     if (event.type !== "blur") { eventTarget.select(); }
@@ -797,6 +847,8 @@ export function App() {
       render.opacitySliderCanvas();
       updateManipulatorPositions.all();
       render.fillOrStrokeSelector();
+
+      updateColorCodeInputs();
 
       updateColorSpaceLabelInColorPicker();
 
@@ -886,6 +938,7 @@ export function App() {
               <option value="okhsv">OkHSV</option>
               <option value="okhsl">OkHSL</option>
               <option value="oklch">OkLCH</option>
+              <option value="oklch">OkLCH (CSS)</option>
             </select>
 
           </div>
@@ -898,7 +951,7 @@ export function App() {
           </div>
         </div>
 
-        <CssColorCodes/>
+        <CssColorCodes colorCode_currentColorModelInput={colorCode_currentColorModelInput} colorCode_color={colorCode_color} colorCode_rgba={colorCode_rgba} colorCode_hex={colorCode_hex} />
 
       </div>
 

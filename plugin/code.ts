@@ -297,7 +297,7 @@ figma.ui.onmessage = (msg) => {
   }
   else if (msg.type === "syncShowCssColorCodes") {  
     if (msg.showCssColorCodes) {
-      figma.ui.resize(pickerSize, 490);
+      figma.ui.resize(pickerSize, 520);
     }
     else {
       figma.ui.resize(pickerSize, 392);

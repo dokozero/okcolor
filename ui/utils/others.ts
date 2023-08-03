@@ -46,10 +46,12 @@ export const is2DMovementMoreVerticalOrHorizontal = function(prevX: number, prev
   }
 };
 
-export const roundOneDecimal = function(value: number): number {
-  if (debugMode) { console.log("UI: roundOneDecimal()"); }
-  
-  return Math.round(value * 10) / 10;
+export const roundWithDecimal = function(value: number, numberOfDecimal = 1): number {
+  if (debugMode) { console.log("UI: roundWithDecimal()"); }
+
+  const roundFormulaValue = Math.pow(10, numberOfDecimal);
+
+  return Math.round(value * roundFormulaValue) / roundFormulaValue;
 };
 
 
