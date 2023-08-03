@@ -240,6 +240,10 @@ export const App = function() {
       manipulatorColorPicker.current!.classList.add("u-display-none");
       colorPickerUIMessage.current!.classList.remove("u-display-none");
 
+      if (currentColorModel === "oklch") {
+        colorSpaceOfCurrentColor.current!.classList.add("u-display-none");
+      }
+
       let message: string = UIMessageTexts[messageCode];
       if (nodeType !== "") {
         message = message.replace("$SHAPE", nodeType.toLowerCase());
