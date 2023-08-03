@@ -272,7 +272,7 @@ export const App = function() {
 
     let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
     
-    const newOkhxy = colorConversion("rgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2], colorSpace);
+    const newOkhxy = colorConversion("rgb", currentColorModel, true, shapeColor[0], shapeColor[1], shapeColor[2], colorSpace);
 
     // We have to update these values before updating them with the real value to handle this case: because Preact signals doesn't update if we give them the same value they already have, if user change the value on input, for example the hue from 100 to 50, doesn't validate it (like pressing "Enter") then select another shape, if this new one had also a hue of 100 the hue input will show "50" and not 100. By doing this simple increment we ensure that this case will not happen.
     okhxyValues.hue.value++;
@@ -287,7 +287,7 @@ export const App = function() {
   const updateColorCodeInputs = function(){
     if (debugMode) { console.log("UI: updateColorCodeInputs()"); }
 
-    const rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
+    const rgbP3 = colorConversion(currentColorModel, "rgb", false, okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
 
     let clamped;
     let rgbSrgb;
@@ -295,10 +295,10 @@ export const App = function() {
     // We don't clamp chroma with the models that don't use it because they already work in sRGB.
     if (currentColorModel === "oklch") {
       clamped = clampChromaInGamut({ mode: currentColorModel, l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, "oklch", "rgb");
-      rgbSrgb = colorConversion(currentColorModel, "rgb", clamped.h, clamped.c*100, clamped.l*100, "rgb");
+      rgbSrgb = colorConversion(currentColorModel, "rgb", false, clamped.h, clamped.c*100, clamped.l*100, "rgb");
     }
     else {
-      rgbSrgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "rgb");
+      rgbSrgb = colorConversion(currentColorModel, "rgb", false, okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "rgb");
     }
 
     const opacity = shapeInfos.colors[currentFillOrStroke].rgba[3]/100;
@@ -329,7 +329,7 @@ export const App = function() {
   const updateCurrentRgbaFromOkhxyValues = function() {
     if (debugMode) { console.log("UI: updateCurrentRgbaFromOkhxyValues()"); }
 
-    let newRgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
+    let newRgb = colorConversion(currentColorModel, "rgb", false, okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
     shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
   };
 
@@ -560,7 +560,7 @@ export const App = function() {
         }
 
         if ((shiftKeyPressed && moveVerticallyOnly) || !shiftKeyPressed) {
-          const newYValue = Math.round(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100);
+          const newYValue = roundWithDecimal(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100, 1);
 
           if (ctrlKeyPressed && newYValue % 5 === 0) {
             okhxyValues.y.value = newYValue;
@@ -575,7 +575,7 @@ export const App = function() {
         }
 
         if ((shiftKeyPressed && moveHorizontallyOnly) || !shiftKeyPressed) {
-          const newXValue = Math.round(limitMouseHandlerValue(canvasX/pickerSize) * 100);
+          const newXValue = roundWithDecimal(limitMouseHandlerValue(canvasX/pickerSize) * 100, 2);
 
           if (currentColorModel === "oklch") {
             if (ctrlKeyPressed) {
@@ -608,7 +608,7 @@ export const App = function() {
       }
       else if (mouseHandlerEventTargetId === "okhxy-h-slider") {
         canvasY = event.clientX - rect.left - 7;
-        okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvasY/slider_size) * 360);
+        okhxyValues.hue.value = roundWithDecimal(limitMouseHandlerValue(canvasY/slider_size) * 360, 1);
 
         if (currentColorModel === "oklch") {
           clampOkhxyValuesChroma();
@@ -944,7 +944,6 @@ export const App = function() {
               <option value="oklch">OkLCH</option>
               <option value="oklch">OkLCH (CSS)</option>
             </select>
-
           </div>
 
           <div class="input-wrapper c-select-input-controls__input-wrapper">

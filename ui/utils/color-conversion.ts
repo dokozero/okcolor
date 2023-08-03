@@ -10,8 +10,8 @@ const convertToOkhsl = converter("okhsl");
 const convertToOkhsv = converter("okhsv");
 const convertToOklch = converter("oklch");
 
-export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number, colorSpace: string): [number, number, number] {
-  if (debugMode) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }
+export function colorConversion(from: string, to: string, oklchCss: boolean, param1: number, param2: number, param3: number, colorSpace: string): [number, number, number] {
+  if (debugMode || true) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch;
   let result: [number, number, number] = [0, 0, 0];
@@ -138,9 +138,17 @@ export function colorConversion(from: string, to: string, param1: number, param2
     result[2] = Math.round(culoriResult.v*100);
   }
   else if (to === "oklch") {
-    result[0] = Math.round(culoriResult.h);
-    result[1] = roundWithDecimal(culoriResult.c*100, 1);
-    result[2] = Math.round(culoriResult.l*100);
+    if (oklchCss) {
+      console.log("🚀 ~ file: color-conversion.ts:142 ~ colorConversion ~ oklchCss:", oklchCss)
+      result[0] = roundWithDecimal(culoriResult.h, 2);
+      result[1] = roundWithDecimal(culoriResult.c, 3);
+      result[2] = roundWithDecimal(culoriResult.l*100, 2);
+    }
+    else {
+      result[0] = Math.round(culoriResult.h);
+      result[1] = roundWithDecimal(culoriResult.c*100, 1);
+      result[2] = Math.round(culoriResult.l*100);   
+    }
   }
 
   // Temporary fix of #0000FF being out of the triangle shape (same problem with oklch.com, see https://github.com/evilmartians/oklch-picker/issues/78. Might come from CuloriJS, but on https://bottosson.github.io/misc/colorpicker/#0000ff we have it also, if we insert #0000FF in the HEx input then change the H input on OkLCH from 265 back to 264, the OkLCH triangle shape doesn't render the same.)
