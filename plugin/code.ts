@@ -5,7 +5,7 @@ import { pickerSize, debugMode } from "../ui/utils/constants";
 */
 
 let currentFillOrStroke = "fill";
-let currentColorModel: "oklch" | "okhsl" | "okhsv";
+let currentColorModel: "oklchCss" | "oklch" | "okhsl" | "okhsv";
 let showCssColorCodes: boolean;
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
@@ -322,8 +322,8 @@ const init = async function() {
   currentColorModel = await figma.clientStorage.getAsync("currentColorModel");
 
   // We could just test if currentColorModel is undefined (when user first launch the plugin) but with this test, if for any reason the currentColorModel value in the clientStorage is a different string than "okhsv", "okhsl" or "oklch", we set it to okhsl (could come from a Figma bug that change the value but it shouldn't occurs).
-  if (currentColorModel !== "okhsv" && currentColorModel !== "okhsl" && currentColorModel !== "oklch") {
-    currentColorModel = "okhsl";
+  if (currentColorModel !== "okhsv" && currentColorModel !== "okhsl" && currentColorModel !== "oklch" && currentColorModel !== "oklchCss") {
+    currentColorModel = "oklchCss";
   }
 
   showCssColorCodes = await figma.clientStorage.getAsync("showCssColorCodes");

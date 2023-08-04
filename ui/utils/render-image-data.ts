@@ -43,7 +43,7 @@ export const renderImageData = function(hue: number, colorModel: string): ImageD
       }
     }
   }
-  else if (colorModel === "oklch") {
+  else if (colorModel === "oklch" || colorModel === "oklchCss") {
 
     let currentTheme: string;
 

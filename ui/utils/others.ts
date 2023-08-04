@@ -1,7 +1,7 @@
 import { debugMode } from "./constants";
 
 export const clampNumber = function(num: number, min: number, max: number): number {
-  if (debugMode) { console.log("UI: clampNumber()"); }
+  if (debugMode) { console.log(`UI: clampNumber(${num}, ${min}, ${max})`); }
 
   if (num < min) {
     return min;

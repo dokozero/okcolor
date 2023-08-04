@@ -34,11 +34,6 @@ select:hover {
   border: 1px solid var(--figma-color-border, rgba(0, 0, 0, .1));
 }
 
-.input-wrapper:hover input:not(:first-child),
-.input-wrapper:focus-within input:not(:first-child) {
-  border-left-color: var(--figma-color-border, rgba(0, 0, 0, .1));
-}
-
 .input-wrapper:focus-within {
   height: 30px;
   margin-top: 0;
@@ -218,6 +213,10 @@ body.deactivated .c-bottom-controls {
     margin-top: 1px;
     margin-bottom: 1px;
   }
+  .c-select-input-controls__input-wrapper:hover input:not(:last-child),
+  .c-select-input-controls__input-wrapper:focus-within input:not(:last-child) {
+    border-right-color: var(--figma-color-border, rgba(0, 0, 0, .1));
+  }
 
 
 .c-color-codes {
@@ -299,5 +298,10 @@ body.deactivated .c-bottom-controls {
   padding-left: 16px;
   padding-right: 16px;
 }
+
+.u-order-0 { order: 0; }
+.u-order-1 { order: 1; }
+.u-order-2 { order: 2; }
+.u-order-3 { order: 3; }
 
 .u-pointer-events-none { pointer-events: none; }

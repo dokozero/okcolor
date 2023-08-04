@@ -65,7 +65,7 @@ let UIMessageOn = false;
 
 // Default choice unless selected shape on launch has no fill.
 let currentFillOrStroke = "fill";
-let currentColorModel: "oklch" | "okhsl" | "okhsv";
+let currentColorModel: "oklchCss" | "oklch" | "okhsl" | "okhsv";
 let activeMouseHandler: Function | undefined;
 
 // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
@@ -160,6 +160,9 @@ export const App = function() {
   const manipulatorColorPicker = useRef<SVGGElement>(null);
   const manipulatorHueSlider = useRef<SVGSVGElement>(null);
   const manipulatorOpacitySlider = useRef<SVGSVGElement>(null);
+  const hueInput = useRef<HTMLInputElement>(null);
+  const xInput = useRef<HTMLInputElement>(null);
+  const yInput = useRef<HTMLInputElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
   const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
@@ -190,10 +193,37 @@ export const App = function() {
   ** UPDATES TO UI
   */
 
+  const updateColorInputsPosition = function() {
+    if (currentColorModel === "oklchCss") {
+      hueInput.current!.classList.add("u-order-2");
+      hueInput.current!.tabIndex = 3;
+
+      xInput.current!.classList.add("u-order-1");
+      xInput.current!.tabIndex = 2;
+
+      yInput.current!.classList.add("u-order-0");
+      yInput.current!.tabIndex = 1;
+
+      opacityInput.current!.classList.add("u-order-3");
+    } 
+    else {
+      hueInput.current!.classList.remove("u-order-2");
+      hueInput.current!.tabIndex = 1;
+      
+      xInput.current!.classList.remove("u-order-1");
+      xInput.current!.tabIndex = 2;
+      
+      yInput.current!.classList.remove("u-order-0");
+      yInput.current!.tabIndex = 3;
+
+      opacityInput.current!.classList.remove("u-order-3");
+    }
+  }
+
   const scaleColorPickerCanvas = function() {
     if (debugMode) { console.log("UI: scaleColorPickerCanvas()"); }
 
-    if (currentColorModel === "oklch") {
+    if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
       colorPickerCanvas.current!.style.transform = `scale(${lowResFactorOklch})`;
       colorPickerCanvas.current!.width = lowResPickerSizeOklch;
       colorPickerCanvas.current!.height = lowResPickerSizeOklch;
@@ -208,14 +238,21 @@ export const App = function() {
   const clampOkhxyValuesChroma = function() {
     if (debugMode) { console.log("UI: clampOkhxyValuesChroma()"); }
 
-    const clamped = clampChromaInGamut({ mode: "oklch", l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, "oklch", colorSpace);
+    const chroma = currentColorModel === "oklch" ? okhxyValues.x.value/100 : okhxyValues.x.value;
+
+    const clamped = clampChromaInGamut({ mode: "oklch", l: okhxyValues.y.value/100, c: chroma, h: okhxyValues.hue.value }, "oklch", colorSpace);
 
     // If we send a pure black to clampChromaInGamut (l and c to 0), clamped.c will be undefined.
     if (!clamped.c) {
       okhxyValues.x.value = 0;
     }
-    else if (okhxyValues.x.value/100 > clamped.c) {
-      okhxyValues.x.value = roundWithDecimal(clamped.c*100, 1);
+    else if (chroma > clamped.c) {
+      if (currentColorModel === "oklch") {
+        okhxyValues.x.value = roundWithDecimal(clamped.c*100, 1);
+      }
+      else {
+        okhxyValues.x.value = roundWithDecimal(clamped.c, 3);
+      }
     }
   }
 
@@ -240,7 +277,7 @@ export const App = function() {
       manipulatorColorPicker.current!.classList.add("u-display-none");
       colorPickerUIMessage.current!.classList.remove("u-display-none");
 
-      if (currentColorModel === "oklch") {
+      if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
         colorSpaceOfCurrentColor.current!.classList.add("u-display-none");
       }
 
@@ -272,39 +309,51 @@ export const App = function() {
 
     let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
     
-    const newOkhxy = colorConversion("rgb", currentColorModel, true, shapeColor[0], shapeColor[1], shapeColor[2], colorSpace);
+    const newOkhxy = colorConversion("rgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2], colorSpace);
 
     // We have to update these values before updating them with the real value to handle this case: because Preact signals doesn't update if we give them the same value they already have, if user change the value on input, for example the hue from 100 to 50, doesn't validate it (like pressing "Enter") then select another shape, if this new one had also a hue of 100 the hue input will show "50" and not 100. By doing this simple increment we ensure that this case will not happen.
     okhxyValues.hue.value++;
     okhxyValues.x.value++;
     okhxyValues.y.value++;
-
+    
     okhxyValues.hue.value = newOkhxy[0];
     okhxyValues.x.value = newOkhxy[1];
     okhxyValues.y.value = newOkhxy[2];
   };
 
+  const updateCurrentRgbaFromOkhxyValues = function() {
+    if (debugMode) { console.log("UI: updateCurrentRgbaFromOkhxyValues()"); }
+
+    const chroma = currentColorModel === "oklch" ? okhxyValues.x.value : okhxyValues.x.value*100;
+
+    let newRgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, chroma, okhxyValues.y.value, colorSpace);
+    shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
+  };
+
   const updateColorCodeInputs = function(){
     if (debugMode) { console.log("UI: updateColorCodeInputs()"); }
 
-    const rgbP3 = colorConversion(currentColorModel, "rgb", false, okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
+    const rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
 
     let clamped;
     let rgbSrgb;
+    
+    const chroma = currentColorModel === "oklch" ? okhxyValues.x.value/100 : okhxyValues.x.value;
 
     // We don't clamp chroma with the models that don't use it because they already work in sRGB.
-    if (currentColorModel === "oklch") {
-      clamped = clampChromaInGamut({ mode: currentColorModel, l: okhxyValues.y.value/100, c: okhxyValues.x.value/100, h: okhxyValues.hue.value }, "oklch", "rgb");
-      rgbSrgb = colorConversion(currentColorModel, "rgb", false, clamped.h, clamped.c*100, clamped.l*100, "rgb");
+    if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+
+      clamped = clampChromaInGamut({ mode: "oklch", l: okhxyValues.y.value/100, c: chroma, h: okhxyValues.hue.value }, "oklch", "rgb");
+      rgbSrgb = colorConversion(currentColorModel, "rgb", clamped.h, clamped.c*100, clamped.l*100, "rgb");
     }
     else {
-      rgbSrgb = colorConversion(currentColorModel, "rgb", false, okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "rgb");
+      rgbSrgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "rgb");
     }
 
     const opacity = shapeInfos.colors[currentFillOrStroke].rgba[3]/100;
 
-    if (currentColorModel === "oklch") {
-      colorCode_currentColorModelInput.current!.value = `oklch(${okhxyValues.y.value}% ${roundWithDecimal(okhxyValues.x.value/100, 3)} ${okhxyValues.hue}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+    if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+      colorCode_currentColorModelInput.current!.value = `oklch(${okhxyValues.y.value}% ${roundWithDecimal(chroma, 3)} ${okhxyValues.hue}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
     else if (currentColorModel === "okhsl") {
       colorCode_currentColorModelInput.current!.value = `{mode: "", h: ${okhxyValues.hue.value}, s: ${okhxyValues.x.value}, l: ${okhxyValues.y.value}}`;
@@ -313,36 +362,30 @@ export const App = function() {
       colorCode_currentColorModelInput.current!.value = `{mode: "", h: ${okhxyValues.hue.value}, s: ${okhxyValues.x.value}, v: ${okhxyValues.y.value}}`;
     }
 
-    if (currentColorModel === "oklch") {
+    if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
       colorCode_color.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3[0]/255, 2)} ${roundWithDecimal(rgbP3[1]/255, 2)} ${roundWithDecimal(rgbP3[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
-      colorCode_rgba.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
-      colorCode_hex.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`);
     }
     else {
       colorCode_color.current!.value = `color(srgb ${roundWithDecimal(rgbSrgb[0]/255, 2)} ${roundWithDecimal(rgbSrgb[1]/255, 2)} ${roundWithDecimal(rgbSrgb[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
-      colorCode_rgba.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
-      colorCode_hex.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`);
     }
 
+    colorCode_rgba.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
+    colorCode_hex.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`);
+    
   }
-
-  const updateCurrentRgbaFromOkhxyValues = function() {
-    if (debugMode) { console.log("UI: updateCurrentRgbaFromOkhxyValues()"); }
-
-    let newRgb = colorConversion(currentColorModel, "rgb", false, okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
-    shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
-  };
 
   const updateColorSpaceLabelInColorPicker = function() {
     if (debugMode) { console.log("UI: updateColorSpaceLabelInColorPicker()"); }
     
-    if (currentColorModel === "oklch") {
+    if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
       colorSpaceOfCurrentColor.current!.classList.remove("u-display-none");
 
-      if (inGamutSrgb(`oklch(${okhxyValues.y.value/100} ${okhxyValues.x.value/100} ${okhxyValues.hue.value})`)) {
+      const chroma = currentColorModel === "oklch" ? okhxyValues.x.value/100 : okhxyValues.x.value-0.001;
+
+      if (inGamutSrgb(`oklch(${okhxyValues.y.value/100} ${chroma} ${okhxyValues.hue.value})`)) {
         colorSpaceOfCurrentColor.current!.innerHTML = "sRGB";
       }
-      else if (inGamutP3(`oklch(${okhxyValues.y.value/100} ${(okhxyValues.x.value/100)-0.001} ${okhxyValues.hue.value})`)) {
+      else if (inGamutP3(`oklch(${okhxyValues.y.value/100} ${chroma} ${okhxyValues.hue.value})`)) {
         colorSpaceOfCurrentColor.current!.innerHTML = "P3";
       }
     }
@@ -390,10 +433,12 @@ export const App = function() {
     colorPicker() {
       if (debugMode) { console.log("UI: updateManipulatorPositions.colorPicker()"); }
 
-      let x = okhxyValues.x.value / 100;
+      let x = currentColorModel !== "oklchCss" ? okhxyValues.x.value / 100 : okhxyValues.x.value;
       let y = okhxyValues.y.value / 100;
 
-      if (currentColorModel === "oklch") { x *= oklchChromaScale; }
+      if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+        x *= oklchChromaScale;
+      }
 
       manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(pickerSize*x, pickerSize*(1-y));
     },
@@ -513,6 +558,8 @@ export const App = function() {
     if (debugMode) { console.log("UI: colorModelHandle()"); }
 
     currentColorModel = (event.target as HTMLSelectElement).value;
+
+    updateColorInputsPosition();
     
     syncCurrentColorModelWithPlugin();
     
@@ -560,7 +607,14 @@ export const App = function() {
         }
 
         if ((shiftKeyPressed && moveVerticallyOnly) || !shiftKeyPressed) {
-          const newYValue = roundWithDecimal(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100, 1);
+          let newYValue: number;
+          
+          if (currentColorModel !== "oklchCss") {
+            newYValue = Math.round(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100);
+          }
+          else {
+            newYValue = roundWithDecimal(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100, 1);
+          }
 
           if (ctrlKeyPressed && newYValue % 5 === 0) {
             okhxyValues.y.value = newYValue;
@@ -569,20 +623,29 @@ export const App = function() {
             okhxyValues.y.value = newYValue;
           }
 
-          if (currentColorModel === "oklch") {
+          if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
             clampOkhxyValuesChroma();
           }
         }
 
         if ((shiftKeyPressed && moveHorizontallyOnly) || !shiftKeyPressed) {
-          const newXValue = roundWithDecimal(limitMouseHandlerValue(canvasX/pickerSize) * 100, 2);
-
+          const newXValue = roundWithDecimal(limitMouseHandlerValue(canvasX/pickerSize) * 100, 1);
+          
           if (currentColorModel === "oklch") {
             if (ctrlKeyPressed) {
               okhxyValues.x.value = Math.round(newXValue / oklchChromaScale);
             }
             else if (!ctrlKeyPressed) {
               okhxyValues.x.value = roundWithDecimal(newXValue / oklchChromaScale, 1);
+            }
+            clampOkhxyValuesChroma();
+          }
+          else if (currentColorModel === "oklchCss") {
+            if (ctrlKeyPressed) {
+              okhxyValues.x.value = roundWithDecimal(newXValue / 100 / oklchChromaScale, 2);
+            }
+            else if (!ctrlKeyPressed) {
+              okhxyValues.x.value = roundWithDecimal(newXValue / 100 / oklchChromaScale, 3);
             }
             clampOkhxyValuesChroma();
           }
@@ -596,8 +659,6 @@ export const App = function() {
           }
         }
 
-        updateColorCodeInputs();
-
         updateColorSpaceLabelInColorPicker();
 
         updateCurrentRgbaFromOkhxyValues();
@@ -608,14 +669,18 @@ export const App = function() {
       }
       else if (mouseHandlerEventTargetId === "okhxy-h-slider") {
         canvasY = event.clientX - rect.left - 7;
-        okhxyValues.hue.value = roundWithDecimal(limitMouseHandlerValue(canvasY/slider_size) * 360, 1);
+        
+        if (currentColorModel !== "oklchCss") {
+          okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvasY/slider_size) * 360);
+        }
+        else {
+          okhxyValues.hue.value = roundWithDecimal(limitMouseHandlerValue(canvasY/slider_size) * 360, 1);
+        }
 
-        if (currentColorModel === "oklch") {
+        if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
           clampOkhxyValuesChroma();
           updateManipulatorPositions.colorPicker();
         }
-
-        updateColorCodeInputs();
 
         updateColorSpaceLabelInColorPicker();
 
@@ -681,17 +746,22 @@ export const App = function() {
     const eventTarget = event.target as HTMLInputElement;
     const eventTargetId: string = eventTarget.id;
 
-    let eventTargetValue: number;
+    let eventTargetValue = parseInt(eventTarget.value);
 
     let incrementValue: number;
 
-    if (currentColorModel === "oklch" && eventTargetId === "x") {
-      // If we are in OkLCH and user is changing the chroma value, he can enter a decimal value hence the parseFloat().
-      eventTargetValue = roundWithDecimal(parseFloat(eventTarget.value), 1);
+    if (currentColorModel === "oklch") {
+      if (eventTargetId === "x") {
+        eventTargetValue = roundWithDecimal(parseFloat(eventTarget.value), 1);
+      }
     }
-    else {
-      // For all others inputs, we parse the value with parseInt to remove the decimals if user uses them.
-      eventTargetValue = parseInt(eventTarget.value);
+    else if (currentColorModel === "oklchCss") {
+      if (eventTargetId === "x") {
+        eventTargetValue = roundWithDecimal(parseFloat(eventTarget.value), 3);
+      }
+      else {
+        eventTargetValue = roundWithDecimal(parseFloat(eventTarget.value), 1);
+      }
     }
     
     // If Not a Number we insert back the old value.
@@ -707,7 +777,15 @@ export const App = function() {
     }
 
     // If we are in OkLCH and user is changing the chroma value, we use 0.1 for a more precise choice.
-    if (currentColorModel === "oklch" && eventTargetId === "x") {
+    if (eventTargetId === "x" && currentColorModel === "oklch") {
+      if (shiftKeyPressed) { incrementValue = 1; }
+      else { incrementValue = 0.1; }   
+    }
+    else if (eventTargetId === "x" && currentColorModel === "oklchCss") {
+      if (shiftKeyPressed) { incrementValue = 0.01; }
+      else { incrementValue = 0.001; }
+    }
+    else if ((eventTargetId === "y" || eventTargetId === "hue") && currentColorModel === "oklchCss") {
       if (shiftKeyPressed) { incrementValue = 1; }
       else { incrementValue = 0.1; }
     }
@@ -720,7 +798,20 @@ export const App = function() {
     else if (key === "ArrowDown") { eventTargetValue -= incrementValue; }
     
     // We adjust user's value in case it's outside of the allowed range.
-    const maxValue = eventTargetId === "hue" ? 360 : 100;
+    let maxValue: number;
+
+    if (eventTargetId === "hue") {
+      maxValue = 360;
+    }
+    else {
+      if (currentColorModel === "oklchCss" && eventTargetId === "x") {
+        maxValue = 0.4;
+      }
+      else {
+        maxValue = 100;
+      }
+    }
+
     eventTargetValue = clampNumber(eventTargetValue, 0, maxValue);
     
     let oldValue: number;
@@ -730,14 +821,24 @@ export const App = function() {
 
       // We have to update input's value like this because if we don't we'll have some issues. For example if user set 0 on an input then -10 the signal will not update after the test because il will already be at 0 and thus will not refresh (from Preact's doc: "A signal will only update if you assign a new value to it"). Another example, without this code if user try to enter "5t" more than two times, the input value will stay at "5t".
       if (key !== "Escape" && okhxyValues[eventTargetId].value !== eventTargetValue) {
-        // We use roundWithDecimal() again because in some case we can have values like "3.8000000000000003" when using the up or down arrow keys.
-        okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 1);
+        if (currentColorModel !== "oklchCss") {
+          // We use roundWithDecimal() again because in some case we can have values like "3.8000000000000003" when using the up or down arrow keys.
+          okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 1);
+        }
+        else {
+          if (eventTargetId === "x") {
+            okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 3);
+          }
+          else {
+            okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 1);
+          }
+        }
       }
       else {
         eventTarget.value = oldValue.toString();
       }
       
-      if (currentColorModel === "oklch") {
+      if (currentColorModel === "oklch" || currentFillOrStroke === "oklchCss") {
         clampOkhxyValuesChroma();
       }
 
@@ -753,7 +854,7 @@ export const App = function() {
       }
       
       // We test if currentColorModel === "oklch" because if we modify the hue there is a chance that the chroma value is now out of range and thus we need to update the color picker.
-      if (eventTargetId === "x" || eventTargetId === "y" || currentColorModel === "oklch") {
+      if (eventTargetId === "x" || eventTargetId === "y" || currentColorModel === "oklch" || currentColorModel === "oklchCss") {
         updateManipulatorPositions.colorPicker();
       }
 
@@ -817,7 +918,8 @@ export const App = function() {
 
       currentColorModel = event.data.pluginMessage.data.currentColorModel;
       showCssColorCodes.value = event.data.pluginMessage.data.showCssColorCodes;
-      
+
+      updateColorInputsPosition();
 
       // We do this to avoid flickering on loading.
       colorModelSelect.current!.style.opacity = "1";
@@ -942,15 +1044,15 @@ export const App = function() {
               <option value="okhsv">OkHSV</option>
               <option value="okhsl">OkHSL</option>
               <option value="oklch">OkLCH</option>
-              <option value="oklch">OkLCH (CSS)</option>
+              <option value="oklchCss">OkLCH (CSS)</option>
             </select>
           </div>
 
           <div class="input-wrapper c-select-input-controls__input-wrapper">
-            <input onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="hue" value={okhxyValues.hue} spellcheck={false} />
-            <input onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="x" value={okhxyValues.x} spellcheck={false} />
-            <input onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="y" value={okhxyValues.y} spellcheck={false} />
-            <input ref={opacityInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="opacity" spellcheck={false} />
+            <input ref={hueInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="hue" value={okhxyValues.hue} spellcheck={false} />
+            <input ref={xInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="x" value={okhxyValues.x} spellcheck={false} />
+            <input ref={yInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="y" value={okhxyValues.y} spellcheck={false} />
+            <input ref={opacityInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="opacity" tabIndex={4} spellcheck={false} />
           </div>
         </div>
 

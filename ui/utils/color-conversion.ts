@@ -10,8 +10,8 @@ const convertToOkhsl = converter("okhsl");
 const convertToOkhsv = converter("okhsv");
 const convertToOklch = converter("oklch");
 
-export function colorConversion(from: string, to: string, oklchCss: boolean, param1: number, param2: number, param3: number, colorSpace: string): [number, number, number] {
-  if (debugMode || true) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }
+export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number, colorSpace: string): [number, number, number] {
+  if (debugMode) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch;
   let result: [number, number, number] = [0, 0, 0];
@@ -78,10 +78,10 @@ export function colorConversion(from: string, to: string, oklchCss: boolean, par
     }
   }
 
-  // convertToRgb() needs these values between 0 and 1.
+  // convertToRgb() and convertToP3() needs these values between 0 and 1.
   if (to === "rgb") {
-      param2 = param2 / 100;
-      param3 = param3 / 100;
+    param2 = param2 / 100;
+    param3 = param3 / 100;
   }
 
   // Same here, we need the RGB values between 0 and 1.
@@ -103,16 +103,16 @@ export function colorConversion(from: string, to: string, oklchCss: boolean, par
   // We have to use formatHex for converting from RGB because if not we get wrong saturation values (like 0.5 instead of 1).
   if (from === "okhsl" && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "okhsl", h: param1, s: param2, l: param3}); }
   else if (from === "okhsv" && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "okhsv", h: param1, s: param2, v: param3}); }
-  else if (from === "oklch" && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }
+  else if ((from === "oklch" || from === "oklchCss") && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }
 
   else if (from === "okhsl" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "okhsl", h: param1, s: param2, l: param3}); }
   else if (from === "okhsv" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "okhsv", h: param1, s: param2, v: param3}); }
-  else if (from === "oklch" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "oklch", h: param1, c: param2, l: param3}); }
+  else if ((from === "oklch" || from === "oklchCss") && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "oklch", h: param1, c: param2, l: param3}); }
 
   // We alway use srgb for OkHSL and OkHSV because they are not intended to be used in P3 and if we try, we get out of range value like a saturation of 103.
   else if (from === "rgb" && to === "okhsl") { culoriResult = convertToOkhsl(`color(srgb ${param1} ${param2} ${param3})`); }
   else if (from === "rgb" && to === "okhsv") { culoriResult = convertToOkhsv(`color(srgb ${param1} ${param2} ${param3})`); }
-  else if (from === "rgb" && to === "oklch") { culoriResult = convertToOklch(`color(${colorFunctionSpace} ${param1} ${param2} ${param3})`); }
+  else if (from === "rgb" && (to === "oklch" || to === "oklchCss")) { culoriResult = convertToOklch(`color(${colorFunctionSpace} ${param1} ${param2} ${param3})`); }
 
   if (to === "rgb") {
     if (param3 === 0) {
@@ -124,7 +124,7 @@ export function colorConversion(from: string, to: string, oklchCss: boolean, par
     else {
       result[0] = clampNumber(culoriResult.r*255, 0, 255);
       result[1] = clampNumber(culoriResult.g*255, 0, 255);
-      result[2] = clampNumber(culoriResult.b*255, 0, 255);
+      result[2] = clampNumber(culoriResult.b*255, 0, 255);      
     }
   }
   else if (to === "okhsl") {
@@ -138,17 +138,14 @@ export function colorConversion(from: string, to: string, oklchCss: boolean, par
     result[2] = Math.round(culoriResult.v*100);
   }
   else if (to === "oklch") {
-    if (oklchCss) {
-      console.log("🚀 ~ file: color-conversion.ts:142 ~ colorConversion ~ oklchCss:", oklchCss)
-      result[0] = roundWithDecimal(culoriResult.h, 2);
-      result[1] = roundWithDecimal(culoriResult.c, 3);
-      result[2] = roundWithDecimal(culoriResult.l*100, 2);
-    }
-    else {
-      result[0] = Math.round(culoriResult.h);
-      result[1] = roundWithDecimal(culoriResult.c*100, 1);
-      result[2] = Math.round(culoriResult.l*100);   
-    }
+    result[0] = Math.round(culoriResult.h);
+    result[1] = roundWithDecimal(culoriResult.c*100, 1);
+    result[2] = Math.round(culoriResult.l*100);
+  }
+  else if (to === "oklchCss") {
+    result[0] = roundWithDecimal(culoriResult.h, 1);
+    result[1] = roundWithDecimal(culoriResult.c, 3);
+    result[2] = roundWithDecimal(culoriResult.l*100, 1);
   }
 
   // Temporary fix of #0000FF being out of the triangle shape (same problem with oklch.com, see https://github.com/evilmartians/oklch-picker/issues/78. Might come from CuloriJS, but on https://bottosson.github.io/misc/colorpicker/#0000ff we have it also, if we insert #0000FF in the HEx input then change the H input on OkLCH from 265 back to 264, the OkLCH triangle shape doesn't render the same.)
