@@ -91,6 +91,7 @@ export function colorConversion(from: string, to: string, param1: number, param2
     param3 = param3 / 255;
   }
 
+  // color() function in CSS use different names for the color profile than the one used in this plugin.
   let colorFunctionSpace: string;
 
   if (colorSpace === "p3") {
@@ -146,6 +147,12 @@ export function colorConversion(from: string, to: string, param1: number, param2
     result[0] = roundWithDecimal(culoriResult.h, 1);
     result[1] = roundWithDecimal(culoriResult.c, 3);
     result[2] = roundWithDecimal(culoriResult.l*100, 1);
+  }
+  
+  // We need to do this because if for example we get a color like #888888, we will get Nan for result[0], also, with others gray values we'll sometimes get a hue of 90 or 0.
+  // The reason we use roundWithDecimal() is because without it we can have for example param1 = 123.99995 and param2 = 123.99994.
+  if (from === "rgb" && roundWithDecimal(param1, 3) === roundWithDecimal(param2, 3) && roundWithDecimal(param1, 3) === roundWithDecimal(param3, 3) && roundWithDecimal(param2, 3) === roundWithDecimal(param3, 3)) {
+    result[0] = 0;
   }
 
   // Temporary fix of #0000FF being out of the triangle shape (same problem with oklch.com, see https://github.com/evilmartians/oklch-picker/issues/78. Might come from CuloriJS, but on https://bottosson.github.io/misc/colorpicker/#0000ff we have it also, if we insert #0000FF in the HEx input then change the H input on OkLCH from 265 back to 264, the OkLCH triangle shape doesn't render the same.)
