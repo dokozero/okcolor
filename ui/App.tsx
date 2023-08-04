@@ -838,7 +838,7 @@ export const App = function() {
         eventTarget.value = oldValue.toString();
       }
       
-      if (currentColorModel === "oklch" || currentFillOrStroke === "oklchCss") {
+      if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
         clampOkhxyValuesChroma();
       }
 
