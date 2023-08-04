@@ -83,7 +83,7 @@ let moveVerticallyOnly = false;
 let moveHorizontallyOnly = false;
 
 const CssColorCodes = function({colorCode_currentColorModelInput, colorCode_color, colorCode_rgba, colorCode_hex}) {
-  console.log("render CssCodeShow");
+  if (debugMode) { console.log("UI: render CssColorCodes()"); }
   
   effect(() => {
     if (debugMode) { console.log("UI: syncShowCssColorCodes()"); }
@@ -139,8 +139,7 @@ const CssColorCodes = function({colorCode_currentColorModelInput, colorCode_colo
 
 
 export const App = function() {
-
-  console.log("render App");
+  if (debugMode) { console.log("UI: render App"); }
   
   useEffect(() => {
     colorPickerCanvas2dContext = colorPickerCanvas.current!.getContext("2d");    
@@ -609,15 +608,20 @@ export const App = function() {
         if ((shiftKeyPressed && moveVerticallyOnly) || !shiftKeyPressed) {
           let newYValue: number;
           
-          if (currentColorModel !== "oklchCss") {
-            newYValue = Math.round(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100);
-          }
-          else {
+          if (currentColorModel === "oklchCss" && !ctrlKeyPressed) {
             newYValue = roundWithDecimal(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100, 1);
           }
-
-          if (ctrlKeyPressed && newYValue % 5 === 0) {
-            okhxyValues.y.value = newYValue;
+          else {
+            newYValue = Math.round(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100)
+          }
+          
+          if (ctrlKeyPressed) {
+            if (currentColorModel === "oklch" && newYValue % 5 === 0) {
+              okhxyValues.y.value = newYValue;
+            }
+            else if (currentColorModel === "oklchCss" && newYValue % 1 === 0) {
+              okhxyValues.y.value = newYValue;
+            }
           }
           else if (!ctrlKeyPressed) {
             okhxyValues.y.value = newYValue;
