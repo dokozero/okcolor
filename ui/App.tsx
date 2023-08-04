@@ -333,21 +333,21 @@ export const App = function() {
   const updateColorCodeInputs = function(){
     if (debugMode) { console.log("UI: updateColorCodeInputs()"); }
 
-    const rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
-
     let clamped;
     let rgbSrgb;
+    let rgbP3;
     
     const chroma = currentColorModel === "oklch" ? okhxyValues.x.value/100 : okhxyValues.x.value;
 
     // We don't clamp chroma with the models that don't use it because they already work in sRGB.
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-
       clamped = clampChromaInGamut({ mode: "oklch", l: okhxyValues.y.value/100, c: chroma, h: okhxyValues.hue.value }, "oklch", "rgb");
       rgbSrgb = colorConversion(currentColorModel, "rgb", clamped.h, clamped.c*100, clamped.l*100, "rgb");
+      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, chroma*100, okhxyValues.y.value, colorSpace);
     }
     else {
       rgbSrgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "rgb");
+      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
     }
 
     const opacity = shapeInfos.colors[currentFillOrStroke].rgba[3]/100;
