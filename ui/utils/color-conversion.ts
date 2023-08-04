@@ -10,7 +10,7 @@ const convertToOkhsl = converter("okhsl");
 const convertToOkhsv = converter("okhsv");
 const convertToOklch = converter("oklch");
 
-export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number, colorSpace: string): [number, number, number] {
+export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number, fileColorProfile: string): [number, number, number] {
   if (debugMode) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch;
@@ -94,7 +94,7 @@ export function colorConversion(from: string, to: string, param1: number, param2
   // color() function in CSS use different names for the color profile than the one used in this plugin.
   let colorFunctionSpace: string;
 
-  if (colorSpace === "p3") {
+  if (fileColorProfile === "p3") {
     colorFunctionSpace = "display-p3";
   }
   else {
@@ -102,13 +102,13 @@ export function colorConversion(from: string, to: string, param1: number, param2
   }
 
   // We have to use formatHex for converting from RGB because if not we get wrong saturation values (like 0.5 instead of 1).
-  if (from === "okhsl" && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "okhsl", h: param1, s: param2, l: param3}); }
-  else if (from === "okhsv" && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "okhsv", h: param1, s: param2, v: param3}); }
-  else if ((from === "oklch" || from === "oklchCss") && to === "rgb" && colorSpace === "rgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }
+  if (from === "okhsl" && to === "rgb" && fileColorProfile === "rgb") { culoriResult = convertToRgb({mode: "okhsl", h: param1, s: param2, l: param3}); }
+  else if (from === "okhsv" && to === "rgb" && fileColorProfile === "rgb") { culoriResult = convertToRgb({mode: "okhsv", h: param1, s: param2, v: param3}); }
+  else if ((from === "oklch" || from === "oklchCss") && to === "rgb" && fileColorProfile === "rgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }
 
-  else if (from === "okhsl" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "okhsl", h: param1, s: param2, l: param3}); }
-  else if (from === "okhsv" && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "okhsv", h: param1, s: param2, v: param3}); }
-  else if ((from === "oklch" || from === "oklchCss") && to === "rgb" && colorSpace === "p3") { culoriResult = convertToP3({mode: "oklch", h: param1, c: param2, l: param3}); }
+  else if (from === "okhsl" && to === "rgb" && fileColorProfile === "p3") { culoriResult = convertToP3({mode: "okhsl", h: param1, s: param2, l: param3}); }
+  else if (from === "okhsv" && to === "rgb" && fileColorProfile === "p3") { culoriResult = convertToP3({mode: "okhsv", h: param1, s: param2, v: param3}); }
+  else if ((from === "oklch" || from === "oklchCss") && to === "rgb" && fileColorProfile === "p3") { culoriResult = convertToP3({mode: "oklch", h: param1, c: param2, l: param3}); }
 
   // We alway use srgb for OkHSL and OkHSV because they are not intended to be used in P3 and if we try, we get out of range value like a saturation of 103.
   else if (from === "rgb" && to === "okhsl") { culoriResult = convertToOkhsl(`color(srgb ${param1} ${param2} ${param3})`); }

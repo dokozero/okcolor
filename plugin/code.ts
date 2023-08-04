@@ -5,6 +5,7 @@ import { pickerSize, debugMode } from "../ui/utils/constants";
 */
 
 let currentFillOrStroke = "fill";
+let fileColorProfile: "rgb" | "p3";
 let currentColorModel: "oklchCss" | "oklch" | "okhsl" | "okhsv";
 let showCssColorCodes: boolean;
 
@@ -164,7 +165,7 @@ const updateShapeInfos = function(): boolean {
 const sendInitToUI = function() {
   if (debugMode) { console.log("PLUGIN: sendInitToUI())"); }
   
-  figma.ui.postMessage({"message": "init", "data": {"currentColorModel": currentColorModel, "showCssColorCodes": showCssColorCodes} });
+  figma.ui.postMessage({"message": "init", "data": {"fileColorProfile": fileColorProfile, "currentColorModel": currentColorModel, "showCssColorCodes": showCssColorCodes} });
 };
 
 const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
@@ -289,6 +290,9 @@ figma.ui.onmessage = (msg) => {
     timeoutId = setTimeout(() => { itsAMe = false; }, 500);
 
   }
+  else if (msg.type === "syncFileColorProfile") {
+    figma.clientStorage.setAsync("fileColorProfile", msg.fileColorProfile);
+  }
   else if (msg.type === "syncCurrentFillOrStroke") {
     currentFillOrStroke = msg.currentFillOrStroke;
   }
@@ -297,10 +301,10 @@ figma.ui.onmessage = (msg) => {
   }
   else if (msg.type === "syncShowCssColorCodes") {  
     if (msg.showCssColorCodes) {
-      figma.ui.resize(pickerSize, 520);
+      figma.ui.resize(pickerSize, 568);
     }
     else {
-      figma.ui.resize(pickerSize, 392);
+      figma.ui.resize(pickerSize, 440);
     }
     figma.clientStorage.setAsync("showCssColorCodes", msg.showCssColorCodes);
   }
@@ -312,11 +316,17 @@ figma.ui.onmessage = (msg) => {
 ** INIT
 */
 
-figma.showUI(__html__, {width: pickerSize, height: 392, themeColors: true});
+figma.showUI(__html__, {width: pickerSize, height: 440, themeColors: true});
 
 // To send the color of the shape on launch, we call it when the UI is ready, see above figma.ui.onmessage
 const init = async function() {
   if (debugMode) { console.log("PLUGIN: init()"); }
+
+  fileColorProfile = await figma.clientStorage.getAsync("fileColorProfile");
+
+  if (fileColorProfile !== "rgb" && fileColorProfile !== "p3") {
+    fileColorProfile = "rgb";
+  }
 
   // Get the currentColorModel value from the clientStorage and set it to "okhsl" if it's not in there.
   currentColorModel = await figma.clientStorage.getAsync("currentColorModel");

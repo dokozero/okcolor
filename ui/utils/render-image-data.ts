@@ -5,11 +5,9 @@ import type { Rgb, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
 
 const localDebugMode = false;
 
-let colorSpace = "p3";
-
 const convertToRgb = converter("rgb");
 
-export const renderImageData = function(hue: number, colorModel: string): ImageData {
+export const renderImageData = function(hue: number, colorModel: string, fileColorProfile: string): ImageData {
   if (debugMode) { console.log("UI: renderImageData()"); }
 
   let imageData: ImageData;
@@ -100,14 +98,14 @@ export const renderImageData = function(hue: number, colorModel: string): ImageD
   
         pixelIndex = (y * lowResPickerSizeOklch + x) * 4;
 
-        if (chroma > sRGBMaxChroma.c && !whitePixelRendered && colorSpace === "p3") {
+        if (chroma > sRGBMaxChroma.c && !whitePixelRendered && fileColorProfile === "p3") {
           imageData.data[pixelIndex] = 255;
           imageData.data[pixelIndex + 1] = 255;
           imageData.data[pixelIndex + 2] = 255;
           imageData.data[pixelIndex + 3] = 255;
           whitePixelRendered = true;
         }
-        else if ((colorSpace === "p3" && chroma > P3MaxChroma.c) || (colorSpace === "srgb" && chroma > sRGBMaxChroma.c)) {
+        else if ((fileColorProfile === "p3" && chroma > P3MaxChroma.c) || (fileColorProfile === "rgb" && chroma > sRGBMaxChroma.c)) {
           imageData.data[pixelIndex] = bgColor.r;
           imageData.data[pixelIndex + 1] = bgColor.g;
           imageData.data[pixelIndex + 2] = bgColor.b;

@@ -28,8 +28,6 @@ const okhxyValues = {
 
 const showCssColorCodes = signal<boolean>();
 
-let colorSpace = "p3";
-
 const opacitySliderStyle = signal("");
 
 type RgbaColor = [number, number, number, number];
@@ -62,6 +60,8 @@ let shapeInfos: ShapeInfos = {
 let colorPickerCanvas2dContext: CanvasRenderingContext2D | null = null;
 
 let UIMessageOn = false;
+
+let fileColorProfile: "rgb" | "p3";
 
 // Default choice unless selected shape on launch has no fill.
 let currentFillOrStroke = "fill";
@@ -99,7 +99,7 @@ const CssColorCodes = function({colorCode_currentColorModelInput, colorCode_colo
     <div class="c-color-codes">
 
       <div class="c-color-codes__title-wrapper" onClick={ () => {showCssColorCodes.value = !showCssColorCodes.value} }>
-        <div>Color Codes</div>
+        <div>Color codes</div>
         
         <div class={"c-color-codes__arrow-icon" + (showCssColorCodes.value ? " c-color-codes__arrow-icon--open" : "")}>
           <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" stroke="none"></path></svg>
@@ -163,6 +163,7 @@ export const App = function() {
   const xInput = useRef<HTMLInputElement>(null);
   const yInput = useRef<HTMLInputElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
+  const fileColorProfileSelect = useRef<HTMLSelectElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
   const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
 
@@ -239,7 +240,7 @@ export const App = function() {
 
     const chroma = currentColorModel === "oklch" ? okhxyValues.x.value/100 : okhxyValues.x.value;
 
-    const clamped = clampChromaInGamut({ mode: "oklch", l: okhxyValues.y.value/100, c: chroma, h: okhxyValues.hue.value }, "oklch", colorSpace);
+    const clamped = clampChromaInGamut({ mode: "oklch", l: okhxyValues.y.value/100, c: chroma, h: okhxyValues.hue.value }, "oklch", fileColorProfile);
 
     // If we send a pure black to clampChromaInGamut (l and c to 0), clamped.c will be undefined.
     if (!clamped.c) {
@@ -308,7 +309,7 @@ export const App = function() {
 
     let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
     
-    const newOkhxy = colorConversion("rgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2], colorSpace);
+    const newOkhxy = colorConversion("rgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2], fileColorProfile);
 
     // We have to update these values before updating them with the real value to handle this case: because Preact signals doesn't update if we give them the same value they already have, if user change the value on input, for example the hue from 100 to 50, doesn't validate it (like pressing "Enter") then select another shape, if this new one had also a hue of 100 the hue input will show "50" and not 100. By doing this simple increment we ensure that this case will not happen.
     okhxyValues.hue.value++;
@@ -323,9 +324,9 @@ export const App = function() {
   const updateCurrentRgbaFromOkhxyValues = function() {
     if (debugMode) { console.log("UI: updateCurrentRgbaFromOkhxyValues()"); }
 
-    const chroma = currentColorModel === "oklch" ? okhxyValues.x.value : okhxyValues.x.value*100;
+    const chroma = currentColorModel === "oklchCss" ? okhxyValues.x.value*100 : okhxyValues.x.value;
 
-    let newRgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, chroma, okhxyValues.y.value, colorSpace);
+    let newRgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, chroma, okhxyValues.y.value, fileColorProfile);
     shapeInfos.colors[currentFillOrStroke].rgba = [...newRgb, shapeInfos.colors[currentFillOrStroke].rgba[3]];
   };
 
@@ -342,11 +343,11 @@ export const App = function() {
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
       clamped = clampChromaInGamut({ mode: "oklch", l: okhxyValues.y.value/100, c: chroma, h: okhxyValues.hue.value }, "oklch", "rgb");
       rgbSrgb = colorConversion(currentColorModel, "rgb", clamped.h, clamped.c*100, clamped.l*100, "rgb");
-      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, chroma*100, okhxyValues.y.value, colorSpace);
+      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, chroma*100, okhxyValues.y.value, fileColorProfile);
     }
     else {
       rgbSrgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "rgb");
-      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, colorSpace);
+      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, fileColorProfile);
     }
 
     const opacity = shapeInfos.colors[currentFillOrStroke].rgba[3]/100;
@@ -397,7 +398,7 @@ export const App = function() {
     colorPickerCanvas() {
       if (debugMode) { console.log("UI: render.colorPickerCanvas()"); }
 
-      colorPickerCanvas2dContext!.putImageData(renderImageData(okhxyValues.hue.value, currentColorModel), 0, 0);
+      colorPickerCanvas2dContext!.putImageData(renderImageData(okhxyValues.hue.value, currentColorModel, fileColorProfile), 0, 0);
     },
     fillOrStrokeSelector() {
       if (debugMode) { console.log("UI: render.fillOrStrokeSelector()"); }
@@ -432,7 +433,7 @@ export const App = function() {
     colorPicker() {
       if (debugMode) { console.log("UI: updateManipulatorPositions.colorPicker()"); }
 
-      let x = currentColorModel !== "oklchCss" ? okhxyValues.x.value / 100 : okhxyValues.x.value;
+      let x = currentColorModel === "oklchCss" ? okhxyValues.x.value : okhxyValues.x.value / 100;
       let y = okhxyValues.y.value / 100;
 
       if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
@@ -533,6 +534,25 @@ export const App = function() {
     }
   });
 
+  const fileColorProfileHandle = function(event: any) {
+    if (debugMode) { console.log("UI: fileColorProfileHandle()"); }
+
+    fileColorProfile = (event.target as HTMLSelectElement).value;
+
+    updateColorInputsPosition();
+    
+    syncFileColorProfileWithPlugin();
+    
+    scaleColorPickerCanvas();
+    
+    updateOkhxyValuesFromCurrentRgba();
+    updateManipulatorPositions.all();
+    render.colorPickerCanvas();
+
+    updateColorCodeInputs();
+
+    updateColorSpaceLabelInColorPicker();
+  }
 
   const fillOrStrokeHandle = function() {
     if (debugMode) { console.log("UI: fillOrStrokeHandle()"); }
@@ -892,6 +912,12 @@ export const App = function() {
     parent.postMessage({ pluginMessage: { type: "updateShapeColor", "newColor": shapeInfos.colors[currentFillOrStroke].rgba } }, "*");
   };
 
+  const syncFileColorProfileWithPlugin = function() {
+    if (debugMode) { console.log("UI: syncFileColorProfileWithPlugin()"); }
+
+    parent.postMessage({ pluginMessage: { type: "syncFileColorProfile", "fileColorProfile": fileColorProfile } }, "*");
+  }
+
   const syncCurrentFillOrStrokeWithPlugin = function() {
     if (debugMode) { console.log("UI: syncCurrentFillOrStrokeWithPlugin()"); }
 
@@ -920,10 +946,13 @@ export const App = function() {
       setupHandler(hueSlider.current!);
       setupHandler(opacitySlider.current!);
 
+      fileColorProfile = event.data.pluginMessage.data.fileColorProfile;
       currentColorModel = event.data.pluginMessage.data.currentColorModel;
       showCssColorCodes.value = event.data.pluginMessage.data.showCssColorCodes;
 
       updateColorInputsPosition();
+
+      fileColorProfileSelect.current!.value = fileColorProfile;
 
       // We do this to avoid flickering on loading.
       colorModelSelect.current!.style.opacity = "1";
@@ -974,6 +1003,17 @@ export const App = function() {
   
   return (
     <>
+      <div class="c-file-color-profile">
+        <p>File's color profile</p>
+
+        <div class="select-wrapper">
+          <select ref={fileColorProfileSelect} onChange={fileColorProfileHandle} name="file_color_profile" id="file_color_profile">
+            <option value="rgb">sRGB</option>
+            <option value="p3">Display P3</option>
+          </select>
+        </div>
+      </div>
+
       <div class="c-color-picker" style={`width: ${pickerSize}px; height: ${pickerSize}px;`}>
         <div ref={colorPickerUIMessage} class="c-color-picker__message-wrapper u-display-none">
           <p class="c-color-picker__message-text"></p>
@@ -994,15 +1034,15 @@ export const App = function() {
       <div class="c-bottom-controls">
         <div class="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
 
-          <div class="fill-stroke-selector" ref={fillOrStrokeSelector} onClick={fillOrStrokeHandle} data-has-fill="true" data-has-stroke="true" data-active="fill" >
+          <div class="c-fill-stroke-selector" ref={fillOrStrokeSelector} onClick={fillOrStrokeHandle} data-has-fill="true" data-has-stroke="true" data-active="fill" >
             
-            <div class="fill-stroke-selector__fill">
+            <div class="c-fill-stroke-selector__fill">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle ref={fillOrStrokeSelector_fill} cx="10" cy="10" r="9.5" fill="#FFFFFF" stroke="#AAAAAA"/>
               </svg>
             </div>
 
-            <div class="fill-stroke-selector__stroke">
+            <div class="c-fill-stroke-selector__stroke">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path ref={fillOrStrokeSelector_stroke} d="M15.8 10C15.8 13.2033 13.2033 15.8 10 15.8C6.79675 15.8 4.2 13.2033 4.2 10C4.2 6.79675 6.79675 4.2 10 4.2C13.2033 4.2 15.8 6.79675 15.8 10ZM10 19.5C15.2467 19.5 19.5 15.2467 19.5 10C19.5 4.75329 15.2467 0.5 10 0.5C4.75329 0.5 0.5 4.75329 0.5 10C0.5 15.2467 4.75329 19.5 10 19.5Z" fill="#FFFFFF" stroke="#AAAAAA"/>
               </svg>
