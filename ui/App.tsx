@@ -1010,11 +1010,13 @@ export const App = function() {
       else if (eventTargetId === "hex") {
         const newRgb = convertToRgb(eventTargetValue);
 
-        newOkhxy = colorConversion("rgb", currentColorModel, newRgb.r*255, newRgb.g*255, newRgb.b*255, "rgb");
+        if (newRgb !== undefined) {
+          newOkhxy = colorConversion("rgb", currentColorModel, newRgb.r*255, newRgb.g*255, newRgb.b*255, "rgb");
 
-        okhxyValues.hue.value = newOkhxy[0];
-        okhxyValues.x.value = newOkhxy[1];
-        okhxyValues.y.value = newOkhxy[2];
+          okhxyValues.hue.value = newOkhxy[0];
+          okhxyValues.x.value = newOkhxy[1];
+          okhxyValues.y.value = newOkhxy[2];
+        }
       }
     }
 
