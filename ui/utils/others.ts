@@ -95,7 +95,7 @@ export const copyToClipboard = function(textToCopy: string) {
   }
 }
 
-export const isColorCodeInGoodFormat = function(color: string, format: string): boolean {
+export const isColorCodeInGoodFormat = function(color: string, format: string, currentColorModel: string): boolean {
   let regex;
   let match;
 
@@ -149,7 +149,13 @@ export const isColorCodeInGoodFormat = function(color: string, format: string): 
     if (value3 < 0 || value3 > 100) { return false; }
   }
   else if (format === "color") {
-    regex = /color\(display-p3\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)(\s\/\s(\d+(\.\d+)?))?\)/;
+    if (currentColorModel === "okhsl" || currentColorModel === "okhsv") {
+      regex = /color\(srgb\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)(\s\/\s(\d+(\.\d+)?))?\)/;
+    }
+    else {
+      regex = /color\(display-p3\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)(\s\/\s(\d+(\.\d+)?))?\)/;
+    }
+    
     match = color.match(regex);
 
     if (!match) { return false; }
@@ -165,20 +171,24 @@ export const isColorCodeInGoodFormat = function(color: string, format: string): 
     if (value4 !== null && (value4 < 0 || value4 > 1)) { return false; }
   }
   else if (format === "rgba") {
-    regex = /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+(\.\d+)?)\s*\)/;
+    regex = /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(,\s*(\d+(\.\d+)?))?\s*\)/;
     match = color.match(regex);
-
-    if (!match) { return false; }
+    
+    if (!match) {
+      regex = /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
+      match = color.match(regex);
+      if (!match) { return false; }
+    }
 
     value1 = parseInt(match[1]);
     value2 = parseInt(match[2]);
     value3 = parseInt(match[3]);
-    value4 = parseFloat(match[4]);
+    value4 = match[5] ? parseFloat(match[5]) : null;
 
     if (value1 < 0 || value1 > 255) { return false; }
     if (value2 < 0 || value2 > 255) { return false; }
     if (value3 < 0 || value3 > 255) { return false; }
-    if (value4 < 0 || value4 > 1) { return false; }
+    if (value4 !== null && (value4 < 0 || value4 > 1)) { return false; }
   }
 
   return true;

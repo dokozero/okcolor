@@ -64,6 +64,14 @@ let UIMessageOn = false;
 
 let fileColorProfile: "rgb" | "p3";
 
+// We need this variable only to check if the value of an input has been changed on blur, see colorCodesInputHandler();
+let colorCodesInputValues = {
+  currentColorModel: "",
+  color: "",
+  rgba: "",
+  hex: ""
+}
+
 // Default choice unless selected shape on launch has no fill.
 let currentFillOrStroke = "fill";
 let currentColorModel: "oklchCss" | "oklch" | "okhsl" | "okhsv";
@@ -372,7 +380,11 @@ export const App = function() {
 
     colorCode_rgbaInput.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
     colorCode_hexInput.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`);
-    
+
+    colorCodesInputValues.currentColorModel = colorCode_currentColorModelInput.current!.value;
+    colorCodesInputValues.color = colorCode_colorInput.current!.value;
+    colorCodesInputValues.rgba = colorCode_rgbaInput.current!.value;
+    colorCodesInputValues.hex = colorCode_hexInput.current!.value;    
   }
 
   const updateColorSpaceLabelInColorPicker = function() {
@@ -926,6 +938,9 @@ export const App = function() {
     
     let eventTargetValue = eventTarget.value;
 
+    // This test is to know if user a for example pressed the tab key but without modyfing the value.
+    if (colorCodesInputValues[eventTargetId] === eventTargetValue) { return; }
+
     let colorFormat: string;
     
     if (eventTargetId === "currentColorMode") {
@@ -937,10 +952,10 @@ export const App = function() {
       }
     }
     else {
-      colorFormat = eventTargetId
+      colorFormat = eventTargetId;
     }
 
-    const isColorCodeInGoodFormatValue = isColorCodeInGoodFormat(eventTargetValue, colorFormat);
+    const isColorCodeInGoodFormatValue = isColorCodeInGoodFormat(eventTargetValue, colorFormat, currentColorModel);
 
     let regex;
     let matches;
