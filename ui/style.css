@@ -35,9 +35,6 @@ select:hover {
 }
 
 .input-wrapper:focus-within {
-  height: 30px;
-  margin-top: 0;
-  margin-bottom: 0;
   border: 1px solid var(--figma-color-border-selected);
   outline: 1px solid var(--figma-color-border-selected);
 }
@@ -110,6 +107,7 @@ select {
 
 .c-color-picker {
   position: relative;
+  border-top: 1px solid var(--figma-color-border);
 }
 body.deactivated .c-color-picker {
   outline: solid 1px var(--figma-color-border);

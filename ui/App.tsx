@@ -2,18 +2,19 @@ import { render } from "preact";
 import { signal, effect } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
 
-import { formatHex, inGamut, clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
+import { formatHex, converter, inGamut, clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
 
 import { colorConversion } from "./utils/color-conversion";
 import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale, debugMode } from "./utils/constants";
 
 import { UIMessageTexts } from "./utils/ui-messages";
 import { renderImageData } from "./utils/render-image-data";
-import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, copyToClipboard } from "./utils/others";
+import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, copyToClipboard, isColorCodeInGoodFormat } from "./utils/others";
 
 
 const inGamutSrgb = inGamut("rgb");
 const inGamutP3 = inGamut("p3");
+const convertToRgb = converter("rgb");
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
 
@@ -82,7 +83,7 @@ let prevCanvasY: number | undefined;
 let moveVerticallyOnly = false;
 let moveHorizontallyOnly = false;
 
-const CssColorCodes = function({colorCode_currentColorModelInput, colorCode_color, colorCode_rgba, colorCode_hex}) {
+const CssColorCodes = function({handleInputFocus, colorCodesInputHandler, colorCode_currentColorModelInput, colorCode_colorInput, colorCode_rgbaInput, colorCode_hexInput}) {
   if (debugMode) { console.log("UI: render CssColorCodes()"); }
   
   effect(() => {
@@ -110,23 +111,23 @@ const CssColorCodes = function({colorCode_currentColorModelInput, colorCode_colo
 
       <div class={"c-color-codes__input-wraper " + (showCssColorCodes.value ? "" : " u-display-none")}>
         <div class="input-wrapper">
-          <input ref={colorCode_currentColorModelInput} type="text" />
+          <input ref={colorCode_currentColorModelInput} id="currentColorMode" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
           <div onClick={() => copyToClipboard(colorCode_currentColorModelInput.current.value)} class="c-color-codes__copy-action">Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_color} type="text" />
-          <div onClick={() => copyToClipboard(colorCode_color.current.value)} class="c-color-codes__copy-action">Copy</div>
+          <input ref={colorCode_colorInput} id="color" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
+          <div onClick={() => copyToClipboard(colorCode_colorInput.current.value)} class="c-color-codes__copy-action">Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_rgba} type="text" />
-          <div onClick={() => copyToClipboard(colorCode_rgba.current.value)} class="c-color-codes__copy-action">Copy</div>
+          <input ref={colorCode_rgbaInput} id="rgba" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
+          <div onClick={() => copyToClipboard(colorCode_rgbaInput.current.value)} class="c-color-codes__copy-action">Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_hex} type="text" />
-          <div onClick={() => copyToClipboard(colorCode_hex.current.value)} class="c-color-codes__copy-action">Copy</div>
+          <input ref={colorCode_hexInput} id="hex" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
+          <div onClick={() => copyToClipboard(colorCode_hexInput.current.value)} class="c-color-codes__copy-action">Copy</div>
         </div>
       </div>
 
@@ -168,9 +169,9 @@ export const App = function() {
   const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
 
   const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null);
-  const colorCode_color = useRef<HTMLInputElement>(null);
-  const colorCode_rgba = useRef<HTMLInputElement>(null);
-  const colorCode_hex = useRef<HTMLInputElement>(null);
+  const colorCode_colorInput = useRef<HTMLInputElement>(null);
+  const colorCode_rgbaInput = useRef<HTMLInputElement>(null);
+  const colorCode_hexInput = useRef<HTMLInputElement>(null);
 
 
 
@@ -363,14 +364,14 @@ export const App = function() {
     }
 
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-      colorCode_color.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3[0]/255, 2)} ${roundWithDecimal(rgbP3[1]/255, 2)} ${roundWithDecimal(rgbP3[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_colorInput.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3[0]/255, 2)} ${roundWithDecimal(rgbP3[1]/255, 2)} ${roundWithDecimal(rgbP3[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
     else {
-      colorCode_color.current!.value = `color(srgb ${roundWithDecimal(rgbSrgb[0]/255, 2)} ${roundWithDecimal(rgbSrgb[1]/255, 2)} ${roundWithDecimal(rgbSrgb[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_colorInput.current!.value = `color(srgb ${roundWithDecimal(rgbSrgb[0]/255, 2)} ${roundWithDecimal(rgbSrgb[1]/255, 2)} ${roundWithDecimal(rgbSrgb[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
 
-    colorCode_rgba.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
-    colorCode_hex.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`);
+    colorCode_rgbaInput.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
+    colorCode_hexInput.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`);
     
   }
 
@@ -653,32 +654,39 @@ export const App = function() {
         }
 
         if ((shiftKeyPressed && moveHorizontallyOnly) || !shiftKeyPressed) {
-          const newXValue = roundWithDecimal(limitMouseHandlerValue(canvasX/pickerSize) * 100, 1);
+          let newXValue: number;
+
+          if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+            newXValue = roundWithDecimal(limitMouseHandlerValue(canvasX/pickerSize) * 100, 1);
+          }
+          else {
+            newXValue = Math.round(limitMouseHandlerValue(canvasX/pickerSize) * 100);
+          }
           
           if (currentColorModel === "oklch") {
             if (ctrlKeyPressed) {
-              okhxyValues.x.value = Math.round(newXValue / oklchChromaScale);
+              okhxyValues.x.value = Math.round(newXValue! / oklchChromaScale);
             }
             else if (!ctrlKeyPressed) {
-              okhxyValues.x.value = roundWithDecimal(newXValue / oklchChromaScale, 1);
+              okhxyValues.x.value = roundWithDecimal(newXValue! / oklchChromaScale, 1);
             }
             clampOkhxyValuesChroma();
           }
           else if (currentColorModel === "oklchCss") {
             if (ctrlKeyPressed) {
-              okhxyValues.x.value = roundWithDecimal(newXValue / 100 / oklchChromaScale, 2);
+              okhxyValues.x.value = roundWithDecimal(newXValue! / 100 / oklchChromaScale, 2);
             }
             else if (!ctrlKeyPressed) {
-              okhxyValues.x.value = roundWithDecimal(newXValue / 100 / oklchChromaScale, 3);
+              okhxyValues.x.value = roundWithDecimal(newXValue! / 100 / oklchChromaScale, 3);
             }
             clampOkhxyValuesChroma();
           }
           else {
-            if (ctrlKeyPressed && newXValue % 5 === 0) {
-              okhxyValues.x.value = newXValue;
+            if (ctrlKeyPressed && newXValue! % 5 === 0) {
+              okhxyValues.x.value = newXValue!;
             }
             else if (!ctrlKeyPressed) {
-              okhxyValues.x.value = newXValue;
+              okhxyValues.x.value = newXValue!;
             }
           }
         }
@@ -754,8 +762,8 @@ export const App = function() {
     (event.target as HTMLInputElement).select();
   };
 
-  const inputHandler = function(event: KeyboardEvent | FocusEvent) {
-    if (debugMode) { console.log("UI: InputHandler()"); }
+  const okhxyInputHandler = function(event: KeyboardEvent | FocusEvent) {
+    if (debugMode) { console.log("UI: okhxyInputHandler()"); }
 
     // To handle rare case where user could have entered a new value on an input but without validating it (like pressing "Enter") and then selecting another shape, without this check the new value of the input would be set on the new shape as the blur event would still trigger when user click on it.
     if (event.type === "blur" && mouseInsideDocument === false) { return; }
@@ -899,6 +907,135 @@ export const App = function() {
     if (event.type !== "blur") { eventTarget.select(); }
     sendNewShapeColorToPlugin();
   };
+
+  const colorCodesInputHandler = function(event: KeyboardEvent | FocusEvent) {
+    if (debugMode) { console.log("UI: colorCodesInputHandler()"); }
+
+    // To handle rare case where user could have entered a new value on an input but without validating it (like pressing "Enter") and then selecting another shape, without this check the new value of the input would be set on the new shape as the blur event would still trigger when user click on it.
+    if (event.type === "blur" && mouseInsideDocument === false) { return; }
+
+    const inputHandlesAllowedKeys = ["Enter", "Tab", "Escape"];
+    const key = "key" in event ? event.key : "";
+
+    if (!inputHandlesAllowedKeys.includes(key) && event.type !== "blur") { return; }
+    
+    if (key !== "Tab") { event.preventDefault(); }
+
+    const eventTarget = event.target as HTMLInputElement;
+    const eventTargetId: string = eventTarget.id;
+    
+    let eventTargetValue = eventTarget.value;
+
+    let colorFormat: string;
+    
+    if (eventTargetId === "currentColorMode") {
+      if ((currentColorModel === "oklch" || currentColorModel === "oklchCss")) {
+        colorFormat = "oklch"
+      }
+      else {
+        colorFormat = currentColorModel;
+      }
+    }
+    else {
+      colorFormat = eventTargetId
+    }
+
+    const isColorCodeInGoodFormatValue = isColorCodeInGoodFormat(eventTargetValue, colorFormat);
+
+    let regex;
+    let matches;
+    let newOkhxy;
+    let newOpacity = 1;
+
+    if (isColorCodeInGoodFormatValue || colorFormat === "hex") {
+      if (eventTargetId === "currentColorMode") {
+        if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+          regex = /(\d+(\.\d+)?)/g;
+          matches = eventTargetValue.match(regex);
+
+          if (currentColorModel === "oklch") {
+            okhxyValues.hue.value = roundWithDecimal(parseFloat(matches![2]), 0);
+            okhxyValues.x.value = roundWithDecimal(parseFloat(matches![1])*100, 1);
+            okhxyValues.y.value = roundWithDecimal(parseFloat(matches![0]), 0);
+          }
+          else {
+            okhxyValues.hue.value = parseFloat(matches![2]);
+            okhxyValues.x.value = parseFloat(matches![1]);
+            okhxyValues.y.value = parseFloat(matches![0]);
+          }
+
+          newOpacity = parseFloat(matches![3]);
+        }
+        else if (currentColorModel === "okhsl") {
+          regex = /h:\s*(\d+)\s*,\s*s:\s*(\d+)\s*,\s*l:\s*(\d+)\s*/;
+          matches = eventTargetValue.match(regex);
+
+          okhxyValues.hue.value = parseInt(matches![1]);
+          okhxyValues.x.value = parseInt(matches![2]);
+          okhxyValues.y.value = parseInt(matches![3]);
+        }
+        else if (currentColorModel === "okhsv") {
+          regex = /h:\s*(\d+)\s*,\s*s:\s*(\d+)\s*,\s*v:\s*(\d+)\s*/;
+          matches = eventTargetValue.match(regex);
+
+          okhxyValues.hue.value = parseInt(matches![1]);
+          okhxyValues.x.value = parseInt(matches![2]);
+          okhxyValues.y.value = parseInt(matches![3]);
+        }
+      }
+      else if (eventTargetId === "color") {
+        regex = /(\b\d+(\.\d+)?\b)/g;
+        matches = eventTargetValue.match(regex);
+
+        newOkhxy = colorConversion("rgb", currentColorModel, parseFloat(matches![0])*255, parseFloat(matches![1])*255, parseFloat(matches![2])*255, fileColorProfile);
+
+        okhxyValues.hue.value = newOkhxy[0];
+        okhxyValues.x.value = newOkhxy[1];
+        okhxyValues.y.value = newOkhxy[2];
+
+        newOpacity = parseFloat(matches![3]);
+      }
+      else if (eventTargetId === "rgba") {
+        regex = /(\d+(\.\d+)?)/g;
+        matches = eventTargetValue.match(regex);
+
+        newOkhxy = colorConversion("rgb", currentColorModel, parseFloat(matches![0]), parseFloat(matches![1]), parseFloat(matches![2]), "rgb");
+
+        okhxyValues.hue.value = newOkhxy[0];
+        okhxyValues.x.value = newOkhxy[1];
+        okhxyValues.y.value = newOkhxy[2];
+
+        newOpacity = parseFloat(matches![3]);
+      }
+      else if (eventTargetId === "hex") {
+        const newRgb = convertToRgb(eventTargetValue);
+
+        newOkhxy = colorConversion("rgb", currentColorModel, newRgb.r*255, newRgb.g*255, newRgb.b*255, "rgb");
+
+        okhxyValues.hue.value = newOkhxy[0];
+        okhxyValues.x.value = newOkhxy[1];
+        okhxyValues.y.value = newOkhxy[2];
+      }
+    }
+
+    if (!Number.isNaN(newOpacity)) {
+      updateOpacityValue(newOpacity*100);
+    }
+    else {
+      updateOpacityValue(100);
+    }
+
+    updateColorSpaceLabelInColorPicker();
+
+    updateCurrentRgbaFromOkhxyValues();
+    
+    updateManipulatorPositions.all();
+    render.all();
+
+    updateColorCodeInputs();
+
+    sendNewShapeColorToPlugin();
+  }
 
 
 
@@ -1093,14 +1230,14 @@ export const App = function() {
           </div>
 
           <div class="input-wrapper c-select-input-controls__input-wrapper">
-            <input ref={hueInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="hue" value={okhxyValues.hue} spellcheck={false} />
-            <input ref={xInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="x" value={okhxyValues.x} spellcheck={false} />
-            <input ref={yInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="y" value={okhxyValues.y} spellcheck={false} />
-            <input ref={opacityInput} onFocus={handleInputFocus} onBlur={inputHandler} onKeyDown={inputHandler} id="opacity" tabIndex={4} spellcheck={false} />
+            <input ref={hueInput} onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="hue" value={okhxyValues.hue} spellcheck={false} />
+            <input ref={xInput} onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="x" value={okhxyValues.x} spellcheck={false} />
+            <input ref={yInput} onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="y" value={okhxyValues.y} spellcheck={false} />
+            <input ref={opacityInput} onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="opacity" tabIndex={4} spellcheck={false} />
           </div>
         </div>
 
-        <CssColorCodes colorCode_currentColorModelInput={colorCode_currentColorModelInput} colorCode_color={colorCode_color} colorCode_rgba={colorCode_rgba} colorCode_hex={colorCode_hex} />
+        <CssColorCodes handleInputFocus={handleInputFocus} colorCodesInputHandler={colorCodesInputHandler} colorCode_currentColorModelInput={colorCode_currentColorModelInput} colorCode_colorInput={colorCode_colorInput} colorCode_rgbaInput={colorCode_rgbaInput} colorCode_hexInput={colorCode_hexInput} />
 
       </div>
 
