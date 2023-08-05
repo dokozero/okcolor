@@ -117,25 +117,25 @@ const CssColorCodes = function({handleInputFocus, colorCodesInputHandler, colorC
 
       {/* TODO: Support esc key to cancel focus on inputs */}
 
-      <div class={"c-color-codes__input-wraper " + (showCssColorCodes.value ? "" : " u-display-none")}>
+      <div class={"c-color-codes__inputs-wraper " + (showCssColorCodes.value ? "" : " u-display-none")}>
         <div class="input-wrapper">
-          <input ref={colorCode_currentColorModelInput} id="currentColorMode" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div onClick={() => copyToClipboard(colorCode_currentColorModelInput.current.value)} class="c-color-codes__copy-action">Copy</div>
+          <input ref={colorCode_currentColorModelInput} id="currentColorModel" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
+          <div class="c-color-codes__copy-action" onClick={() => copyToClipboard(colorCode_currentColorModelInput.current.value)}>Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
           <input ref={colorCode_colorInput} id="color" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div onClick={() => copyToClipboard(colorCode_colorInput.current.value)} class="c-color-codes__copy-action">Copy</div>
+          <div class="c-color-codes__copy-action" onClick={() => copyToClipboard(colorCode_colorInput.current.value)}>Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
           <input ref={colorCode_rgbaInput} id="rgba" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div onClick={() => copyToClipboard(colorCode_rgbaInput.current.value)} class="c-color-codes__copy-action">Copy</div>
+          <div class="c-color-codes__copy-action" onClick={() => copyToClipboard(colorCode_rgbaInput.current.value)}>Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
           <input ref={colorCode_hexInput} id="hex" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div onClick={() => copyToClipboard(colorCode_hexInput.current.value)} class="c-color-codes__copy-action">Copy</div>
+          <div class="c-color-codes__copy-action" onClick={() => copyToClipboard(colorCode_hexInput.current.value)}>Copy</div>
         </div>
       </div>
 
@@ -362,7 +362,7 @@ export const App = function() {
     const opacity = shapeInfos.colors[currentFillOrStroke].rgba[3]/100;
 
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-      colorCode_currentColorModelInput.current!.value = `oklch(${okhxyValues.y.value}% ${roundWithDecimal(chroma, 3)} ${okhxyValues.hue}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_currentColorModelInput.current!.value = `oklch(${okhxyValues.y.value}% ${roundWithDecimal(chroma, 6)} ${okhxyValues.hue}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
     else if (currentColorModel === "okhsl") {
       colorCode_currentColorModelInput.current!.value = `h: ${okhxyValues.hue.value}, s: ${okhxyValues.x.value}, l: ${okhxyValues.y.value}`;
@@ -372,10 +372,10 @@ export const App = function() {
     }
 
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-      colorCode_colorInput.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3[0]/255, 2)} ${roundWithDecimal(rgbP3[1]/255, 2)} ${roundWithDecimal(rgbP3[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_colorInput.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3[0]/255, 3)} ${roundWithDecimal(rgbP3[1]/255, 3)} ${roundWithDecimal(rgbP3[2]/255, 3)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
     else {
-      colorCode_colorInput.current!.value = `color(srgb ${roundWithDecimal(rgbSrgb[0]/255, 2)} ${roundWithDecimal(rgbSrgb[1]/255, 2)} ${roundWithDecimal(rgbSrgb[2]/255, 2)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_colorInput.current!.value = `color(srgb ${roundWithDecimal(rgbSrgb[0]/255, 3)} ${roundWithDecimal(rgbSrgb[1]/255, 3)} ${roundWithDecimal(rgbSrgb[2]/255, 3)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
 
     colorCode_rgbaInput.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
@@ -950,9 +950,9 @@ export const App = function() {
 
     let colorFormat: string;
     
-    if (eventTargetId === "currentColorMode") {
+    if (eventTargetId === "currentColorModel") {
       if ((currentColorModel === "oklch" || currentColorModel === "oklchCss")) {
-        colorFormat = "oklch"
+        colorFormat = "oklch";
       }
       else {
         colorFormat = currentColorModel;
@@ -970,7 +970,7 @@ export const App = function() {
     let newOpacity = 1;
 
     if (isColorCodeInGoodFormatValue || colorFormat === "hex") {
-      if (eventTargetId === "currentColorMode") {
+      if (eventTargetId === "currentColorModel") {
         if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
           regex = /(\d+(\.\d+)?)/g;
           matches = eventTargetValue.match(regex);

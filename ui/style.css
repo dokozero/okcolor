@@ -273,16 +273,21 @@ body.deactivated .c-bottom-controls {
       top: 2px;
       transform: rotate(0deg);
     }
-  .c-color-codes__input-wraper {
+  .c-color-codes__inputs-wraper {
     margin-top: -4px;
     padding-left: 8px;
     padding-right: 8px;
   }
     .c-color-codes__copy-action {
-      margin-right: 8px;
       visibility: hidden;
+      position: absolute;
+      right: 0;
+      height: 26px;
+      line-height: 26px;
+      padding: 0 6px;
+      background-color: var(--figma-color-bg);
     }
-    .c-color-codes__input-wraper .input-wrapper:hover .c-color-codes__copy-action {
+    .c-color-codes__inputs-wraper .input-wrapper:hover .c-color-codes__copy-action {
       visibility: visible;
     }
     .c-color-codes__copy-action:hover {
