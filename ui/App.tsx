@@ -343,11 +343,11 @@ export const App = function() {
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
       clamped = clampChromaInGamut({ mode: "oklch", l: okhxyValues.y.value/100, c: chroma, h: okhxyValues.hue.value }, "oklch", "rgb");
       rgbSrgb = colorConversion(currentColorModel, "rgb", clamped.h, clamped.c*100, clamped.l*100, "rgb");
-      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, chroma*100, okhxyValues.y.value, fileColorProfile);
+      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, chroma*100, okhxyValues.y.value, "p3");
     }
     else {
       rgbSrgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "rgb");
-      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, fileColorProfile);
+      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "p3");
     }
 
     const opacity = shapeInfos.colors[currentFillOrStroke].rgba[3]/100;
