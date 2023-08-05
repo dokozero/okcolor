@@ -939,7 +939,14 @@ export const App = function() {
     let eventTargetValue = eventTarget.value;
 
     // This test is to know if user a for example pressed the tab key but without modyfing the value.
-    if (colorCodesInputValues[eventTargetId] === eventTargetValue) { return; }
+    if (colorCodesInputValues[eventTargetId] === eventTargetValue) {
+
+      // We allow to update the color inputs if rgba of hex one are focused, like this user can simply set the sRGB fallback of an P3 color with "Enter" key.
+      if (!((eventTargetId === "rgba" || eventTargetId === "hex") && key === "Enter")) {
+        eventTarget.blur();
+        return;
+      }
+    }
 
     let colorFormat: string;
     
@@ -1052,6 +1059,8 @@ export const App = function() {
     updateColorCodeInputs();
 
     sendNewShapeColorToPlugin();
+
+    if (key === "Enter" && (eventTargetId === "rgba" || eventTargetId === "hex")) { eventTarget.blur(); }
   }
 
 
