@@ -356,10 +356,10 @@ export const App = function() {
       colorCode_currentColorModelInput.current!.value = `oklch(${okhxyValues.y.value}% ${roundWithDecimal(chroma, 3)} ${okhxyValues.hue}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
     else if (currentColorModel === "okhsl") {
-      colorCode_currentColorModelInput.current!.value = `{mode: "", h: ${okhxyValues.hue.value}, s: ${okhxyValues.x.value}, l: ${okhxyValues.y.value}}`;
+      colorCode_currentColorModelInput.current!.value = `h: ${okhxyValues.hue.value}, s: ${okhxyValues.x.value}, l: ${okhxyValues.y.value}`;
     }
     else if (currentColorModel === "okhsv") {
-      colorCode_currentColorModelInput.current!.value = `{mode: "", h: ${okhxyValues.hue.value}, s: ${okhxyValues.x.value}, v: ${okhxyValues.y.value}}`;
+      colorCode_currentColorModelInput.current!.value = `h: ${okhxyValues.hue.value}, s: ${okhxyValues.x.value}, v: ${okhxyValues.y.value}`;
     }
 
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
