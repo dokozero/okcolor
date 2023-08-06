@@ -1211,7 +1211,7 @@ export const App = function() {
   return (
     <>
       <div class="c-file-color-profile">
-        <p>File's color profile</p>
+        <p>File color profile</p>
 
         <div class="select-wrapper">
           <select ref={fileColorProfileSelect} onChange={fileColorProfileHandle} name="file_color_profile" id="file_color_profile">
