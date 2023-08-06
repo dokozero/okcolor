@@ -369,7 +369,6 @@ export const App = function() {
     }
     else {
       rgbSrgb = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "rgb");
-      rgbP3 = colorConversion(currentColorModel, "rgb", okhxyValues.hue.value, okhxyValues.x.value, okhxyValues.y.value, "p3");
     }
 
     const opacity = shapeInfos.colors[currentFillOrStroke].rgba[3]/100;
@@ -385,7 +384,7 @@ export const App = function() {
     }
 
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-      colorCode_colorInput.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3[0]/255, 3)} ${roundWithDecimal(rgbP3[1]/255, 3)} ${roundWithDecimal(rgbP3[2]/255, 3)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_colorInput.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3![0]/255, 3)} ${roundWithDecimal(rgbP3![1]/255, 3)} ${roundWithDecimal(rgbP3![2]/255, 3)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
     else {
       colorCode_colorInput.current!.value = `color(srgb ${roundWithDecimal(rgbSrgb[0]/255, 3)} ${roundWithDecimal(rgbSrgb[1]/255, 3)} ${roundWithDecimal(rgbSrgb[2]/255, 3)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
