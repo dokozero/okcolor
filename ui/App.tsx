@@ -2,7 +2,7 @@ import { render } from "preact";
 import { signal, effect } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
 
-import { formatHex, converter, inGamut, clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
+import { formatHex, formatHex8, converter, inGamut, clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
 
 import { colorConversion } from "./utils/color-conversion";
 import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale, debugMode } from "./utils/constants";
@@ -391,7 +391,13 @@ export const App = function() {
     }
 
     colorCode_rgbaInput.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
-    colorCode_hexInput.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`).toUpperCase();
+
+    if (opacity !== 1) {
+      colorCode_hexInput.current!.value = formatHex8(`rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`).toUpperCase();
+    }
+    else {
+      colorCode_hexInput.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`).toUpperCase();
+    }
 
     colorCodesInputValues.currentColorModel = colorCode_currentColorModelInput.current!.value;
     colorCodesInputValues.color = colorCode_colorInput.current!.value;
@@ -871,7 +877,7 @@ export const App = function() {
     let currentValue;
 
     if (eventTargetId === "opacity") {
-      currentValue = parseInt(opacityInput.current!.value);
+      currentValue = shapeInfos.colors[currentFillOrStroke].rgba[3];
     }
     else {
       currentValue = okhxyValues[eventTargetId].value;
@@ -1109,6 +1115,8 @@ export const App = function() {
           okhxyValues.hue.value = newOkhxy[0];
           okhxyValues.x.value = newOkhxy[1];
           okhxyValues.y.value = newOkhxy[2];
+
+          if (newRgb.alpha) { newOpacity = roundWithDecimal(newRgb.alpha, 2); }
         }
       }
     }
