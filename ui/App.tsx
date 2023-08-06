@@ -184,6 +184,7 @@ export const App = function() {
   const xInput = useRef<HTMLInputElement>(null);
   const yInput = useRef<HTMLInputElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
+  const fileColorProfileGroup = useRef<HTMLDivElement>(null);
   const fileColorProfileSelect = useRef<HTMLSelectElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
   const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
@@ -624,6 +625,19 @@ export const App = function() {
     if (debugMode) { console.log("UI: colorModelHandle()"); }
 
     currentColorModel = (event.target as HTMLSelectElement).value;
+
+    // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3 space.
+    if (currentColorModel === "okhsl" || currentColorModel === "okhsv") {
+      fileColorProfileSelect.current!.value = "rgb";
+      fileColorProfile = "rgb";
+
+      fileColorProfileGroup.current!.classList.add("c-file-color-profile--deactivated");
+
+      syncFileColorProfileWithPlugin();
+    }
+    else {
+      fileColorProfileGroup.current!.classList.remove("c-file-color-profile--deactivated");
+    }
 
     updateColorInputsPosition();
     
@@ -1175,6 +1189,10 @@ export const App = function() {
 
       fileColorProfileSelect.current!.value = fileColorProfile;
 
+      if (currentColorModel === "okhsl" || currentColorModel === "okhsv") {
+        fileColorProfileGroup.current!.classList.add("c-file-color-profile--deactivated");
+      }
+
       // We do this to avoid flickering on loading.
       colorModelSelect.current!.style.opacity = "1";
 
@@ -1224,7 +1242,7 @@ export const App = function() {
   
   return (
     <>
-      <div class="c-file-color-profile">
+      <div ref={fileColorProfileGroup} class="c-file-color-profile">
         <p>File color profile</p>
 
         <div class="select-wrapper">

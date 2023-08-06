@@ -91,7 +91,10 @@ select {
   justify-content: space-between;
   align-items: center;
   padding: 6px 8px 6px 14px;
-  border-bottom: 1px solid var(--figma-color-border);
+}
+.c-file-color-profile--deactivated {
+  pointer-events: none;
+  opacity: 0.5;
 }
   .c-file-color-profile p {
     font-size: 11px;
@@ -108,6 +111,7 @@ select {
 
 .c-color-picker {
   position: relative;
+  border-top: 1px solid var(--figma-color-border);
 }
   .c-color-picker__message-wrapper {
     z-index: 1;
