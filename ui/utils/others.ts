@@ -84,7 +84,9 @@ const unsecuredCopyToClipboard = function(textToCopy: string) {
   document.body.removeChild(textArea);
 }
 
-export const copyToClipboard = function(textToCopy: string) {
+export const copyToClipboard = function(textToCopy: string, event: MouseEvent) {
+  const eventTarget = event.target as HTMLDivElement;
+
   // If the context is secure and clipboard API is available, use it
   if ( window.isSecureContext && typeof navigator?.clipboard?.writeText === "function"){
     navigator.clipboard.writeText(textToCopy);
@@ -93,6 +95,8 @@ export const copyToClipboard = function(textToCopy: string) {
   else {
     unsecuredCopyToClipboard(textToCopy);
   }
+
+  eventTarget.classList.add("c-color-codes__copy-action--copied");
 }
 
 export const isColorCodeInGoodFormat = function(color: string, format: string, currentColorModel: string): boolean {

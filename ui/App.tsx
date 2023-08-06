@@ -93,6 +93,11 @@ let moveHorizontallyOnly = false;
 
 const CssColorCodes = function({handleInputFocus, colorCodesInputHandler, colorCode_currentColorModelInput, colorCode_colorInput, colorCode_rgbaInput, colorCode_hexInput}) {
   if (debugMode) { console.log("UI: render CssColorCodes()"); }
+
+  const colorCode_currentColorModelCopyAction = useRef<HTMLDivElement>(null);
+  const colorCode_colorCopyAction = useRef<HTMLDivElement>(null);
+  const colorCode_rgbaCopyAction = useRef<HTMLDivElement>(null);
+  const colorCode_hexCopyAction = useRef<HTMLDivElement>(null);
   
   effect(() => {
     if (debugMode) { console.log("UI: syncShowCssColorCodes()"); }
@@ -102,6 +107,13 @@ const CssColorCodes = function({handleInputFocus, colorCodesInputHandler, colorC
      parent.postMessage({ pluginMessage: { type: "syncShowCssColorCodes", "showCssColorCodes": showCssColorCodes.value } }, "*");
     }
   });
+
+  const removeModifierClassOnCopyActions = function() {
+    colorCode_currentColorModelCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
+    colorCode_colorCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
+    colorCode_rgbaCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
+    colorCode_hexCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
+  };
 
   return (
 
@@ -117,25 +129,25 @@ const CssColorCodes = function({handleInputFocus, colorCodesInputHandler, colorC
 
       {/* TODO: Support esc key to cancel focus on inputs */}
 
-      <div class={"c-color-codes__inputs-wraper " + (showCssColorCodes.value ? "" : " u-display-none")}>
+      <div class={"c-color-codes__inputs-wraper " + (showCssColorCodes.value ? "" : " u-display-none")} onMouseLeave={removeModifierClassOnCopyActions}>
         <div class="input-wrapper">
           <input ref={colorCode_currentColorModelInput} id="currentColorModel" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div class="c-color-codes__copy-action" onClick={() => copyToClipboard(colorCode_currentColorModelInput.current.value)}>Copy</div>
+          <div ref={colorCode_currentColorModelCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_currentColorModelInput.current.value, event);} }>Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
           <input ref={colorCode_colorInput} id="color" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div class="c-color-codes__copy-action" onClick={() => copyToClipboard(colorCode_colorInput.current.value)}>Copy</div>
+          <div ref={colorCode_colorCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_colorInput.current.value, event); } }>Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
           <input ref={colorCode_rgbaInput} id="rgba" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div class="c-color-codes__copy-action" onClick={() => copyToClipboard(colorCode_rgbaInput.current.value)}>Copy</div>
+          <div ref={colorCode_rgbaCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_rgbaInput.current.value, event); } }>Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
           <input ref={colorCode_hexInput} id="hex" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div class="c-color-codes__copy-action" onClick={() => copyToClipboard(colorCode_hexInput.current.value)}>Copy</div>
+          <div ref={colorCode_hexCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_hexInput.current.value, event); } }>Copy</div>
         </div>
       </div>
 
