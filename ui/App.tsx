@@ -986,6 +986,8 @@ export const App = function() {
             okhxyValues.y.value = parseFloat(matches![0]);
           }
 
+          clampOkhxyValuesChroma();
+
           newOpacity = parseFloat(matches![3]);
         }
         else if (currentColorModel === "okhsl") {
