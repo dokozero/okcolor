@@ -391,7 +391,7 @@ export const App = function() {
     }
 
     colorCode_rgbaInput.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
-    colorCode_hexInput.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`);
+    colorCode_hexInput.current!.value = formatHex(`rgb(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)})`).toUpperCase();
 
     colorCodesInputValues.currentColorModel = colorCode_currentColorModelInput.current!.value;
     colorCodesInputValues.color = colorCode_colorInput.current!.value;
