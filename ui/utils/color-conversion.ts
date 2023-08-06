@@ -35,48 +35,49 @@ export function colorConversion(from: string, to: string, param1: number, param2
     }
   }
 
+  // Edit for now we don't do it because for example with #00FF00, if we move the L param from 83 to 84 and 85, we'll get a color with too much difference at 84 compared to 83 and 85.
   // We do this before calling convertToRgb() to send back the correct peak values. If we don't to this, convertToRgb() will not send peak rgb values when needed.
-  if (from === "okhsl" || from === "okhsv") {
+  // if (from === "okhsl" || from === "okhsv") {
 
-    const pickColorRgb: { [key: string]: [number, number, number] } = {
-      "red": [255, 0, 0],
-      "green": [0, 255, 0],
-      "blue": [0, 0, 255],
-      "yellow": [255, 255, 0],
-      "pink": [255, 0, 255],
-      "cyan": [0, 255, 255],
-    }
+  //   const pickColorRgb: { [key: string]: [number, number, number] } = {
+  //     "red": [255, 0, 0],
+  //     "green": [0, 255, 0],
+  //     "blue": [0, 0, 255],
+  //     "yellow": [255, 255, 0],
+  //     "pink": [255, 0, 255],
+  //     "cyan": [0, 255, 255],
+  //   }
 
-    const pickColorConditions: { [key: string]: { [key: string]: boolean } } = {
-      "okhsl": {
-        "red": (from === "okhsl" && param1 === 29 && param2 > 99 && param3 === 57),
-        "green": (from === "okhsl" && param1 === 142 && param2 > 99 && param3 === 84),
-        "blue": (from === "okhsl" && param1 === 264 && param2 > 99 && param3 === 37),
-        "yellow": (from === "okhsl" && param1 === 110 && param2 > 99 && param3 === 96),
-        "pink": (from === "okhsl" && param1 === 328 && param2 > 99 && param3 === 65),
-        "cyan": (from === "okhsl" && param1 === 195 && param2 > 99 && param3 === 89)
-      },
-      "okhsv": {
-          "red": (from === "okhsv" && param1 === 29 && param2 > 99 && param3 > 99),
-          "green": (from === "okhsv" && param1 === 142 && param2 > 99 && param3 > 99),
-          "blue": (from === "okhsv" && param1 === 264 && param2 > 99 && param3 > 99),
-          "yellow": (from === "okhsv" && param1 === 110 && param2 > 99 && param3 > 99),
-          "pink": (from === "okhsv" && param1 === 328 && param2 > 99 && param3 > 99),
-          "cyan": (from === "okhsv" && param1 === 195 && param2 > 99 && param3 > 99)
-      }
-    };
+  //   const pickColorConditions: { [key: string]: { [key: string]: boolean } } = {
+  //     "okhsl": {
+  //       "red": (from === "okhsl" && param1 === 29 && param2 > 99 && param3 === 57),
+  //       "green": (from === "okhsl" && param1 === 142 && param2 > 99 && param3 === 84),
+  //       "blue": (from === "okhsl" && param1 === 264 && param2 > 99 && param3 === 37),
+  //       "yellow": (from === "okhsl" && param1 === 110 && param2 > 99 && param3 === 96),
+  //       "pink": (from === "okhsl" && param1 === 328 && param2 > 99 && param3 === 65),
+  //       "cyan": (from === "okhsl" && param1 === 195 && param2 > 99 && param3 === 89)
+  //     },
+  //     "okhsv": {
+  //       "red": (from === "okhsv" && param1 === 29 && param2 > 99 && param3 > 99),
+  //       "green": (from === "okhsv" && param1 === 142 && param2 > 99 && param3 > 99),
+  //       "blue": (from === "okhsv" && param1 === 264 && param2 > 99 && param3 > 99),
+  //       "yellow": (from === "okhsv" && param1 === 110 && param2 > 99 && param3 > 99),
+  //       "pink": (from === "okhsv" && param1 === 328 && param2 > 99 && param3 > 99),
+  //       "cyan": (from === "okhsv" && param1 === 195 && param2 > 99 && param3 > 99)
+  //     }
+  //   };
 
-    let currentKey;
+  //   let currentKey;
 
-    for (let i = 0; i < Object.keys(pickColorRgb).length; i++) {
-      currentKey = Object.keys(pickColorRgb)[i];
+  //   for (let i = 0; i < Object.keys(pickColorRgb).length; i++) {
+  //     currentKey = Object.keys(pickColorRgb)[i];
 
-      if (pickColorConditions.okhsl[currentKey] || pickColorConditions.okhsv[currentKey]) {
-        result = pickColorRgb[currentKey];
-        return result;
-      }
-    }
-  }
+  //     if (pickColorConditions.okhsl[currentKey] || pickColorConditions.okhsv[currentKey]) {
+  //       result = pickColorRgb[currentKey];
+  //       return result;
+  //     }
+  //   }
+  // }
 
   // convertToRgb() and convertToP3() needs these values between 0 and 1.
   if (to === "rgb") {
