@@ -820,6 +820,21 @@ export const App = function() {
       return;
     }
 
+    // We test if the value is the same and user didn't use up or down key to avoid continuing.
+    let currentValue;
+
+    if (eventTargetId === "opacity") {
+      currentValue = parseInt(opacityInput.current!.value);
+    }
+    else {
+      currentValue = okhxyValues[eventTargetId].value;
+    }
+
+    if (currentValue === eventTargetValue && key !== "ArrowUp" && key !== "ArrowDown") {
+      eventTarget.blur();
+      return;
+    }
+
     // If we are in OkLCH and user is changing the chroma value, we use 0.1 for a more precise choice.
     if (eventTargetId === "x" && currentColorModel === "oklch") {
       if (shiftKeyPressed) { incrementValue = 1; }
@@ -918,6 +933,8 @@ export const App = function() {
 
     if (event.type !== "blur") { eventTarget.select(); }
     sendNewShapeColorToPlugin();
+
+    if (key === "Enter") { eventTarget.blur(); }
   };
 
   const colorCodesInputHandler = function(event: KeyboardEvent | FocusEvent) {
@@ -1062,7 +1079,7 @@ export const App = function() {
 
     sendNewShapeColorToPlugin();
 
-    if (key === "Enter" && (eventTargetId === "rgba" || eventTargetId === "hex")) { eventTarget.blur(); }
+    if (key === "Enter") { eventTarget.blur(); }
   }
 
 
