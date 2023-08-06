@@ -1002,7 +1002,7 @@ export const App = function() {
             okhxyValues.x.value = parseFloat(matches![1]);
             okhxyValues.y.value = parseFloat(matches![0]);
           }
-
+          
           clampOkhxyValuesChroma();
 
           newOpacity = parseFloat(matches![3]);
@@ -1028,12 +1028,17 @@ export const App = function() {
         regex = /(\b\d+(\.\d+)?\b)/g;
         matches = eventTargetValue.match(regex);
 
-        newOkhxy = colorConversion("rgb", currentColorModel, parseFloat(matches![0])*255, parseFloat(matches![1])*255, parseFloat(matches![2])*255, fileColorProfile);
+        if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+          newOkhxy = colorConversion("rgb", currentColorModel, parseFloat(matches![0])*255, parseFloat(matches![1])*255, parseFloat(matches![2])*255, "p3");
+        }
+        else {
+          newOkhxy = colorConversion("rgb", currentColorModel, parseFloat(matches![0])*255, parseFloat(matches![1])*255, parseFloat(matches![2])*255, "rgb");
+        }
 
         okhxyValues.hue.value = newOkhxy[0];
         okhxyValues.x.value = newOkhxy[1];
         okhxyValues.y.value = newOkhxy[2];
-
+        
         newOpacity = parseFloat(matches![3]);
       }
       else if (eventTargetId === "rgba") {
