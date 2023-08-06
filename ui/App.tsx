@@ -398,7 +398,7 @@ export const App = function() {
       if (inGamutSrgb(`oklch(${okhxyValues.y.value/100} ${chroma} ${okhxyValues.hue.value})`)) {
         colorSpaceOfCurrentColor.current!.innerHTML = "sRGB";
       }
-      else if (inGamutP3(`oklch(${okhxyValues.y.value/100} ${chroma} ${okhxyValues.hue.value})`)) {
+      else if (inGamutP3(`oklch(${okhxyValues.y.value/100} ${chroma} ${okhxyValues.hue.value})`) && fileColorProfile === "p3") {
         colorSpaceOfCurrentColor.current!.innerHTML = "P3";
       }
     }
