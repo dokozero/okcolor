@@ -488,6 +488,26 @@ export const App = function() {
     okhxyValues.x.value = 0;
     okhxyValues.y.value = 0;
 
+    if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+      colorCode_currentColorModelInput.current!.value = "oklch(0 0 0)";
+    }
+    else if (currentColorModel === "okhsl") {
+      colorCode_currentColorModelInput.current!.value = "h: 0, s: 0, l: 0";
+    }
+    else if (currentColorModel === "okhsv") {
+      colorCode_currentColorModelInput.current!.value = "h: 0, s: 0, v: 0";
+    }
+
+    if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+      colorCode_colorInput.current!.value = "color(display-p3 0 0 0)";
+    }
+    else {
+      colorCode_colorInput.current!.value = "color(srgb 0 0 0)";
+    }
+
+    colorCode_rgbaInput.current!.value = "rgba(0, 0, 0, 0)";
+    colorCode_hexInput.current!.value = "#000000";
+
     updateOpacityValue(0);
     shapeInfosResetDefault();
 

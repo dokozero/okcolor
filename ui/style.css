@@ -109,9 +109,6 @@ select {
   position: relative;
   border-top: 1px solid var(--figma-color-border);
 }
-body.deactivated .c-color-picker {
-  outline: solid 1px var(--figma-color-border);
-}
   .c-color-picker__message-wrapper {
     z-index: 1;
     position: absolute;
