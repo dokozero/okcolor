@@ -117,7 +117,7 @@ const CssColorCodes = function({handleInputFocus, colorCodesInputHandler, colorC
 
   return (
 
-    <div class="c-color-codes">
+    <div class={"c-color-codes" + (showCssColorCodes.value ? " c-color-codes--open" : "")}>
 
       <div class="c-color-codes__title-wrapper" onClick={ () => {showCssColorCodes.value = !showCssColorCodes.value} }>
         <div>Color codes</div>

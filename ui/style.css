@@ -243,8 +243,11 @@ body.deactivated .c-bottom-controls {
   margin-top: 10px;
   border-top: 1px solid var(--figma-color-border);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--figma-color-text);
+}
+.c-color-codes--open {
+  font-weight: 500;
 }
   .c-color-codes__title-wrapper {
     display: flex;
