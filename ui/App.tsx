@@ -163,7 +163,7 @@ export const App = function() {
   if (debugMode) { console.log("UI: render App"); }
   
   useEffect(() => {
-    colorPickerCanvas2dContext = colorPickerCanvas.current!.getContext("2d");    
+    colorPickerCanvas2dContext = colorPickerCanvas.current!.getContext("2d");
 
     // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
     parent.postMessage({ pluginMessage: { type: "init"} }, "*");
@@ -443,7 +443,7 @@ export const App = function() {
     opacitySliderCanvas() {
       if (debugMode) { console.log("UI: render.opacitySliderCanvas()"); }
 
-      opacitySliderStyle.value = `background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${shapeInfos.colors[currentFillOrStroke].rgba[0]}, ${shapeInfos.colors[currentFillOrStroke].rgba[1]}, ${shapeInfos.colors[currentFillOrStroke].rgba[2]}, 1)), url(${opacitysliderBackgroundImg})`;
+      opacitySliderStyle.value = `background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${shapeInfos.colors[currentFillOrStroke].rgba[0]}, ${shapeInfos.colors[currentFillOrStroke].rgba[1]}, ${shapeInfos.colors[currentFillOrStroke].rgba[2]}, 1) 90%), url(${opacitysliderBackgroundImg})`;
     },
     all() {
       if (debugMode) { console.log("UI: render.all()"); }
@@ -1284,7 +1284,7 @@ export const App = function() {
               </div>
             </div>
 
-            <div class="c-slider u-mt-14">
+            <div class="c-slider u-mt-16">
               <div class="c-slider__canvas" style={opacitySliderStyle}>
                 <div ref={opacitySlider} class="u-w-full u-h-full" id="opacity-slider"></div>
               </div>

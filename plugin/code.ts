@@ -301,10 +301,10 @@ figma.ui.onmessage = (msg) => {
   }
   else if (msg.type === "syncShowCssColorCodes") {  
     if (msg.showCssColorCodes) {
-      figma.ui.resize(pickerSize, 568);
+      figma.ui.resize(pickerSize, 564);
     }
     else {
-      figma.ui.resize(pickerSize, 440);
+      figma.ui.resize(pickerSize, 436);
     }
     figma.clientStorage.setAsync("showCssColorCodes", msg.showCssColorCodes);
   }
@@ -316,7 +316,7 @@ figma.ui.onmessage = (msg) => {
 ** INIT
 */
 
-figma.showUI(__html__, {width: pickerSize, height: 440, themeColors: true});
+figma.showUI(__html__, {width: pickerSize, height: 436, themeColors: true});
 
 // To send the color of the shape on launch, we call it when the UI is ready, see above figma.ui.onmessage
 const init = async function() {
