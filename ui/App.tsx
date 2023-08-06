@@ -583,20 +583,22 @@ export const App = function() {
     if (debugMode) { console.log("UI: fileColorProfileHandle()"); }
 
     fileColorProfile = (event.target as HTMLSelectElement).value;
-
-    updateColorInputsPosition();
     
     syncFileColorProfileWithPlugin();
-    
-    scaleColorPickerCanvas();
-    
-    updateOkhxyValuesFromCurrentRgba();
-    updateManipulatorPositions.all();
-    render.colorPickerCanvas();
 
-    updateColorCodeInputs();
+    if (!UIMessageOn) {
+      updateColorInputsPosition();
+          
+      scaleColorPickerCanvas();
+      
+      updateOkhxyValuesFromCurrentRgba();
+      updateManipulatorPositions.all();
+      render.colorPickerCanvas();
 
-    updateColorSpaceLabelInColorPicker();
+      updateColorCodeInputs();
+
+      updateColorSpaceLabelInColorPicker();
+    }
   }
 
   const fillOrStrokeHandle = function() {
