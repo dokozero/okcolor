@@ -299,7 +299,7 @@ figma.ui.onmessage = (msg) => {
   else if (msg.type === "syncCurrentColorModel") {
     figma.clientStorage.setAsync("currentColorModel", msg.currentColorModel);
   }
-  else if (msg.type === "syncShowCssColorCodes") {  
+  else if (msg.type === "syncShowCssColorCodes") {
     if (msg.showCssColorCodes) {
       figma.ui.resize(pickerSize, 564);
     }
@@ -342,7 +342,7 @@ const init = async function() {
     showCssColorCodes = false;
   }
   if (showCssColorCodes) {
-    figma.ui.resize(pickerSize, 490);
+    figma.ui.resize(pickerSize, 564);
   }
 
   sendInitToUI();

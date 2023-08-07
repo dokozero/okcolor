@@ -104,7 +104,7 @@ const CssColorCodes = function({handleInputFocus, colorCodesInputHandler, colorC
     
     // We check first if showCssColorCodes if undefined because we don't want to sync with the plugin on first render.
     if (showCssColorCodes.value !== undefined) {
-     parent.postMessage({ pluginMessage: { type: "syncShowCssColorCodes", "showCssColorCodes": showCssColorCodes.value } }, "*");
+      parent.postMessage({ pluginMessage: { type: "syncShowCssColorCodes", "showCssColorCodes": showCssColorCodes.value } }, "*");
     }
   });
 
