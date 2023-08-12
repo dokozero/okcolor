@@ -1,15 +1,17 @@
 import { render } from "preact";
-import { signal, effect } from "@preact/signals";
+import { signal } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
+
+import CssColorCodes from "./components/CssColorCodes";
 
 import { formatHex, formatHex8, converter, inGamut, clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
 
 import { colorConversion } from "./utils/color-conversion";
-import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale, debugMode } from "./utils/constants";
+import { pickerSize, sliderSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale, debugMode } from "./utils/constants";
 
 import { UIMessageTexts } from "./utils/ui-messages";
 import { renderImageData } from "./utils/render-image-data";
-import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, copyToClipboard, isColorCodeInGoodFormat } from "./utils/others";
+import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, isColorCodeInGoodFormat } from "./utils/others";
 
 
 const inGamutSrgb = inGamut("rgb");
@@ -18,16 +20,13 @@ const convertToRgb = converter("rgb");
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
 
-// We use a different value for the slider as they take less room.
-const slider_size = 148;
-
 const okhxyValues = {
   hue: signal(0),
   x: signal(0),
   y: signal(0),
 };
 
-const showCssColorCodes = signal<boolean>();
+const showCssColorCodes = signal<boolean | undefined>(undefined);
 
 const opacitySliderStyle = signal("");
 
@@ -62,6 +61,7 @@ let colorPickerCanvas2dContext: CanvasRenderingContext2D | null = null;
 
 let UIMessageOn = false;
 
+// We use "rgb" and not "srgb" because Culori use it like this, even if it's confusing because rgb is a color model.
 let fileColorProfile: "rgb" | "p3";
 
 // We need this variable only to check if the value of an input has been changed on blur, see colorCodesInputHandler();
@@ -91,74 +91,6 @@ let prevCanvasY: number | undefined;
 let moveVerticallyOnly = false;
 let moveHorizontallyOnly = false;
 
-const CssColorCodes = function({handleInputFocus, colorCodesInputHandler, colorCode_currentColorModelInput, colorCode_colorInput, colorCode_rgbaInput, colorCode_hexInput}) {
-  if (debugMode) { console.log("UI: render CssColorCodes()"); }
-
-  const colorCode_currentColorModelCopyAction = useRef<HTMLDivElement>(null);
-  const colorCode_colorCopyAction = useRef<HTMLDivElement>(null);
-  const colorCode_rgbaCopyAction = useRef<HTMLDivElement>(null);
-  const colorCode_hexCopyAction = useRef<HTMLDivElement>(null);
-  
-  effect(() => {
-    if (debugMode) { console.log("UI: syncShowCssColorCodes()"); }
-    
-    // We check first if showCssColorCodes if undefined because we don't want to sync with the plugin on first render.
-    if (showCssColorCodes.value !== undefined) {
-      parent.postMessage({ pluginMessage: { type: "syncShowCssColorCodes", "showCssColorCodes": showCssColorCodes.value } }, "*");
-    }
-  });
-
-  const removeModifierClassOnCopyActions = function() {
-    colorCode_currentColorModelCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
-    colorCode_colorCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
-    colorCode_rgbaCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
-    colorCode_hexCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
-  };
-
-  return (
-
-    <div class={"c-color-codes" + (showCssColorCodes.value ? " c-color-codes--open" : "")}>
-
-      <div class="c-color-codes__title-wrapper" onClick={ () => {showCssColorCodes.value = !showCssColorCodes.value} }>
-        <div>Color codes</div>
-        
-        <div class={"c-color-codes__arrow-icon" + (showCssColorCodes.value ? " c-color-codes__arrow-icon--open" : "")}>
-          <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" stroke="none"></path></svg>
-        </div>
-      </div>
-
-      {/* TODO: Support esc key to cancel focus on inputs */}
-
-      <div class={"c-color-codes__inputs-wraper " + (showCssColorCodes.value ? "" : " u-display-none")} onMouseLeave={removeModifierClassOnCopyActions}>
-        <div class="input-wrapper">
-          <input ref={colorCode_currentColorModelInput} id="currentColorModel" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div ref={colorCode_currentColorModelCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_currentColorModelInput.current.value, event);} }>Copy</div>
-        </div>
-
-        <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_colorInput} id="color" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div ref={colorCode_colorCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_colorInput.current.value, event); } }>Copy</div>
-        </div>
-
-        <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_rgbaInput} id="rgba" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div ref={colorCode_rgbaCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_rgbaInput.current.value, event); } }>Copy</div>
-        </div>
-
-        <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_hexInput} id="hex" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div ref={colorCode_hexCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_hexInput.current.value, event); } }>Copy</div>
-        </div>
-      </div>
-
-    </div>
-
-  );
-
-}
-
-
-
 export const App = function() {
   if (debugMode) { console.log("UI: render App"); }
   
@@ -169,7 +101,6 @@ export const App = function() {
     parent.postMessage({ pluginMessage: { type: "init"} }, "*");
   }, []);
 
-  // TODO - Put outside of the function?
   const fillOrStrokeSelector = useRef<HTMLDivElement>(null);
   const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null);
   const fillOrStrokeSelector_stroke = useRef<SVGPathElement>(null);
@@ -477,13 +408,13 @@ export const App = function() {
       if (debugMode) { console.log("UI: updateManipulatorPositions.hueSlider()"); }
 
       let hue = okhxyValues.hue.value / 360;
-      manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*hue)-1, -1);
+      manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate((sliderSize*hue)-1, -1);
     },
     opacitySlider() {
       if (debugMode) { console.log("UI: updateManipulatorPositions.opacitySlider()"); }
 
       let opacity = shapeInfos.colors[currentFillOrStroke].rgba[3] / 100;
-      manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)-1, -1);
+      manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate((sliderSize*opacity)-1, -1);
     },
     all() {
       if (debugMode) { console.log("UI: updateManipulatorPositions.all()"); }
@@ -768,10 +699,10 @@ export const App = function() {
         canvasY = event.clientX - rect.left - 7;
         
         if (currentColorModel !== "oklchCss") {
-          okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvasY/slider_size) * 360);
+          okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvasY/sliderSize) * 360);
         }
         else {
-          okhxyValues.hue.value = roundWithDecimal(limitMouseHandlerValue(canvasY/slider_size) * 360, 1);
+          okhxyValues.hue.value = roundWithDecimal(limitMouseHandlerValue(canvasY/sliderSize) * 360, 1);
         }
 
         if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
@@ -788,7 +719,7 @@ export const App = function() {
       }
       else if (mouseHandlerEventTargetId === "opacity-slider") {
         canvasY = event.clientX - rect.left - 7;
-        updateOpacityValue(Math.round(limitMouseHandlerValue(canvasY/slider_size) * 100));
+        updateOpacityValue(Math.round(limitMouseHandlerValue(canvasY/sliderSize) * 100));
 
         updateManipulatorPositions.opacitySlider();
       }
@@ -1346,12 +1277,20 @@ export const App = function() {
           </div>
         </div>
 
-        <CssColorCodes handleInputFocus={handleInputFocus} colorCodesInputHandler={colorCodesInputHandler} colorCode_currentColorModelInput={colorCode_currentColorModelInput} colorCode_colorInput={colorCode_colorInput} colorCode_rgbaInput={colorCode_rgbaInput} colorCode_hexInput={colorCode_hexInput} />
+        <CssColorCodes
+          showCssColorCodes={showCssColorCodes}
+          handleInputFocus={handleInputFocus}
+          colorCodesInputHandler={colorCodesInputHandler}
+          colorCode_currentColorModelInput={colorCode_currentColorModelInput}
+          colorCode_colorInput={colorCode_colorInput}
+          colorCode_rgbaInput={colorCode_rgbaInput}
+          colorCode_hexInput={colorCode_hexInput}
+        />
 
       </div>
 
     </>
   );
-}
+};
 
 render(<App />, document.getElementById("root") as HTMLElement);

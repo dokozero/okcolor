@@ -102,7 +102,6 @@ export function colorConversion(from: string, to: string, param1: number, param2
     colorFunctionSpace = "srgb";
   }
 
-  // We have to use formatHex for converting from RGB because if not we get wrong saturation values (like 0.5 instead of 1).
   if (from === "okhsl" && to === "rgb" && fileColorProfile === "rgb") { culoriResult = convertToRgb({mode: "okhsl", h: param1, s: param2, l: param3}); }
   else if (from === "okhsv" && to === "rgb" && fileColorProfile === "rgb") { culoriResult = convertToRgb({mode: "okhsv", h: param1, s: param2, v: param3}); }
   else if ((from === "oklch" || from === "oklchCss") && to === "rgb" && fileColorProfile === "rgb") { culoriResult = convertToRgb({mode: "oklch", h: param1, c: param2, l: param3}); }

@@ -42,7 +42,6 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
     }
   }
   else if (colorModel === "oklch" || colorModel === "oklchCss") {
-
     let currentTheme: string;
 
     if (document.documentElement.classList.contains("figma-dark")) {
@@ -63,8 +62,8 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
     
     let bgColorLuminosity = 0;
 
-    let chroma: number;
-    let luminosity: number;
+    let currentChroma: number;
+    let currentLuminosity: number;
 
     let whitePixelRendered = false;
 
@@ -88,24 +87,24 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
         numberOfRenderedPixelsForCurrentLine = 0;
       }
 
-      luminosity = (lowResPickerSizeOklch - y) / lowResPickerSizeOklch;
+      currentLuminosity = (lowResPickerSizeOklch - y) / lowResPickerSizeOklch;
 
-      sRGBMaxChroma = clampChromaInGamut({ mode: "oklch", l: luminosity, c: 0.37, h: hue }, "oklch", "rgb");
-      P3MaxChroma = clampChromaInGamut({ mode: "oklch", l: luminosity, c: 0.37, h: hue }, "oklch", "p3");
+      sRGBMaxChroma = clampChromaInGamut({ mode: "oklch", l: currentLuminosity, c: 0.37, h: hue }, "oklch", "rgb");
+      P3MaxChroma = clampChromaInGamut({ mode: "oklch", l: currentLuminosity, c: 0.37, h: hue }, "oklch", "p3");
 
       for (let x = 0; x < lowResPickerSizeOklch; x++) {
-        chroma = x / (lowResPickerSizeOklch * oklchChromaScale);
+        currentChroma = x / (lowResPickerSizeOklch * oklchChromaScale);
   
         pixelIndex = (y * lowResPickerSizeOklch + x) * 4;
 
-        if (chroma > sRGBMaxChroma.c && !whitePixelRendered && fileColorProfile === "p3") {
+        if (currentChroma > sRGBMaxChroma.c && !whitePixelRendered && fileColorProfile === "p3") {
           imageData.data[pixelIndex] = 255;
           imageData.data[pixelIndex + 1] = 255;
           imageData.data[pixelIndex + 2] = 255;
           imageData.data[pixelIndex + 3] = 255;
           whitePixelRendered = true;
         }
-        else if ((fileColorProfile === "p3" && chroma > P3MaxChroma.c) || (fileColorProfile === "rgb" && chroma > sRGBMaxChroma.c)) {
+        else if ((fileColorProfile === "p3" && currentChroma > P3MaxChroma.c) || (fileColorProfile === "rgb" && currentChroma > sRGBMaxChroma.c)) {
           imageData.data[pixelIndex] = bgColor.r;
           imageData.data[pixelIndex + 1] = bgColor.g;
           imageData.data[pixelIndex + 2] = bgColor.b;
@@ -117,7 +116,7 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
             numberOfTotalRenderedPixels++;
           }
 
-          rgbColor = convertToRgb({mode: "oklch", h: hue, c: chroma, l: luminosity});
+          rgbColor = convertToRgb({mode: "oklch", h: hue, c: currentChroma, l: currentLuminosity});
           imageData.data[pixelIndex] = rgbColor.r * 255;
           imageData.data[pixelIndex + 1] = rgbColor.g * 255;
           imageData.data[pixelIndex + 2] = rgbColor.b * 255;
@@ -126,11 +125,9 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
       }
       
       if (localDebugMode) {
-        console.log("Number of rendered pixles for current line = " + numberOfRenderedPixelsForCurrentLine);
+        console.log("Number of rendered pixels for current line = " + numberOfRenderedPixelsForCurrentLine);
       }
       
-      // chromaIsClampedSrgb = false;
-      // chromaIsClampedP3 = false;
       whitePixelRendered = false;
     }
 
