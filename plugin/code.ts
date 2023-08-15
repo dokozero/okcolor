@@ -1,4 +1,4 @@
-import { pickerSize, debugMode } from "../ui/utils/constants";
+import { PICKER_SIZE, debugMode } from "../ui/constants";
 
 /*
 ** VARIABLES DECLARATIONS
@@ -301,10 +301,10 @@ figma.ui.onmessage = (msg) => {
   }
   else if (msg.type === "syncShowCssColorCodes") {
     if (msg.showCssColorCodes) {
-      figma.ui.resize(pickerSize, 564);
+      figma.ui.resize(PICKER_SIZE, 564);
     }
     else {
-      figma.ui.resize(pickerSize, 436);
+      figma.ui.resize(PICKER_SIZE, 436);
     }
     figma.clientStorage.setAsync("showCssColorCodes", msg.showCssColorCodes);
   }
@@ -316,7 +316,7 @@ figma.ui.onmessage = (msg) => {
 ** INIT
 */
 
-figma.showUI(__html__, {width: pickerSize, height: 436, themeColors: true});
+figma.showUI(__html__, {width: PICKER_SIZE, height: 436, themeColors: true});
 
 // To send the color of the shape on launch, we call it when the UI is ready, see above figma.ui.onmessage
 const init = async function() {
@@ -342,7 +342,7 @@ const init = async function() {
     showCssColorCodes = false;
   }
   if (showCssColorCodes) {
-    figma.ui.resize(pickerSize, 564);
+    figma.ui.resize(PICKER_SIZE, 564);
   }
 
   sendInitToUI();

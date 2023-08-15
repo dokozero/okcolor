@@ -1,7 +1,7 @@
 import { effect } from "@preact/signals";
 import { useRef } from "preact/hooks";
-import { copyToClipboard } from "../utils/others";
-import { debugMode } from "../utils/constants";
+import { copyToClipboard } from "../helpers/others";
+import { debugMode } from "../constants";
 
 const CssColorCodes = function({showCssColorCodes, handleInputFocus, colorCodesInputHandler, colorCode_currentColorModelInput, colorCode_colorInput, colorCode_rgbaInput, colorCode_hexInput}) {
   if (debugMode) { console.log("UI: render CssColorCodes()"); }
