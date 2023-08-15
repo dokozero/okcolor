@@ -10,17 +10,17 @@
     "build": "npm run build-ui && npm run build-plugin"
   },
   "dependencies": {
-    "@preact/signals": "^1.2.0",
+    "@preact/signals": "^1.2.1",
     "culori": "^3.2.0",
-    "preact": "^10.16.0"
+    "preact": "^10.17.0"
   },
   "devDependencies": {
-    "@figma/plugin-typings": "^1.72.0",
+    "@figma/plugin-typings": "^1.74.0",
     "@preact/preset-vite": "^2.5.0",
     "@types/culori": "^2.0.0",
-    "@types/node": "^20.4.8",
+    "@types/node": "^20.5.0",
     "typescript": "^5.1.6",
-    "vite": "^4.4.8",
+    "vite": "^4.4.9",
     "vite-plugin-singlefile": "^0.13.5"
   }
 }
