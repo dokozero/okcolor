@@ -395,9 +395,11 @@ export const App = function() {
       const gl = colorPickerGLContext!;
       const isLch = ['oklch', 'oklchCss'].includes(currentColorModel);
       const size = isLch ? LOW_RES_PICKER_SIZE_OKLCH : LOW_RES_PICKER_SIZE;
+
       gl.viewport(0, 0, size, size);
+      gl.drawingBufferColorSpace = fileColorProfile === 'p3' ? 'display-p3' : 'srgb';
       gl.clearColor(0, 0, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.clear(gl.COLOR_BUFFER_BIT);
       twgl.setUniforms(programInfo, {
         resolution: [size, size],
         dark,

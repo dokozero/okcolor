@@ -1,4 +1,7 @@
+// conversation matrix used from culori.js
+
 precision mediump float;
+
 float clampRadian(float radian)
 {
     return mod(radian, 2.0 * M_PI) / (2.0 * M_PI);
@@ -107,4 +110,23 @@ vec3 oklch2p3(in vec3 lch) {
     vec3 xyz = lrgb2xyz(lrgb);
     vec3 p3 = xyz2p3(xyz);
     return lrgb2rgb(p3);
+}
+
+bool isInBounds(in vec3 v) {
+    return all(greaterThanEqual(v, vec3(0.0))) && all(lessThanEqual(v, vec3(1.0)));
+}
+
+// backward search max chroma in sRGB space
+float sRGBMaxChroma(in vec3 lch) {
+    float step = 0.0009;
+    float chroma = lch.y;
+
+    for(int i = 0; i < 100; i++) {
+        if (isInBounds(oklch2srgb(vec3(lch.x, chroma, lch.z)))) {
+            break;
+        }
+        chroma -= step;
+    }
+
+    return chroma - step;
 }
