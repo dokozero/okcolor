@@ -2,8 +2,8 @@ export const PICKER_SIZE = 240;
 // We use a different value for the slider as they take less room.
 export const SLIDER_SIZE = 148;
 
-export const lOW_RES_FACTOR = 2.5;
-export const lOW_RES_FACTOR_OKLCH = 1;
+export const lOW_RES_FACTOR = 0.5;
+export const lOW_RES_FACTOR_OKLCH = 0.2;
 
 export const LOW_RES_PICKER_SIZE = PICKER_SIZE / lOW_RES_FACTOR;
 export const LOW_RES_PICKER_SIZE_OKLCH = PICKER_SIZE / lOW_RES_FACTOR_OKLCH;

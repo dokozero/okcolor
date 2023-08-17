@@ -5,13 +5,21 @@ import { useRef, useEffect } from "preact/hooks";
 import CssColorCodes from "./components/CssColorCodes";
 
 import { formatHex, formatHex8, converter, inGamut, clampChromaInGamut } from "./helpers/culori.mjs";
+import * as twgl from 'twgl.js';
 
 import { colorConversion } from "./helpers/colorConversion";
 import { PICKER_SIZE, SLIDER_SIZE, LOW_RES_PICKER_SIZE, LOW_RES_PICKER_SIZE_OKLCH, lOW_RES_FACTOR, lOW_RES_FACTOR_OKLCH, OKLCH_CHROMA_SCALE, debugMode } from "./constants";
 
 import { UiMessageTexts } from "./ui-messages";
-import { renderImageData } from "./helpers/renderImageData";
+
+// import { renderImageData } from "./helpers/renderImageData";
+
 import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, isColorCodeInGoodFormat } from "./helpers/others";
+
+import utilsGlsl from '@virtual:shaders/ui/shaders/utils.glsl';
+import libraryGlsl from '@virtual:shaders/ui/shaders/library.glsl';
+import fShader from '@virtual:shaders/ui/shaders/f_shader.glsl';
+import vShader from '@virtual:shaders/ui/shaders/v_shader.glsl';
 
 
 const inGamutSrgb = inGamut("rgb");
@@ -57,7 +65,9 @@ let shapeInfos: ShapeInfos = {
   }
 }
 
-let colorPickerCanvas2dContext: CanvasRenderingContext2D | null = null;
+let colorPickerGLContext: WebGL2RenderingContext | null = null;
+let bufferInfo: twgl.BufferInfo;
+let programInfo: twgl.ProgramInfo;
 
 let UIMessageOn = false;
 
@@ -72,9 +82,16 @@ let colorCodesInputValues = {
   hex: ""
 }
 
+enum ColorModels {
+  'oklchCss',
+  'oklch',
+  'okhsl',
+  'okhsv'
+}
+
 // Default choice unless selected shape on launch has no fill.
 let currentFillOrStroke = "fill";
-let currentColorModel: "oklchCss" | "oklch" | "okhsl" | "okhsv";
+let currentColorModel: keyof typeof ColorModels;
 let activeMouseHandler: Function | undefined;
 
 // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
@@ -95,7 +112,20 @@ export const App = function() {
   if (debugMode) { console.log("UI: render App"); }
   
   useEffect(() => {
-    colorPickerCanvas2dContext = colorPickerCanvas.current!.getContext("2d");
+    colorPickerGLContext = colorPickerCanvas.current!.getContext("webgl2");
+    const gl = colorPickerGLContext!;
+    const arrays = {
+      position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]
+    }
+
+    bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+    programInfo = twgl.createProgramInfo(gl, [
+      vShader,
+      libraryGlsl + utilsGlsl + fShader
+    ]);
+
+    gl.useProgram(programInfo.program);
+    twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
 
     // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
     parent.postMessage({ pluginMessage: { type: "init"} }, "*");
@@ -360,7 +390,23 @@ export const App = function() {
     colorPickerCanvas() {
       if (debugMode) { console.log("UI: render.colorPickerCanvas()"); }
 
-      colorPickerCanvas2dContext!.putImageData(renderImageData(okhxyValues.hue.value, currentColorModel, fileColorProfile), 0, 0);
+      let dark = document.documentElement.classList.contains("figma-dark");
+
+      const gl = colorPickerGLContext!;
+      const isLch = ['oklch', 'oklchCss'].includes(currentColorModel);
+      const size = isLch ? LOW_RES_PICKER_SIZE_OKLCH : LOW_RES_PICKER_SIZE;
+      gl.viewport(0, 0, size, size);
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      twgl.setUniforms(programInfo, {
+        resolution: [size, size],
+        dark,
+        chroma_scale: OKLCH_CHROMA_SCALE,
+        showP3: fileColorProfile === 'p3',
+        mode: ColorModels[currentColorModel],
+        hue_rad: okhxyValues.hue.value * Math.PI / 180,
+      })
+      twgl.drawBufferInfo(gl, bufferInfo);
     },
     fillOrStrokeSelector() {
       if (debugMode) { console.log("UI: render.fillOrStrokeSelector()"); }
@@ -464,8 +510,6 @@ export const App = function() {
     updateManipulatorPositions.all();
     render.opacitySliderCanvas();
     render.fillOrStrokeSelector();
-
-    colorPickerCanvas2dContext!.clearRect(0, 0, colorPickerCanvas.current!.width, colorPickerCanvas.current!.height);
   };
 
 
