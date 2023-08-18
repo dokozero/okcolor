@@ -25,17 +25,8 @@ void main()
 
         if (showP3) {
             col = oklch2p3(oklch);
-
-            bool isInRgb = isInBounds(oklabRGB);
-            if (!isInRgb) {
-                float maxChroma = sRGBMaxChroma(oklch);
-                if (abs(c - maxChroma) < 0.002) {
-                    col = vec3(1, 1, 1);
-                    // col = pow(col,vec3(1./1.2)); increase gamma pixel out sRGB
-                }
-            }
         } else {
-            col = pow(col,vec3(1./2.4)); // sRGB gamma correction
+            col = pow(col,vec3(1./2.2)); // sRGB gamma correction
         }
 
         bool inBounds = isInBounds(col);

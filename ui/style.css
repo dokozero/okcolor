@@ -156,6 +156,10 @@ select {
   .c-color-picker__handler {
     pointer-events: none;
   }
+  .c-color-picker__oklch-separator {
+    position: absolute;
+    pointer-events: none;
+  }
 
 
 body.deactivated .c-bottom-controls {

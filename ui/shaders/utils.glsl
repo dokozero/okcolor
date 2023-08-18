@@ -115,18 +115,3 @@ vec3 oklch2p3(in vec3 lch) {
 bool isInBounds(in vec3 v) {
     return all(greaterThanEqual(v, vec3(0.0))) && all(lessThanEqual(v, vec3(1.0)));
 }
-
-// backward search max chroma in sRGB space
-float sRGBMaxChroma(in vec3 lch) {
-    float step = 0.0009;
-    float chroma = lch.y;
-
-    for(int i = 0; i < 100; i++) {
-        if (isInBounds(oklch2srgb(vec3(lch.x, chroma, lch.z)))) {
-            break;
-        }
-        chroma -= step;
-    }
-
-    return chroma - step;
-}

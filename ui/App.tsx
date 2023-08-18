@@ -8,7 +8,17 @@ import { formatHex, formatHex8, converter, inGamut, clampChromaInGamut } from ".
 import * as twgl from 'twgl.js';
 
 import { colorConversion } from "./helpers/colorConversion";
-import { PICKER_SIZE, SLIDER_SIZE, LOW_RES_PICKER_SIZE, LOW_RES_PICKER_SIZE_OKLCH, lOW_RES_FACTOR, lOW_RES_FACTOR_OKLCH, OKLCH_CHROMA_SCALE, debugMode } from "./constants";
+import {
+  PICKER_SIZE,
+  SLIDER_SIZE,
+  LOW_RES_PICKER_SIZE,
+  LOW_RES_PICKER_SIZE_OKLCH,
+  lOW_RES_FACTOR,
+  lOW_RES_FACTOR_OKLCH,
+  OKLCH_CHROMA_SCALE,
+  OKLCH_RGB_BOUNDARY_COLOR,
+  debugMode
+} from "./constants";
 
 import { UiMessageTexts } from "./ui-messages";
 
@@ -149,6 +159,7 @@ export const App = function() {
   const fileColorProfileSelect = useRef<HTMLSelectElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
   const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
+  const sRGBBoundary = useRef<SVGPathElement>(null);
 
   const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null);
   const colorCode_colorInput = useRef<HTMLInputElement>(null);
@@ -389,6 +400,28 @@ export const App = function() {
   const render = {
     colorPickerCanvas() {
       if (debugMode) { console.log("UI: render.colorPickerCanvas()"); }
+
+      // show separator
+      if (fileColorProfile === 'p3') {
+        let d = 'M0 0 ';
+        const precision = 0.5
+        // Precision 0.5 to reduce the load; the rest will be rendered by the browser itself.
+        // It gives a slightly skewed angle at hue 0 and 360; it can be slightly increased
+        for (let l = 0; l < PICKER_SIZE; l += 1 / precision) {
+          const lumen = (PICKER_SIZE - l) / PICKER_SIZE;
+          const sRGBMaxChroma = clampChromaInGamut({
+            mode: "oklch",
+            l: lumen,
+            c: 0.37,
+            h: okhxyValues.hue.value
+          }, "oklch", "rgb");
+          d += `L${(sRGBMaxChroma.c * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `;
+        }
+
+        sRGBBoundary.current!.setAttribute('d', d);
+      } else {
+        sRGBBoundary.current!.setAttribute('d', '');
+      }
 
       let dark = document.documentElement.classList.contains("figma-dark");
 
@@ -1245,6 +1278,9 @@ export const App = function() {
         <div ref={colorSpaceOfCurrentColor} class="c-color-picker__color-space"></div>
 
         <canvas ref={colorPickerCanvas} class="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
+        <svg class="c-color-picker__oklch-separator" width={PICKER_SIZE} height={PICKER_SIZE}>
+          <path fill="none" stroke={OKLCH_RGB_BOUNDARY_COLOR} ref={sRGBBoundary} />
+        </svg>
 
         <svg class="c-color-picker__handler" width={PICKER_SIZE} height={PICKER_SIZE}>
           <g ref={manipulatorColorPicker} transform="translate(0,0)">
