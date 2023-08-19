@@ -254,6 +254,7 @@ export const App = function() {
       UiMessageOn = false;
 
       document.body.classList.remove("deactivated");
+      colorPickerCanvas.current!.classList.remove("u-display-none");
       manipulatorColorPicker.current!.classList.remove("u-display-none");
       colorPickerUiMessage.current!.classList.add("u-display-none");
     },
@@ -265,6 +266,7 @@ export const App = function() {
       resetInterface();
 
       document.body.classList.add("deactivated");
+      colorPickerCanvas.current!.classList.add("u-display-none");
       manipulatorColorPicker.current!.classList.add("u-display-none");
       colorPickerUiMessage.current!.classList.remove("u-display-none");
 

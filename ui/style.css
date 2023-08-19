@@ -120,6 +120,7 @@ select {
     height: 100%;
     display: flex;
     align-items: center;
+    background: var(--figma-color-bg-secondary);
   }
     .c-color-picker__message-text {
       margin: 0;
@@ -152,7 +153,6 @@ select {
   }
   .c-color-picker__canvas {
     transform-origin: left top;
-    background: var(--figma-color-bg-secondary);
   }
   .c-color-picker__handler,
   .c-color-picker__srgb-boundary {
