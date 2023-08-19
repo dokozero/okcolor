@@ -72,11 +72,11 @@ let shapeInfos: ShapeInfos = {
   }
 }
 
-let colorPickerGLContext: WebGL2RenderingContext | null = null;
+let colorPickerGlContext: WebGL2RenderingContext | null = null;
 let bufferInfo: twgl.BufferInfo;
 let programInfo: twgl.ProgramInfo;
 
-let UIMessageOn = false;
+let UiMessageOn = false;
 
 // We use "rgb" and not "srgb" because Culori use it like this, even if it's confusing because rgb is a color model.
 let fileColorProfile: "rgb" | "p3";
@@ -119,8 +119,8 @@ export const App = function() {
   if (debugMode) { console.log("UI: render App"); }
   
   useEffect(() => {
-    colorPickerGLContext = colorPickerCanvas.current!.getContext("webgl2");
-    const gl = colorPickerGLContext!;
+    colorPickerGlContext = colorPickerCanvas.current!.getContext("webgl2");
+    const gl = colorPickerGlContext!;
     const arrays = {
       position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]
     }
@@ -141,7 +141,7 @@ export const App = function() {
   const fillOrStrokeSelector = useRef<HTMLDivElement>(null);
   const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null);
   const fillOrStrokeSelector_stroke = useRef<SVGPathElement>(null);
-  const colorPickerUIMessage = useRef<HTMLDivElement>(null);
+  const colorPickerUiMessage = useRef<HTMLDivElement>(null);
   const colorPickerCanvas = useRef<HTMLCanvasElement>(null);
   const hueSlider = useRef<HTMLDivElement>(null);
   const opacitySlider = useRef<HTMLDivElement>(null);
@@ -156,7 +156,7 @@ export const App = function() {
   const fileColorProfileSelect = useRef<HTMLSelectElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
   const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
-  const sRGBBoundary = useRef<SVGPathElement>(null);
+  const srgbBoundary = useRef<SVGPathElement>(null);
 
   const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null);
   const colorCode_colorInput = useRef<HTMLInputElement>(null);
@@ -247,26 +247,26 @@ export const App = function() {
     }
   }
 
-  const UIMessage = {
+  const UiMessage = {
     hide() {
-      if (debugMode) { console.log("UI: UIMessage.hide()"); }
+      if (debugMode) { console.log("UI: UiMessage.hide()"); }
 
-      UIMessageOn = false;
+      UiMessageOn = false;
 
       document.body.classList.remove("deactivated");
       manipulatorColorPicker.current!.classList.remove("u-display-none");
-      colorPickerUIMessage.current!.classList.add("u-display-none");
+      colorPickerUiMessage.current!.classList.add("u-display-none");
     },
     show(messageCode: string, nodeType: string) {
-      if (debugMode) { console.log(`UI: UIMessage.show(${messageCode}, ${nodeType})`); }
+      if (debugMode) { console.log(`UI: UiMessage.show(${messageCode}, ${nodeType})`); }
 
-      UIMessageOn = true;
+      UiMessageOn = true;
 
       resetInterface();
 
       document.body.classList.add("deactivated");
       manipulatorColorPicker.current!.classList.add("u-display-none");
-      colorPickerUIMessage.current!.classList.remove("u-display-none");
+      colorPickerUiMessage.current!.classList.remove("u-display-none");
 
       if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
         colorSpaceOfCurrentColor.current!.classList.add("u-display-none");
@@ -276,7 +276,7 @@ export const App = function() {
       if (nodeType !== "") {
         message = message.replace("$SHAPE", nodeType.toLowerCase());
       }
-      colorPickerUIMessage.current!.children[0].innerHTML = message;
+      colorPickerUiMessage.current!.children[0].innerHTML = message;
     }
   };
 
@@ -415,14 +415,14 @@ export const App = function() {
           d += `L${(sRGBMaxChroma.c * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `;
         }
 
-        sRGBBoundary.current!.setAttribute("d", d);
+        srgbBoundary.current!.setAttribute("d", d);
       } else {
-        sRGBBoundary.current!.setAttribute("d", "");
+        srgbBoundary.current!.setAttribute("d", "");
       }
 
       let dark = document.documentElement.classList.contains("figma-dark");
 
-      const gl = colorPickerGLContext!;
+      const gl = colorPickerGlContext!;
       const isLch = ["oklch", "oklchCss"].includes(currentColorModel);
       const size = isLch ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV;
 
@@ -599,7 +599,7 @@ export const App = function() {
     
     syncFileColorProfileWithPlugin();
 
-    if (!UIMessageOn) {
+    if (!UiMessageOn) {
       updateColorInputsPosition();
           
       scaleColorPickerCanvas();
@@ -1219,8 +1219,8 @@ export const App = function() {
       // This value is false by default.
       let shouldRenderColorPickerCanvas: boolean = event.data.pluginMessage.shouldRenderColorPickerCanvas;
 
-      if (UIMessageOn) {
-        UIMessage.hide();
+      if (UiMessageOn) {
+        UiMessage.hide();
         shouldRenderColorPickerCanvas = true;
       }
 
@@ -1248,8 +1248,8 @@ export const App = function() {
       if (shouldRenderColorPickerCanvas) { render.colorPickerCanvas(); }
     }
 
-    else if (pluginMessage === "displayUIMessage") {
-      UIMessage.show(event.data.pluginMessage.UIMessageCode, event.data.pluginMessage.nodeType);
+    else if (pluginMessage === "displayUiMessage") {
+      UiMessage.show(event.data.pluginMessage.UiMessageCode, event.data.pluginMessage.nodeType);
     }
   };
 
@@ -1268,7 +1268,7 @@ export const App = function() {
       </div>
 
       <div class="c-color-picker" style={`width: ${PICKER_SIZE}px; height: ${PICKER_SIZE}px;`}>
-        <div ref={colorPickerUIMessage} class="c-color-picker__message-wrapper u-display-none">
+        <div ref={colorPickerUiMessage} class="c-color-picker__message-wrapper u-display-none">
           <p class="c-color-picker__message-text"></p>
         </div>
 
@@ -1276,7 +1276,7 @@ export const App = function() {
 
         <canvas ref={colorPickerCanvas} class="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
         <svg class="c-color-picker__oklch-separator" width={PICKER_SIZE} height={PICKER_SIZE}>
-          <path fill="none" stroke={OKLCH_RGB_BOUNDARY_COLOR} ref={sRGBBoundary} />
+          <path fill="none" stroke={OKLCH_RGB_BOUNDARY_COLOR} ref={srgbBoundary} />
         </svg>
 
         <svg class="c-color-picker__handler" width={PICKER_SIZE} height={PICKER_SIZE}>
