@@ -15,7 +15,7 @@ void main()
     float h = hue_rad;
     float c = uv.x / chroma_scale;
 
-    vec3 bg_color = oklch2srgb(vec3(dark ? .70 : .95, .009, h));
+    vec3 bg_color = oklch2srgb(vec3(dark ? .60 : .95, .004, h));
 
     // fn inRange return 1.0 if float in range
     if (inRange(mode, 0.0, 2.0) == 1.0) {
