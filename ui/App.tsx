@@ -21,9 +21,6 @@ import {
 } from "./constants";
 
 import { UiMessageTexts } from "./ui-messages";
-
-// import { renderImageData } from "./helpers/renderImageData";
-
 import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, isColorCodeInGoodFormat } from "./helpers/others";
 
 import utilsGlsl from '@virtual:shaders/ui/shaders/utils.glsl';

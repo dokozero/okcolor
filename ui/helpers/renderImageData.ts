@@ -1,3 +1,5 @@
+// We keep this file for archive purpose just in case but know the rendering of color picker is done with WebGL shaders.
+
 import { LOW_RES_PICKER_SIZE, LOW_RES_PICKER_SIZE_OKLCH, OKLCH_CHROMA_SCALE, debugMode } from "../constants";
 
 import { converter, clampChromaInGamut } from "../helpers/culori.mjs";
