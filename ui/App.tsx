@@ -1277,8 +1277,8 @@ export const App = function() {
         <div ref={colorSpaceOfCurrentColor} class="c-color-picker__color-space"></div>
 
         <canvas ref={colorPickerCanvas} class="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
-        <svg class="c-color-picker__oklch-separator" width={PICKER_SIZE} height={PICKER_SIZE}>
-          <path fill="none" stroke={OKLCH_RGB_BOUNDARY_COLOR} ref={srgbBoundary} />
+        <svg class="c-color-picker__srgb-boundary" width={PICKER_SIZE} height={PICKER_SIZE}>
+          <path ref={srgbBoundary} fill="none" stroke={OKLCH_RGB_BOUNDARY_COLOR} />
         </svg>
 
         <svg class="c-color-picker__handler" width={PICKER_SIZE} height={PICKER_SIZE}>

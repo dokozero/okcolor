@@ -146,18 +146,16 @@ select {
   }
 
   .c-color-picker__canvas,
-  .c-color-picker__handler {
+  .c-color-picker__handler,
+  .c-color-picker__srgb-boundary {
     position: absolute;
   }
   .c-color-picker__canvas {
     transform-origin: left top;
     background: var(--figma-color-bg-secondary);
   }
-  .c-color-picker__handler {
-    pointer-events: none;
-  }
-  .c-color-picker__oklch-separator {
-    position: absolute;
+  .c-color-picker__handler,
+  .c-color-picker__srgb-boundary {
     pointer-events: none;
   }
 
