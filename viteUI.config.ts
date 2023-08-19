@@ -2,20 +2,20 @@ import { resolve } from "path";
 import { defineConfig } from "vite";
 import preact from "@preact/preset-vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import plainText from 'vite-plugin-virtual-plain-text';
+import plainText from "vite-plugin-virtual-plain-text";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     preact(),
-    plainText({ virtualNamespace: '@virtual:shaders/', dtsAutoGen: 'virtual-shaders-declaration' }),
+    plainText({ virtualNamespace: "@virtual:shaders/", dtsAutoGen: "virtual-shaders-declaration" }),
     {
-      name: 'watch-external', // https://stackoverflow.com/questions/63373804/rollup-watch-include-directory/63548394#63548394
+      name: "watch-external", // https://stackoverflow.com/questions/63373804/rollup-watch-include-directory/63548394#63548394
       async buildStart(){
-        this.addWatchFile('ui/shaders/utils.glsl');
-        this.addWatchFile('ui/shaders/library.glsl');
-        this.addWatchFile('ui/shaders/v_shader.glsl');
-        this.addWatchFile('ui/shaders/f_shader.glsl');
+        this.addWatchFile("ui/shaders/utils.glsl");
+        this.addWatchFile("ui/shaders/library.glsl");
+        this.addWatchFile("ui/shaders/v_shader.glsl");
+        this.addWatchFile("ui/shaders/f_shader.glsl");
       }
     },
     viteSingleFile()],

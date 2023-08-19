@@ -5,7 +5,7 @@ import { useRef, useEffect } from "preact/hooks";
 import CssColorCodes from "./components/CssColorCodes";
 
 import { formatHex, formatHex8, converter, inGamut, clampChromaInGamut } from "./helpers/culori.mjs";
-import * as twgl from 'twgl.js';
+import * as twgl from "twgl.js";
 
 import { colorConversion } from "./helpers/colorConversion";
 import {
@@ -23,10 +23,10 @@ import {
 import { UiMessageTexts } from "./ui-messages";
 import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, isColorCodeInGoodFormat } from "./helpers/others";
 
-import utilsGlsl from '@virtual:shaders/ui/shaders/utils.glsl';
-import libraryGlsl from '@virtual:shaders/ui/shaders/library.glsl';
-import fShader from '@virtual:shaders/ui/shaders/f_shader.glsl';
-import vShader from '@virtual:shaders/ui/shaders/v_shader.glsl';
+import utilsGlsl from "@virtual:shaders/ui/shaders/utils.glsl";
+import libraryGlsl from "@virtual:shaders/ui/shaders/library.glsl";
+import fShader from "@virtual:shaders/ui/shaders/f_shader.glsl";
+import vShader from "@virtual:shaders/ui/shaders/v_shader.glsl";
 
 
 const inGamutSrgb = inGamut("rgb");
@@ -90,10 +90,10 @@ let colorCodesInputValues = {
 }
 
 enum ColorModels {
-  'oklchCss',
-  'oklch',
-  'okhsl',
-  'okhsv'
+  "oklchCss",
+  "oklch",
+  "okhsl",
+  "okhsv"
 }
 
 // Default choice unless selected shape on launch has no fill.
@@ -399,8 +399,8 @@ export const App = function() {
       if (debugMode) { console.log("UI: render.colorPickerCanvas()"); }
 
       // show separator
-      if (fileColorProfile === 'p3') {
-        let d = 'M0 0 ';
+      if (fileColorProfile === "p3") {
+        let d = "M0 0 ";
         const precision = 0.5
         // Precision 0.5 to reduce the load; the rest will be rendered by the browser itself.
         // It gives a slightly skewed angle at hue 0 and 360; it can be slightly increased
@@ -415,26 +415,26 @@ export const App = function() {
           d += `L${(sRGBMaxChroma.c * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `;
         }
 
-        sRGBBoundary.current!.setAttribute('d', d);
+        sRGBBoundary.current!.setAttribute("d", d);
       } else {
-        sRGBBoundary.current!.setAttribute('d', '');
+        sRGBBoundary.current!.setAttribute("d", "");
       }
 
       let dark = document.documentElement.classList.contains("figma-dark");
 
       const gl = colorPickerGLContext!;
-      const isLch = ['oklch', 'oklchCss'].includes(currentColorModel);
+      const isLch = ["oklch", "oklchCss"].includes(currentColorModel);
       const size = isLch ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV;
 
       gl.viewport(0, 0, size, size);
-      gl.drawingBufferColorSpace = fileColorProfile === 'p3' ? 'display-p3' : 'srgb';
+      gl.drawingBufferColorSpace = fileColorProfile === "p3" ? "display-p3" : "srgb";
       gl.clearColor(0, 0, 0, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
       twgl.setUniforms(programInfo, {
         resolution: [size, size],
         dark,
         chroma_scale: OKLCH_CHROMA_SCALE,
-        showP3: fileColorProfile === 'p3',
+        showP3: fileColorProfile === "p3",
         mode: ColorModels[currentColorModel],
         hue_rad: okhxyValues.hue.value * Math.PI / 180,
       })
