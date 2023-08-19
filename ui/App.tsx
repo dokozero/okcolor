@@ -1,15 +1,32 @@
 import { render } from "preact";
-import { signal, effect } from "@preact/signals";
+import { signal } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
 
-import { formatHex, formatHex8, converter, inGamut, clampChromaInGamut } from "../node_modules/culori/bundled/culori.mjs";
+import CssColorCodes from "./components/CssColorCodes";
 
-import { colorConversion } from "./utils/color-conversion";
-import { pickerSize, lowResPickerSize, lowResPickerSizeOklch, lowResFactor, lowResFactorOklch, oklchChromaScale, debugMode } from "./utils/constants";
+import { formatHex, formatHex8, converter, inGamut, clampChromaInGamut } from "./helpers/culori.mjs";
+import * as twgl from "twgl.js";
 
-import { UIMessageTexts } from "./utils/ui-messages";
-import { renderImageData } from "./utils/render-image-data";
-import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, copyToClipboard, isColorCodeInGoodFormat } from "./utils/others";
+import { colorConversion } from "./helpers/colorConversion";
+import {
+  PICKER_SIZE,
+  SLIDER_SIZE,
+  RES_PICKER_SIZE_OKHSLV,
+  RES_PICKER_SIZE_OKLCH,
+  RES_PICKER_FACTOR_OKHSLV,
+  RES_PICKER_FACTOR_OKLCH,
+  OKLCH_CHROMA_SCALE,
+  OKLCH_RGB_BOUNDARY_COLOR,
+  debugMode
+} from "./constants";
+
+import { UiMessageTexts } from "./ui-messages";
+import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, isColorCodeInGoodFormat } from "./helpers/others";
+
+import utilsGlsl from "@virtual:shaders/ui/shaders/utils.glsl";
+import libraryGlsl from "@virtual:shaders/ui/shaders/library.glsl";
+import fShader from "@virtual:shaders/ui/shaders/f_shader.glsl";
+import vShader from "@virtual:shaders/ui/shaders/v_shader.glsl";
 
 
 const inGamutSrgb = inGamut("rgb");
@@ -18,16 +35,13 @@ const convertToRgb = converter("rgb");
 
 const opacitysliderBackgroundImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII=";
 
-// We use a different value for the slider as they take less room.
-const slider_size = 148;
-
 const okhxyValues = {
   hue: signal(0),
   x: signal(0),
   y: signal(0),
 };
 
-const showCssColorCodes = signal<boolean>();
+const showCssColorCodes = signal<boolean | undefined>(undefined);
 
 const opacitySliderStyle = signal("");
 
@@ -58,10 +72,13 @@ let shapeInfos: ShapeInfos = {
   }
 }
 
-let colorPickerCanvas2dContext: CanvasRenderingContext2D | null = null;
+let colorPickerGlContext: WebGL2RenderingContext | null = null;
+let bufferInfo: twgl.BufferInfo;
+let programInfo: twgl.ProgramInfo;
 
-let UIMessageOn = false;
+let UiMessageOn = false;
 
+// We use "rgb" and not "srgb" because Culori use it like this, even if it's confusing because rgb is a color model.
 let fileColorProfile: "rgb" | "p3";
 
 // We need this variable only to check if the value of an input has been changed on blur, see colorCodesInputHandler();
@@ -72,9 +89,16 @@ let colorCodesInputValues = {
   hex: ""
 }
 
+enum ColorModels {
+  "oklchCss",
+  "oklch",
+  "okhsl",
+  "okhsv"
+}
+
 // Default choice unless selected shape on launch has no fill.
 let currentFillOrStroke = "fill";
-let currentColorModel: "oklchCss" | "oklch" | "okhsl" | "okhsv";
+let currentColorModel: keyof typeof ColorModels;
 let activeMouseHandler: Function | undefined;
 
 // This var is to let user move the manipulators outside of their zone, if not the event of the others manipulator will trigger if keep the mousedown and go to other zones.
@@ -91,89 +115,33 @@ let prevCanvasY: number | undefined;
 let moveVerticallyOnly = false;
 let moveHorizontallyOnly = false;
 
-const CssColorCodes = function({handleInputFocus, colorCodesInputHandler, colorCode_currentColorModelInput, colorCode_colorInput, colorCode_rgbaInput, colorCode_hexInput}) {
-  if (debugMode) { console.log("UI: render CssColorCodes()"); }
-
-  const colorCode_currentColorModelCopyAction = useRef<HTMLDivElement>(null);
-  const colorCode_colorCopyAction = useRef<HTMLDivElement>(null);
-  const colorCode_rgbaCopyAction = useRef<HTMLDivElement>(null);
-  const colorCode_hexCopyAction = useRef<HTMLDivElement>(null);
-  
-  effect(() => {
-    if (debugMode) { console.log("UI: syncShowCssColorCodes()"); }
-    
-    // We check first if showCssColorCodes if undefined because we don't want to sync with the plugin on first render.
-    if (showCssColorCodes.value !== undefined) {
-     parent.postMessage({ pluginMessage: { type: "syncShowCssColorCodes", "showCssColorCodes": showCssColorCodes.value } }, "*");
-    }
-  });
-
-  const removeModifierClassOnCopyActions = function() {
-    colorCode_currentColorModelCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
-    colorCode_colorCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
-    colorCode_rgbaCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
-    colorCode_hexCopyAction.current!.classList.remove("c-color-codes__copy-action--copied");
-  };
-
-  return (
-
-    <div class={"c-color-codes" + (showCssColorCodes.value ? " c-color-codes--open" : "")}>
-
-      <div class="c-color-codes__title-wrapper" onClick={ () => {showCssColorCodes.value = !showCssColorCodes.value} }>
-        <div>Color codes</div>
-        
-        <div class={"c-color-codes__arrow-icon" + (showCssColorCodes.value ? " c-color-codes__arrow-icon--open" : "")}>
-          <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" stroke="none"></path></svg>
-        </div>
-      </div>
-
-      {/* TODO: Support esc key to cancel focus on inputs */}
-
-      <div class={"c-color-codes__inputs-wraper " + (showCssColorCodes.value ? "" : " u-display-none")} onMouseLeave={removeModifierClassOnCopyActions}>
-        <div class="input-wrapper">
-          <input ref={colorCode_currentColorModelInput} id="currentColorModel" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div ref={colorCode_currentColorModelCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_currentColorModelInput.current.value, event);} }>Copy</div>
-        </div>
-
-        <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_colorInput} id="color" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div ref={colorCode_colorCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_colorInput.current.value, event); } }>Copy</div>
-        </div>
-
-        <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_rgbaInput} id="rgba" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div ref={colorCode_rgbaCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_rgbaInput.current.value, event); } }>Copy</div>
-        </div>
-
-        <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_hexInput} id="hex" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
-          <div ref={colorCode_hexCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_hexInput.current.value, event); } }>Copy</div>
-        </div>
-      </div>
-
-    </div>
-
-  );
-
-}
-
-
-
 export const App = function() {
   if (debugMode) { console.log("UI: render App"); }
   
   useEffect(() => {
-    colorPickerCanvas2dContext = colorPickerCanvas.current!.getContext("2d");
+    colorPickerGlContext = colorPickerCanvas.current!.getContext("webgl2");
+    const gl = colorPickerGlContext!;
+    const arrays = {
+      position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]
+    }
+
+    bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+    programInfo = twgl.createProgramInfo(gl, [
+      vShader,
+      libraryGlsl + utilsGlsl + fShader
+    ]);
+
+    gl.useProgram(programInfo.program);
+    twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
 
     // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
     parent.postMessage({ pluginMessage: { type: "init"} }, "*");
   }, []);
 
-  // TODO - Put outside of the function?
   const fillOrStrokeSelector = useRef<HTMLDivElement>(null);
   const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null);
   const fillOrStrokeSelector_stroke = useRef<SVGPathElement>(null);
-  const colorPickerUIMessage = useRef<HTMLDivElement>(null);
+  const colorPickerUiMessage = useRef<HTMLDivElement>(null);
   const colorPickerCanvas = useRef<HTMLCanvasElement>(null);
   const hueSlider = useRef<HTMLDivElement>(null);
   const opacitySlider = useRef<HTMLDivElement>(null);
@@ -188,6 +156,7 @@ export const App = function() {
   const fileColorProfileSelect = useRef<HTMLSelectElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
   const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
+  const srgbBoundary = useRef<SVGPathElement>(null);
 
   const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null);
   const colorCode_colorInput = useRef<HTMLInputElement>(null);
@@ -246,14 +215,14 @@ export const App = function() {
     if (debugMode) { console.log("UI: scaleColorPickerCanvas()"); }
 
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-      colorPickerCanvas.current!.style.transform = `scale(${lowResFactorOklch})`;
-      colorPickerCanvas.current!.width = lowResPickerSizeOklch;
-      colorPickerCanvas.current!.height = lowResPickerSizeOklch;
+      colorPickerCanvas.current!.style.transform = `scale(${RES_PICKER_FACTOR_OKLCH})`;
+      colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKLCH;
+      colorPickerCanvas.current!.height = RES_PICKER_SIZE_OKLCH;
     }
     else {
-      colorPickerCanvas.current!.style.transform = `scale(${lowResFactor})`;
-      colorPickerCanvas.current!.width = lowResPickerSize;
-      colorPickerCanvas.current!.height = lowResPickerSize;
+      colorPickerCanvas.current!.style.transform = `scale(${RES_PICKER_FACTOR_OKHSLV})`;
+      colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKHSLV;
+      colorPickerCanvas.current!.height = RES_PICKER_SIZE_OKHSLV;
     }
   }
 
@@ -278,36 +247,38 @@ export const App = function() {
     }
   }
 
-  const UIMessage = {
+  const UiMessage = {
     hide() {
-      if (debugMode) { console.log("UI: UIMessage.hide()"); }
+      if (debugMode) { console.log("UI: UiMessage.hide()"); }
 
-      UIMessageOn = false;
+      UiMessageOn = false;
 
       document.body.classList.remove("deactivated");
+      colorPickerCanvas.current!.classList.remove("u-display-none");
       manipulatorColorPicker.current!.classList.remove("u-display-none");
-      colorPickerUIMessage.current!.classList.add("u-display-none");
+      colorPickerUiMessage.current!.classList.add("u-display-none");
     },
     show(messageCode: string, nodeType: string) {
-      if (debugMode) { console.log(`UI: UIMessage.show(${messageCode}, ${nodeType})`); }
+      if (debugMode) { console.log(`UI: UiMessage.show(${messageCode}, ${nodeType})`); }
 
-      UIMessageOn = true;
+      UiMessageOn = true;
 
       resetInterface();
 
       document.body.classList.add("deactivated");
+      colorPickerCanvas.current!.classList.add("u-display-none");
       manipulatorColorPicker.current!.classList.add("u-display-none");
-      colorPickerUIMessage.current!.classList.remove("u-display-none");
+      colorPickerUiMessage.current!.classList.remove("u-display-none");
 
       if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
         colorSpaceOfCurrentColor.current!.classList.add("u-display-none");
       }
 
-      let message: string = UIMessageTexts[messageCode];
+      let message: string = UiMessageTexts[messageCode];
       if (nodeType !== "") {
         message = message.replace("$SHAPE", nodeType.toLowerCase());
       }
-      colorPickerUIMessage.current!.children[0].innerHTML = message;
+      colorPickerUiMessage.current!.children[0].innerHTML = message;
     }
   };
 
@@ -429,14 +400,56 @@ export const App = function() {
     colorPickerCanvas() {
       if (debugMode) { console.log("UI: render.colorPickerCanvas()"); }
 
-      colorPickerCanvas2dContext!.putImageData(renderImageData(okhxyValues.hue.value, currentColorModel, fileColorProfile), 0, 0);
+      // show separator
+      if (fileColorProfile === "p3") {
+        let d = "M0 0 ";
+        const precision = 0.75;
+        // Precision 0.5 to reduce the load; the rest will be rendered by the browser itself.
+        // It gives a slightly skewed angle at hue 0 and 360; it can be slightly increased
+        for (let l = 0; l < PICKER_SIZE; l += 1 / precision) {
+          const lumen = (PICKER_SIZE - l) / PICKER_SIZE;
+          const sRGBMaxChroma = clampChromaInGamut({
+            mode: "oklch",
+            l: lumen,
+            c: 0.37,
+            h: okhxyValues.hue.value
+          }, "oklch", "rgb");
+          d += `L${(sRGBMaxChroma.c * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `;
+        }
+
+        srgbBoundary.current!.setAttribute("d", d);
+      }
+      else {
+        srgbBoundary.current!.setAttribute("d", "");
+      }
+
+      let dark = document.documentElement.classList.contains("figma-dark");
+
+      const gl = colorPickerGlContext!;
+      const isLch = ["oklch", "oklchCss"].includes(currentColorModel);
+      const size = isLch ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV;
+
+      gl.viewport(0, 0, size, size);
+      gl.drawingBufferColorSpace = fileColorProfile === "p3" ? "display-p3" : "srgb";
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      twgl.setUniforms(programInfo, {
+        resolution: [size, size],
+        dark,
+        chroma_scale: OKLCH_CHROMA_SCALE,
+        showP3: fileColorProfile === "p3",
+        mode: ColorModels[currentColorModel],
+        hue_rad: okhxyValues.hue.value * Math.PI / 180,
+      });
+      twgl.drawBufferInfo(gl, bufferInfo);
     },
     fillOrStrokeSelector() {
       if (debugMode) { console.log("UI: render.fillOrStrokeSelector()"); }
 
       if (shapeInfos.hasFillStroke.fill && shapeInfos.hasFillStroke.stroke) {
         fillOrStrokeSelector.current!.classList.remove("u-pointer-events-none");
-      } else {
+      }
+      else {
         fillOrStrokeSelector.current!.classList.add("u-pointer-events-none");
       }
       
@@ -468,22 +481,22 @@ export const App = function() {
       let y = okhxyValues.y.value / 100;
 
       if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-        x *= oklchChromaScale;
+        x *= OKLCH_CHROMA_SCALE;
       }
 
-      manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(pickerSize*x, pickerSize*(1-y));
+      manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(PICKER_SIZE*x, PICKER_SIZE*(1-y));
     },
     hueSlider() {
       if (debugMode) { console.log("UI: updateManipulatorPositions.hueSlider()"); }
 
       let hue = okhxyValues.hue.value / 360;
-      manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*hue)-1, -1);
+      manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate((SLIDER_SIZE*hue)-1, -1);
     },
     opacitySlider() {
       if (debugMode) { console.log("UI: updateManipulatorPositions.opacitySlider()"); }
 
       let opacity = shapeInfos.colors[currentFillOrStroke].rgba[3] / 100;
-      manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate((slider_size*opacity)-1, -1);
+      manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate((SLIDER_SIZE*opacity)-1, -1);
     },
     all() {
       if (debugMode) { console.log("UI: updateManipulatorPositions.all()"); }
@@ -533,8 +546,6 @@ export const App = function() {
     updateManipulatorPositions.all();
     render.opacitySliderCanvas();
     render.fillOrStrokeSelector();
-
-    colorPickerCanvas2dContext!.clearRect(0, 0, colorPickerCanvas.current!.width, colorPickerCanvas.current!.height);
   };
 
 
@@ -592,7 +603,7 @@ export const App = function() {
     
     syncFileColorProfileWithPlugin();
 
-    if (!UIMessageOn) {
+    if (!UiMessageOn) {
       updateColorInputsPosition();
           
       scaleColorPickerCanvas();
@@ -695,10 +706,10 @@ export const App = function() {
           let newYValue: number;
           
           if (currentColorModel === "oklchCss" && !ctrlKeyPressed) {
-            newYValue = roundWithDecimal(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100, 1);
+            newYValue = roundWithDecimal(limitMouseHandlerValue(1 - canvasY/PICKER_SIZE) * 100, 1);
           }
           else {
-            newYValue = Math.round(limitMouseHandlerValue(1 - canvasY/pickerSize) * 100)
+            newYValue = Math.round(limitMouseHandlerValue(1 - canvasY/PICKER_SIZE) * 100)
           }
           
           if (ctrlKeyPressed) {
@@ -722,27 +733,27 @@ export const App = function() {
           let newXValue: number;
 
           if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-            newXValue = roundWithDecimal(limitMouseHandlerValue(canvasX/pickerSize) * 100, 1);
+            newXValue = roundWithDecimal(limitMouseHandlerValue(canvasX/PICKER_SIZE) * 100, 1);
           }
           else {
-            newXValue = Math.round(limitMouseHandlerValue(canvasX/pickerSize) * 100);
+            newXValue = Math.round(limitMouseHandlerValue(canvasX/PICKER_SIZE) * 100);
           }
           
           if (currentColorModel === "oklch") {
             if (ctrlKeyPressed) {
-              okhxyValues.x.value = Math.round(newXValue! / oklchChromaScale);
+              okhxyValues.x.value = Math.round(newXValue! / OKLCH_CHROMA_SCALE);
             }
             else if (!ctrlKeyPressed) {
-              okhxyValues.x.value = roundWithDecimal(newXValue! / oklchChromaScale, 1);
+              okhxyValues.x.value = roundWithDecimal(newXValue! / OKLCH_CHROMA_SCALE, 1);
             }
             clampOkhxyValuesChroma();
           }
           else if (currentColorModel === "oklchCss") {
             if (ctrlKeyPressed) {
-              okhxyValues.x.value = roundWithDecimal(newXValue! / 100 / oklchChromaScale, 2);
+              okhxyValues.x.value = roundWithDecimal(newXValue! / 100 / OKLCH_CHROMA_SCALE, 2);
             }
             else if (!ctrlKeyPressed) {
-              okhxyValues.x.value = roundWithDecimal(newXValue! / 100 / oklchChromaScale, 3);
+              okhxyValues.x.value = roundWithDecimal(newXValue! / 100 / OKLCH_CHROMA_SCALE, 3);
             }
             clampOkhxyValuesChroma();
           }
@@ -768,10 +779,10 @@ export const App = function() {
         canvasY = event.clientX - rect.left - 7;
         
         if (currentColorModel !== "oklchCss") {
-          okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvasY/slider_size) * 360);
+          okhxyValues.hue.value = Math.round(limitMouseHandlerValue(canvasY/SLIDER_SIZE) * 360);
         }
         else {
-          okhxyValues.hue.value = roundWithDecimal(limitMouseHandlerValue(canvasY/slider_size) * 360, 1);
+          okhxyValues.hue.value = roundWithDecimal(limitMouseHandlerValue(canvasY/SLIDER_SIZE) * 360, 1);
         }
 
         if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
@@ -788,7 +799,7 @@ export const App = function() {
       }
       else if (mouseHandlerEventTargetId === "opacity-slider") {
         canvasY = event.clientX - rect.left - 7;
-        updateOpacityValue(Math.round(limitMouseHandlerValue(canvasY/slider_size) * 100));
+        updateOpacityValue(Math.round(limitMouseHandlerValue(canvasY/SLIDER_SIZE) * 100));
 
         updateManipulatorPositions.opacitySlider();
       }
@@ -1212,8 +1223,8 @@ export const App = function() {
       // This value is false by default.
       let shouldRenderColorPickerCanvas: boolean = event.data.pluginMessage.shouldRenderColorPickerCanvas;
 
-      if (UIMessageOn) {
-        UIMessage.hide();
+      if (UiMessageOn) {
+        UiMessage.hide();
         shouldRenderColorPickerCanvas = true;
       }
 
@@ -1241,8 +1252,8 @@ export const App = function() {
       if (shouldRenderColorPickerCanvas) { render.colorPickerCanvas(); }
     }
 
-    else if (pluginMessage === "displayUIMessage") {
-      UIMessage.show(event.data.pluginMessage.UIMessageCode, event.data.pluginMessage.nodeType);
+    else if (pluginMessage === "displayUiMessage") {
+      UiMessage.show(event.data.pluginMessage.UiMessageCode, event.data.pluginMessage.nodeType);
     }
   };
 
@@ -1260,16 +1271,19 @@ export const App = function() {
         </div>
       </div>
 
-      <div class="c-color-picker" style={`width: ${pickerSize}px; height: ${pickerSize}px;`}>
-        <div ref={colorPickerUIMessage} class="c-color-picker__message-wrapper u-display-none">
+      <div class="c-color-picker" style={`width: ${PICKER_SIZE}px; height: ${PICKER_SIZE}px;`}>
+        <div ref={colorPickerUiMessage} class="c-color-picker__message-wrapper u-display-none">
           <p class="c-color-picker__message-text"></p>
         </div>
 
         <div ref={colorSpaceOfCurrentColor} class="c-color-picker__color-space"></div>
 
         <canvas ref={colorPickerCanvas} class="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
+        <svg class="c-color-picker__srgb-boundary" width={PICKER_SIZE} height={PICKER_SIZE}>
+          <path ref={srgbBoundary} fill="none" stroke={OKLCH_RGB_BOUNDARY_COLOR} />
+        </svg>
 
-        <svg class="c-color-picker__handler" width={pickerSize} height={pickerSize}>
+        <svg class="c-color-picker__handler" width={PICKER_SIZE} height={PICKER_SIZE}>
           <g ref={manipulatorColorPicker} transform="translate(0,0)">
             <circle cx="0" cy="0" r="4.8" fill="none" stroke-width="2.8" stroke="#555555" ></circle>
             <circle cx="0" cy="0" r="4.8" fill="none" stroke-width="2.5" stroke="#ffffff" ></circle>
@@ -1346,12 +1360,20 @@ export const App = function() {
           </div>
         </div>
 
-        <CssColorCodes handleInputFocus={handleInputFocus} colorCodesInputHandler={colorCodesInputHandler} colorCode_currentColorModelInput={colorCode_currentColorModelInput} colorCode_colorInput={colorCode_colorInput} colorCode_rgbaInput={colorCode_rgbaInput} colorCode_hexInput={colorCode_hexInput} />
+        <CssColorCodes
+          showCssColorCodes={showCssColorCodes}
+          handleInputFocus={handleInputFocus}
+          colorCodesInputHandler={colorCodesInputHandler}
+          colorCode_currentColorModelInput={colorCode_currentColorModelInput}
+          colorCode_colorInput={colorCode_colorInput}
+          colorCode_rgbaInput={colorCode_rgbaInput}
+          colorCode_hexInput={colorCode_hexInput}
+        />
 
       </div>
 
     </>
   );
-}
+};
 
 render(<App />, document.getElementById("root") as HTMLElement);

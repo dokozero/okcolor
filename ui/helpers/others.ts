@@ -1,4 +1,4 @@
-import { debugMode } from "./constants";
+import { debugMode } from "../constants";
 
 export const clampNumber = function(num: number, min: number, max: number): number {
   if (debugMode) { console.log(`UI: clampNumber(${num}, ${min}, ${max})`); }
@@ -54,21 +54,12 @@ export const roundWithDecimal = function(value: number, numberOfDecimal = 1): nu
   return Math.round(value * roundFormulaValue) / roundFormulaValue;
 };
 
-
 // Thanks to https://forum.figma.com/t/write-to-clipboard-from-custom-plugin/11860/17
 const unsecuredCopyToClipboard = function(textToCopy: string) {
   // Create a textarea element
   const textArea = document.createElement("textarea");
   textArea.value = textToCopy;
   document.body.appendChild(textArea);
-
-  // Focus and select the textarea content
-
-
-
-  // TODO focus and select already done on input?
-
-
 
   textArea.focus();
   textArea.select();

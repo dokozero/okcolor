@@ -1,4 +1,4 @@
-export const UIMessageTexts: {[key: string]: string} = {
+export const UiMessageTexts: {[key: string]: string} = {
   noSelection: "No shape selected.",
   notAllShapesHaveFillOrStroke: "With multiple shapes selected, they should all have a fill or a stroke with a solid color.",
   notSupportedType: "This type is not supported ($SHAPE).",

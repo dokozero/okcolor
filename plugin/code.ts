@@ -1,4 +1,4 @@
-import { pickerSize, debugMode } from "../ui/utils/constants";
+import { PICKER_SIZE, debugMode } from "../ui/constants";
 
 /*
 ** VARIABLES DECLARATIONS
@@ -85,7 +85,7 @@ const updateShapeInfos = function(): boolean {
   const selection = figma.currentPage.selection;
 
   if (!selection[0]) {
-    sendUIMessageCodeToUI("noSelection");
+    sendUiMessageCodeToUi("noSelection");
     return false;
   }
 
@@ -93,7 +93,7 @@ const updateShapeInfos = function(): boolean {
   for (const node of selection) {
     // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
     if (!supportedNodeTypes.includes(node.type)) {
-      sendUIMessageCodeToUI("notSupportedType", node.type);
+      sendUiMessageCodeToUi("notSupportedType", node.type);
       return false;
     }
     
@@ -103,13 +103,13 @@ const updateShapeInfos = function(): boolean {
   const selectionStroke = selection[0].strokes[0];
 
   if (!selectionFill && !selectionStroke) {
-    sendUIMessageCodeToUI("noColorInShape");
+    sendUiMessageCodeToUi("noColorInShape");
     return false;
   }
 
   // We the following 3 conditions, we allow for example to modify the color of a shape that have a gradient on its stroke and a solid fill or vice versa.
   if (selectionFill?.type !== "SOLID" && selectionStroke?.type !== "SOLID") {
-    sendUIMessageCodeToUI("noSolidColor");
+    sendUiMessageCodeToUi("noSolidColor");
     return false;
   }
 
@@ -143,7 +143,7 @@ const updateShapeInfos = function(): boolean {
     }
   
     if (selection.length !== fillsCount && selection.length !== strokesCount) {
-      sendUIMessageCodeToUI("notAllShapesHaveFillOrStroke");
+      sendUiMessageCodeToUi("notAllShapesHaveFillOrStroke");
       return false;
     }
 
@@ -162,22 +162,22 @@ const updateShapeInfos = function(): boolean {
 ** UPDATES TO UI
 */
 
-const sendInitToUI = function() {
-  if (debugMode) { console.log("PLUGIN: sendInitToUI())"); }
+const sendInitToUi = function() {
+  if (debugMode) { console.log("PLUGIN: sendInitToUi())"); }
   
   figma.ui.postMessage({"message": "init", "data": {"fileColorProfile": fileColorProfile, "currentColorModel": currentColorModel, "showCssColorCodes": showCssColorCodes} });
 };
 
-const sendNewShapeColorToUI = function(shouldRenderColorPickerCanvas = false) {
-  if (debugMode) { console.log(`PLUGIN: sendNewShapeColorToUI(${shouldRenderColorPickerCanvas})`); }
+const sendNewShapeColorToUi = function(shouldRenderColorPickerCanvas = false) {
+  if (debugMode) { console.log(`PLUGIN: sendNewShapeColorToUi(${shouldRenderColorPickerCanvas})`); }
   
   figma.ui.postMessage({"message": "newShapeColor", "shapeInfos": shapeInfos, "currentFillOrStroke": currentFillOrStroke, "shouldRenderColorPickerCanvas": shouldRenderColorPickerCanvas});
 };
 
-const sendUIMessageCodeToUI = function(UIMessageCode: string, nodeType: string = "") {
-  if (debugMode) { console.log(`PLUGIN: sendUIMessageCodeToUI(${UIMessageCode}, ${nodeType})`); }
+const sendUiMessageCodeToUi = function(UiMessageCode: string, nodeType: string = "") {
+  if (debugMode) { console.log(`PLUGIN: sendUiMessageCodeToUi(${UiMessageCode}, ${nodeType})`); }
 
-  figma.ui.postMessage({"message": "displayUIMessage", "UIMessageCode": UIMessageCode, "nodeType": nodeType});
+  figma.ui.postMessage({"message": "displayUiMessage", "UiMessageCode": UiMessageCode, "nodeType": nodeType});
 };
 
 
@@ -197,7 +197,7 @@ figma.on("selectionchange", () => {
   if (currentFillOrStroke === "fill" && !shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "stroke"; }
   else if (currentFillOrStroke === "stroke" && !shapeInfos.hasFillStroke.stroke) { currentFillOrStroke = "fill"; }
 
-  sendNewShapeColorToUI(true);
+  sendNewShapeColorToUi(true);
 
 });
 
@@ -229,16 +229,16 @@ figma.on("documentchange", (event) => {
         else if (currentFillOrStroke === "stroke" && !shapeInfos.hasFillStroke.stroke) {
           currentFillOrStroke = "fill";
         }
-        sendNewShapeColorToUI(true);
+        sendNewShapeColorToUi(true);
         return;
       }
 
       if ((currentFillOrStroke === "fill" && changeProperty === "strokes") || (currentFillOrStroke === "stroke" && changeProperty === "fills")) {
         // To avoid rendering color picker canvas if for example user is changing stroke color while the fill is selected in plugin's UI.
-        sendNewShapeColorToUI();
+        sendNewShapeColorToUi();
       }
       else {
-        sendNewShapeColorToUI(true);
+        sendNewShapeColorToUi(true);
       }
 
     }
@@ -299,12 +299,12 @@ figma.ui.onmessage = (msg) => {
   else if (msg.type === "syncCurrentColorModel") {
     figma.clientStorage.setAsync("currentColorModel", msg.currentColorModel);
   }
-  else if (msg.type === "syncShowCssColorCodes") {  
+  else if (msg.type === "syncShowCssColorCodes") {
     if (msg.showCssColorCodes) {
-      figma.ui.resize(pickerSize, 564);
+      figma.ui.resize(PICKER_SIZE, 564);
     }
     else {
-      figma.ui.resize(pickerSize, 436);
+      figma.ui.resize(PICKER_SIZE, 436);
     }
     figma.clientStorage.setAsync("showCssColorCodes", msg.showCssColorCodes);
   }
@@ -316,7 +316,7 @@ figma.ui.onmessage = (msg) => {
 ** INIT
 */
 
-figma.showUI(__html__, {width: pickerSize, height: 436, themeColors: true});
+figma.showUI(__html__, {width: PICKER_SIZE, height: 436, themeColors: true});
 
 // To send the color of the shape on launch, we call it when the UI is ready, see above figma.ui.onmessage
 const init = async function() {
@@ -342,15 +342,15 @@ const init = async function() {
     showCssColorCodes = false;
   }
   if (showCssColorCodes) {
-    figma.ui.resize(pickerSize, 490);
+    figma.ui.resize(PICKER_SIZE, 564);
   }
 
-  sendInitToUI();
+  sendInitToUi();
 
   if (!updateShapeInfos()) return;
 
   if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
   else { currentFillOrStroke = "stroke"; }
 
-  sendNewShapeColorToUI(true);
+  sendNewShapeColorToUi(true);
 };

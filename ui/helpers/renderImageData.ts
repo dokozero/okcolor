@@ -1,7 +1,9 @@
-import { lowResPickerSize, lowResPickerSizeOklch, oklchChromaScale, debugMode } from "./constants";
+// We keep this file for archive purpose just in case but know the rendering of color picker is done with WebGL shaders.
 
-import { converter, clampChromaInGamut } from "../../node_modules/culori/bundled/culori.mjs";
-import type { Rgb, Oklch } from "../../node_modules/culori/bundled/culori.mjs";
+import { RES_PICKER_SIZE_OKHSLV, RES_PICKER_SIZE_OKLCH, OKLCH_CHROMA_SCALE, debugMode } from "../constants";
+
+import { converter, clampChromaInGamut } from "../helpers/culori.mjs";
+import type { Rgb, Oklch } from "../helpers/culori.mjs";
 
 const localDebugMode = false;
 
@@ -16,13 +18,13 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
   let pixelIndex: number;
   
   if (colorModel === "okhsl" || colorModel === "okhsv") {
-    imageData = new ImageData(lowResPickerSize, lowResPickerSize);
+    imageData = new ImageData(RES_PICKER_SIZE_OKHSLV, RES_PICKER_SIZE_OKHSLV);
 
-    for (let y = 0; y < lowResPickerSize; y++) {
-      for (let x = 0; x < lowResPickerSize; x++) {
+    for (let y = 0; y < RES_PICKER_SIZE_OKHSLV; y++) {
+      for (let x = 0; x < RES_PICKER_SIZE_OKHSLV; x++) {
 
-        okhxyX = x / lowResPickerSize;
-        okhxyY = (lowResPickerSize - y) / lowResPickerSize;
+        okhxyX = x / RES_PICKER_SIZE_OKHSLV;
+        okhxyY = (RES_PICKER_SIZE_OKHSLV - y) / RES_PICKER_SIZE_OKHSLV;
 
         let rgbColor: Rgb;
 
@@ -33,7 +35,7 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
           rgbColor = convertToRgb({mode: "okhsv", h: hue, s: okhxyX, v: okhxyY});
         }
 
-        pixelIndex = (y * lowResPickerSize + x) * 4;
+        pixelIndex = (y * RES_PICKER_SIZE_OKHSLV + x) * 4;
         imageData.data[pixelIndex] = rgbColor.r * 255;
         imageData.data[pixelIndex + 1] = rgbColor.g * 255;
         imageData.data[pixelIndex + 2] = rgbColor.b * 255;
@@ -42,7 +44,6 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
     }
   }
   else if (colorModel === "oklch" || colorModel === "oklchCss") {
-
     let currentTheme: string;
 
     if (document.documentElement.classList.contains("figma-dark")) {
@@ -56,15 +57,15 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
     let numberOfRenderedPixelsForCurrentLine = 0;
     let numberOfTotalRenderedPixels = 0;
 
-    imageData = new ImageData(lowResPickerSizeOklch, lowResPickerSizeOklch);
+    imageData = new ImageData(RES_PICKER_SIZE_OKLCH, RES_PICKER_SIZE_OKLCH);
     
     let rgbColor: Rgb;
     let pixelIndex: number;
     
     let bgColorLuminosity = 0;
 
-    let chroma: number;
-    let luminosity: number;
+    let currentChroma: number;
+    let currentLuminosity: number;
 
     let whitePixelRendered = false;
 
@@ -80,32 +81,32 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
 
     let bgColor = convertToRgb({mode: "oklch", h: hue, c: 1, l: bgColorLuminosity});
 
-    for (let y = 0; y < lowResPickerSizeOklch; y++) {
+    for (let y = 0; y < RES_PICKER_SIZE_OKLCH; y++) {
 
       if (localDebugMode) {
         console.log("-");
-        console.log("Luminosity = " + ((lowResPickerSizeOklch - y) / lowResPickerSizeOklch));
+        console.log("Luminosity = " + ((RES_PICKER_SIZE_OKLCH - y) / RES_PICKER_SIZE_OKLCH));
         numberOfRenderedPixelsForCurrentLine = 0;
       }
 
-      luminosity = (lowResPickerSizeOklch - y) / lowResPickerSizeOklch;
+      currentLuminosity = (RES_PICKER_SIZE_OKLCH - y) / RES_PICKER_SIZE_OKLCH;
 
-      sRGBMaxChroma = clampChromaInGamut({ mode: "oklch", l: luminosity, c: 0.37, h: hue }, "oklch", "rgb");
-      P3MaxChroma = clampChromaInGamut({ mode: "oklch", l: luminosity, c: 0.37, h: hue }, "oklch", "p3");
+      sRGBMaxChroma = clampChromaInGamut({ mode: "oklch", l: currentLuminosity, c: 0.37, h: hue }, "oklch", "rgb");
+      P3MaxChroma = clampChromaInGamut({ mode: "oklch", l: currentLuminosity, c: 0.37, h: hue }, "oklch", "p3");
 
-      for (let x = 0; x < lowResPickerSizeOklch; x++) {
-        chroma = x / (lowResPickerSizeOklch * oklchChromaScale);
+      for (let x = 0; x < RES_PICKER_SIZE_OKLCH; x++) {
+        currentChroma = x / (RES_PICKER_SIZE_OKLCH * OKLCH_CHROMA_SCALE);
   
-        pixelIndex = (y * lowResPickerSizeOklch + x) * 4;
+        pixelIndex = (y * RES_PICKER_SIZE_OKLCH + x) * 4;
 
-        if (chroma > sRGBMaxChroma.c && !whitePixelRendered && fileColorProfile === "p3") {
+        if (currentChroma > sRGBMaxChroma.c && !whitePixelRendered && fileColorProfile === "p3") {
           imageData.data[pixelIndex] = 255;
           imageData.data[pixelIndex + 1] = 255;
           imageData.data[pixelIndex + 2] = 255;
           imageData.data[pixelIndex + 3] = 255;
           whitePixelRendered = true;
         }
-        else if ((fileColorProfile === "p3" && chroma > P3MaxChroma.c) || (fileColorProfile === "rgb" && chroma > sRGBMaxChroma.c)) {
+        else if ((fileColorProfile === "p3" && currentChroma > P3MaxChroma.c) || (fileColorProfile === "rgb" && currentChroma > sRGBMaxChroma.c)) {
           imageData.data[pixelIndex] = bgColor.r;
           imageData.data[pixelIndex + 1] = bgColor.g;
           imageData.data[pixelIndex + 2] = bgColor.b;
@@ -117,7 +118,7 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
             numberOfTotalRenderedPixels++;
           }
 
-          rgbColor = convertToRgb({mode: "oklch", h: hue, c: chroma, l: luminosity});
+          rgbColor = convertToRgb({mode: "oklch", h: hue, c: currentChroma, l: currentLuminosity});
           imageData.data[pixelIndex] = rgbColor.r * 255;
           imageData.data[pixelIndex + 1] = rgbColor.g * 255;
           imageData.data[pixelIndex + 2] = rgbColor.b * 255;
@@ -126,11 +127,9 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
       }
       
       if (localDebugMode) {
-        console.log("Number of rendered pixles for current line = " + numberOfRenderedPixelsForCurrentLine);
+        console.log("Number of rendered pixels for current line = " + numberOfRenderedPixelsForCurrentLine);
       }
       
-      // chromaIsClampedSrgb = false;
-      // chromaIsClampedP3 = false;
       whitePixelRendered = false;
     }
 
