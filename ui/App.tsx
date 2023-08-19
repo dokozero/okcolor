@@ -401,7 +401,7 @@ export const App = function() {
       // show separator
       if (fileColorProfile === "p3") {
         let d = "M0 0 ";
-        const precision = 0.5
+        const precision = 0.5;
         // Precision 0.5 to reduce the load; the rest will be rendered by the browser itself.
         // It gives a slightly skewed angle at hue 0 and 360; it can be slightly increased
         for (let l = 0; l < PICKER_SIZE; l += 1 / precision) {
@@ -416,7 +416,8 @@ export const App = function() {
         }
 
         srgbBoundary.current!.setAttribute("d", d);
-      } else {
+      }
+      else {
         srgbBoundary.current!.setAttribute("d", "");
       }
 
@@ -437,7 +438,7 @@ export const App = function() {
         showP3: fileColorProfile === "p3",
         mode: ColorModels[currentColorModel],
         hue_rad: okhxyValues.hue.value * Math.PI / 180,
-      })
+      });
       twgl.drawBufferInfo(gl, bufferInfo);
     },
     fillOrStrokeSelector() {
@@ -445,7 +446,8 @@ export const App = function() {
 
       if (shapeInfos.hasFillStroke.fill && shapeInfos.hasFillStroke.stroke) {
         fillOrStrokeSelector.current!.classList.remove("u-pointer-events-none");
-      } else {
+      }
+      else {
         fillOrStrokeSelector.current!.classList.add("u-pointer-events-none");
       }
       
