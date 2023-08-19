@@ -1,6 +1,6 @@
 // We keep this file for archive purpose just in case but know the rendering of color picker is done with WebGL shaders.
 
-import { LOW_RES_PICKER_SIZE, LOW_RES_PICKER_SIZE_OKLCH, OKLCH_CHROMA_SCALE, debugMode } from "../constants";
+import { RES_PICKER_SIZE_OKHSLV, RES_PICKER_SIZE_OKLCH, OKLCH_CHROMA_SCALE, debugMode } from "../constants";
 
 import { converter, clampChromaInGamut } from "../helpers/culori.mjs";
 import type { Rgb, Oklch } from "../helpers/culori.mjs";
@@ -18,13 +18,13 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
   let pixelIndex: number;
   
   if (colorModel === "okhsl" || colorModel === "okhsv") {
-    imageData = new ImageData(LOW_RES_PICKER_SIZE, LOW_RES_PICKER_SIZE);
+    imageData = new ImageData(RES_PICKER_SIZE_OKHSLV, RES_PICKER_SIZE_OKHSLV);
 
-    for (let y = 0; y < LOW_RES_PICKER_SIZE; y++) {
-      for (let x = 0; x < LOW_RES_PICKER_SIZE; x++) {
+    for (let y = 0; y < RES_PICKER_SIZE_OKHSLV; y++) {
+      for (let x = 0; x < RES_PICKER_SIZE_OKHSLV; x++) {
 
-        okhxyX = x / LOW_RES_PICKER_SIZE;
-        okhxyY = (LOW_RES_PICKER_SIZE - y) / LOW_RES_PICKER_SIZE;
+        okhxyX = x / RES_PICKER_SIZE_OKHSLV;
+        okhxyY = (RES_PICKER_SIZE_OKHSLV - y) / RES_PICKER_SIZE_OKHSLV;
 
         let rgbColor: Rgb;
 
@@ -35,7 +35,7 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
           rgbColor = convertToRgb({mode: "okhsv", h: hue, s: okhxyX, v: okhxyY});
         }
 
-        pixelIndex = (y * LOW_RES_PICKER_SIZE + x) * 4;
+        pixelIndex = (y * RES_PICKER_SIZE_OKHSLV + x) * 4;
         imageData.data[pixelIndex] = rgbColor.r * 255;
         imageData.data[pixelIndex + 1] = rgbColor.g * 255;
         imageData.data[pixelIndex + 2] = rgbColor.b * 255;
@@ -57,7 +57,7 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
     let numberOfRenderedPixelsForCurrentLine = 0;
     let numberOfTotalRenderedPixels = 0;
 
-    imageData = new ImageData(LOW_RES_PICKER_SIZE_OKLCH, LOW_RES_PICKER_SIZE_OKLCH);
+    imageData = new ImageData(RES_PICKER_SIZE_OKLCH, RES_PICKER_SIZE_OKLCH);
     
     let rgbColor: Rgb;
     let pixelIndex: number;
@@ -81,23 +81,23 @@ export const renderImageData = function(hue: number, colorModel: string, fileCol
 
     let bgColor = convertToRgb({mode: "oklch", h: hue, c: 1, l: bgColorLuminosity});
 
-    for (let y = 0; y < LOW_RES_PICKER_SIZE_OKLCH; y++) {
+    for (let y = 0; y < RES_PICKER_SIZE_OKLCH; y++) {
 
       if (localDebugMode) {
         console.log("-");
-        console.log("Luminosity = " + ((LOW_RES_PICKER_SIZE_OKLCH - y) / LOW_RES_PICKER_SIZE_OKLCH));
+        console.log("Luminosity = " + ((RES_PICKER_SIZE_OKLCH - y) / RES_PICKER_SIZE_OKLCH));
         numberOfRenderedPixelsForCurrentLine = 0;
       }
 
-      currentLuminosity = (LOW_RES_PICKER_SIZE_OKLCH - y) / LOW_RES_PICKER_SIZE_OKLCH;
+      currentLuminosity = (RES_PICKER_SIZE_OKLCH - y) / RES_PICKER_SIZE_OKLCH;
 
       sRGBMaxChroma = clampChromaInGamut({ mode: "oklch", l: currentLuminosity, c: 0.37, h: hue }, "oklch", "rgb");
       P3MaxChroma = clampChromaInGamut({ mode: "oklch", l: currentLuminosity, c: 0.37, h: hue }, "oklch", "p3");
 
-      for (let x = 0; x < LOW_RES_PICKER_SIZE_OKLCH; x++) {
-        currentChroma = x / (LOW_RES_PICKER_SIZE_OKLCH * OKLCH_CHROMA_SCALE);
+      for (let x = 0; x < RES_PICKER_SIZE_OKLCH; x++) {
+        currentChroma = x / (RES_PICKER_SIZE_OKLCH * OKLCH_CHROMA_SCALE);
   
-        pixelIndex = (y * LOW_RES_PICKER_SIZE_OKLCH + x) * 4;
+        pixelIndex = (y * RES_PICKER_SIZE_OKLCH + x) * 4;
 
         if (currentChroma > sRGBMaxChroma.c && !whitePixelRendered && fileColorProfile === "p3") {
           imageData.data[pixelIndex] = 255;

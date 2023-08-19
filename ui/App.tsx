@@ -11,10 +11,10 @@ import { colorConversion } from "./helpers/colorConversion";
 import {
   PICKER_SIZE,
   SLIDER_SIZE,
-  LOW_RES_PICKER_SIZE,
-  LOW_RES_PICKER_SIZE_OKLCH,
-  lOW_RES_FACTOR,
-  lOW_RES_FACTOR_OKLCH,
+  RES_PICKER_SIZE_OKHSLV,
+  RES_PICKER_SIZE_OKLCH,
+  RES_PICKER_FACTOR_OKHSLV,
+  RES_PICKER_FACTOR_OKLCH,
   OKLCH_CHROMA_SCALE,
   OKLCH_RGB_BOUNDARY_COLOR,
   debugMode
@@ -215,14 +215,14 @@ export const App = function() {
     if (debugMode) { console.log("UI: scaleColorPickerCanvas()"); }
 
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-      colorPickerCanvas.current!.style.transform = `scale(${lOW_RES_FACTOR_OKLCH})`;
-      colorPickerCanvas.current!.width = LOW_RES_PICKER_SIZE_OKLCH;
-      colorPickerCanvas.current!.height = LOW_RES_PICKER_SIZE_OKLCH;
+      colorPickerCanvas.current!.style.transform = `scale(${RES_PICKER_FACTOR_OKLCH})`;
+      colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKLCH;
+      colorPickerCanvas.current!.height = RES_PICKER_SIZE_OKLCH;
     }
     else {
-      colorPickerCanvas.current!.style.transform = `scale(${lOW_RES_FACTOR})`;
-      colorPickerCanvas.current!.width = LOW_RES_PICKER_SIZE;
-      colorPickerCanvas.current!.height = LOW_RES_PICKER_SIZE;
+      colorPickerCanvas.current!.style.transform = `scale(${RES_PICKER_FACTOR_OKHSLV})`;
+      colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKHSLV;
+      colorPickerCanvas.current!.height = RES_PICKER_SIZE_OKHSLV;
     }
   }
 
@@ -424,7 +424,7 @@ export const App = function() {
 
       const gl = colorPickerGLContext!;
       const isLch = ['oklch', 'oklchCss'].includes(currentColorModel);
-      const size = isLch ? LOW_RES_PICKER_SIZE_OKLCH : LOW_RES_PICKER_SIZE;
+      const size = isLch ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV;
 
       gl.viewport(0, 0, size, size);
       gl.drawingBufferColorSpace = fileColorProfile === 'p3' ? 'display-p3' : 'srgb';
