@@ -3,8 +3,10 @@ import { useRef } from "preact/hooks";
 import { copyToClipboard } from "../helpers/others";
 import { debugMode } from "../constants";
 
-const CssColorCodes = function({showCssColorCodes, handleInputFocus, colorCodesInputHandler, colorCode_currentColorModelInput, colorCode_colorInput, colorCode_rgbaInput, colorCode_hexInput}) {
+const CssColorCodes = function(props) {
   if (debugMode) { console.log("UI: render CssColorCodes()"); }
+
+  const { showCssColorCodes, handleInputFocus, colorCodesInputHandler, colorCode_currentColorModelInput, colorCode_colorInput, colorCode_rgbaInput, colorCode_hexInput } = props;
 
   const colorCode_currentColorModelCopyAction = useRef<HTMLDivElement>(null);
   const colorCode_colorCopyAction = useRef<HTMLDivElement>(null);
@@ -38,8 +40,6 @@ const CssColorCodes = function({showCssColorCodes, handleInputFocus, colorCodesI
           <svg class="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fill-rule="nonzero" fill-opacity="1" stroke="none"></path></svg>
         </div>
       </div>
-
-      {/* TODO: Support esc key to cancel focus on inputs */}
 
       <div class={"c-color-codes__inputs-wraper " + (showCssColorCodes.value ? "" : " u-display-none")} onMouseLeave={removeModifierClassOnCopyActions}>
         <div class="input-wrapper">
