@@ -7,7 +7,15 @@ import { PICKER_SIZE, debugMode } from "../ui/constants";
 let currentFillOrStroke = "fill";
 let fileColorProfile: "rgb" | "p3";
 let currentColorModel: "oklchCss" | "oklch" | "okhsl" | "okhsv";
+let lockRelativeChroma: boolean;
 let showCssColorCodes: boolean;
+
+const pluginHeights = {
+  okHslvWithoutColorCodes: 436,
+  okHslvWithColorCodes: 564,
+  okLchWithoutColorCodes: 469,
+  okLchWithColorCodes: 598,
+};
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
 let itsAMe = false;
@@ -67,6 +75,17 @@ const changePropertiesToReactTo = [
 /*
 ** HELPER FUNCTIONS
 */
+
+const resizeWindowHeight = function() {
+  if (showCssColorCodes) {
+    if ((currentColorModel === "oklch" || currentColorModel === "oklchCss")) figma.ui.resize(PICKER_SIZE, pluginHeights.okLchWithColorCodes);
+    else figma.ui.resize(PICKER_SIZE, pluginHeights.okHslvWithColorCodes);
+  }
+  else {
+    if ((currentColorModel === "oklch" || currentColorModel === "oklchCss")) figma.ui.resize(PICKER_SIZE, pluginHeights.okLchWithoutColorCodes);
+    else figma.ui.resize(PICKER_SIZE, pluginHeights.okHslvWithoutColorCodes);
+  }
+};
 
 const shapeInfosResetDefault = function() {
   if (debugMode) { console.log("PLUGIN: shapeInfosResetDefault()"); }
@@ -165,7 +184,7 @@ const updateShapeInfos = function(): boolean {
 const sendInitToUi = function() {
   if (debugMode) { console.log("PLUGIN: sendInitToUi())"); }
   
-  figma.ui.postMessage({"message": "init", "data": {"fileColorProfile": fileColorProfile, "currentColorModel": currentColorModel, "showCssColorCodes": showCssColorCodes} });
+  figma.ui.postMessage({"message": "init", "data": {"fileColorProfile": fileColorProfile, "currentColorModel": currentColorModel, "lockRelativeChroma": lockRelativeChroma, "showCssColorCodes": showCssColorCodes} });
 };
 
 const sendNewShapeColorToUi = function(shouldRenderColorPickerCanvas = false) {
@@ -297,16 +316,17 @@ figma.ui.onmessage = (msg) => {
     currentFillOrStroke = msg.currentFillOrStroke;
   }
   else if (msg.type === "syncCurrentColorModel") {
+    currentColorModel = msg.currentColorModel;
+    resizeWindowHeight();
     figma.clientStorage.setAsync("currentColorModel", msg.currentColorModel);
   }
   else if (msg.type === "syncShowCssColorCodes") {
-    if (msg.showCssColorCodes) {
-      figma.ui.resize(PICKER_SIZE, 564);
-    }
-    else {
-      figma.ui.resize(PICKER_SIZE, 436);
-    }
-    figma.clientStorage.setAsync("showCssColorCodes", msg.showCssColorCodes);
+    showCssColorCodes = msg.showCssColorCodes;
+    resizeWindowHeight();
+    figma.clientStorage.setAsync("showCssColorCodes", showCssColorCodes);
+  }
+  else if (msg.type === "syncLockRelativeChromaWithPlugin") {
+    figma.clientStorage.setAsync("lockRelativeChroma", msg.lockRelativeChroma);
   }
 };
 
@@ -316,17 +336,13 @@ figma.ui.onmessage = (msg) => {
 ** INIT
 */
 
-figma.showUI(__html__, {width: PICKER_SIZE, height: 436, themeColors: true});
+figma.showUI(__html__, {width: PICKER_SIZE, height: 469, themeColors: true});
 
 // To send the color of the shape on launch, we call it when the UI is ready, see above figma.ui.onmessage
 const init = async function() {
   if (debugMode) { console.log("PLUGIN: init()"); }
 
-  fileColorProfile = await figma.clientStorage.getAsync("fileColorProfile");
-
-  if (fileColorProfile !== "rgb" && fileColorProfile !== "p3") {
-    fileColorProfile = "rgb";
-  }
+  fileColorProfile = await figma.clientStorage.getAsync("fileColorProfile") || "rgb";
 
   // Get the currentColorModel value from the clientStorage and set it to "okhsl" if it's not in there.
   currentColorModel = await figma.clientStorage.getAsync("currentColorModel");
@@ -336,13 +352,11 @@ const init = async function() {
     currentColorModel = "oklchCss";
   }
 
-  showCssColorCodes = await figma.clientStorage.getAsync("showCssColorCodes");
+  lockRelativeChroma = await figma.clientStorage.getAsync("lockRelativeChroma") || false;
+  showCssColorCodes = await figma.clientStorage.getAsync("showCssColorCodes") || false;
 
-  if(showCssColorCodes === undefined) {
-    showCssColorCodes = false;
-  }
   if (showCssColorCodes) {
-    figma.ui.resize(PICKER_SIZE, 564);
+    figma.ui.resize(PICKER_SIZE, 598);
   }
 
   sendInitToUi();

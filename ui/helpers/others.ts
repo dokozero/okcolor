@@ -1,5 +1,7 @@
 import { debugMode } from "../constants";
 
+import { clampChromaInGamut } from "./culori.mjs";
+
 export const clampNumber = function(num: number, min: number, max: number): number {
   if (debugMode) { console.log(`UI: clampNumber(${num}, ${min}, ${max})`); }
 
@@ -88,7 +90,37 @@ export const copyToClipboard = function(textToCopy: string, event: MouseEvent) {
   }
 
   eventTarget.classList.add("c-color-codes__copy-action--copied");
-}
+};
+
+interface GetRelativeChromaProps {
+  currentOklchColor: {
+    l: number,
+    c: number,
+    h: number
+  },
+  currentColorModel: string;
+  fileColorProfile: string;
+  targetValueNeeded: string;
+  targetPercentage?: number
+};
+
+export const getRelativeChroma = function(props: GetRelativeChromaProps): number {
+  const { currentOklchColor, currentColorModel, fileColorProfile, targetValueNeeded, targetPercentage } = props;
+
+  let currentMaxChroma = clampChromaInGamut({ mode: "oklch", l: currentOklchColor.l / 100, c: 0.37, h: currentOklchColor.h }, "oklch", fileColorProfile);
+  currentMaxChroma = currentMaxChroma.c;
+
+  const actualChromaFormated = currentColorModel === "oklchCss" ? currentOklchColor.c : currentOklchColor.c / 100;
+  
+  if (targetValueNeeded === "percentage") {
+    //Some times we can get 101%, like with #FFFF00, so we use clampNumber().
+    return clampNumber(Math.round((actualChromaFormated * 100) / currentMaxChroma), 0, 100);
+  }
+  else {
+    const returnValue = (targetPercentage! * currentMaxChroma) / 100;
+    return (currentColorModel === "oklchCss" ? roundWithDecimal(returnValue, 3) : roundWithDecimal(returnValue * 100, 1));
+  }
+};
 
 export const isColorCodeInGoodFormat = function(color: string, format: string, currentColorModel: string): boolean {
   let regex;

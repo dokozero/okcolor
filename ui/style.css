@@ -27,6 +27,7 @@ p {
 
 .input-wrapper {
   border: 1px solid transparent;
+  border-radius: 2px;
 }
 
 .input-wrapper:hover,
@@ -148,14 +149,16 @@ select {
 
   .c-color-picker__canvas,
   .c-color-picker__handler,
-  .c-color-picker__srgb-boundary {
+  .c-color-picker__srgb-boundary,
+  .c-color-picker__relative-chroma-stroke {
     position: absolute;
   }
   .c-color-picker__canvas {
     transform-origin: left top;
   }
   .c-color-picker__handler,
-  .c-color-picker__srgb-boundary {
+  .c-color-picker__srgb-boundary,
+  .c-color-picker__relative-chroma-stroke {
     pointer-events: none;
   }
 
@@ -243,6 +246,52 @@ body.deactivated .c-bottom-controls {
   .c-select-input-controls__input-wrapper:focus-within input:not(:last-child) {
     border-right-color: var(--figma-color-border, rgba(0, 0, 0, .1));
   }
+
+
+.c-relative-chroma {
+  height: 28px;
+  padding: 0 12px 0 14px;
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+  .c-relative-chroma p {
+    font-size: 11px;
+    color: var(--figma-color-text);
+  }
+  .c-relative-chroma p {
+    flex: 0 0 140px;
+  }
+  .c-relative-chroma__lock-wrapper {
+    height: 100%;
+    margin-left: 4px;
+    padding: 2px;
+    border-radius: 2px;
+  }
+  .c-relative-chroma__lock-wrapper:hover {
+    cursor: pointer;
+    outline: 1px solid var(--figma-color-border);
+  }
+    .c-relative-chroma__lock {
+      height: 100%;
+      padding: 0 6px 0 5px;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+    }
+    .c-relative-chroma__lock--active {
+      background: var(--figma-color-bg-secondary);
+    }
+    .c-relative-chroma__lock svg {
+      fill: var(--figma-color-text);
+      fill-opacity: 0.9;
+      position: relative;
+      left: 1.5px;
+    }
+    .c-relative-chroma__lock--active svg {
+      fill-opacity: 0.9;
+    }
 
 
 .c-color-codes {

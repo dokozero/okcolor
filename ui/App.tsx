@@ -2,6 +2,7 @@ import { render } from "preact";
 import { signal } from "@preact/signals";
 import { useRef, useEffect } from "preact/hooks";
 
+import RelativeChroma from "./components/RelativeChroma";
 import CssColorCodes from "./components/CssColorCodes";
 
 import { formatHex, formatHex8, converter, inGamut, clampChromaInGamut } from "./helpers/culori.mjs";
@@ -21,7 +22,7 @@ import {
 } from "./constants";
 
 import { UiMessageTexts } from "./ui-messages";
-import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, isColorCodeInGoodFormat } from "./helpers/others";
+import { clampNumber, limitMouseHandlerValue, is2DMovementMoreVerticalOrHorizontal, roundWithDecimal, isColorCodeInGoodFormat, getRelativeChroma } from "./helpers/others";
 
 import utilsGlsl from "@virtual:shaders/ui/shaders/utils.glsl";
 import libraryGlsl from "@virtual:shaders/ui/shaders/library.glsl";
@@ -42,6 +43,9 @@ const okhxyValues = {
 };
 
 const showCssColorCodes = signal<boolean | undefined>(undefined);
+const showRelativeChroma = signal<boolean | undefined>(undefined);
+const relativeChroma = signal<string>("");
+const lockRelativeChroma = signal<boolean | undefined>(undefined);
 
 const opacitySliderStyle = signal("");
 
@@ -157,6 +161,7 @@ export const App = function() {
   const colorModelSelect = useRef<HTMLSelectElement>(null);
   const colorSpaceOfCurrentColor = useRef<HTMLDivElement>(null);
   const srgbBoundary = useRef<SVGPathElement>(null);
+  const relativeChromaStroke = useRef<SVGPathElement>(null);
 
   const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null);
   const colorCode_colorInput = useRef<HTMLInputElement>(null);
@@ -282,12 +287,35 @@ export const App = function() {
     }
   };
 
-  // We use a function to update the opacity value in the input because we need to add the "%" sign and doing it directly in the value field with a fignal value doesn't work.
+  // We use a function to update the opacity value in the input because we need to add the "%" sign and doing it directly in the value field with a signal value doesn't work.
   const updateOpacityValue = function(newValue: number) {
     if (debugMode) { console.log(`UI: updateOpacityValue(${newValue})`); }
 
     shapeInfos.colors[currentFillOrStroke].rgba[3] = newValue;
     opacityInput.current!.value = `${newValue}%`;
+  };
+
+  const updateRelativeChromaValue = function() {
+    if (debugMode) { console.log("UI: updateRelativeChromaValue()"); }
+
+    if (currentColorModel !== "oklch" && currentColorModel !== "oklchCss") { return; }
+
+    let newValue: number;
+
+    // We do this test because with a lightness of 0, we get an undefined value for currentMaxChroma.c
+    if (okhxyValues.y.value > 0 && okhxyValues.y.value < 100) {
+      newValue = getRelativeChroma({
+        currentOklchColor: { l: okhxyValues.y.value, c: okhxyValues.x.value, h: okhxyValues.hue.value },
+        currentColorModel: currentColorModel,
+        fileColorProfile: fileColorProfile,
+        targetValueNeeded: "percentage",
+      });
+    }
+    else {
+      newValue = 0;
+    }
+
+    relativeChroma.value = `${newValue}%`;
   };
 
   const switchFillOrStrokeSelector = function() {
@@ -403,6 +431,7 @@ export const App = function() {
       // show separator
       if (fileColorProfile === "p3") {
         let d = "M0 0 ";
+
         const precision = 0.75;
         // Precision 0.5 to reduce the load; the rest will be rendered by the browser itself.
         // It gives a slightly skewed angle at hue 0 and 360; it can be slightly increased
@@ -422,6 +451,29 @@ export const App = function() {
       else {
         srgbBoundary.current!.setAttribute("d", "");
       }
+
+      if (lockRelativeChroma.value) {
+        let d = "M0 0 ";
+
+        const precision = 0.75;
+
+        for (let l = 0; l < PICKER_SIZE; l += 1 / precision) {
+          const lumen = (PICKER_SIZE - l) / PICKER_SIZE;
+          const maxChromaCurrentProfil = clampChromaInGamut({
+            mode: "oklch",
+            l: lumen,
+            c: 0.37,
+            h: okhxyValues.hue.value
+          }, "oklch", fileColorProfile);
+          d += `L${((maxChromaCurrentProfil.c * (parseInt(relativeChroma.value)/100)) * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `;
+        }
+
+        relativeChromaStroke.current!.setAttribute("d", d);
+      }
+      else {
+        relativeChromaStroke.current!.setAttribute("d", "");
+      }
+
 
       let dark = document.documentElement.classList.contains("figma-dark");
 
@@ -539,6 +591,8 @@ export const App = function() {
     colorCode_rgbaInput.current!.value = "rgba(0, 0, 0, 0)";
     colorCode_hexInput.current!.value = "#000000";
 
+    relativeChroma.value = "0%";
+
     updateOpacityValue(0);
     shapeInfosResetDefault();
 
@@ -574,12 +628,15 @@ export const App = function() {
   });
 
   // We want to know if user has one of these two keys down because in mouseHandler() we constrain the color picker manipulator depending on them.
-  document.addEventListener("keydown", (event) => {
+  document.addEventListener("keydown", (event) => {  
     if (event.key === "Shift") {
       shiftKeyPressed = true;
     }
     else if (event.key === "Control") {
       ctrlKeyPressed = true;
+    }
+    else if (event.key === "c" || event.key === "C") {      
+      if (currentColorModel === "oklch" || currentColorModel === "oklchCss") handleLockRelativeChroma();
     }
   });
 
@@ -650,9 +707,14 @@ export const App = function() {
       fileColorProfileGroup.current!.classList.add("c-file-color-profile--deactivated");
 
       syncFileColorProfileWithPlugin();
+
+      lockRelativeChroma.value = false;
+      showRelativeChroma.value = false;
     }
     else {
       fileColorProfileGroup.current!.classList.remove("c-file-color-profile--deactivated");
+      
+      showRelativeChroma.value = true;
     }
 
     updateColorInputsPosition();
@@ -668,6 +730,19 @@ export const App = function() {
     updateColorCodeInputs();
 
     updateColorSpaceLabelInColorPicker();
+  };
+
+  const handleLockRelativeChroma = function() {
+    lockRelativeChroma.value = !lockRelativeChroma.value;
+
+    if (!lockRelativeChroma.value) {
+      relativeChromaStroke.current!.setAttribute("d", "");
+    }
+    else {
+      render.colorPickerCanvas();
+    }
+
+    syncLockRelativeChromaWithPlugin();
   };
 
   const setupHandler = function(canvas: HTMLCanvasElement | HTMLDivElement) {
@@ -690,7 +765,7 @@ export const App = function() {
         canvasY = event.clientY - rect.top;
 
         // With this code we can set the moveVerticallyOnly or moveHorizontallyOnly to true depending on his mouse movement (for example, if he is moving more vertically than horizontally then we set moveVerticallyOnly to true).
-        if (shiftKeyPressed && !moveVerticallyOnly && !moveHorizontallyOnly) {
+        if (shiftKeyPressed && !moveVerticallyOnly && !moveHorizontallyOnly && !lockRelativeChroma.value) {          
           if (prevCanvasX === undefined && prevCanvasY === undefined) {
             prevCanvasX = canvasX;
             prevCanvasY = canvasY;
@@ -702,7 +777,7 @@ export const App = function() {
           }
         }
 
-        if ((shiftKeyPressed && moveVerticallyOnly) || !shiftKeyPressed) {
+        if ((shiftKeyPressed && moveVerticallyOnly) || !shiftKeyPressed || lockRelativeChroma.value) {
           let newYValue: number;
           
           if (currentColorModel === "oklchCss" && !ctrlKeyPressed) {
@@ -729,8 +804,9 @@ export const App = function() {
           }
         }
 
-        if ((shiftKeyPressed && moveHorizontallyOnly) || !shiftKeyPressed) {
+        if ((shiftKeyPressed && moveHorizontallyOnly) || !shiftKeyPressed || lockRelativeChroma.value) {
           let newXValue: number;
+          let newXValueFormated: number;
 
           if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
             newXValue = roundWithDecimal(limitMouseHandlerValue(canvasX/PICKER_SIZE) * 100, 1);
@@ -741,35 +817,51 @@ export const App = function() {
           
           if (currentColorModel === "oklch") {
             if (ctrlKeyPressed) {
-              okhxyValues.x.value = Math.round(newXValue! / OKLCH_CHROMA_SCALE);
+              newXValueFormated = Math.round(newXValue! / OKLCH_CHROMA_SCALE);
             }
             else if (!ctrlKeyPressed) {
-              okhxyValues.x.value = roundWithDecimal(newXValue! / OKLCH_CHROMA_SCALE, 1);
+              newXValueFormated = roundWithDecimal(newXValue! / OKLCH_CHROMA_SCALE, 1);
             }
-            clampOkhxyValuesChroma();
           }
           else if (currentColorModel === "oklchCss") {
             if (ctrlKeyPressed) {
-              okhxyValues.x.value = roundWithDecimal(newXValue! / 100 / OKLCH_CHROMA_SCALE, 2);
+              newXValueFormated = roundWithDecimal(newXValue! / 100 / OKLCH_CHROMA_SCALE, 2);
             }
             else if (!ctrlKeyPressed) {
-              okhxyValues.x.value = roundWithDecimal(newXValue! / 100 / OKLCH_CHROMA_SCALE, 3);
+              newXValueFormated = roundWithDecimal(newXValue! / 100 / OKLCH_CHROMA_SCALE, 3);
             }
-            clampOkhxyValuesChroma();
           }
           else {
             if (ctrlKeyPressed && newXValue! % 5 === 0) {
-              okhxyValues.x.value = newXValue!;
+              newXValueFormated = newXValue!;
             }
             else if (!ctrlKeyPressed) {
-              okhxyValues.x.value = newXValue!;
+              newXValueFormated = newXValue!;
             }
+          }
+
+          if (lockRelativeChroma.value) {
+            newXValueFormated = getRelativeChroma({
+              currentOklchColor: { l: okhxyValues.y.value, c: okhxyValues.x.value, h: okhxyValues.hue.value },
+              currentColorModel: currentColorModel,
+              fileColorProfile: fileColorProfile,
+              targetValueNeeded: "chroma",
+              targetPercentage: parseInt(relativeChroma.value)
+            });
+          }
+
+          okhxyValues.x.value = newXValueFormated!;
+
+          if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+            clampOkhxyValuesChroma();
           }
         }
 
         updateColorSpaceLabelInColorPicker();
 
         updateCurrentRgbaFromOkhxyValues();
+
+        if (!lockRelativeChroma.value) updateRelativeChromaValue();
         
         updateManipulatorPositions.colorPicker();
         render.fillOrStrokeSelector();
@@ -785,6 +877,16 @@ export const App = function() {
           okhxyValues.hue.value = roundWithDecimal(limitMouseHandlerValue(canvasY/SLIDER_SIZE) * 360, 1);
         }
 
+        if (lockRelativeChroma.value) {          
+          okhxyValues.x.value = getRelativeChroma({
+            currentOklchColor: { l: okhxyValues.y.value, c: okhxyValues.x.value, h: okhxyValues.hue.value },
+            currentColorModel: currentColorModel,
+            fileColorProfile: fileColorProfile,
+            targetValueNeeded: "chroma",
+            targetPercentage: parseInt(relativeChroma.value)
+          });
+        }
+
         if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
           clampOkhxyValuesChroma();
           updateManipulatorPositions.colorPicker();
@@ -793,6 +895,8 @@ export const App = function() {
         updateColorSpaceLabelInColorPicker();
 
         updateCurrentRgbaFromOkhxyValues();
+
+        updateRelativeChromaValue();
 
         updateManipulatorPositions.hueSlider();
         render.all();
@@ -880,6 +984,9 @@ export const App = function() {
       else if (eventTargetId === "opacity") {
         updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
       }
+      else if (eventTargetId === "relativeChroma") {
+        eventTarget.value = relativeChroma.value;
+      }
       if (event.type !== "blur") { eventTarget.select(); }
       return;
     }
@@ -889,6 +996,9 @@ export const App = function() {
 
     if (eventTargetId === "opacity") {
       currentValue = shapeInfos.colors[currentFillOrStroke].rgba[3];
+    }
+    else if (eventTargetId === "relativeChroma") {
+      currentValue = parseInt(relativeChroma.value);
     }
     else {
       currentValue = okhxyValues[eventTargetId].value;
@@ -935,6 +1045,9 @@ export const App = function() {
       }
     }
 
+    // We do this because if user enter for example "105" two times in a row for the relative chroma input, the second times the input will not update because signals only trigger render when the value changes, but in this case they will be the same as user entered the value directly in the input. By doing this trick to empty the value first, we are sure that when we update it after, the change will be effective.
+    if ((eventTargetValue > 100 || eventTargetValue < 0) && eventTargetId === "relativeChroma") relativeChroma.value = "";
+
     eventTargetValue = clampNumber(eventTargetValue, 0, maxValue);
     
     let oldValue: number;
@@ -955,6 +1068,18 @@ export const App = function() {
           else {
             okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 1);
           }
+          if (lockRelativeChroma.value) {
+            okhxyValues.x.value = getRelativeChroma({
+              currentOklchColor: { l: okhxyValues.y.value, c: okhxyValues.x.value, h: okhxyValues.hue.value },
+              currentColorModel: currentColorModel,
+              fileColorProfile: fileColorProfile,
+              targetValueNeeded: "chroma",
+              targetPercentage: parseInt(relativeChroma.value)
+            });
+          }
+          else {
+            updateRelativeChromaValue();
+          }
         }
       }
       else {
@@ -966,7 +1091,7 @@ export const App = function() {
       }
 
       updateColorCodeInputs();
-
+      
       updateColorSpaceLabelInColorPicker();
 
       updateCurrentRgbaFromOkhxyValues();
@@ -993,6 +1118,25 @@ export const App = function() {
       updateManipulatorPositions.opacitySlider();
 
       updateColorCodeInputs();
+    }
+    else if (eventTargetId === "relativeChroma") {
+      okhxyValues.x.value = getRelativeChroma({
+        currentOklchColor: { l: okhxyValues.y.value, c: okhxyValues.x.value, h: okhxyValues.hue.value },
+        currentColorModel: currentColorModel,
+        fileColorProfile: fileColorProfile,
+        targetValueNeeded: "chroma",
+        targetPercentage: eventTargetValue
+      });      
+      
+      updateManipulatorPositions.colorPicker();
+
+      updateCurrentRgbaFromOkhxyValues();
+
+      updateRelativeChromaValue();
+
+      updateColorCodeInputs();
+
+      render.colorPickerCanvas();
     }
 
     if (event.type !== "blur") { eventTarget.select(); }
@@ -1142,6 +1286,8 @@ export const App = function() {
     updateColorSpaceLabelInColorPicker();
 
     updateCurrentRgbaFromOkhxyValues();
+
+    updateRelativeChromaValue();
     
     updateManipulatorPositions.all();
     render.all();
@@ -1183,6 +1329,12 @@ export const App = function() {
     parent.postMessage({ pluginMessage: { type: "syncCurrentColorModel", "currentColorModel": currentColorModel } }, "*");
   };
 
+  const syncLockRelativeChromaWithPlugin = function() {
+    if (debugMode) { console.log("UI: syncLockRelativeChromaWithPlugin()"); }
+
+    parent.postMessage({ pluginMessage: { type: "syncLockRelativeChromaWithPlugin", "lockRelativeChroma": lockRelativeChroma.value } }, "*");
+  };
+
 
 
   /* 
@@ -1202,6 +1354,7 @@ export const App = function() {
       fileColorProfile = event.data.pluginMessage.data.fileColorProfile;
       currentColorModel = event.data.pluginMessage.data.currentColorModel;
       showCssColorCodes.value = event.data.pluginMessage.data.showCssColorCodes;
+      lockRelativeChroma.value = event.data.pluginMessage.data.lockRelativeChroma;
 
       updateColorInputsPosition();
 
@@ -1209,6 +1362,10 @@ export const App = function() {
 
       if (currentColorModel === "okhsl" || currentColorModel === "okhsv") {
         fileColorProfileGroup.current!.classList.add("c-file-color-profile--deactivated");
+        showRelativeChroma.value = false;
+      }
+      else {
+        showRelativeChroma.value = true;
       }
 
       // We do this to avoid flickering on loading.
@@ -1238,6 +1395,7 @@ export const App = function() {
 
       updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
       updateOkhxyValuesFromCurrentRgba();
+      updateRelativeChromaValue();
 
       
       render.opacitySliderCanvas();
@@ -1281,6 +1439,10 @@ export const App = function() {
         <canvas ref={colorPickerCanvas} class="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
         <svg class="c-color-picker__srgb-boundary" width={PICKER_SIZE} height={PICKER_SIZE}>
           <path ref={srgbBoundary} fill="none" stroke={OKLCH_RGB_BOUNDARY_COLOR} />
+        </svg>
+
+        <svg class="c-color-picker__relative-chroma-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
+          <path ref={relativeChromaStroke} fill="none" stroke="#FFFFFF80" />
         </svg>
 
         <svg class="c-color-picker__handler" width={PICKER_SIZE} height={PICKER_SIZE}>
@@ -1359,6 +1521,15 @@ export const App = function() {
             <input ref={opacityInput} onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="opacity" tabIndex={4} spellcheck={false} />
           </div>
         </div>
+
+        <RelativeChroma
+          showRelativeChroma={showRelativeChroma}
+          relativeChroma={relativeChroma}
+          lockRelativeChroma={lockRelativeChroma}
+          handleInputFocus={handleInputFocus}
+          okhxyInputHandler={okhxyInputHandler}
+          handleLockRelativeChroma={handleLockRelativeChroma}
+        />
 
         <CssColorCodes
           showCssColorCodes={showCssColorCodes}
