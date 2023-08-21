@@ -280,7 +280,7 @@ body.deactivated .c-bottom-controls {
       display: flex;
       align-items: center;
     }
-    .c-relative-chroma__lock--active {
+    .c-relative-chroma__lock--closed {
       background: var(--figma-color-bg-secondary);
     }
     .c-relative-chroma__lock svg {
@@ -289,7 +289,7 @@ body.deactivated .c-bottom-controls {
       position: relative;
       left: 1.5px;
     }
-    .c-relative-chroma__lock--active svg {
+    .c-relative-chroma__lock--closed svg {
       fill-opacity: 0.9;
     }
 
