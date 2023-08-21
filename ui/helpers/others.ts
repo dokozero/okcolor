@@ -73,7 +73,7 @@ const unsecuredCopyToClipboard = function(textToCopy: string) {
 
   // Remove the textarea element from the DOM
   document.body.removeChild(textArea);
-}
+};
 
 export const copyToClipboard = function(textToCopy: string, event: MouseEvent) {
   const eventTarget = event.target as HTMLDivElement;

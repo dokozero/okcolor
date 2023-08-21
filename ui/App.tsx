@@ -209,7 +209,7 @@ export const App = function() {
 
       opacityInput.current!.classList.remove("u-order-3");
     }
-  }
+  };
 
   const scaleColorPickerCanvas = function() {
     if (debugMode) { console.log("UI: scaleColorPickerCanvas()"); }
@@ -224,7 +224,7 @@ export const App = function() {
       colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKHSLV;
       colorPickerCanvas.current!.height = RES_PICKER_SIZE_OKHSLV;
     }
-  }
+  };
 
   const clampOkhxyValuesChroma = function() {
     if (debugMode) { console.log("UI: clampOkhxyValuesChroma()"); }
@@ -245,7 +245,7 @@ export const App = function() {
         okhxyValues.x.value = roundWithDecimal(clamped.c, 3);
       }
     }
-  }
+  };
 
   const UiMessage = {
     hide() {
@@ -295,7 +295,7 @@ export const App = function() {
     
     currentFillOrStroke = currentFillOrStroke === "fill" ? "stroke" : "fill";
     fillOrStrokeSelector.current!.setAttribute("data-active", currentFillOrStroke);
-  } ;
+  };
 
   const updateOkhxyValuesFromCurrentRgba = function() {
     if (debugMode) { console.log("UI: updateOkhxyValuesFromCurrentRgba()"); }
@@ -374,7 +374,7 @@ export const App = function() {
     colorCodesInputValues.color = colorCode_colorInput.current!.value;
     colorCodesInputValues.rgba = colorCode_rgbaInput.current!.value;
     colorCodesInputValues.hex = colorCode_hexInput.current!.value;    
-  }
+  };
 
   const updateColorSpaceLabelInColorPicker = function() {
     if (debugMode) { console.log("UI: updateColorSpaceLabelInColorPicker()"); }
@@ -616,7 +616,7 @@ export const App = function() {
 
       updateColorSpaceLabelInColorPicker();
     }
-  }
+  };
 
   const fillOrStrokeHandle = function() {
     if (debugMode) { console.log("UI: fillOrStrokeHandle()"); }
@@ -1151,7 +1151,7 @@ export const App = function() {
     sendNewShapeColorToPlugin();
 
     if (key === "Enter") { eventTarget.blur(); }
-  }
+  };
 
 
 
@@ -1169,7 +1169,7 @@ export const App = function() {
     if (debugMode) { console.log("UI: syncFileColorProfileWithPlugin()"); }
 
     parent.postMessage({ pluginMessage: { type: "syncFileColorProfile", "fileColorProfile": fileColorProfile } }, "*");
-  }
+  };
 
   const syncCurrentFillOrStrokeWithPlugin = function() {
     if (debugMode) { console.log("UI: syncCurrentFillOrStrokeWithPlugin()"); }
@@ -1181,7 +1181,7 @@ export const App = function() {
     if (debugMode) { console.log("UI: syncCurrentColorModelWithPlugin()"); }
 
     parent.postMessage({ pluginMessage: { type: "syncCurrentColorModel", "currentColorModel": currentColorModel } }, "*");
-  }
+  };
 
 
 
