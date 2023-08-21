@@ -9,7 +9,7 @@ export const RES_PICKER_SIZE_OKHSLV = PICKER_SIZE / RES_PICKER_FACTOR_OKHSLV;
 export const RES_PICKER_SIZE_OKLCH = PICKER_SIZE / RES_PICKER_FACTOR_OKLCH;
 
 export const OKLCH_CHROMA_SCALE = 2.7;
-export const OKLCH_RGB_BOUNDARY_COLOR = "#ffffff";
+export const OKLCH_RGB_BOUNDARY_COLOR = "#FFFFFF";
 
 // Set this to true to get all the function calls in the console.
 export const debugMode = false;
