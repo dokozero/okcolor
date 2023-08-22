@@ -3,7 +3,7 @@ import { debugMode } from "../constants";
 const RelativeChroma = function(props) {
   if (debugMode) { console.log("UI: render RelativeChroma()"); }
 
-  const { showRelativeChroma, relativeChroma, lockRelativeChroma, handleInputFocus, okhxyInputHandler, handleLockRelativeChroma } = props;
+  const { showRelativeChroma, relativeChroma, lockRelativeChroma, inputFocusHandle, okhxyInputHandle, lockRelativeChromaHandle } = props;
 
   return (
     <>
@@ -11,10 +11,10 @@ const RelativeChroma = function(props) {
         <div class="c-relative-chroma">
           <p>Relative chroma</p>
           <div class="input-wrapper">
-            <input onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="relativeChroma" value={relativeChroma}/>
+            <input onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="relativeChroma" value={relativeChroma}/>
           </div>
 
-          <div className="c-relative-chroma__lock-wrapper" onClick={handleLockRelativeChroma}>
+          <div className="c-relative-chroma__lock-wrapper" onClick={lockRelativeChromaHandle}>
             <div className={"c-relative-chroma__lock" + (lockRelativeChroma.value ? " c-relative-chroma__lock--closed" : "")}>
               <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
                 { !lockRelativeChroma.value ?

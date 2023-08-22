@@ -6,7 +6,7 @@ import { debugMode } from "../constants";
 const CssColorCodes = function(props) {
   if (debugMode) { console.log("UI: render CssColorCodes()"); }
 
-  const { showCssColorCodes, handleInputFocus, colorCodesInputHandler, colorCode_currentColorModelInput, colorCode_colorInput, colorCode_rgbaInput, colorCode_hexInput } = props;
+  const { showCssColorCodes, inputFocusHandle, colorCodesInputHandle, colorCode_currentColorModelInput, colorCode_colorInput, colorCode_rgbaInput, colorCode_hexInput } = props;
 
   const colorCode_currentColorModelCopyAction = useRef<HTMLDivElement>(null);
   const colorCode_colorCopyAction = useRef<HTMLDivElement>(null);
@@ -43,22 +43,22 @@ const CssColorCodes = function(props) {
 
       <div class={"c-color-codes__inputs-wraper " + (showCssColorCodes.value ? "" : " u-display-none")} onMouseLeave={removeModifierClassOnCopyActions}>
         <div class="input-wrapper">
-          <input ref={colorCode_currentColorModelInput} id="currentColorModel" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
+          <input ref={colorCode_currentColorModelInput} id="currentColorModel" type="text" onFocus={inputFocusHandle} onBlur={colorCodesInputHandle} onKeyDown={colorCodesInputHandle} spellcheck={false} />
           <div ref={colorCode_currentColorModelCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_currentColorModelInput.current.value, event);} }>Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_colorInput} id="color" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
+          <input ref={colorCode_colorInput} id="color" type="text" onFocus={inputFocusHandle} onBlur={colorCodesInputHandle} onKeyDown={colorCodesInputHandle} spellcheck={false} />
           <div ref={colorCode_colorCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_colorInput.current.value, event); } }>Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_rgbaInput} id="rgba" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
+          <input ref={colorCode_rgbaInput} id="rgba" type="text" onFocus={inputFocusHandle} onBlur={colorCodesInputHandle} onKeyDown={colorCodesInputHandle} spellcheck={false} />
           <div ref={colorCode_rgbaCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_rgbaInput.current.value, event); } }>Copy</div>
         </div>
 
         <div class="input-wrapper u-mt-4">
-          <input ref={colorCode_hexInput} id="hex" type="text" onFocus={handleInputFocus} onBlur={colorCodesInputHandler} onKeyDown={colorCodesInputHandler} spellcheck={false} />
+          <input ref={colorCode_hexInput} id="hex" type="text" onFocus={inputFocusHandle} onBlur={colorCodesInputHandle} onKeyDown={colorCodesInputHandle} spellcheck={false} />
           <div ref={colorCode_hexCopyAction} class="c-color-codes__copy-action" onClick={(event) => { removeModifierClassOnCopyActions(); copyToClipboard(colorCode_hexInput.current.value, event); } }>Copy</div>
         </div>
       </div>

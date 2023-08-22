@@ -85,7 +85,7 @@ let UiMessageOn = false;
 // We use "rgb" and not "srgb" because Culori use it like this, even if it's confusing because rgb is a color model.
 let fileColorProfile: "rgb" | "p3";
 
-// We need this variable only to check if the value of an input has been changed on blur, see colorCodesInputHandler();
+// We need this variable only to check if the value of an input has been changed on blur, see colorCodesInputHandle();
 let colorCodesInputValues = {
   currentColorModel: "",
   color: "",
@@ -636,7 +636,7 @@ export const App = function() {
       ctrlKeyPressed = true;
     }
     else if (event.key === "c" || event.key === "C") {      
-      if (currentColorModel === "oklch" || currentColorModel === "oklchCss") handleLockRelativeChroma();
+      if (currentColorModel === "oklch" || currentColorModel === "oklchCss") lockRelativeChromaHandle();
     }
   });
 
@@ -736,7 +736,9 @@ export const App = function() {
     updateColorSpaceLabelInColorPicker();
   };
 
-  const handleLockRelativeChroma = function() {
+  const lockRelativeChromaHandle = function() {
+    if (debugMode) { console.log("UI: lockRelativeChromaHandle()"); }
+
     lockRelativeChroma.value = !lockRelativeChroma.value;
 
     if (!lockRelativeChroma.value) {
@@ -940,14 +942,14 @@ export const App = function() {
   });
 
 
-  const handleInputFocus = function(event: FocusEvent) {
-    if (debugMode) { console.log("UI: handleInputFocus()"); }
+  const inputFocusHandle = function(event: FocusEvent) {
+    if (debugMode) { console.log("UI: inputFocusHandle()"); }
 
     (event.target as HTMLInputElement).select();
   };
 
-  const okhxyInputHandler = function(event: KeyboardEvent | FocusEvent) {
-    if (debugMode) { console.log("UI: okhxyInputHandler()"); }
+  const okhxyInputHandle = function(event: KeyboardEvent | FocusEvent) {
+    if (debugMode) { console.log("UI: okhxyInputHandle()"); }
 
     // To handle rare case where user could have entered a new value on an input but without validating it (like pressing "Enter") and then selecting another shape, without this check the new value of the input would be set on the new shape as the blur event would still trigger when user click on it.
     if (event.type === "blur" && mouseInsideDocument === false) { return; }
@@ -1149,8 +1151,8 @@ export const App = function() {
     if (key === "Enter") { eventTarget.blur(); }
   };
 
-  const colorCodesInputHandler = function(event: KeyboardEvent | FocusEvent) {
-    if (debugMode) { console.log("UI: colorCodesInputHandler()"); }
+  const colorCodesInputHandle = function(event: KeyboardEvent | FocusEvent) {
+    if (debugMode) { console.log("UI: colorCodesInputHandle()"); }
 
     // To handle rare case where user could have entered a new value on an input but without validating it (like pressing "Enter") and then selecting another shape, without this check the new value of the input would be set on the new shape as the blur event would still trigger when user click on it.
     if (event.type === "blur" && mouseInsideDocument === false) { return; }
@@ -1519,10 +1521,10 @@ export const App = function() {
           </div>
 
           <div class="input-wrapper c-select-input-controls__input-wrapper">
-            <input ref={hueInput} onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="hue" value={okhxyValues.hue} spellcheck={false} />
-            <input ref={xInput} onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="x" value={okhxyValues.x} spellcheck={false} />
-            <input ref={yInput} onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="y" value={okhxyValues.y} spellcheck={false} />
-            <input ref={opacityInput} onFocus={handleInputFocus} onBlur={okhxyInputHandler} onKeyDown={okhxyInputHandler} id="opacity" tabIndex={4} spellcheck={false} />
+            <input ref={hueInput} onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="hue" value={okhxyValues.hue} spellcheck={false} />
+            <input ref={xInput} onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="x" value={okhxyValues.x} spellcheck={false} />
+            <input ref={yInput} onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="y" value={okhxyValues.y} spellcheck={false} />
+            <input ref={opacityInput} onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="opacity" tabIndex={4} spellcheck={false} />
           </div>
         </div>
 
@@ -1530,15 +1532,15 @@ export const App = function() {
           showRelativeChroma={showRelativeChroma}
           relativeChroma={relativeChroma}
           lockRelativeChroma={lockRelativeChroma}
-          handleInputFocus={handleInputFocus}
-          okhxyInputHandler={okhxyInputHandler}
-          handleLockRelativeChroma={handleLockRelativeChroma}
+          inputFocusHandle={inputFocusHandle}
+          okhxyInputHandle={okhxyInputHandle}
+          lockRelativeChromaHandle={lockRelativeChromaHandle}
         />
 
         <CssColorCodes
           showCssColorCodes={showCssColorCodes}
-          handleInputFocus={handleInputFocus}
-          colorCodesInputHandler={colorCodesInputHandler}
+          inputFocusHandle={inputFocusHandle}
+          colorCodesInputHandle={colorCodesInputHandle}
           colorCode_currentColorModelInput={colorCode_currentColorModelInput}
           colorCode_colorInput={colorCode_colorInput}
           colorCode_rgbaInput={colorCode_rgbaInput}
