@@ -666,6 +666,9 @@ export const App = function() {
       scaleColorPickerCanvas();
       
       updateOkhxyValuesFromCurrentRgba();
+
+      if (currentColorModel === "oklch" || currentColorModel === "oklchCss") updateRelativeChromaValue();
+
       updateManipulatorPositions.all();
       render.colorPickerCanvas();
 
