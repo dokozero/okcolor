@@ -686,6 +686,7 @@ export const App = function() {
     updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
 
     updateOkhxyValuesFromCurrentRgba();
+    updateRelativeChromaValue();
     render.opacitySliderCanvas();
     updateManipulatorPositions.all();
     render.colorPickerCanvas();
