@@ -352,7 +352,12 @@ const init = async function() {
     currentColorModel = "oklchCss";
   }
 
-  lockRelativeChroma = await figma.clientStorage.getAsync("lockRelativeChroma") || false;
+  if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+    lockRelativeChroma = await figma.clientStorage.getAsync("lockRelativeChroma") || false;
+  }
+  else {
+    lockRelativeChroma = false;
+  }
   showCssColorCodes = await figma.clientStorage.getAsync("showCssColorCodes") || false;
 
   if (showCssColorCodes) {
