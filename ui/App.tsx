@@ -44,8 +44,10 @@ const okhxyValues = {
 
 const showCssColorCodes = signal<boolean | undefined>(undefined);
 const showRelativeChroma = signal<boolean | undefined>(undefined);
-const relativeChroma = signal<string>("");
 const lockRelativeChroma = signal<boolean | undefined>(undefined);
+
+// We need this value for when the user change the value in the input and use for example a NaN value like text. With this value, we can easily revert the change if necessary.
+let previousRelativeChromaValue: string;
 
 const opacitySliderStyle = signal("");
 
@@ -121,7 +123,7 @@ let moveHorizontallyOnly = false;
 
 export const App = function() {
   if (debugMode) { console.log("UI: render App"); }
-  
+
   useEffect(() => {
     colorPickerGlContext = colorPickerCanvas.current!.getContext("webgl2");
     const gl = colorPickerGlContext!;
@@ -156,6 +158,7 @@ export const App = function() {
   const xInput = useRef<HTMLInputElement>(null);
   const yInput = useRef<HTMLInputElement>(null);
   const opacityInput = useRef<HTMLInputElement>(null);
+  const relativeChromaInput = useRef<HTMLInputElement>(null);
   const fileColorProfileGroup = useRef<HTMLDivElement>(null);
   const fileColorProfileSelect = useRef<HTMLSelectElement>(null);
   const colorModelSelect = useRef<HTMLSelectElement>(null);
@@ -297,7 +300,7 @@ export const App = function() {
 
   const updateRelativeChromaValue = function() {
     if (debugMode) { console.log("UI: updateRelativeChromaValue()"); }
-
+    
     if (currentColorModel !== "oklch" && currentColorModel !== "oklchCss") { return; }
 
     let newValue: number;
@@ -314,8 +317,9 @@ export const App = function() {
     else {
       newValue = 0;
     }
-
-    relativeChroma.value = `${newValue}%`;
+    
+    previousRelativeChromaValue = relativeChromaInput.current!.value ? relativeChromaInput.current!.value : `${newValue}%`;
+    relativeChromaInput.current!.value = `${newValue}%`;
   };
 
   const switchFillOrStrokeSelector = function() {
@@ -465,7 +469,7 @@ export const App = function() {
             c: 0.37,
             h: okhxyValues.hue.value
           }, "oklch", fileColorProfile);
-          d += `L${((maxChromaCurrentProfil.c * (parseInt(relativeChroma.value)/100)) * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `;
+          d += `L${((maxChromaCurrentProfil.c * (parseInt(relativeChromaInput.current!.value)/100)) * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `;
         }
 
         relativeChromaStroke.current!.setAttribute("d", d);
@@ -591,7 +595,7 @@ export const App = function() {
     colorCode_rgbaInput.current!.value = "rgba(0, 0, 0, 0)";
     colorCode_hexInput.current!.value = "#000000";
 
-    relativeChroma.value = "0%";
+    if (currentColorModel === "oklch" || currentColorModel === "oklchCss") relativeChromaInput.current!.value = "0%";
 
     updateOpacityValue(0);
     shapeInfosResetDefault();
@@ -635,8 +639,11 @@ export const App = function() {
     else if (event.key === "Control") {
       ctrlKeyPressed = true;
     }
-    else if (event.key === "c" || event.key === "C") {      
-      if (currentColorModel === "oklch" || currentColorModel === "oklchCss") lockRelativeChromaHandle();
+    // We test document.activeElement !== relativeChromaInput.current! because we don't want to trigger this code if user type "c" while he's in the relativeChroma input.
+    else if ((event.key === "c" || event.key === "C") && document.activeElement !== relativeChromaInput.current!) {
+      if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
+        lockRelativeChromaHandle();
+      }
     }
   });
 
@@ -728,6 +735,9 @@ export const App = function() {
     scaleColorPickerCanvas();
     
     updateOkhxyValuesFromCurrentRgba();
+
+    if (currentColorModel === "oklch" || currentColorModel === "oklchCss") updateRelativeChromaValue();
+
     updateManipulatorPositions.all();
     render.colorPickerCanvas();
 
@@ -852,7 +862,7 @@ export const App = function() {
               currentColorModel: currentColorModel,
               fileColorProfile: fileColorProfile,
               targetValueNeeded: "chroma",
-              targetPercentage: parseInt(relativeChroma.value)
+              targetPercentage: parseInt(relativeChromaInput.current!.value)
             });
           }
 
@@ -889,7 +899,7 @@ export const App = function() {
             currentColorModel: currentColorModel,
             fileColorProfile: fileColorProfile,
             targetValueNeeded: "chroma",
-            targetPercentage: parseInt(relativeChroma.value)
+            targetPercentage: parseInt(relativeChromaInput.current!.value)
           });
         }
 
@@ -994,7 +1004,7 @@ export const App = function() {
         updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
       }
       else if (eventTargetId === "relativeChroma") {
-        eventTarget.value = relativeChroma.value;
+        eventTarget.value = previousRelativeChromaValue;
       }
       if (event.type !== "blur") { eventTarget.select(); }
       return;
@@ -1007,13 +1017,13 @@ export const App = function() {
       currentValue = shapeInfos.colors[currentFillOrStroke].rgba[3];
     }
     else if (eventTargetId === "relativeChroma") {
-      currentValue = parseInt(relativeChroma.value);
+      currentValue = parseInt(previousRelativeChromaValue);
     }
     else {
       currentValue = okhxyValues[eventTargetId].value;
     }
 
-    if (currentValue === eventTargetValue && key !== "ArrowUp" && key !== "ArrowDown") {
+    if (currentValue === eventTargetValue && key !== "ArrowUp" && key !== "ArrowDown") {    
       eventTarget.blur();
       return;
     }
@@ -1054,9 +1064,6 @@ export const App = function() {
       }
     }
 
-    // We do this because if user enter for example "105" two times in a row for the relative chroma input, the second times the input will not update because signals only trigger render when the value changes, but in this case they will be the same as user entered the value directly in the input. By doing this trick to empty the value first, we are sure that when we update it after, the change will be effective.
-    if ((eventTargetValue > 100 || eventTargetValue < 0) && eventTargetId === "relativeChroma") relativeChroma.value = "";
-
     eventTargetValue = clampNumber(eventTargetValue, 0, maxValue);
     
     let oldValue: number;
@@ -1083,7 +1090,7 @@ export const App = function() {
               currentColorModel: currentColorModel,
               fileColorProfile: fileColorProfile,
               targetValueNeeded: "chroma",
-              targetPercentage: parseInt(relativeChroma.value)
+              targetPercentage: parseInt(relativeChromaInput.current!.value)
             });
           }
           else {
@@ -1135,13 +1142,15 @@ export const App = function() {
         fileColorProfile: fileColorProfile,
         targetValueNeeded: "chroma",
         targetPercentage: eventTargetValue
-      });      
+      });
       
       updateManipulatorPositions.colorPicker();
 
       updateCurrentRgbaFromOkhxyValues();
 
-      updateRelativeChromaValue();
+      // We don't need to use updateRelativeChromaValue() because the okhxyValues.x.value has already been updated.
+      relativeChromaInput.current!.value = `${eventTargetValue}%`;
+      previousRelativeChromaValue = `${eventTargetValue}%`;
 
       updateColorCodeInputs();
 
@@ -1532,8 +1541,8 @@ export const App = function() {
         </div>
 
         <RelativeChroma
+          relativeChromaInput={relativeChromaInput}
           showRelativeChroma={showRelativeChroma}
-          relativeChroma={relativeChroma}
           lockRelativeChroma={lockRelativeChroma}
           inputFocusHandle={inputFocusHandle}
           okhxyInputHandle={okhxyInputHandle}

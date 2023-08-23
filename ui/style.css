@@ -358,7 +358,10 @@ body.deactivated .c-bottom-controls {
 */
 
 .u-display-none { display: none; }
-.u-visibility-hidden { visibility: hidden; }
+.u-visibility-hidden {
+  visibility: hidden;
+  position: absolute;
+}
 
 .u-flex { display: flex; }
 .u-items-center	{ align-items: center; }
