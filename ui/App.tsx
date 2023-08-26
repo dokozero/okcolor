@@ -639,8 +639,8 @@ export const App = function() {
     else if (event.key === "Control") {
       ctrlKeyPressed = true;
     }
-    // We test document.activeElement !== relativeChromaInput.current! because we don't want to trigger this code if user type "c" while he's in the relativeChroma input.
-    else if ((event.key === "c" || event.key === "C") && document.activeElement !== relativeChromaInput.current!) {
+    // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
+    else if ((event.key === "c" || event.key === "C") && document.activeElement?.tagName !== "INPUT") {
       if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
         lockRelativeChromaHandle();
       }
