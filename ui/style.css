@@ -58,8 +58,6 @@ input {
   width: 100%;
   height: 100%;
   padding: 7px 4px;
-  border: 1px solid transparent;
-  border-radius: 2px;
   font-family: "Inter", sans-serif;
   font-size: 11px;
   font-weight: 400;
@@ -68,9 +66,14 @@ input {
   background-color: transparent;
   cursor: default;
 }
+input {
+  border: 0;
+  border-right: 1px solid transparent;
+}
 select {
   /* We set the height to 100% only for the select and not the input because it would make a 1 px gap between the outer border of input-wrapper and the left borders of the nested input when hovering. */
   height: 100%;
+  border: 1px solid transparent;
 }
 select:focus,
 input:focus {
@@ -91,7 +94,7 @@ select {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 8px 6px 14px;
+  padding: 6px 6px 6px 14px;
 }
 .c-file-color-profile--deactivated {
   pointer-events: none;
@@ -224,8 +227,7 @@ body.deactivated .c-bottom-controls {
   height: 28px;
   align-items: center;
   position: relative;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding: 0 9px;
   margin-top: 12px;
 }  
   .c-select-input-controls__select-wrapper,
@@ -270,8 +272,8 @@ body.deactivated .c-bottom-controls {
     border-radius: 2px;
   }
   .c-relative-chroma__lock-wrapper:hover {
-    cursor: pointer;
     outline: 1px solid var(--figma-color-border);
+    outline-offset: -1px;
   }
     .c-relative-chroma__lock {
       height: 100%;
@@ -329,8 +331,7 @@ body.deactivated .c-bottom-controls {
     }
   .c-color-codes__inputs-wraper {
     margin-top: -4px;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: 0 9px;
   }
     .c-color-codes__copy-action {
       visibility: hidden;
