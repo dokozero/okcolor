@@ -640,7 +640,7 @@ export const App = function() {
       ctrlKeyPressed = true;
     }
     // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
-    else if ((event.key === "c" || event.key === "C") && document.activeElement?.tagName !== "INPUT") {
+    else if ((event.key === "c" || event.key === "C") && !UiMessageOn && document.activeElement?.tagName !== "INPUT") {
       if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
         lockRelativeChromaHandle();
       }
