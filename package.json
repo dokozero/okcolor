@@ -12,16 +12,16 @@
   "dependencies": {
     "@preact/signals": "^1.2.1",
     "culori": "^3.2.0",
-    "preact": "^10.17.0",
-    "twgl.js": "^5.5.1",
+    "preact": "^10.17.1",
+    "twgl.js": "^5.5.3",
     "vite-plugin-virtual-plain-text": "^1.4.3"
   },
   "devDependencies": {
-    "@figma/plugin-typings": "^1.74.0",
+    "@figma/plugin-typings": "^1.76.0",
     "@preact/preset-vite": "^2.5.0",
     "@types/culori": "^2.0.0",
-    "@types/node": "^20.5.0",
-    "typescript": "^5.1.6",
+    "@types/node": "^20.5.7",
+    "typescript": "^5.2.2",
     "vite": "^4.4.9",
     "vite-plugin-singlefile": "^0.13.5"
   }

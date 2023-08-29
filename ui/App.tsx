@@ -963,9 +963,7 @@ export const App = function() {
     (event.target as HTMLInputElement).select();
 
     // We use a timeout because if not, if user modify the value then click again inside the input.
-    setTimeout(() => {
-      console.log("ok");
-      
+    setTimeout(() => {      
       (event.target as HTMLInputElement).select();
     }, 10);
   };
