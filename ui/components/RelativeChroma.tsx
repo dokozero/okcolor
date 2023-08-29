@@ -3,14 +3,14 @@ import { debugMode } from "../constants";
 const RelativeChroma = function(props) {
   if (debugMode) { console.log("UI: render RelativeChroma()"); }
 
-  const { relativeChromaInput, showRelativeChroma, lockRelativeChroma, inputFocusHandle, okhxyInputHandle, lockRelativeChromaHandle } = props;
+  const { relativeChromaInput, showRelativeChroma, lockRelativeChroma, selectInputContent, okhxyInputHandle, lockRelativeChromaHandle } = props;
 
   return (
     <>
       <div class={(showRelativeChroma.value ? "" : "u-visibility-hidden ") + "c-relative-chroma"}>
         <p>Relative chroma</p>
         <div class="input-wrapper">
-          <input ref={relativeChromaInput} onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="relativeChroma"/>
+          <input ref={relativeChromaInput} onClick={selectInputContent} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="relativeChroma"/>
         </div>
 
         <div className="c-relative-chroma__lock-wrapper" onClick={lockRelativeChromaHandle}>

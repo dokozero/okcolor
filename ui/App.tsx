@@ -952,8 +952,8 @@ export const App = function() {
   });
 
 
-  const inputFocusHandle = function(event: FocusEvent) {
-    if (debugMode) { console.log("UI: inputFocusHandle()"); }
+  const selectInputContent = function(event: FocusEvent) {
+    if (debugMode) { console.log("UI: selectInputContent()"); }
     (event.target as HTMLInputElement).select();
 
     // We use a timeout because if not, if user modify the value then click again inside the input.
@@ -1536,10 +1536,10 @@ export const App = function() {
           </div>
 
           <div class="input-wrapper c-select-input-controls__input-wrapper">
-            <input ref={hueInput} onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="hue" value={okhxyValues.hue} spellcheck={false} />
-            <input ref={xInput} onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="x" value={okhxyValues.x} spellcheck={false} />
-            <input ref={yInput} onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="y" value={okhxyValues.y} spellcheck={false} />
-            <input ref={opacityInput} onFocus={inputFocusHandle} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="opacity" tabIndex={4} spellcheck={false} />
+            <input ref={hueInput} onClick={selectInputContent} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="hue" value={okhxyValues.hue} spellcheck={false} />
+            <input ref={xInput} onClick={selectInputContent} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="x" value={okhxyValues.x} spellcheck={false} />
+            <input ref={yInput} onClick={selectInputContent} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="y" value={okhxyValues.y} spellcheck={false} />
+            <input ref={opacityInput} onClick={selectInputContent} onBlur={okhxyInputHandle} onKeyDown={okhxyInputHandle} id="opacity" tabIndex={4} spellcheck={false} />
           </div>
         </div>
 
@@ -1547,14 +1547,14 @@ export const App = function() {
           relativeChromaInput={relativeChromaInput}
           showRelativeChroma={showRelativeChroma}
           lockRelativeChroma={lockRelativeChroma}
-          inputFocusHandle={inputFocusHandle}
+          selectInputContent={selectInputContent}
           okhxyInputHandle={okhxyInputHandle}
           lockRelativeChromaHandle={lockRelativeChromaHandle}
         />
 
         <CssColorCodes
           showCssColorCodes={showCssColorCodes}
-          inputFocusHandle={inputFocusHandle}
+          selectInputContent={selectInputContent}
           colorCodesInputHandle={colorCodesInputHandle}
           colorCode_currentColorModelInput={colorCode_currentColorModelInput}
           colorCode_colorInput={colorCode_colorInput}
