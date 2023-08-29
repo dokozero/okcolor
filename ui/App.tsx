@@ -1032,7 +1032,14 @@ export const App = function() {
       currentValue = okhxyValues[eventTargetId].value;
     }
 
-    if (currentValue === eventTargetValue && key !== "ArrowUp" && key !== "ArrowDown") {    
+    if (currentValue === eventTargetValue && key !== "ArrowUp" && key !== "ArrowDown") {
+      if (eventTargetId === "opacity") {
+        updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
+      }
+      else if (eventTargetId === "relativeChroma") {
+        eventTarget.value = previousRelativeChromaValue;
+      }
+
       eventTarget.blur();
       return;
     }
