@@ -954,11 +954,14 @@ export const App = function() {
 
   const inputFocusHandle = function(event: FocusEvent) {
     if (debugMode) { console.log("UI: inputFocusHandle()"); }
+    (event.target as HTMLInputElement).select();
 
-    // We use a timeout because if not, if user modify the value then click again inside the input
+    // We use a timeout because if not, if user modify the value then click again inside the input.
     setTimeout(() => {
+      console.log("ok");
+      
       (event.target as HTMLInputElement).select();
-    }, 25);
+    }, 10);
   };
 
   const okhxyInputHandle = function(event: KeyboardEvent | FocusEvent) {
