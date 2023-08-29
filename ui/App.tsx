@@ -298,7 +298,7 @@ export const App = function() {
     opacityInput.current!.value = `${newValue}%`;
   };
 
-  const updateRelativeChromaValue = function() {
+  const updateRelativeChromaValue = function(forceNewPreviousRelativeChromaValue = false) {
     if (debugMode) { console.log("UI: updateRelativeChromaValue()"); }
     
     if (currentColorModel !== "oklch" && currentColorModel !== "oklchCss") { return; }
@@ -318,7 +318,13 @@ export const App = function() {
       newValue = 0;
     }
     
-    previousRelativeChromaValue = relativeChromaInput.current!.value ? relativeChromaInput.current!.value : `${newValue}%`;
+    if (forceNewPreviousRelativeChromaValue) {
+      previousRelativeChromaValue = `${newValue}%`;
+    }
+    else {
+      previousRelativeChromaValue = relativeChromaInput.current!.value ? relativeChromaInput.current!.value : `${newValue}%`;
+    }
+
     relativeChromaInput.current!.value = `${newValue}%`;
   };
 
@@ -1416,7 +1422,7 @@ export const App = function() {
 
       updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
       updateOkhxyValuesFromCurrentRgba();
-      updateRelativeChromaValue();
+      updateRelativeChromaValue(true);
 
       
       render.opacitySliderCanvas();
