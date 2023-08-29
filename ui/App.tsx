@@ -1164,6 +1164,8 @@ export const App = function() {
 
       updateCurrentRgbaFromOkhxyValues();
 
+      updateColorSpaceLabelInColorPicker();
+
       // We don't need to use updateRelativeChromaValue() because the okhxyValues.x.value has already been updated.
       relativeChromaInput.current!.value = `${eventTargetValue}%`;
       previousRelativeChromaValue = `${eventTargetValue}%`;
