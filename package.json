@@ -20,7 +20,7 @@
     "@figma/plugin-typings": "^1.76.0",
     "@preact/preset-vite": "^2.5.0",
     "@types/culori": "^2.0.0",
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.5.8",
     "typescript": "^5.2.2",
     "vite": "^4.4.9",
     "vite-plugin-singlefile": "^0.13.5"
