@@ -118,7 +118,7 @@ export const getRelativeChroma = function(props: GetRelativeChromaProps): number
   }
   else {
     const returnValue = (targetPercentage! * currentMaxChroma) / 100;
-    return (currentColorModel === "oklchCss" ? roundWithDecimal(returnValue, 3) : roundWithDecimal(returnValue * 100, 1));
+    return (currentColorModel === "oklchCss" ? roundWithDecimal(returnValue, 6) : roundWithDecimal(returnValue * 100, 1));
   }
 };
 

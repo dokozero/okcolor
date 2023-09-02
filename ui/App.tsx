@@ -335,12 +335,12 @@ export const App = function() {
     fillOrStrokeSelector.current!.setAttribute("data-active", currentFillOrStroke);
   };
 
-  const updateOkhxyValuesFromCurrentRgba = function() {
+  const updateOkhxyValuesFromCurrentRgba = function(simplifiedValues = true) {
     if (debugMode) { console.log("UI: updateOkhxyValuesFromCurrentRgba()"); }
 
     let shapeColor = shapeInfos.colors[currentFillOrStroke].rgba.slice(0, 3);
     
-    const newOkhxy = colorConversion("rgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2], fileColorProfile);
+    const newOkhxy = colorConversion("rgb", currentColorModel, shapeColor[0], shapeColor[1], shapeColor[2], fileColorProfile, simplifiedValues);
 
     // We have to update these values before updating them with the real value to handle this case: because Preact signals doesn't update if we give them the same value they already have, if user change the value on input, for example the hue from 100 to 50, doesn't validate it (like pressing "Enter") then select another shape, if this new one had also a hue of 100 the hue input will show "50" and not 100. By doing this simple increment we ensure that this case will not happen.
     okhxyValues.hue.value++;
@@ -393,10 +393,10 @@ export const App = function() {
     }
 
     if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-      colorCode_colorInput.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3![0]/255, 3)} ${roundWithDecimal(rgbP3![1]/255, 3)} ${roundWithDecimal(rgbP3![2]/255, 3)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_colorInput.current!.value = `color(display-p3 ${roundWithDecimal(rgbP3![0]/255, 4)} ${roundWithDecimal(rgbP3![1]/255, 4)} ${roundWithDecimal(rgbP3![2]/255, 4)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
     else {
-      colorCode_colorInput.current!.value = `color(srgb ${roundWithDecimal(rgbSrgb[0]/255, 3)} ${roundWithDecimal(rgbSrgb[1]/255, 3)} ${roundWithDecimal(rgbSrgb[2]/255, 3)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
+      colorCode_colorInput.current!.value = `color(srgb ${roundWithDecimal(rgbSrgb[0]/255, 4)} ${roundWithDecimal(rgbSrgb[1]/255, 4)} ${roundWithDecimal(rgbSrgb[2]/255, 4)}` + (opacity !== 1 ? ` / ${opacity})` : ")");
     }
 
     colorCode_rgbaInput.current!.value = `rgba(${roundWithDecimal(rgbSrgb[0], 0)}, ${roundWithDecimal(rgbSrgb[1], 0)}, ${roundWithDecimal(rgbSrgb[2], 0)}, ${opacity})`;
@@ -675,10 +675,9 @@ export const App = function() {
 
     if (!UiMessageOn) {
       updateColorInputsPosition();
-          
-      scaleColorPickerCanvas();
-      
-      updateOkhxyValuesFromCurrentRgba();
+
+      if (lockRelativeChroma.value) updateOkhxyValuesFromCurrentRgba(false);
+      else updateOkhxyValuesFromCurrentRgba();
 
       if (currentColorModel === "oklch" || currentColorModel === "oklchCss") updateRelativeChromaValue();
 
@@ -803,7 +802,9 @@ export const App = function() {
           let newYValue: number;
           
           if (currentColorModel === "oklchCss" && !ctrlKeyPressed) {
-            newYValue = roundWithDecimal(limitMouseHandlerValue(1 - canvasY/PICKER_SIZE) * 100, 1);
+            newYValue = roundWithDecimal(limitMouseHandlerValue(1 - canvasY/PICKER_SIZE) * 100, 2);
+            if (newYValue === 99.99) newYValue = 100;
+            else if (newYValue === 0.01) newYValue = 0;
           }
           else {
             newYValue = Math.round(limitMouseHandlerValue(1 - canvasY/PICKER_SIZE) * 100)
@@ -996,10 +997,10 @@ export const App = function() {
     }
     else if (currentColorModel === "oklchCss") {
       if (eventTargetId === "x") {
-        eventTargetValue = roundWithDecimal(parseFloat(eventTarget.value), 3);
+        eventTargetValue = roundWithDecimal(parseFloat(eventTarget.value), 6);
       }
       else {
-        eventTargetValue = roundWithDecimal(parseFloat(eventTarget.value), 1);
+        eventTargetValue = roundWithDecimal(parseFloat(eventTarget.value), 2);
       }
     }
     
@@ -1090,31 +1091,32 @@ export const App = function() {
       if (key !== "Escape" && okhxyValues[eventTargetId].value !== eventTargetValue) {
         if (currentColorModel !== "oklchCss") {
           // We use roundWithDecimal() again because in some case we can have values like "3.8000000000000003" when using the up or down arrow keys.
-          okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 1);
+          okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 2);
         }
         else {
           if (eventTargetId === "x") {
-            okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 3);
+            okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 6);
           }
           else {
-            okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 1);
-          }
-          if (lockRelativeChroma.value) {
-            okhxyValues.x.value = getRelativeChroma({
-              currentOklchColor: { l: okhxyValues.y.value, c: okhxyValues.x.value, h: okhxyValues.hue.value },
-              currentColorModel: currentColorModel,
-              fileColorProfile: fileColorProfile,
-              targetValueNeeded: "chroma",
-              targetPercentage: parseInt(relativeChromaInput.current!.value)
-            });
-          }
-          else {
-            updateRelativeChromaValue();
+            okhxyValues[eventTargetId].value = roundWithDecimal(eventTargetValue, 2);
           }
         }
       }
       else {
         eventTarget.value = oldValue.toString();
+      }
+
+      if ((currentColorModel === "oklch" || currentColorModel === "oklchCss") && lockRelativeChroma.value) {        
+        okhxyValues.x.value = getRelativeChroma({
+          currentOklchColor: { l: okhxyValues.y.value, c: okhxyValues.x.value, h: okhxyValues.hue.value },
+          currentColorModel: currentColorModel,
+          fileColorProfile: fileColorProfile,
+          targetValueNeeded: "chroma",
+          targetPercentage: parseInt(relativeChromaInput.current!.value)
+        });
+      }
+      else {
+        updateRelativeChromaValue();
       }
       
       if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
@@ -1429,7 +1431,7 @@ export const App = function() {
       shapeInfos = JSON.parse(JSON.stringify(event.data.pluginMessage.shapeInfos));
 
       updateOpacityValue(shapeInfos.colors[currentFillOrStroke].rgba[3]);
-      updateOkhxyValuesFromCurrentRgba();
+      updateOkhxyValuesFromCurrentRgba(false);
       updateRelativeChromaValue(true);
 
       

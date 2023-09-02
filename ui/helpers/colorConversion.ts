@@ -10,7 +10,7 @@ const convertToOkhsl = converter("okhsl");
 const convertToOkhsv = converter("okhsv");
 const convertToOklch = converter("oklch");
 
-export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number, fileColorProfile: string): [number, number, number] {
+export function colorConversion(from: string, to: string, param1: number, param2: number, param3: number, fileColorProfile: string, simplifiedValues = true): [number, number, number] {
   if (debugMode) { console.log(`UI: colorConversion(${from}, ${to}, ${param1}, ${param2}, ${param3})`); }
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch;
@@ -144,9 +144,12 @@ export function colorConversion(from: string, to: string, param1: number, param2
     result[2] = Math.round(culoriResult.l*100);
   }
   else if (to === "oklchCss") {
-    result[0] = roundWithDecimal(culoriResult.h, 1);
-    result[1] = roundWithDecimal(culoriResult.c, 3);
-    result[2] = roundWithDecimal(culoriResult.l*100, 1);
+ 
+    if (simplifiedValues) result[1] = roundWithDecimal(culoriResult.c, 3);
+    else result[1] = roundWithDecimal(culoriResult.c, 6);
+
+    result[0] = roundWithDecimal(culoriResult.h, 2);
+    result[2] = roundWithDecimal(culoriResult.l*100, 2);
   }
   
   // We need to do this because if for example we get a color like #888888, we will get Nan for result[0], also, with others gray values we'll sometimes get a hue of 90 or 0.
