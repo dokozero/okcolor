@@ -963,9 +963,10 @@ export const App = function() {
     (event.target as HTMLInputElement).select();
 
     // We use a timeout because if not, if user modify the value then click again inside the input.
-    setTimeout(() => {      
-      (event.target as HTMLInputElement).select();
-    }, 10);
+    // Edit we remove it for now as it leads to some bugs like selecting the input but way after 10ms.
+    // setTimeout(() => {      
+    //   (event.target as HTMLInputElement).select();
+    // }, 10);
   };
 
   const okhxyInputHandle = function(event: KeyboardEvent | FocusEvent) {
