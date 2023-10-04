@@ -1,0 +1,21 @@
+.c-file-color-profile-select {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 6px 6px 14px;
+}
+.c-file-color-profile-select--deactivated {
+  pointer-events: none;
+  opacity: 0.5;
+}
+.c-file-color-profile-select p {
+  font-size: 11px;
+  color: var(--figma-color-text);
+}
+.c-file-color-profile-select .select-wrapper {
+  width: 80px;
+  height: 28px;
+}
+.c-file-color-profile-select select {
+  padding: 7px;
+}

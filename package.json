@@ -10,19 +10,28 @@
     "build": "npm run build-ui && npm run build-plugin"
   },
   "dependencies": {
-    "@preact/signals": "^1.2.1",
+    "@nanostores/react": "^0.7.1",
     "culori": "^3.2.0",
-    "preact": "^10.17.1",
+    "nanostores": "^0.9.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "twgl.js": "^5.5.3",
     "vite-plugin-virtual-plain-text": "^1.4.3"
   },
   "devDependencies": {
-    "@figma/plugin-typings": "^1.76.0",
-    "@preact/preset-vite": "^2.5.0",
-    "@types/culori": "^2.0.0",
-    "@types/node": "^20.5.8",
+    "@figma/plugin-typings": "^1.78.1",
+    "@types/culori": "^2.0.1",
+    "@types/node": "^20.8.2",
+    "@types/react": "^18.2.24",
+    "@types/react-dom": "^18.2.9",
+    "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "@typescript-eslint/parser": "^6.7.4",
+    "@vitejs/plugin-react": "^4.1.0",
+    "eslint": "^8.50.0",
+    "eslint-plugin-react": "^7.33.2",
+    "prettier": "^3.0.3",
     "typescript": "^5.2.2",
-    "vite": "^4.4.9",
+    "vite": "^4.4.10",
     "vite-plugin-singlefile": "^0.13.5"
   }
 }

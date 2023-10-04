@@ -1,375 +1,317 @@
-import { PICKER_SIZE, debugMode } from "../ui/constants";
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 
-/*
-** VARIABLES DECLARATIONS
-*/
+import { PICKER_SIZE } from '../constants'
+import type { ColorRgba, ColorsRgba, CurrentColorModel, CurrentFillOrStroke, FileColorProfile } from '../types'
+import { uiMessageTexts } from '../ui/ui-messages'
 
-let currentFillOrStroke = "fill";
-let fileColorProfile: "rgb" | "p3";
-let currentColorModel: "oklchCss" | "oklch" | "okhsl" | "okhsv";
-let lockRelativeChroma: boolean;
-let showCssColorCodes: boolean;
+let currentFillOrStroke: CurrentFillOrStroke = 'fill'
+let fileColorProfile: FileColorProfile
+let currentColorModel: CurrentColorModel
+let lockRelativeChroma: boolean
+let showCssColorCodes: boolean
 
 const pluginHeights = {
-  okHslvWithoutColorCodes: 436,
-  okHslvWithColorCodes: 564,
+  okHsvlWithoutColorCodes: 436,
+  okHsvlWithColorCodes: 564,
   okLchWithoutColorCodes: 469,
-  okLchWithColorCodes: 598,
-};
-
-// We use this variable to prevent the triggering of figma.on "documentchange".
-let itsAMe = false;
-
-type RgbaColor = [number, number, number, number];
-
-interface ShapeInfos {
-  hasFillStroke: {
-    fill: boolean;
-    stroke: boolean;
-  };
-  colors: {
-    [key: string]: { rgba: RgbaColor; }
-  };
+  okLchWithColorCodes: 598
 }
 
-let shapeInfos: ShapeInfos = {
-  hasFillStroke: {
-    fill: false,
-    stroke: false
-  },
-  colors: {
-    fill: {
-      rgba: [255, 255, 255, 0]
-    },
-    stroke: {
-      rgba: [255, 255, 255, 0]
-    }
-  }
+// We use this variable to prevent the triggering of figma.on "documentchange".
+let itsAMe = false
+
+const colorsRgba: ColorsRgba = {
+  fill: null,
+  stroke: null
 }
 
 const supportedNodeTypes = [
-  "BOOLEAN_OPERATION",
-  "COMPONENT",
-  "ELLIPSE",
-  "FRAME",
-  "INSTANCE",
-  "LINE",
-  "POLYGON",
-  "RECTANGLE",
-  "STAR",
-  "TEXT",
-  "VECTOR",
-  "SHAPE_WITH_TEXT",
-  "HIGHLIGHT"
-];
+  'BOOLEAN_OPERATION',
+  'COMPONENT',
+  'ELLIPSE',
+  'FRAME',
+  'INSTANCE',
+  'LINE',
+  'POLYGON',
+  'RECTANGLE',
+  'STAR',
+  'TEXT',
+  'VECTOR',
+  'SHAPE_WITH_TEXT',
+  'HIGHLIGHT'
+]
 
-const changePropertiesToReactTo = [
-  "fills",
-  "fillStyleId",
-  "strokes",
-  "strokeWeight"
-];
-
-
+const changePropertiesToReactTo = ['fills', 'fillStyleId', 'strokes', 'strokeWeight']
 
 /*
-** HELPER FUNCTIONS
-*/
+ ** HELPER FUNCTIONS
+ */
 
-const resizeWindowHeight = function() {
+const resizeWindowHeight = () => {
   if (showCssColorCodes) {
-    if ((currentColorModel === "oklch" || currentColorModel === "oklchCss")) figma.ui.resize(PICKER_SIZE, pluginHeights.okLchWithColorCodes);
-    else figma.ui.resize(PICKER_SIZE, pluginHeights.okHslvWithColorCodes);
+    if (['oklch', 'oklchCss'].includes(currentColorModel)) figma.ui.resize(PICKER_SIZE, pluginHeights.okLchWithColorCodes)
+    else figma.ui.resize(PICKER_SIZE, pluginHeights.okHsvlWithColorCodes)
+  } else {
+    if (['oklch', 'oklchCss'].includes(currentColorModel)) figma.ui.resize(PICKER_SIZE, pluginHeights.okLchWithoutColorCodes)
+    else figma.ui.resize(PICKER_SIZE, pluginHeights.okHsvlWithoutColorCodes)
   }
-  else {
-    if ((currentColorModel === "oklch" || currentColorModel === "oklchCss")) figma.ui.resize(PICKER_SIZE, pluginHeights.okLchWithoutColorCodes);
-    else figma.ui.resize(PICKER_SIZE, pluginHeights.okHslvWithoutColorCodes);
-  }
-};
+}
 
-const shapeInfosResetDefault = function() {
-  if (debugMode) { console.log("PLUGIN: shapeInfosResetDefault()"); }
-
-  shapeInfos.hasFillStroke.fill = false,
-  shapeInfos.hasFillStroke.stroke = false,
-  shapeInfos.colors.fill.rgba = [255, 255, 255, 0],
-  shapeInfos.colors.stroke.rgba = [255, 255, 255, 0]
-};
-
-const updateShapeInfos = function(): boolean {
-  if (debugMode) { console.log("PLUGIN: updateShapeInfos()"); }
-
-  shapeInfosResetDefault();
- 
-  const selection = figma.currentPage.selection;
+const updateColorsRgba = (): boolean => {
+  const selection = figma.currentPage.selection
 
   if (!selection[0]) {
-    sendUiMessageCodeToUi("noSelection");
-    return false;
+    sendUiMessageCodeToUi('no_selection')
+    return false
   }
 
   // We use this for loop to either check if one thing is selected or multiple as use can for example select a group a shape, in that case we should block the plugin from being used.
   for (const node of selection) {
     // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
     if (!supportedNodeTypes.includes(node.type)) {
-      sendUiMessageCodeToUi("notSupportedType", node.type);
-      return false;
+      sendUiMessageCodeToUi('not_supported_type', node.type)
+      return false
     }
-    
   }
 
-  const selectionFill = selection[0].fills[0];
-  const selectionStroke = selection[0].strokes[0];
+  const selectionFill = selection[0].fills[0]
+  const selectionStroke = selection[0].strokes[0]
 
   if (!selectionFill && !selectionStroke) {
-    sendUiMessageCodeToUi("noColorInShape");
-    return false;
+    sendUiMessageCodeToUi('no_color_in_shape')
+    return false
   }
 
   // We the following 3 conditions, we allow for example to modify the color of a shape that have a gradient on its stroke and a solid fill or vice versa.
-  if (selectionFill?.type !== "SOLID" && selectionStroke?.type !== "SOLID") {
-    sendUiMessageCodeToUi("noSolidColor");
-    return false;
+  if (selectionFill?.type !== 'SOLID' && selectionStroke?.type !== 'SOLID') {
+    sendUiMessageCodeToUi('no_solid_color')
+    return false
   }
 
-  if (selectionFill?.type === "SOLID") {
-    shapeInfos.hasFillStroke.fill = true;
-
-    shapeInfos.colors.fill.rgba[0] = selectionFill.color.r * 255;
-    shapeInfos.colors.fill.rgba[1] = selectionFill.color.g * 255;
-    shapeInfos.colors.fill.rgba[2] = selectionFill.color.b * 255;
-    shapeInfos.colors.fill.rgba[3] = Math.round(selectionFill.opacity * 100);
+  if (selectionFill?.type === 'SOLID') {
+    colorsRgba.fill = {
+      r: selectionFill.color.r * 255,
+      g: selectionFill.color.g * 255,
+      b: selectionFill.color.b * 255,
+      a: Math.round(selectionFill.opacity * 100)
+    }
+  } else {
+    colorsRgba.fill = null
   }
 
-  if (selectionStroke?.type === "SOLID") {
-    shapeInfos.hasFillStroke.stroke = true;
-
-    shapeInfos.colors.stroke.rgba[0] = selectionStroke.color.r * 255;
-    shapeInfos.colors.stroke.rgba[1] = selectionStroke.color.g * 255;
-    shapeInfos.colors.stroke.rgba[2] = selectionStroke.color.b * 255;
-    shapeInfos.colors.stroke.rgba[3] = Math.round(selectionStroke.opacity * 100);
+  if (selectionStroke?.type === 'SOLID') {
+    colorsRgba.stroke = {
+      r: selectionStroke.color.r * 255,
+      g: selectionStroke.color.g * 255,
+      b: selectionStroke.color.b * 255,
+      a: Math.round(selectionStroke.opacity * 100)
+    }
+  } else {
+    colorsRgba.stroke = null
   }
-
 
   // If user select multiple shape and not all of them have a stroke of a fill or if it's case but one of them is a gradient, we block the plugin.
   if (selection.length > 1) {
-    let fillsCount = 0;
-    let strokesCount = 0;
-    
+    let fillsCount = 0
+    let strokesCount = 0
+
     for (const node of selection) {
-      if (node.fills[0]?.type === "SOLID") fillsCount++;
-      if (node.strokes[0]?.type === "SOLID") strokesCount++;
+      if (node.fills[0]?.type === 'SOLID') fillsCount++
+      if (node.strokes[0]?.type === 'SOLID') strokesCount++
     }
-  
+
     if (selection.length !== fillsCount && selection.length !== strokesCount) {
-      sendUiMessageCodeToUi("notAllShapesHaveFillOrStroke");
-      return false;
+      sendUiMessageCodeToUi('not_all_shapes_have_fill_or_stroke')
+      return false
     }
-
-    // If for example two shapes are selected with a fill but one of them have a stroke, we set update shaeInfos accordingly.
-    if (strokesCount < fillsCount) { shapeInfos.hasFillStroke.stroke = false; }
-    else if (fillsCount < strokesCount) { shapeInfos.hasFillStroke.fill = false; }
   }
-  
-  return true;
 
-};
+  return true
+}
 
+/*
+ ** UPDATES TO UI
+ */
 
+const sendInitToUi = () => {
+  figma.ui.postMessage({
+    message: 'init',
+    initData: {
+      figmaEditorType: figma.editorType,
+      fileColorProfile: fileColorProfile,
+      currentColorModel: currentColorModel,
+      lockRelativeChroma: lockRelativeChroma,
+      showCssColorCodes: showCssColorCodes
+    }
+  })
+}
 
-/* 
-** UPDATES TO UI
-*/
+const sendNewColorsRgbaToUi = () => {
+  figma.ui.postMessage({
+    message: 'newColorsRgba',
+    newColorsRgbaData: {
+      colorsRgba: colorsRgba,
+      currentFillOrStroke: currentFillOrStroke
+    }
+  })
+}
 
-const sendInitToUi = function() {
-  if (debugMode) { console.log("PLUGIN: sendInitToUi())"); }
-  
-  figma.ui.postMessage({"message": "init", "data": {"fileColorProfile": fileColorProfile, "currentColorModel": currentColorModel, "lockRelativeChroma": lockRelativeChroma, "showCssColorCodes": showCssColorCodes} });
-};
+const sendUiMessageCodeToUi = (uiMessageCode: keyof typeof uiMessageTexts, nodeType?: string | undefined) => {
+  figma.ui.postMessage({
+    message: 'displayUiMessage',
+    displayUiMessageData: {
+      uiMessageCode: uiMessageCode,
+      nodeType: nodeType
+    }
+  })
+}
 
-const sendNewShapeColorToUi = function(shouldRenderColorPickerCanvas = false) {
-  if (debugMode) { console.log(`PLUGIN: sendNewShapeColorToUi(${shouldRenderColorPickerCanvas})`); }
-  
-  figma.ui.postMessage({"message": "newShapeColor", "shapeInfos": shapeInfos, "currentFillOrStroke": currentFillOrStroke, "shouldRenderColorPickerCanvas": shouldRenderColorPickerCanvas});
-};
-
-const sendUiMessageCodeToUi = function(UiMessageCode: string, nodeType: string = "") {
-  if (debugMode) { console.log(`PLUGIN: sendUiMessageCodeToUi(${UiMessageCode}, ${nodeType})`); }
-
-  figma.ui.postMessage({"message": "displayUiMessage", "UiMessageCode": UiMessageCode, "nodeType": nodeType});
-};
-
-
-
-/* 
-** UPDATES FROM FIGMA
-*/
+/*
+ ** UPDATES FROM FIGMA
+ */
 
 // If user change shape selection.
-figma.on("selectionchange", () => {
-  if (debugMode) { console.log("PLUGIN: figma.on selectionchange"); }
+figma.on('selectionchange', () => {
+  if (!updateColorsRgba()) return
 
-  currentFillOrStroke = "fill";
-  
-  if (!updateShapeInfos()) return;
+  currentFillOrStroke = colorsRgba.fill ? 'fill' : 'stroke'
 
-  if (currentFillOrStroke === "fill" && !shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "stroke"; }
-  else if (currentFillOrStroke === "stroke" && !shapeInfos.hasFillStroke.stroke) { currentFillOrStroke = "fill"; }
-
-  sendNewShapeColorToUi(true);
-
-});
+  sendNewColorsRgbaToUi()
+})
 
 // If user change property of selected shape.
-figma.on("documentchange", (event) => {
-  if (itsAMe) { return; }
-  
-  const changeType = event.documentChanges[0].type;
-  
-  if (changeType === "PROPERTY_CHANGE") {
-    const changeProperty = event.documentChanges[0].properties[0];
-    
+figma.on('documentchange', (event) => {
+  if (itsAMe) {
+    return
+  }
+
+  const changeType = event.documentChanges[0].type
+
+  if (changeType === 'PROPERTY_CHANGE') {
+    const changeProperty = event.documentChanges[0].properties[0]
+
     // We don't run the code if for example the user has changed the rotation of the shape.
     // We take into account "strokeWeight" to handle the case where the user add a stroke but then remove it with cmd+z, that event has for some reasons the changeProperty "strokeWeight" and not "stroke".
     // For "fillStyleId", it's to take into account if user has a shape with a color style and he change it to another or if he uses the eyedropper thus removing the color style.
     if (changePropertiesToReactTo.includes(changeProperty)) {
-
-      if (debugMode) { console.log("PLUGIN: figma.on documentchange"); }
-     
       // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
-      let oldHasFillStroke = Object.assign({}, shapeInfos.hasFillStroke);
- 
-      if (!updateShapeInfos()) return;
+      const oldColorsRgba = JSON.parse(JSON.stringify(colorsRgba))
 
-      if (JSON.stringify(oldHasFillStroke) !== JSON.stringify(shapeInfos.hasFillStroke)) {
-        if (currentFillOrStroke === "fill" && !shapeInfos.hasFillStroke.fill) {
-          currentFillOrStroke = "stroke";
+      if (!updateColorsRgba()) return
+
+      if (JSON.stringify(oldColorsRgba) !== JSON.stringify(colorsRgba)) {
+        if (currentFillOrStroke === 'fill' && !colorsRgba.fill) {
+          currentFillOrStroke = 'stroke'
+        } else if (currentFillOrStroke === 'stroke' && !colorsRgba.stroke) {
+          currentFillOrStroke = 'fill'
         }
-        else if (currentFillOrStroke === "stroke" && !shapeInfos.hasFillStroke.stroke) {
-          currentFillOrStroke = "fill";
-        }
-        sendNewShapeColorToUi(true);
-        return;
       }
 
-      if ((currentFillOrStroke === "fill" && changeProperty === "strokes") || (currentFillOrStroke === "stroke" && changeProperty === "fills")) {
-        // To avoid rendering color picker canvas if for example user is changing stroke color while the fill is selected in plugin's UI.
-        sendNewShapeColorToUi();
-      }
-      else {
-        sendNewShapeColorToUi(true);
-      }
-
+      sendNewColorsRgbaToUi()
     }
-
   }
-});
+})
 
+/*
+ ** UPDATES FROM UI
+ */
 
+let timeoutId: number
 
-/* 
-** UPDATES FROM UI
-*/
+interface OnMessageEvent {
+  message: string
+  newColorRgba?: ColorRgba
+  fileColorProfile?: FileColorProfile
+  currentFillOrStroke?: CurrentFillOrStroke
+  currentColorModel?: CurrentColorModel
+  showCssColorCodes?: boolean
+  lockRelativeChroma?: boolean
+}
 
-let timeoutId: number;
-
-figma.ui.onmessage = (msg) => {
-  if (debugMode) { console.log(`PLUGIN: figma.ui.onmessage - "${msg.type}"`); }
-
-  if (msg.type === "init") {
+figma.ui.onmessage = (event: OnMessageEvent) => {
+  if (event.message === 'init') {
     // We wait the UI is fully loaded before sending the init infos back to the UI, see the useEffect on the UI code.
-    init();
-  }
-  else if (msg.type === "updateShapeColor") {
+    init()
+  } else if (event.message === 'updateShapeColor') {
+    itsAMe = true
 
-    itsAMe = true;
+    const newColorRgbaFormated = {
+      r: event.newColorRgba!.r / 255,
+      g: event.newColorRgba!.g / 255,
+      b: event.newColorRgba!.b / 255,
+      a: event.newColorRgba!.a / 100
+    }
+    let copyNode
+    const type = currentFillOrStroke + 's'
 
-    const newColor_r = msg.newColor[0] / 255;
-    const newColor_g = msg.newColor[1] / 255;
-    const newColor_b = msg.newColor[2] / 255;
-    const newColor_opacity = msg.newColor[3] / 100;
-    let copyNode;
-    const type = currentFillOrStroke + "s";
-    
     for (const node of figma.currentPage.selection) {
-      if (type in node) {
-        copyNode = JSON.parse(JSON.stringify(node[type]));
-        
-        copyNode[0].color.r = newColor_r;
-        copyNode[0].color.g = newColor_g;
-        copyNode[0].color.b = newColor_b;
-        copyNode[0].opacity = newColor_opacity;
+      // @ts-ignore
+      // We know here that node will always have a fills or strokes properties because the user can use the plugin is the selected shape(s) are not of the types from supportedNodeTypes.
+      copyNode = JSON.parse(JSON.stringify(node[type]))
 
-        node[type] = copyNode;
-      }
+      copyNode[0].color.r = newColorRgbaFormated.r
+      copyNode[0].color.g = newColorRgbaFormated.g
+      copyNode[0].color.b = newColorRgbaFormated.b
+      copyNode[0].opacity = newColorRgbaFormated.a
+
+      // @ts-ignore
+      node[type] = copyNode
     }
 
     // We reset itsAMe value to false here because if we do it on the documentchange callback, when we move the hue cursor on FFFFFF or 000000 in OkHSL, this callback is not executed so itsAMe would stay on true and if for example user delete the fill of the shape we would get an error.
-    if (timeoutId) { clearTimeout(timeoutId); }
-    timeoutId = setTimeout(() => { itsAMe = false; }, 500);
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+    timeoutId = setTimeout(() => {
+      itsAMe = false
+    }, 500)
+  } else if (event.message === 'syncFileColorProfile') {
+    figma.clientStorage.setAsync('fileColorProfile', event.fileColorProfile)
+  } else if (event.message === 'syncCurrentFillOrStroke') {
+    currentFillOrStroke = event.currentFillOrStroke!
+  } else if (event.message === 'syncCurrentColorModel') {
+    currentColorModel = event.currentColorModel!
+    resizeWindowHeight()
+    figma.clientStorage.setAsync('currentColorModel', event.currentColorModel)
+  } else if (event.message === 'syncShowCssColorCodes') {
+    showCssColorCodes = event.showCssColorCodes!
+    resizeWindowHeight()
+    figma.clientStorage.setAsync('showCssColorCodes', showCssColorCodes)
+  } else if (event.message === 'syncLockRelativeChromaWithPlugin') {
+    figma.clientStorage.setAsync('lockRelativeChroma', event.lockRelativeChroma)
+  }
+}
 
-  }
-  else if (msg.type === "syncFileColorProfile") {
-    figma.clientStorage.setAsync("fileColorProfile", msg.fileColorProfile);
-  }
-  else if (msg.type === "syncCurrentFillOrStroke") {
-    currentFillOrStroke = msg.currentFillOrStroke;
-  }
-  else if (msg.type === "syncCurrentColorModel") {
-    currentColorModel = msg.currentColorModel;
-    resizeWindowHeight();
-    figma.clientStorage.setAsync("currentColorModel", msg.currentColorModel);
-  }
-  else if (msg.type === "syncShowCssColorCodes") {
-    showCssColorCodes = msg.showCssColorCodes;
-    resizeWindowHeight();
-    figma.clientStorage.setAsync("showCssColorCodes", showCssColorCodes);
-  }
-  else if (msg.type === "syncLockRelativeChromaWithPlugin") {
-    figma.clientStorage.setAsync("lockRelativeChroma", msg.lockRelativeChroma);
-  }
-};
+/*
+ ** INIT
+ */
 
+const getLocalStorageValueAndCreateUiWindow = async () => {
+  // We force the fileColorProfile value to sRGB in FigJam because they don't suport P3 yet (https://help.figma.com/hc/en-us/articles/360039825114).
+  if (figma.editorType === 'figma') fileColorProfile = (await figma.clientStorage.getAsync('fileColorProfile')) || 'rgb'
+  else if (figma.editorType === 'figjam') fileColorProfile = 'rgb'
 
+  currentColorModel = (await figma.clientStorage.getAsync('currentColorModel')) || 'oklchCss'
+  lockRelativeChroma = (await figma.clientStorage.getAsync('lockRelativeChroma')) || false
+  showCssColorCodes = (await figma.clientStorage.getAsync('showCssColorCodes')) || false
 
-/* 
-** INIT
-*/
+  let initialUiHeight = showCssColorCodes ? pluginHeights.okLchWithColorCodes : pluginHeights.okLchWithoutColorCodes
+  if (['okhsv', 'okhsl'].includes(currentColorModel)) {
+    initialUiHeight = showCssColorCodes ? pluginHeights.okHsvlWithColorCodes : pluginHeights.okHsvlWithoutColorCodes
+  }
 
-figma.showUI(__html__, {width: PICKER_SIZE, height: 469, themeColors: true});
+  figma.showUI(__html__, { width: PICKER_SIZE, height: initialUiHeight, themeColors: true })
+}
+
+getLocalStorageValueAndCreateUiWindow()
 
 // To send the color of the shape on launch, we call it when the UI is ready, see above figma.ui.onmessage
-const init = async function() {
-  if (debugMode) { console.log("PLUGIN: init()"); }
+const init = async () => {
+  sendInitToUi()
 
-  fileColorProfile = await figma.clientStorage.getAsync("fileColorProfile") || "rgb";
+  if (!updateColorsRgba()) return
 
-  // Get the currentColorModel value from the clientStorage and set it to "okhsl" if it's not in there.
-  currentColorModel = await figma.clientStorage.getAsync("currentColorModel");
+  currentFillOrStroke = colorsRgba.fill ? 'fill' : 'stroke'
 
-  // We could just test if currentColorModel is undefined (when user first launch the plugin) but with this test, if for any reason the currentColorModel value in the clientStorage is a different string than "okhsv", "okhsl" or "oklch", we set it to okhsl (could come from a Figma bug that change the value but it shouldn't occurs).
-  if (currentColorModel !== "okhsv" && currentColorModel !== "okhsl" && currentColorModel !== "oklch" && currentColorModel !== "oklchCss") {
-    currentColorModel = "oklchCss";
-  }
-
-  if (currentColorModel === "oklch" || currentColorModel === "oklchCss") {
-    lockRelativeChroma = await figma.clientStorage.getAsync("lockRelativeChroma") || false;
-  }
-  else {
-    lockRelativeChroma = false;
-  }
-  showCssColorCodes = await figma.clientStorage.getAsync("showCssColorCodes") || false;
-
-  if (showCssColorCodes) {
-    figma.ui.resize(PICKER_SIZE, 598);
-  }
-
-  sendInitToUi();
-
-  if (!updateShapeInfos()) return;
-
-  if (shapeInfos.hasFillStroke.fill) { currentFillOrStroke = "fill"; }
-  else { currentFillOrStroke = "stroke"; }
-
-  sendNewShapeColorToUi(true);
-};
+  sendNewColorsRgbaToUi()
+}
