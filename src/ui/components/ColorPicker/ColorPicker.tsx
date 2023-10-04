@@ -24,10 +24,10 @@ import {
   OKLCH_CHROMA_SCALE
 } from '../../../constants'
 
-import utilsGlsl from '@virtual:shaders/ui/shaders/utils.glsl'
-import libraryGlsl from '@virtual:shaders/ui/shaders/library.glsl'
-import fShader from '@virtual:shaders/ui/shaders/f_shader.glsl'
-import vShader from '@virtual:shaders/ui/shaders/v_shader.glsl'
+import utilsGlsl from '@virtual:shaders/src/ui/shaders/utils.glsl'
+import libraryGlsl from '@virtual:shaders/src/ui/shaders/library.glsl'
+import fShader from '@virtual:shaders/src/ui/shaders/f_shader.glsl'
+import vShader from '@virtual:shaders/src/ui/shaders/v_shader.glsl'
 
 import * as twgl from 'twgl.js'
 

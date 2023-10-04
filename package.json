@@ -4,7 +4,7 @@
   "description": "A Figma plugin to get OK Colors",
   "scripts": {
     "build-plugin": "vite build --config vitePlugin.config.ts",
-    "build-ui": "vite build --config viteUI.config.ts",
+    "build-ui": "vite build --config viteUi.config.ts",
     "watch-plugin": "npm run build-plugin -- --watch",
     "watch-ui": "npm run build-ui -- --watch",
     "build": "npm run build-ui && npm run build-plugin"
