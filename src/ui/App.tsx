@@ -29,32 +29,9 @@ import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 import { consoleLogInfos } from '../constants'
 
 import { uiMessageTexts } from './ui-messages'
-import { ColorsRgba, CurrentColorModel, CurrentFillOrStroke, FigmaEditorType, FileColorProfile } from '../types'
+import { OnMessageFromPlugin } from '../types'
 
 let isMouseDown = false
-
-interface OnMessage {
-  data: {
-    pluginMessage: {
-      message: string
-      initData: {
-        figmaEditorType: FigmaEditorType
-        fileColorProfile: FileColorProfile
-        currentColorModel: CurrentColorModel
-        lockRelativeChroma: boolean
-        showCssColorCodes: boolean
-      }
-      newColorsRgbaData: {
-        currentFillOrStroke: CurrentFillOrStroke
-        colorsRgba: ColorsRgba
-      }
-      displayUiMessageData: {
-        uiMessageCode: keyof typeof uiMessageTexts
-        nodeType: string
-      }
-    }
-  }
-}
 
 function App() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -62,9 +39,10 @@ function App() {
   }
 
   // Updates from the plugins
-  onmessage = (event: OnMessage) => {
+  onmessage = (event: OnMessageFromPlugin) => {
     const pluginMessage = event.data.pluginMessage
 
+    // Set variables from local storage.
     if (pluginMessage.message === 'init') {
       $figmaEditorType.set(pluginMessage.initData.figmaEditorType)
       $fileColorProfile.set(pluginMessage.initData.fileColorProfile)
@@ -72,15 +50,16 @@ function App() {
       $lockRelativeChroma.set(pluginMessage.initData.lockRelativeChroma)
       $showCssColorCodes.set(pluginMessage.initData.showCssColorCodes)
     }
-
-    if (pluginMessage.message === 'newColorsRgba') {
+    // Update the color based on the selected shape in Figma.
+    else if (pluginMessage.message === 'newColorsRgba') {
       if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
       if (document.body.classList.contains('deactivated')) document.body.classList.remove('deactivated')
       if ($uiMessage.get().show) $uiMessage.setKey('show', false)
       $currentFillOrStroke.set(pluginMessage.newColorsRgbaData.currentFillOrStroke)
       updateColorsRgba(pluginMessage.newColorsRgbaData.colorsRgba, true)
     }
-    if (pluginMessage.message === 'displayUiMessage') {
+    // Set the UI in a disabled mode and update the UI message.
+    else if (pluginMessage.message === 'displayUiMessage') {
       if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
       $uiMessage.setKey('show', true)
       $colorHxya.set({ h: 0, x: 0, y: 0, a: 0 })

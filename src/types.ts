@@ -1,6 +1,9 @@
+import { uiMessageTexts } from './ui/ui-messages'
+
 enum FigmaEditorTypes {
   'figjam',
-  'figma'
+  'figma',
+  'dev'
 }
 export type FigmaEditorType = keyof typeof FigmaEditorTypes
 
@@ -91,4 +94,33 @@ export enum ColorCodesInputValues {
   'color' = 'color',
   'rgba' = 'rgba',
   'hex' = 'hex'
+}
+
+export interface InitData {
+  figmaEditorType: FigmaEditorType
+  fileColorProfile: FileColorProfile
+  currentColorModel: CurrentColorModel
+  lockRelativeChroma: boolean
+  showCssColorCodes: boolean
+}
+
+export interface NewColorsRgbaData {
+  currentFillOrStroke: CurrentFillOrStroke
+  colorsRgba: ColorsRgba
+}
+
+export interface DisplayUiMessageData {
+  uiMessageCode: keyof typeof uiMessageTexts
+  nodeType: string | null
+}
+
+export interface OnMessageFromPlugin {
+  data: {
+    pluginMessage: {
+      message: string
+      initData: InitData
+      newColorsRgbaData: NewColorsRgbaData
+      displayUiMessageData: DisplayUiMessageData
+    }
+  }
 }

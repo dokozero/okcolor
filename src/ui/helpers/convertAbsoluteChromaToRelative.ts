@@ -3,9 +3,9 @@ import { $fileColorProfile, $currentColorModel } from '../store'
 import { clampChromaInGamut } from './culori.mjs'
 import { clampNumber } from './others'
 
-/*
-return 0 - 100
-*/
+/**
+ * @returns {number} between 0 and 100
+ */
 export default function convertAbsoluteChromaToRelative(colorHxy: ColorHxy): number {
   // We do this test because with a lightness of 0, we get an undefined value for currentMaxChroma.c
   if (colorHxy.y === 0) return 0

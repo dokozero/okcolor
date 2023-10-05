@@ -8,11 +8,9 @@ interface Props {
   relativeChroma?: number
 }
 
-/*
-return
-  oklch = 0 - 37
-  oklchCss = 0 - 0.37
-*/
+/**
+ * @returns {number} between 0 and 37 for oklch or 0 and 0.37 for oklchCss
+ */
 export default function convertRelativeChromaToAbsolute(props: Props): number {
   const { colorHxy, relativeChroma = $relativeChroma.get()! } = props
 
