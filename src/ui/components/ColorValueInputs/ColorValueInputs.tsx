@@ -32,11 +32,10 @@ const getOldValue = (eventId: string): number | undefined => {
 function getStepUpdateValue(eventId: string): number {
   const shiftPressed = $currentKeysPressed.get().includes('shift')
 
-  if ($currentColorModel.get() === 'oklchCss') {
-    if (eventId === 'x') return shiftPressed ? 0.01 : 0.001
-    if (['h', 'y'].includes(eventId)) return shiftPressed ? 10 : 0.1
+  if (eventId === 'x') {
+    if ($currentColorModel.get() === 'oklchCss') return shiftPressed ? 0.01 : 0.001
+    if ($currentColorModel.get() === 'oklch') return shiftPressed ? 1 : 0.1
   }
-  if ($currentColorModel.get() === 'oklch' && eventId === 'x') return shiftPressed ? 1 : 0.1
   return shiftPressed ? 10 : 1
 }
 
