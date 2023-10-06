@@ -155,7 +155,7 @@ export const $colorValueDecimals = computed(
       case 'okhsv':
         return { h: 0, x: 0, y: 0 }
       case 'oklch':
-        return { h: 0, x: 1, y: 0 }
+        return { h: 0, x: lockRelativeChroma ? 4 : 1, y: 0 }
       case 'oklchCss':
         return { h: 1, x: lockRelativeChroma ? 6 : 3, y: 1 }
       default:

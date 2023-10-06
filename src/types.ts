@@ -85,7 +85,7 @@ export type CurrentKeysPressed = (keyof typeof KeysPressed)[]
 export interface ColorValueDecimals {
   [key: string]: number
   h: 0 | 1
-  x: 0 | 1 | 3 | 6
+  x: 0 | 1 | 3 | 4 | 6
   y: 0 | 1
 }
 
