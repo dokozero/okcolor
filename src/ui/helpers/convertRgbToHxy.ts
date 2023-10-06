@@ -98,7 +98,7 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
       } else {
         newColorHxy = {
           h: roundWithDecimal(culoriResult.h, 2),
-          x: roundWithDecimal(culoriResult.c, $colorValueDecimals.get()!.x),
+          x: roundWithDecimal(culoriResult.c, 6),
           y: roundWithDecimal(culoriResult.l * 100, 2)
         }
       }
