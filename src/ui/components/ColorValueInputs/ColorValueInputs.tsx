@@ -123,7 +123,7 @@ export default function ColorValueInputs() {
     const oldValue = getOldValue(eventId)
     const newValue = parseFloat(eventTarget.value)
 
-    if (isNaN(newValue) || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
+    if (lastKeyPressed === 'Escape' || isNaN(newValue) || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
       eventTarget.value = oldValue!.toString() + (eventId === 'a' ? '%' : '')
       return
     } else {
@@ -136,7 +136,7 @@ export default function ColorValueInputs() {
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     const eventKey = event.key
 
-    if (['Enter', 'Tab'].includes(eventKey)) {
+    if (['Enter', 'Tab', 'Escape'].includes(eventKey)) {
       lastKeyPressed = eventKey
       ;(event.target as HTMLInputElement).blur()
     } else if (['ArrowUp', 'ArrowDown'].includes(eventKey)) {

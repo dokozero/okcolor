@@ -52,7 +52,7 @@ export default function RelativeChromaInput() {
   const handleInputOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const eventTarget = event.target
 
-    if (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed)) {
+    if (lastKeyPressed === 'Escape' || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
       eventTarget.value = $relativeChroma.get() + '%'
       return
     } else {
@@ -66,7 +66,7 @@ export default function RelativeChromaInput() {
     const eventKey = event.key
     const eventTarget = event.target as HTMLInputElement
 
-    if (['Enter', 'Tab'].includes(eventKey)) {
+    if (['Enter', 'Tab', 'Escape'].includes(eventKey)) {
       lastKeyPressed = eventKey
       ;(event.target as HTMLInputElement).blur()
     } else if (['ArrowUp', 'ArrowDown'].includes(eventKey)) {

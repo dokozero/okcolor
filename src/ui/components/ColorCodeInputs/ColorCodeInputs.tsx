@@ -61,7 +61,7 @@ export default function ColorCodeInputs() {
 
     // If the mouse is outside plugin's window and the last key pressed is not Enter or Tab one.
     // If we are outside the window but user has pressed Enter or Tab key, we want to continue and update the input.
-    if (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed)) {
+    if (lastKeyPressed === 'Escape' || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
       eventTarget.value = colorCodesInputValues[eventTargetId]
       return
     } else {
@@ -82,7 +82,7 @@ export default function ColorCodeInputs() {
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (['Enter', 'Tab'].includes(event.key)) {
+    if (['Enter', 'Tab', 'Escape'].includes(event.key)) {
       lastKeyPressed = event.key
       ;(event.target as HTMLInputElement).blur()
     }
