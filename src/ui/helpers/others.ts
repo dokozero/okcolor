@@ -15,7 +15,14 @@ export const limitMouseManipulatorPosition = (value: number): number => {
 }
 
 export const selectInputContent = (event: React.MouseEvent<HTMLInputElement>) => {
-  ;(event.target as HTMLInputElement).select()
+  const eventTarget = event.target as HTMLInputElement
+
+  eventTarget.select()
+
+  // This is a fix as in some cases, if the user update the value of an input then click again inside it, in some cases the above select will not work. To counter this, we use this setTimeout callback.
+  setTimeout(() => {
+    eventTarget.select()
+  }, 10)
 }
 
 export const roundWithDecimal = (value: number, numberOfDecimal = 1): number => {
