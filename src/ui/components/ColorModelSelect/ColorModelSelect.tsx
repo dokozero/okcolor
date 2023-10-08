@@ -49,7 +49,7 @@ export default function ColorModelSelect() {
 
     updateColorHxyaAndSyncColorsRgbaAndPlugin({ ...newColorHxy, a: $colorHxya.get().a }, false, false)
 
-    // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3 space.
+    // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3's space.
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {
       $fileColorProfile.set('rgb')
 

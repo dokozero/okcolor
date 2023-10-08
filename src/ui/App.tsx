@@ -38,11 +38,11 @@ function App() {
     console.log('Component render — App')
   }
 
-  // Updates from the plugin
+  // Updates from the plugin.
   onmessage = (event: OnMessageFromPlugin) => {
     const pluginMessage = event.data.pluginMessage
 
-    // Set variables from local storage.
+    // Set variables from local storage that only plugin code can get.
     if (pluginMessage.message === 'init') {
       $figmaEditorType.set(pluginMessage.initData.figmaEditorType)
       $fileColorProfile.set(pluginMessage.initData.fileColorProfile)
@@ -81,14 +81,14 @@ function App() {
         // We set the focus back to the plugin window if user clicked outside of it, like this he doesn't need to click inside in order to use the shift or control keys.
         window.focus()
 
-        // We test if shiftKeyPressed is true and set it to false to prevent this case: if user launches the plugin, enter the mouse inside (thus making it focus), leave the plugin, move a shape with shift key pressed in Figma (event listerner on the plugin will then trigger and set shiftKeyPressed to true), then come back to the plugin, the shiftKeyPressed will still be true event if is not pressing it anymore because the keyup event will not be triggered as the focus was lost when user moved the sahep in Figma.
-        // We could test if the mouse is inside on the keydown event but then we will not be able to use the shift key to change the inputs values (by steps of 5 for some of them, check inputHandler()).
-        // Same for ctrlKeyPressed even if it is not used as much than shift in Figma.
+        // We test if any of the keys that are used in the plugin are pressed and set them to false to prevent this case: if user launches the plugin, enter the mouse inside (thus making it focused), leave the plugin, move a shape with shift key pressed in Figma (event listener will then trigger and add the 'shift' in $currentKeysPressed), then comes back to the plugin, $currentKeysPressed will still contains 'shift', even if he is not pressing it anymore, that's because the keyup event will not be triggered as the focus was lost when user moved the shape in Figma.
+        // We could test if the mouse is inside on the keydown event but then, we will not be able to use the shift key to change the inputs values (by bigger steps for some of them, see in ColorValueInputs).
+        // Same for ctrl key even if it is not used as much than shift in Figma.
         if ($currentKeysPressed.get()) $currentKeysPressed.set([''])
       }
     })
 
-    // This is in case the use has multiple Figma files open with OkColor open in them as well. Without this if the plugin is focused, by pressing "ctrl + Tab", the plugin in the previous tab will get the “Ctrl” in $currentKeysPressed and when the use come back and move the handler in the color picker, the Ctrl modifier effect will be takien into account event if he's not pressing it.
+    // This is in case the user has multiple Figma files open with OkColor open in them as well. Without this if the plugin is focused, by pressing "ctrl + tab", the plugin in the previous tab will get the 'ctrl' in $currentKeysPressed and when the user comes back and move the manipulator in the ColorPicker, the ctrl modifier effect will be taken into account even if he's not pressing it.
     window.addEventListener('blur', () => {
       if ($currentKeysPressed.get()) $currentKeysPressed.set([''])
     })
@@ -113,7 +113,7 @@ function App() {
       $mouseEventCallback.set(null)
     })
 
-    // We want to know if user has one of these two keys down because in mouseHandler() we constrain the color picker manipulator depending on them.
+    // We want to know if the user has one of these two keys down because in ColorPciker we constrain the color picker manipulator depending on them and in others parts like ColorValueInputs.
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Shift') {
         $currentKeysPressed.set([...$currentKeysPressed.get(), 'shift'])

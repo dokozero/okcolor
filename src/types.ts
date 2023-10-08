@@ -7,11 +7,11 @@ enum FigmaEditorTypes {
 }
 export type FigmaEditorType = keyof typeof FigmaEditorTypes
 
+// We use 'rgb' and not 'srgb' because Culori use it like this, even if it's confusing because rgb is a color model, not a space.
 enum FileColorProfiles {
   'rgb',
   'p3'
 }
-// We use 'rgb' and not 'srgb' because Culori use it like this, even if it's confusing because rgb is a color model.
 export type FileColorProfile = keyof typeof FileColorProfiles
 
 export enum ColorModels {

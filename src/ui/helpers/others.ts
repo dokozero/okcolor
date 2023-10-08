@@ -4,7 +4,7 @@ export const clampNumber = (num: number, min: number, max: number): number => {
   else return num
 }
 
-// To avoid getting the handlers going off the canvas.
+// To avoid getting the manipulators going off, for example the canvas of ColorPicker.
 export const limitMouseManipulatorPosition = (value: number): number => {
   const minThreshold = 0.0001
   const maxThreshold = 1 - minThreshold

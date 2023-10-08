@@ -40,7 +40,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     return returnObject
   }
 
-  // We use this for loop to either check if one thing is selected or multiple as use can for example select a group a shape, in that case we should block the plugin from being used.
+  // We use this for loop to either check if one or multiple thing are selected as the user can, for example, select a group a shape, in that case we should block the plugin from being used.
   for (const node of selection) {
     // We don't support some node types like groups as it would be too complicated to change color of potentially lot of nested shape's colors.
     if (!supportedNodeTypes.includes(node.type)) {
@@ -58,7 +58,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     return returnObject
   }
 
-  // We the following 3 conditions, we allow for example to modify the color of a shape that have a gradient on its stroke and a solid fill or vice versa.
+  // With the following 3 conditions, we allow for example to modify the color of a shape that have a gradient on its stroke and a solid fill or vice versa.
   if (selectionFill?.type !== 'SOLID' && selectionStroke?.type !== 'SOLID') {
     returnObject.uiMessageCode = 'no_solid_color'
     return returnObject
@@ -82,7 +82,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     }
   }
 
-  // If user select multiple shape and not all of them have a stroke of a fill or if it's case but one of them is a gradient, we block the plugin.
+  // If user select multiple shape and not all of them have a stroke of a fill, or if it is the case but one of them is a gradient, we disable the UI.
   if (selection.length > 1) {
     let fillsCount = 0
     let strokesCount = 0

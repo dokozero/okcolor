@@ -10,12 +10,12 @@ interface Props {
 }
 
 /**
- * @returns {number} between 0 and MAX_CHROMA_P3 * 100 for oklch or 0 and MAX_CHROMA_P3 for oklchCss
+ * @returns {number} between 0 and MAX_CHROMA_P3 * 100 for oklch or 0 and MAX_CHROMA_P3 for oklchCss.
  */
 export default function convertRelativeChromaToAbsolute(props: Props): number {
   const { colorHxy, relativeChroma = $relativeChroma.get()! } = props
 
-  // We do this test because with a lightness of 0, we get an undefined value for currentMaxChroma.c
+  // We do this test because with a lightness of 0, we get an undefined value for currentMaxChroma.c.
   if (colorHxy.y === 0) return 0
 
   const currentMaxChroma = clampChromaInGamut(

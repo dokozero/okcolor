@@ -1,7 +1,3 @@
-/* 
-** COMPONENTS
-*/
-
 @import 'components/ColorCodeInputs/ColorCodeInputs.css';
 @import 'components/ColorPicker/ColorPicker.css';
 @import 'components/FileColorProfileSelect/FileColorProfileSelect.css';
@@ -10,9 +6,9 @@
 @import 'components/sliders/sliders.css';
 @import 'components/RelativeChromaInput/RelativeChromaInput.css';
 
-/* 
-** GLOBALS
-*/
+/**
+ * Bases
+ */
 
 * {
   box-sizing: border-box;
@@ -98,9 +94,9 @@ select {
   appearance: none;
 }
 
-/* 
-** COMPONENTS
-*/
+/** 
+ * Global components
+ */
 
 body.deactivated .c-file-color-profile-select,
 body.deactivated .c-bottom-controls {
@@ -136,9 +132,9 @@ body.deactivated .c-bottom-controls {
   border-right-color: var(--figma-color-border, rgba(0, 0, 0, 0.1));
 }
 
-/* 
-** UTILITY
-*/
+/** 
+ * Utilities
+ */
 
 .u-display-none {
   display: none;

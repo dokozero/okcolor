@@ -190,7 +190,7 @@ interface OnMessageEvent {
 figma.ui.onmessage = (event: OnMessageEvent) => {
   switch (event.message) {
     case 'init':
-      // We wait the UI is fully loaded before sending the init infos back to the UI, see the useEffect on the UI code.
+      // We wait for the UI to be ready before sending the init infos to it, see the useEffect on the App component.
       init()
       break
 
@@ -198,7 +198,7 @@ figma.ui.onmessage = (event: OnMessageEvent) => {
       itsAMe = true
       updateShapeColor(event.newColorRgba!, currentFillOrStroke)
 
-      // We reset itsAMe value to false here because if we do it on the documentchange callback, when we move the hue cursor on FFFFFF or 000000 in OkHSL, this callback is not executed so itsAMe would stay on true and if for example user delete the fill of the shape we would get an error.
+      // We reset itsAMe value to false here because if we do it on the documentchange callback, when we move the hue cursor on FFFFFF or 000000 in OkHSL, this callback is not executed so itsAMe would stay on true and if for example user delete the fill of the shape, we would get an error.
       if (timeoutId) clearTimeout(timeoutId)
 
       timeoutId = setTimeout(() => {

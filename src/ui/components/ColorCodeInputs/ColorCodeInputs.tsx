@@ -8,7 +8,7 @@ import getNewColorHxya from './helpers/getNewColorHxya'
 import { ColorCodesInputValues, PartialColorHxya } from '../../../types'
 import copyToClipboard from '../../helpers/copyToClipboard'
 
-// We need this variable only to check if the value of an input has been changed on blur, see handleInput();
+// We only need this object to check if the value of an input has been changed on blur.
 const colorCodesInputValues: { [key in ColorCodesInputValues]: string } = {
   currentColorModel: '',
   color: '',
@@ -60,7 +60,7 @@ export default function ColorCodeInputs() {
     const eventTargetId = eventTarget.id as keyof typeof ColorCodesInputValues
 
     // If the mouse is outside plugin's window and the last key pressed is not Enter or Tab one.
-    // If we are outside the window but user has pressed Enter or Tab key, we want to continue and update the input
+    // If we are outside the window but user has pressed Enter or Tab key, we want to continue and update the input.
     if (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed)) {
       eventTarget.value = colorCodesInputValues[eventTargetId]
       return
@@ -68,7 +68,7 @@ export default function ColorCodeInputs() {
       lastKeyPressed = ''
     }
 
-    // This test is to know if user a for example pressed the tab key but without modyfing the value.
+    // This test is to know if user has for example pressed the tab key but without modyfing the value.
     if (colorCodesInputValues[eventTargetId] === eventTarget.value) {
       // Even if the color on input is the same, we allow to update the UI if rgba of hex inputs are focused, like this the user can simply set the sRGB fallback of an P3 color with "Enter" key.
       if (!((eventTargetId === 'rgba' || eventTargetId === 'hex') && lastKeyPressed !== 'Enter')) {

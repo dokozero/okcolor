@@ -14,7 +14,7 @@ export default function updateShapeColor(newColorRgba: ColorRgba, currentFillOrS
 
   for (const node of figma.currentPage.selection) {
     // @ts-ignore
-    // We know here that node will always have a fills or strokes properties because the user can use the plugin is the selected shape(s) are not of the types from supportedNodeTypes.
+    // We know here that node will always have a fills or strokes properties because the user can't use the plugin if the selected shape(s) are not of the types from supportedNodeTypes.
     copyNode = JSON.parse(JSON.stringify(node[type]))
 
     copyNode[0].color.r = newColorRgbaFormated.r

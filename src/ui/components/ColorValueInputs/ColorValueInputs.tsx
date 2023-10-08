@@ -123,7 +123,6 @@ export default function ColorValueInputs() {
     const oldValue = getOldValue(eventId)
     const newValue = parseFloat(eventTarget.value)
 
-    // if (isNaN(newValue) || (event.type === 'blur' && !$isMouseInsideDocument.get())) {
     if (isNaN(newValue) || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
       eventTarget.value = oldValue!.toString() + (eventId === 'a' ? '%' : '')
       return
@@ -155,7 +154,7 @@ export default function ColorValueInputs() {
         if (eventKey === 'ArrowUp') newValue += stepUpdateValue
         else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
 
-        // We need to round the value because sometimes we can get results like 55.8999999
+        // We need to round the value because sometimes we can get results like 55.8999999.
         newValue = roundWithDecimal(newValue, $colorValueDecimals.get()![`${eventId}`])
 
         updateColorHxyaTargetValue(eventTarget, eventId, newValue)

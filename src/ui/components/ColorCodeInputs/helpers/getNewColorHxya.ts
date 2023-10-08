@@ -199,7 +199,7 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
   }
 
   if (!newColorA! && matches[3]?.valueOf()) {
-    // We need to use Math.round here otherwise, parseFloat(0.55) * 100 will give 55.00...01 among other value like 0.56.
+    // We need to use Math.round here otherwise, parseFloat(0.55) * 100 will give 55.00...01 among other values like 0.56.
     newColorA = Math.round(parseFloat(matches![3]) * 100)
   }
 
