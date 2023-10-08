@@ -8,7 +8,7 @@ import {
   $currentKeysPressed,
   $colorValueDecimals,
   $uiMessage,
-  updateColorHxya,
+  updateColorHxyaAndSyncColorsRgbaAndPlugin,
   $mouseEventCallback
 } from '../../store'
 import { limitMouseHandlerValue, roundWithDecimal } from '../../helpers/others'
@@ -144,7 +144,7 @@ export default function ColorPicker() {
             }
           })
         }
-        updateColorHxya({ x: newColorHxya.x, y: Math.round(newColorHxya.y) })
+        updateColorHxyaAndSyncColorsRgbaAndPlugin({ x: newColorHxya.x, y: Math.round(newColorHxya.y) })
       } else if (mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) {
         let valueToTest = newColorHxya.x
 
@@ -153,11 +153,11 @@ export default function ColorPicker() {
         }
 
         if (valueToTest % 5 === 0) {
-          updateColorHxya({ x: newColorHxya.x, y: newColorHxya.y })
+          updateColorHxyaAndSyncColorsRgbaAndPlugin({ x: newColorHxya.x, y: newColorHxya.y })
         }
       }
     } else {
-      updateColorHxya(newColorHxya)
+      updateColorHxyaAndSyncColorsRgbaAndPlugin(newColorHxya)
     }
 
     updateManipulatorPosition()

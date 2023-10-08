@@ -1,6 +1,13 @@
 import { useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
-import { $colorHxya, $currentColorModel, $currentFillOrStroke, $fileColorProfile, $colorsRgba } from '../../store'
+import {
+  $colorHxya,
+  $currentColorModel,
+  $currentFillOrStroke,
+  $fileColorProfile,
+  $colorsRgba,
+  updateColorHxyaAndSyncColorsRgbaAndPlugin
+} from '../../store'
 import { useStore } from '@nanostores/react'
 import { CurrentColorModel } from '../../../types'
 import convertRgbToHxy from '../../helpers/convertRgbToHxy'
@@ -40,7 +47,7 @@ export default function ColorModelSelect() {
       fileColorProfile: $fileColorProfile.get()!
     })
 
-    $colorHxya.set({ ...newColorHxy, a: $colorHxya.get().a })
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ ...newColorHxy, a: $colorHxya.get().a }, false, false)
 
     // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3 space.
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { SLIDER_SIZE, consoleLogInfos } from '../../../../constants'
-import { $colorHxya, $currentFillOrStroke, $colorsRgba, updateColorHxya, $mouseEventCallback } from '../../../store'
+import { $colorHxya, $currentFillOrStroke, $colorsRgba, updateColorHxyaAndSyncColorsRgbaAndPlugin, $mouseEventCallback } from '../../../store'
 import { limitMouseHandlerValue } from '../../../helpers/others'
 import { useStore } from '@nanostores/react'
 
@@ -28,7 +28,7 @@ export default function OpacitySlider() {
     const canvasY = event.clientX - rect.left - 7
 
     const newColorA = Math.round(limitMouseHandlerValue(canvasY / SLIDER_SIZE) * 100)
-    updateColorHxya({ a: newColorA })
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ a: newColorA })
   }
 
   useEffect(() => {

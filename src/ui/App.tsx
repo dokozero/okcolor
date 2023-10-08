@@ -9,11 +9,11 @@ import {
   $currentKeysPressed,
   $isMouseInsideDocument,
   $uiMessage,
-  updateColorsRgba,
+  updateColorsRgbaAndSyncColorHxya,
   $currentFillOrStroke,
   $mouseEventCallback,
-  $colorHxya,
-  $figmaEditorType
+  $figmaEditorType,
+  updateColorHxyaAndSyncColorsRgbaAndPlugin
 } from './store'
 
 import FileColorProfileSelect from './components/FileColorProfileSelect/FileColorProfileSelect'
@@ -38,7 +38,7 @@ function App() {
     console.log('Component render — App')
   }
 
-  // Updates from the plugins
+  // Updates from the plugin
   onmessage = (event: OnMessageFromPlugin) => {
     const pluginMessage = event.data.pluginMessage
 
@@ -56,13 +56,13 @@ function App() {
       if (document.body.classList.contains('deactivated')) document.body.classList.remove('deactivated')
       if ($uiMessage.get().show) $uiMessage.setKey('show', false)
       $currentFillOrStroke.set(pluginMessage.newColorsRgbaData.currentFillOrStroke)
-      updateColorsRgba(pluginMessage.newColorsRgbaData.colorsRgba, true)
+      updateColorsRgbaAndSyncColorHxya(pluginMessage.newColorsRgbaData.colorsRgba, true)
     }
     // Set the UI in a disabled mode and update the UI message.
     else if (pluginMessage.message === 'displayUiMessage') {
       if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
       $uiMessage.setKey('show', true)
-      $colorHxya.set({ h: 0, x: 0, y: 0, a: 0 })
+      updateColorHxyaAndSyncColorsRgbaAndPlugin({ h: 0, x: 0, y: 0, a: 0 }, false, false)
       document.body.classList.add('deactivated')
 
       let message = uiMessageTexts[`${pluginMessage.displayUiMessageData.uiMessageCode}`]

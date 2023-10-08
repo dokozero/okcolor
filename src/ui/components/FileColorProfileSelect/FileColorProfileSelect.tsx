@@ -1,5 +1,13 @@
 import { useStore } from '@nanostores/react'
-import { $fileColorProfile, $currentColorModel, $colorHxya, $colorsRgba, $currentFillOrStroke, $figmaEditorType } from '../../store'
+import {
+  $fileColorProfile,
+  $currentColorModel,
+  $colorHxya,
+  $colorsRgba,
+  $currentFillOrStroke,
+  $figmaEditorType,
+  updateColorHxyaAndSyncColorsRgbaAndPlugin
+} from '../../store'
 import { consoleLogInfos } from '../../../constants'
 import { FileColorProfile } from '../../../types'
 import convertRgbToHxy from '../../helpers/convertRgbToHxy'
@@ -30,7 +38,7 @@ export default function FileColorProfileSelect() {
       fileColorProfile: newFileColorProfile
     })
 
-    $colorHxya.set({ ...newColorHxy, a: $colorHxya.get().a })
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ ...newColorHxy, a: $colorHxya.get().a }, false, false)
 
     parent.postMessage(
       {

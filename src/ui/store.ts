@@ -45,7 +45,7 @@ export const $colorsRgba = deepMap<ColorsRgba>({
   }
 })
 
-export const updateColorsRgba = action(
+export const updateColorsRgbaAndSyncColorHxya = action(
   $colorsRgba,
   'updateColorsRgba',
   (colorsRgba, newColorsRgba: ColorsRgba, keepOklchCssDoubleDigit: boolean = false) => {
@@ -86,49 +86,60 @@ export const $colorHxya = map<ColorHxya>({
   a: 0
 })
 
-export const updateColorHxya = action($colorHxya, 'updateColorHxy', (colorHxya, newColorHxya: PartialColorHxya) => {
-  if (consoleLogInfos.includes('Store updates')) {
-    console.log('Store update — updateColorHxya')
-    console.log(`    newColorHxya: ${JSON.stringify(newColorHxya)}`)
+export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
+  $colorHxya,
+  'updateColorHxy',
+  (colorHxya, newColorHxya: PartialColorHxya, syncColorsRgba = true, syncColorRgbWithPlugin = true) => {
+    if (consoleLogInfos.includes('Store updates')) {
+      console.log('Store update — updateColorHxya')
+      console.log(`    newColorHxya: ${JSON.stringify(newColorHxya)}`)
+    }
+
+    const { h, x, y, a } = newColorHxya
+
+    colorHxya.set({
+      h: h !== undefined ? h : colorHxya.get().h,
+      x: x !== undefined ? x : colorHxya.get().x,
+      y: y !== undefined ? y : colorHxya.get().y,
+      a: a !== undefined ? a : colorHxya.get().a
+    })
+
+    if (!syncColorsRgba && !syncColorRgbWithPlugin) return
+
+    const chroma = $currentColorModel.get() === 'oklchCss' ? colorHxya.get().x * 100 : colorHxya.get().x
+    const newColorRgb = convertHxyToRgb({
+      colorHxy: {
+        h: colorHxya.get().h!,
+        x: chroma,
+        y: colorHxya.get().y
+      },
+      originColorModel: $currentColorModel.get()!,
+      fileColorProfile: $fileColorProfile.get()!
+    })
+
+    if (syncColorsRgba) {
+      $colorsRgba.setKey(`${$currentFillOrStroke.get()}`, { ...newColorRgb, a: colorHxya.get().a })
+    }
+
+    if (syncColorRgbWithPlugin) {
+      parent.postMessage(
+        {
+          pluginMessage: {
+            message: 'updateShapeColor',
+            newColorRgba: { ...newColorRgb, a: $colorHxya.get().a }
+          }
+        },
+        '*'
+      )
+    }
   }
-
-  const { h, x, y, a } = newColorHxya
-
-  colorHxya.set({
-    h: h !== undefined ? h : colorHxya.get().h,
-    x: x !== undefined ? x : colorHxya.get().x,
-    y: y !== undefined ? y : colorHxya.get().y,
-    a: a !== undefined ? a : colorHxya.get().a
-  })
-
-  const chroma = $currentColorModel.get() === 'oklchCss' ? colorHxya.get().x * 100 : colorHxya.get().x
-  const newColorRgb = convertHxyToRgb({
-    colorHxy: {
-      h: colorHxya.get().h!,
-      x: chroma,
-      y: colorHxya.get().y
-    },
-    originColorModel: $currentColorModel.get()!,
-    fileColorProfile: $fileColorProfile.get()!
-  })
-  $colorsRgba.setKey(`${$currentFillOrStroke.get()}`, { ...newColorRgb, a: colorHxya.get().a })
-
-  parent.postMessage(
-    {
-      pluginMessage: {
-        message: 'updateShapeColor',
-        newColorRgba: { ...newColorRgb, a: $colorHxya.get().a }
-      }
-    },
-    '*'
-  )
-})
+)
 
 export const $relativeChroma = atom<number | null>(null)
 
 $colorHxya.subscribe((newColorHxya) => {
   if (consoleLogInfos.includes('Store updates')) {
-    console.log('Store update — $relativeChroma (subscribeed on $colorHxya)')
+    console.log('Store update — $relativeChroma (subscribed on $colorHxya)')
     console.log(`    newColorHxya: ${JSON.stringify(newColorHxya)}`)
   }
 

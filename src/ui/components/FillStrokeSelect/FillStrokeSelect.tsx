@@ -1,6 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
-import { $colorHxya, $currentColorModel, $currentFillOrStroke, $fileColorProfile, $colorsRgba } from '../../store'
+import {
+  $colorHxya,
+  $currentColorModel,
+  $currentFillOrStroke,
+  $fileColorProfile,
+  $colorsRgba,
+  updateColorHxyaAndSyncColorsRgbaAndPlugin
+} from '../../store'
 import { useStore } from '@nanostores/react'
 import convertRgbToHxy from '../../helpers/convertRgbToHxy'
 
@@ -42,7 +49,7 @@ export default function FillStrokeSelect() {
       fileColorProfile: $fileColorProfile.get()!
     })
 
-    $colorHxya.set({ ...newColorHxy, a: newColorRgba.a })
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ ...newColorHxy, a: newColorRgba.a }, false, false)
 
     parent.postMessage(
       {
