@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { SLIDER_SIZE, consoleLogInfos } from '../../../../constants'
 import { $colorHxya, $currentFillOrStroke, $colorsRgba, updateColorHxyaAndSyncColorsRgbaAndPlugin, $mouseEventCallback } from '../../../store'
-import { limitMouseHandlerValue } from '../../../helpers/others'
+import { limitMouseManipulatorPosition } from '../../../helpers/others'
 import { useStore } from '@nanostores/react'
 
 const opacitysliderBackgroundImg =
@@ -27,7 +27,7 @@ export default function OpacitySlider() {
     const rect = opacitySlider.current!.getBoundingClientRect()
     const canvasY = event.clientX - rect.left - 7
 
-    const newColorA = Math.round(limitMouseHandlerValue(canvasY / SLIDER_SIZE) * 100)
+    const newColorA = Math.round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 100)
     updateColorHxyaAndSyncColorsRgbaAndPlugin({ a: newColorA })
   }
 
@@ -54,7 +54,7 @@ export default function OpacitySlider() {
         <div ref={opacitySlider} className="u-w-full u-h-full" id="opacity-slider"></div>
       </div>
 
-      <div className="c-slider__handler">
+      <div className="c-slider__manipulator">
         <svg ref={manipulatorOpacitySlider} transform="translate(0,0)" width="14" height="14">
           <circle cx="7" cy="7" r="4.8" fill="none" strokeWidth="2.8" stroke="#555555"></circle>
           <circle cx="7" cy="7" r="4.8" fill="none" strokeWidth="2.5" stroke="#ffffff"></circle>

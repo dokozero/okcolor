@@ -11,7 +11,7 @@ import {
   updateColorHxyaAndSyncColorsRgbaAndPlugin,
   $mouseEventCallback
 } from '../../store'
-import { limitMouseHandlerValue, roundWithDecimal } from '../../helpers/others'
+import { limitMouseManipulatorPosition, roundWithDecimal } from '../../helpers/others'
 
 import {
   consoleLogInfos,
@@ -100,7 +100,7 @@ export default function ColorPicker() {
     if ($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) {
       currentContrainedMove = true
     } else {
-      newColorHxya.y = roundWithDecimal(limitMouseHandlerValue(1 - canvasY / PICKER_SIZE) * 100, $colorValueDecimals.get()!.y)
+      newColorHxya.y = roundWithDecimal(limitMouseManipulatorPosition(1 - canvasY / PICKER_SIZE) * 100, $colorValueDecimals.get()!.y)
     }
 
     // Get the new X value.
@@ -116,7 +116,7 @@ export default function ColorPicker() {
           }
         })
       } else {
-        newColorHxya.x = roundWithDecimal(limitMouseHandlerValue(canvasX / PICKER_SIZE) * 100, $colorValueDecimals.get()!.x)
+        newColorHxya.x = roundWithDecimal(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, $colorValueDecimals.get()!.x)
 
         switch ($currentColorModel.get()) {
           case 'oklch':
@@ -303,7 +303,7 @@ export default function ColorPicker() {
         <path ref={relativeChromaStroke} fill="none" stroke="#FFFFFF80" />
       </svg>
 
-      <svg className="c-color-picker__handler" width={PICKER_SIZE} height={PICKER_SIZE}>
+      <svg className="c-color-picker__manipulator" width={PICKER_SIZE} height={PICKER_SIZE}>
         <g ref={manipulatorColorPicker} transform="translate(-10,-10)">
           <circle cx="0" cy="0" r="4.8" fill="none" strokeWidth="2.8" stroke="#555555"></circle>
           <circle cx="0" cy="0" r="4.8" fill="none" strokeWidth="2.5" stroke="#ffffff"></circle>

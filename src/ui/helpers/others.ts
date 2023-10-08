@@ -5,7 +5,7 @@ export const clampNumber = (num: number, min: number, max: number): number => {
 }
 
 // To avoid getting the handlers going off the canvas.
-export const limitMouseHandlerValue = (value: number): number => {
+export const limitMouseManipulatorPosition = (value: number): number => {
   const minThreshold = 0.0001
   const maxThreshold = 1 - minThreshold
 
