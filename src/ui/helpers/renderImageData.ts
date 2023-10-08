@@ -1,6 +1,6 @@
 // We keep this file for archive purpose just in case but now the rendering of color picker is done with WebGL shaders.
 
-import { RES_PICKER_SIZE_OKHSLV, RES_PICKER_SIZE_OKLCH, OKLCH_CHROMA_SCALE } from '../../constants'
+import { RES_PICKER_SIZE_OKHSLV, RES_PICKER_SIZE_OKLCH, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../constants'
 
 import { converter, clampChromaInGamut } from '../helpers/culori.mjs'
 import type { Rgb, Oklch } from '../helpers/culori.mjs'
@@ -83,8 +83,8 @@ export const renderImageData = function (hue: number, colorModel: string, fileCo
 
       currentLuminosity = (RES_PICKER_SIZE_OKLCH - y) / RES_PICKER_SIZE_OKLCH
 
-      sRGBMaxChroma = clampChromaInGamut({ mode: 'oklch', l: currentLuminosity, c: 0.37, h: hue }, 'oklch', 'rgb')
-      P3MaxChroma = clampChromaInGamut({ mode: 'oklch', l: currentLuminosity, c: 0.37, h: hue }, 'oklch', 'p3')
+      sRGBMaxChroma = clampChromaInGamut({ mode: 'oklch', l: currentLuminosity, c: MAX_CHROMA_P3, h: hue }, 'oklch', 'rgb')
+      P3MaxChroma = clampChromaInGamut({ mode: 'oklch', l: currentLuminosity, c: MAX_CHROMA_P3, h: hue }, 'oklch', 'p3')
 
       for (let x = 0; x < RES_PICKER_SIZE_OKLCH; x++) {
         currentChroma = x / (RES_PICKER_SIZE_OKLCH * OKLCH_CHROMA_SCALE)

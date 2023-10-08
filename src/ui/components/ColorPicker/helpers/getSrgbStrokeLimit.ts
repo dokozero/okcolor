@@ -1,4 +1,4 @@
-import { PICKER_SIZE, OKLCH_CHROMA_SCALE } from '../../../../constants'
+import { PICKER_SIZE, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../constants'
 import { $colorHxya } from '../../../store'
 import { clampChromaInGamut } from '../../../helpers/culori.mjs'
 
@@ -13,7 +13,7 @@ export default function getSrgbStrokeLimit(): string {
       {
         mode: 'oklch',
         l: (PICKER_SIZE - l) / PICKER_SIZE,
-        c: 0.37,
+        c: MAX_CHROMA_P3,
         h: $colorHxya.get().h
       },
       'oklch',

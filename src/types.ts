@@ -50,20 +50,20 @@ export interface ColorRgba {
 
 export interface ColorHxy {
   h: number // 0 - 360
-  x: number // oklchCss = 0 - 0.37, others: 0 - 100
+  x: number // oklchCss = 0 - MAX_CHROMA_P3, others: 0 - 100
   y: number // 0 - 100
 }
 
 export interface ColorHxya {
   h: number | null // 0 - 360
-  x: number // oklchCss = 0 - 0.37, others: 0 - 100
+  x: number // oklchCss = 0 - MAX_CHROMA_P3, others: 0 - 100
   y: number // 0 - 100
   a: number // 0 - 100
 }
 
 export interface PartialColorHxya {
   h?: number | undefined // 0 - 360
-  x?: number | undefined // oklchCss = 0 - 0.37, others: 0 - 100
+  x?: number | undefined // oklchCss = 0 - MAX_CHROMA_P3, others: 0 - 100
   y?: number | undefined // 0 - 100
   a?: number | undefined // 0 - 100
 }

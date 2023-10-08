@@ -4,7 +4,7 @@ import { clampChromaInGamut } from './culori.mjs'
 import { roundWithDecimal } from './others'
 
 /**
- * @returns {number} between 0 and 37 for oklch or 0 and 0.37 for oklchCss
+ * @returns {number} between 0 and MAX_CHROMA_P3 * 100 for oklch or 0 and MAX_CHROMA_P3 for oklchCss
  */
 export default function getClampedChroma(props: ColorHxy): number {
   const { h, x, y } = props

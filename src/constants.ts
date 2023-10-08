@@ -11,6 +11,8 @@ export const RES_PICKER_SIZE_OKLCH = PICKER_SIZE / RES_PICKER_FACTOR_OKLCH
 export const OKLCH_CHROMA_SCALE = 2.7
 export const OKLCH_RGB_BOUNDARY_COLOR = '#FFFFFF'
 
+export const MAX_CHROMA_P3 = 0.37
+
 // prettier-ignore
 // Comment the line you don't want.
 export const consoleLogInfos = [
