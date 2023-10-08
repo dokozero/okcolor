@@ -19,19 +19,19 @@
     "vite-plugin-virtual-plain-text": "^1.4.3"
   },
   "devDependencies": {
-    "@figma/plugin-typings": "^1.78.1",
+    "@figma/plugin-typings": "^1.79.0",
     "@types/culori": "^2.0.1",
-    "@types/node": "^20.8.2",
-    "@types/react": "^18.2.24",
-    "@types/react-dom": "^18.2.9",
+    "@types/node": "^20.8.3",
+    "@types/react": "^18.2.25",
+    "@types/react-dom": "^18.2.11",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
     "@typescript-eslint/parser": "^6.7.4",
     "@vitejs/plugin-react": "^4.1.0",
-    "eslint": "^8.50.0",
+    "eslint": "^8.51.0",
     "eslint-plugin-react": "^7.33.2",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2",
-    "vite": "^4.4.10",
+    "vite": "^4.4.11",
     "vite-plugin-singlefile": "^0.13.5"
   }
 }
