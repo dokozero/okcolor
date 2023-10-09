@@ -1,0 +1,44 @@
+.c-relative-chroma {
+  height: 28px;
+  padding: 0 12px 0 14px;
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.c-relative-chroma p {
+  font-size: 11px;
+  color: var(--figma-color-text);
+}
+.c-relative-chroma p {
+  flex: 0 0 140px;
+}
+.c-relative-chroma__lock-wrapper {
+  height: 100%;
+  margin-left: 4px;
+  padding: 2px;
+  border-radius: 2px;
+}
+.c-relative-chroma__lock-wrapper:hover {
+  outline: 1px solid var(--figma-color-border);
+  outline-offset: -1px;
+}
+.c-relative-chroma__lock {
+  height: 100%;
+  padding: 0 6px 0 5px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+}
+.c-relative-chroma__lock--closed {
+  background: var(--figma-color-bg-secondary);
+}
+.c-relative-chroma__lock svg {
+  fill: var(--figma-color-text);
+  fill-opacity: 0.9;
+  position: relative;
+  left: 1.5px;
+}
+.c-relative-chroma__lock--closed svg {
+  fill-opacity: 0.9;
+}
