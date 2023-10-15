@@ -5,9 +5,9 @@
   "scripts": {
     "build-plugin": "vite build --config vite-plugin.config.ts",
     "build-ui": "vite build --config vite-ui.config.ts",
-    "watch-plugin": "npm run build-plugin -- --watch",
-    "watch-ui": "npm run build-ui -- --watch",
-    "build": "npm run build-ui && npm run build-plugin"
+    "watch-plugin": "vite build --watch --config vite-plugin.config.ts",
+    "watch-ui": "vite build --watch --config vite-ui.config.ts",
+    "build": "pnpm run build-plugin && pnpm run build-ui"
   },
   "dependencies": {
     "@nanostores/react": "^0.7.1",
