@@ -20,9 +20,10 @@ export const selectInputContent = (event: React.MouseEvent<HTMLInputElement>) =>
   eventTarget.select()
 
   // This is a fix as in some cases, if the user update the value of an input then click again inside it, in some cases the above select will not work. To counter this, we use this setTimeout callback.
-  setTimeout(() => {
-    eventTarget.select()
-  }, 10)
+  // Update, we deactivate it for now as updating multiple time the same input lead to error because the below select can happen while editing the input.
+  // setTimeout(() => {
+  //   eventTarget.select()
+  // }, 10)
 }
 
 export const roundWithDecimal = (value: number, numberOfDecimal = 1): number => {

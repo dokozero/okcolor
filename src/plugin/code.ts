@@ -3,7 +3,7 @@
 import { PICKER_SIZE } from '../constants'
 import type { ColorRgba, ColorsRgba, CurrentColorModel, CurrentFillOrStroke, FileColorProfile } from '../types'
 import getNewColorsRgba from './helpers/getNewColorsRgba'
-import updateShapeColor from './helpers/newColorRgbaFormated'
+import updateShapeColor from './helpers/updateShapeColor'
 import sendMessageToUi from './helpers/sendMessageToUi'
 
 let currentFillOrStroke: CurrentFillOrStroke = 'fill'
