@@ -26,13 +26,18 @@ void main()
         if (showP3) {
             col = oklch2p3(oklch);
         } else {
-            col = pow(col,vec3(1./2.2)); // sRGB gamma correction
+            // sRGB gamma correction
+            col = exp(log(col) * (1./2.2));
+            // col = pow(col,vec3(1./2.2)); // We used this approach on previous version but with Chrome and Safari, pow() seems to not handle negative numbers the same way as in Firefox/Figma desktop and it broke isInBounds().
         }
 
         bool inBounds = isInBounds(col);
-        if (inBounds)
+        if (inBounds) {
             gl_FragColor = vec4(col, 1.0);
-        else gl_FragColor = vec4(pow(bg_color,vec3(1./1.4)), 1.0);
+        }
+        else {
+            gl_FragColor = vec4(pow(bg_color,vec3(1./1.4)), 1.0);
+        }
     } else {
         // clamp radian to [0,1]
         vec3 hsl = vec3(clampRadian(h), uv.x, uv.y);

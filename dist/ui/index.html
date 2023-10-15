@@ -597,8 +597,8 @@ void main()
             col = oklch2p3(oklch);
         } else {
             // sRGB gamma correction
-            // col = exp(log(col) * (1./2.2));
-            col = pow(col,vec3(1./2.2)); // We used approach on previous version but on Chrome and Safari, pow() seems to not handle negative numbers the same way as in Firefox/Figma desktop and it broke isInBounds().
+            col = exp(log(col) * (1./2.2));
+            // col = pow(col,vec3(1./2.2)); // We used this approach on previous version but with Chrome and Safari, pow() seems to not handle negative numbers the same way as in Firefox/Figma desktop and it broke isInBounds().
         }
 
         bool inBounds = isInBounds(col);
