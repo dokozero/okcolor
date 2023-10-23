@@ -28,6 +28,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
 
   const returnObject: GetNewColorsRgbaReturn = {
     newColorsRgba: {
+      parentFill: null,
       fill: null,
       stroke: null
     },
@@ -95,6 +96,25 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     if (selection.length !== fillsCount && selection.length !== strokesCount) {
       returnObject.uiMessageCode = 'not_all_shapes_have_fill_or_stroke'
       return returnObject
+    }
+  }
+
+  if (selection[0].parent?.fills) {
+    let currentObject = selection[0].parent
+
+    while (currentObject) {
+      if (currentObject.fills.length !== 0) {
+        returnObject.newColorsRgba.parentFill = {
+          r: currentObject.fills[0].color.r * 255,
+          g: currentObject.fills[0].color.g * 255,
+          b: currentObject.fills[0].color.b * 255
+        }
+        break
+      } else if (currentObject.parent) {
+        currentObject = currentObject.parent
+      } else {
+        break
+      }
     }
   }
 

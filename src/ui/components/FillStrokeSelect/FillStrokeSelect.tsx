@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import {
-  $colorHxya,
   $currentColorModel,
   $currentFillOrStroke,
   $fileColorProfile,
   $colorsRgba,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin
+  updateColorHxyaAndSyncColorsRgbaAndPlugin,
+  $updateParent
 } from '../../store'
 import { useStore } from '@nanostores/react'
 import convertRgbToHxy from '../../helpers/convertRgbToHxy'
@@ -18,7 +18,7 @@ export default function FillStrokeSelect() {
 
   const currentFillOrStroke = useStore($currentFillOrStroke)
   const colorsRgba = useStore($colorsRgba)
-  const colorHxya = useStore($colorHxya)
+  const updateParent = useStore($updateParent)
 
   const fillOrStrokeSelector = useRef<HTMLDivElement>(null)
   const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null)
@@ -64,9 +64,7 @@ export default function FillStrokeSelect() {
 
   useEffect(() => {
     updateRenderFillStrokeSelectColor()
-  }, [colorHxya])
 
-  useEffect(() => {
     if (colorsRgba.fill && colorsRgba.stroke) {
       fillOrStrokeSelector.current!.classList.remove('u-pointer-events-none')
     } else {
@@ -76,15 +74,24 @@ export default function FillStrokeSelect() {
     fillOrStrokeSelector.current!.setAttribute('data-has-fill', colorsRgba.fill ? 'true' : 'false')
     fillOrStrokeSelector.current!.setAttribute('data-has-stroke', colorsRgba.stroke ? 'true' : 'false')
 
-    fillOrStrokeSelector_fill.current!.setAttribute(
-      'fill',
-      colorsRgba.fill ? `rgb(${colorsRgba.fill.r}, ${colorsRgba.fill.g}, ${colorsRgba.fill.b})` : 'none'
-    )
-    fillOrStrokeSelector_stroke.current!.setAttribute(
-      'fill',
-      colorsRgba.stroke ? `rgb(${colorsRgba.stroke.r}, ${colorsRgba.stroke.g}, ${colorsRgba.stroke.b})` : 'none'
-    )
-  }, [colorsRgba])
+    if (updateParent) {
+      fillOrStrokeSelector_fill.current!.setAttribute(
+        'fill',
+        `rgb(${colorsRgba.parentFill!.r}, ${colorsRgba.parentFill!.g}, ${colorsRgba.parentFill!.b})`
+      )
+
+      fillOrStrokeSelector_stroke.current!.setAttribute('fill', 'none')
+    } else {
+      fillOrStrokeSelector_fill.current!.setAttribute(
+        'fill',
+        colorsRgba.fill ? `rgb(${colorsRgba.fill.r}, ${colorsRgba.fill.g}, ${colorsRgba.fill.b})` : 'none'
+      )
+      fillOrStrokeSelector_stroke.current!.setAttribute(
+        'fill',
+        colorsRgba.stroke ? `rgb(${colorsRgba.stroke.r}, ${colorsRgba.stroke.g}, ${colorsRgba.stroke.b})` : 'none'
+      )
+    }
+  }, [colorsRgba, updateParent])
 
   return (
     <div

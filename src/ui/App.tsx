@@ -13,7 +13,9 @@ import {
   $currentFillOrStroke,
   $mouseEventCallback,
   $figmaEditorType,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin
+  updateColorHxyaAndSyncColorsRgbaAndPlugin,
+  $updateParent,
+  $lockContrast
 } from './store'
 
 import FileColorProfileSelect from './components/FileColorProfileSelect/FileColorProfileSelect'
@@ -23,7 +25,8 @@ import HueSlider from './components/sliders/HueSlider/HueSlider'
 import OpacitySlider from './components/sliders/OpacitySlider/OpacitySlider'
 import ColorModelSelect from './components/ColorModelSelect/ColorModelSelect'
 import ColorValueInputs from './components/ColorValueInputs/ColorValueInputs'
-import RelativeChromaInput from './components/RelativeChromaInput/RelativeChromaInput'
+import RelativeChromaInput from './components/single-input-with-lock/RelativeChromaInput/RelativeChromaInput'
+import ContrastInput from './components/single-input-with-lock/ContrastInput/ContrastInput'
 import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 
 import { consoleLogInfos } from '../constants'
@@ -55,6 +58,10 @@ function App() {
       if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
       if (document.body.classList.contains('deactivated')) document.body.classList.remove('deactivated')
       if ($uiMessage.get().show) $uiMessage.setKey('show', false)
+
+      // If on previous selected shape we had the parent selected, we set it to false as default.
+      if ($updateParent.get()) $updateParent.set(false)
+
       $currentFillOrStroke.set(pluginMessage.newColorsRgbaData.currentFillOrStroke)
       updateColorsRgbaAndSyncColorHxya(pluginMessage.newColorsRgbaData.colorsRgba, true)
     }
@@ -154,6 +161,7 @@ function App() {
         </div>
 
         <RelativeChromaInput />
+        <ContrastInput />
         <ColorCodeInputs />
       </div>
     </>

@@ -9,7 +9,10 @@ import {
   $colorValueDecimals,
   $uiMessage,
   updateColorHxyaAndSyncColorsRgbaAndPlugin,
-  $mouseEventCallback
+  $mouseEventCallback,
+  $lockContrast,
+  $contrast,
+  $relativeChroma
 } from '../../store'
 import { limitMouseManipulatorPosition, roundWithDecimal } from '../../helpers/others'
 
@@ -38,6 +41,8 @@ import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit
 import { ColorModels } from '../../../types'
 import convertRelativeChromaToAbsolute from '../../helpers/convertRelativeChromaToAbsolute'
 import convertAbsoluteChromaToRelative from '../../helpers/convertAbsoluteChromaToRelative'
+import getContrastStrokeLimit from './helpers/getContrastStrokeLimit'
+import convertContrastToLightness from '../../helpers/convertContrastToLightness'
 
 let colorPickerGlContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
@@ -68,12 +73,16 @@ export default function ColorPicker() {
 
   const currentColorModel = useStore($currentColorModel)
   const lockRelativeChroma = useStore($lockRelativeChroma)
+  const lockContrast = useStore($lockContrast)
+  const relativeChroma = useStore($relativeChroma)
+  const contrast = useStore($contrast)
 
   const colorPicker = useRef<HTMLDivElement>(null)
   const colorPickerCanvas = useRef<HTMLCanvasElement>(null)
   const manipulatorColorPicker = useRef<SVGGElement>(null)
   const srgbBoundary = useRef<SVGPathElement>(null)
   const relativeChromaStroke = useRef<SVGPathElement>(null)
+  const contrastStroke = useRef<SVGPathElement>(null)
 
   const updateManipulatorPosition = () => {
     let x = $currentColorModel.get() === 'oklchCss' ? $colorHxya.get().x : $colorHxya.get().x / 100
@@ -97,7 +106,7 @@ export default function ColorPicker() {
     }
 
     // Get the new Y value.
-    if ($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) {
+    if (($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) || $lockContrast.get()) {
       currentContrainedMove = true
     } else {
       newColorHxya.y = roundWithDecimal(limitMouseManipulatorPosition(1 - canvasY / PICKER_SIZE) * 100, $colorValueDecimals.get()!.y)
@@ -125,6 +134,22 @@ export default function ColorPicker() {
           case 'oklchCss':
             newColorHxya.x = roundWithDecimal(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, $colorValueDecimals.get()!.x)
             break
+        }
+      }
+
+      if ($lockContrast.get()) {
+        if ($contrast.get() !== 0) {
+          const newHxy = convertContrastToLightness(
+            {
+              h: $colorHxya.get().h!,
+              x: newColorHxya.x,
+              y: $colorHxya.get().y,
+              a: $colorHxya.get().a
+            },
+            $contrast.get()!
+          )
+
+          newColorHxya.y = newHxy.y
         }
       }
     }
@@ -163,18 +188,34 @@ export default function ColorPicker() {
     updateManipulatorPosition()
   }
 
-  const renderColorPickerCanvas = () => {
+  const renderSrgbBoundary = () => {
     if ($fileColorProfile.get() === 'p3') {
       srgbBoundary.current!.setAttribute('d', getSrgbStrokeLimit())
     } else {
       srgbBoundary.current!.setAttribute('d', '')
     }
+  }
 
+  const renderRelativeChromaStroke = () => {
     if ($lockRelativeChroma.get()) {
       relativeChromaStroke.current!.setAttribute('d', getRelativeChromaStrokeLimit())
     } else {
       relativeChromaStroke.current!.setAttribute('d', '')
     }
+  }
+
+  const renderContrastStroke = () => {
+    if ($lockContrast.get()) {
+      contrastStroke.current!.setAttribute('d', getContrastStrokeLimit())
+    } else {
+      contrastStroke.current!.setAttribute('d', '')
+    }
+  }
+
+  const renderColorPickerCanvas = () => {
+    renderSrgbBoundary()
+    renderRelativeChromaStroke()
+    renderContrastStroke()
 
     const gl = colorPickerGlContext
     const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()!) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
@@ -229,18 +270,23 @@ export default function ColorPicker() {
   }, [currentColorModel])
 
   useEffect(() => {
-    if (colorHxya.h === null) return
-
-    renderColorPickerCanvas()
     updateManipulatorPosition()
     updateColorSpaceLabelInColorPicker()
-  }, [colorHxya])
+  }, [colorHxya.x, colorHxya.y])
 
   useEffect(() => {
     if (colorHxya.h === null) return
 
     renderColorPickerCanvas()
-  }, [lockRelativeChroma])
+  }, [colorHxya.h])
+
+  useEffect(() => {
+    renderRelativeChromaStroke()
+  }, [relativeChroma, lockRelativeChroma])
+
+  useEffect(() => {
+    renderContrastStroke()
+  }, [contrast, lockContrast])
 
   useEffect(() => {
     if (uiMessage.show) {
@@ -301,6 +347,10 @@ export default function ColorPicker() {
 
       <svg className="c-color-picker__relative-chroma-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
         <path ref={relativeChromaStroke} fill="none" stroke="#FFFFFF80" />
+      </svg>
+
+      <svg className="c-color-picker__contrast-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
+        <path ref={contrastStroke} fill="none" stroke="#FFFFFF80" />
       </svg>
 
       <svg className="c-color-picker__manipulator" width={PICKER_SIZE} height={PICKER_SIZE}>

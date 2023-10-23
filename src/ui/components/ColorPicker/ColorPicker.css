@@ -38,7 +38,8 @@
 .c-color-picker__canvas,
 .c-color-picker__manipulator,
 .c-color-picker__srgb-boundary,
-.c-color-picker__relative-chroma-stroke {
+.c-color-picker__relative-chroma-stroke,
+.c-color-picker__contrast-stroke {
   position: absolute;
 }
 .c-color-picker__canvas {
@@ -46,7 +47,8 @@
 }
 .c-color-picker__manipulator,
 .c-color-picker__srgb-boundary,
-.c-color-picker__relative-chroma-stroke {
+.c-color-picker__relative-chroma-stroke,
+.c-color-picker__contrast-stroke {
   pointer-events: none;
 }
 
@@ -54,7 +56,8 @@
 .c-color-picker--deactivated .c-color-picker__manipulator,
 .c-color-picker--deactivated .c-color-picker__srgb-boundary,
 .c-color-picker--deactivated .c-color-picker__relative-chroma-stroke,
-.c-color-picker--deactivated .c-color-picker__color-space {
+.c-color-picker--deactivated .c-color-picker__color-space,
+.c-color-picker--deactivated .c-color-picker__contrast-stroke {
   display: none;
 }
 

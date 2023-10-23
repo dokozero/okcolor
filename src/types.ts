@@ -69,7 +69,8 @@ export interface PartialColorHxya {
 }
 
 export interface ColorsRgba {
-  [key: string]: ColorRgba | null
+  [key: string]: ColorRgba | ColorRgb | null
+  parentFill: ColorRgb | null
   fill: ColorRgba | null
   stroke: ColorRgba | null
 }
@@ -124,3 +125,5 @@ export interface OnMessageFromPlugin {
     }
   }
 }
+
+export type ApcaContrast = number // between -108 and 106

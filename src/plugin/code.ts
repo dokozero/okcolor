@@ -13,16 +13,17 @@ let lockRelativeChroma: boolean
 let showCssColorCodes: boolean
 
 const pluginHeights = {
-  okHsvlWithoutColorCodes: 436,
-  okHsvlWithColorCodes: 564,
-  okLchWithoutColorCodes: 469,
-  okLchWithColorCodes: 598
+  okHsvlWithoutColorCodes: 470,
+  okHsvlWithColorCodes: 598,
+  okLchWithoutColorCodes: 503,
+  okLchWithColorCodes: 632
 }
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
 let itsAMe = false
 
 let colorsRgba: ColorsRgba = {
+  parentFill: null,
   fill: null,
   stroke: null
 }
@@ -180,6 +181,7 @@ let timeoutId: number
 interface OnMessageEvent {
   message: string
   newColorRgba?: ColorRgba
+  updateParent?: boolean
   fileColorProfile?: FileColorProfile
   currentFillOrStroke?: CurrentFillOrStroke
   currentColorModel?: CurrentColorModel
@@ -196,7 +198,7 @@ figma.ui.onmessage = (event: OnMessageEvent) => {
 
     case 'updateShapeColor':
       itsAMe = true
-      updateShapeColor(event.newColorRgba!, currentFillOrStroke)
+      updateShapeColor(event.newColorRgba!, currentFillOrStroke, event.updateParent!)
 
       // We reset itsAMe value to false here because if we do it on the documentchange callback, when we move the hue cursor on FFFFFF or 000000 in OkHSL, this callback is not executed so itsAMe would stay on true and if for example user delete the fill of the shape, we would get an error.
       if (timeoutId) clearTimeout(timeoutId)

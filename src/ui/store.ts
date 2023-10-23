@@ -15,6 +15,8 @@ import convertHxyToRgb from './helpers/convertHxyToRgb'
 import convertAbsoluteChromaToRelative from './helpers/convertAbsoluteChromaToRelative'
 import { consoleLogInfos } from '../constants'
 
+import getContrastFromBgandFgRgba from './helpers/getContrastFromBgandFgRgba'
+
 export const $uiMessage = map({
   show: false,
   message: ''
@@ -23,14 +25,19 @@ export const $uiMessage = map({
 export const $figmaEditorType = atom<FigmaEditorType | null>(null)
 export const $fileColorProfile = atom<FileColorProfile | null>(null)
 export const $currentColorModel = atom<CurrentColorModel | null>(null)
-export const $lockRelativeChroma = atom<boolean | null>(null)
 export const $currentFillOrStroke = atom<CurrentFillOrStroke>('fill')
 export const $showCssColorCodes = atom(true)
 export const $currentKeysPressed = atom<CurrentKeysPressed>([''])
 export const $isMouseInsideDocument = atom(false)
 export const $mouseEventCallback = atom<((event: MouseEvent) => void) | null>(null)
+export const $relativeChroma = atom<number | null>(null)
+export const $lockRelativeChroma = atom<boolean | null>(null)
+export const $updateParent = atom(false)
+export const $contrast = atom<number | null>(null)
+export const $lockContrast = atom<boolean | null>(null)
 
 export const $colorsRgba = deepMap<ColorsRgba>({
+  parentFill: null,
   fill: {
     r: 255,
     g: 255,
@@ -79,6 +86,7 @@ export const updateColorsRgbaAndSyncColorHxya = action(
   }
 )
 
+// This map contain the current color being used in the UI, it can be the fill or the stroke but also the foreground or the background (always the fill) of the current selected object.
 export const $colorHxya = map<ColorHxya>({
   h: null,
   x: 0,
@@ -118,7 +126,9 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
     })
 
     if (syncColorsRgba) {
-      $colorsRgba.setKey(`${$currentFillOrStroke.get()}`, { ...newColorRgb, a: colorHxya.get().a })
+      const key = $updateParent.get() ? 'parentFill' : `${$currentFillOrStroke.get()}`
+
+      $colorsRgba.setKey(key, { ...newColorRgb, a: colorHxya.get().a })
     }
 
     if (syncColorRgbWithPlugin) {
@@ -126,7 +136,8 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
         {
           pluginMessage: {
             message: 'updateShapeColor',
-            newColorRgba: { ...newColorRgb, a: $colorHxya.get().a }
+            newColorRgba: { ...newColorRgb, a: $colorHxya.get().a },
+            updateParent: $updateParent.get()
           }
         },
         '*'
@@ -135,8 +146,7 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
   }
 )
 
-export const $relativeChroma = atom<number | null>(null)
-
+// We don't use computed() to calculate $relativeChroma because we need to update from other places.
 $colorHxya.subscribe((newColorHxya) => {
   if (consoleLogInfos.includes('Store updates')) {
     console.log('Store update — $relativeChroma (subscribed on $colorHxya)')
@@ -150,6 +160,29 @@ $colorHxya.subscribe((newColorHxya) => {
   if ($lockRelativeChroma.get() && $relativeChroma.get() && (newColorHxya.y === 0 || newColorHxya.y === 100)) return
 
   $relativeChroma.set(convertAbsoluteChromaToRelative({ h: newColorHxya.h, x: newColorHxya.x, y: newColorHxya.y }))
+})
+
+// We don't use computed() to calculate $contrast because we need to update from other places.
+$colorsRgba.subscribe((newColorsRgba) => {
+  if (consoleLogInfos.includes('Store updates')) {
+    console.log('Store update — $contrast (subscribed on $colorsRgba)')
+    console.log(`    newColorHxya: ${JSON.stringify(newColorsRgba)}`)
+  }
+
+  if (!newColorsRgba.parentFill) {
+    $contrast.set(0)
+    return
+  }
+
+  let newContrast: number | null = null
+
+  newContrast = getContrastFromBgandFgRgba(newColorsRgba.parentFill!, newColorsRgba.fill!)
+
+  if (newContrast !== null) {
+    newContrast = Math.round(newContrast)
+
+    $contrast.set(newContrast)
+  }
 })
 
 export const $colorValueDecimals = computed(

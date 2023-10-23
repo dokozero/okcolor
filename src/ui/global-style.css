@@ -4,7 +4,7 @@
 @import 'components/FileColorProfileSelect/FileColorProfileSelect.css';
 @import 'components/FillStrokeSelect/FillStrokeSelect.css';
 @import 'components/sliders/sliders.css';
-@import 'components/RelativeChromaInput/RelativeChromaInput.css';
+@import 'components/single-input-with-lock/single-input-with-lock.css';
 
 /**
  * Bases
@@ -192,6 +192,9 @@ body.deactivated .c-bottom-controls {
 .u-px-16 {
   padding-left: 16px;
   padding-right: 16px;
+}
+.u-ml-auto {
+  margin-left: auto;
 }
 
 .u-order-0 {

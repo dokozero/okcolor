@@ -1,6 +1,13 @@
 import { useRef, useEffect } from 'react'
 import { SLIDER_SIZE, consoleLogInfos } from '../../../../constants'
-import { $colorHxya, $currentFillOrStroke, $colorsRgba, updateColorHxyaAndSyncColorsRgbaAndPlugin, $mouseEventCallback } from '../../../store'
+import {
+  $colorHxya,
+  $currentFillOrStroke,
+  $colorsRgba,
+  updateColorHxyaAndSyncColorsRgbaAndPlugin,
+  $mouseEventCallback,
+  $updateParent
+} from '../../../store'
 import { limitMouseManipulatorPosition } from '../../../helpers/others'
 import { useStore } from '@nanostores/react'
 
@@ -14,7 +21,9 @@ export default function OpacitySlider() {
 
   const colorHxya = useStore($colorHxya)
   const colorsRgba = useStore($colorsRgba)
+  const updateParent = useStore($updateParent)
 
+  const opacitySliderWrapper = useRef<HTMLDivElement>(null)
   const opacitySlider = useRef<HTMLDivElement>(null)
   const manipulatorOpacitySlider = useRef<SVGSVGElement>(null)
 
@@ -36,6 +45,20 @@ export default function OpacitySlider() {
   }, [colorHxya.a])
 
   useEffect(() => {
+    if (updateParent) {
+      opacitySliderWrapper.current!.style.backgroundImage = `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${colorsRgba.parentFill!.r}, ${
+        colorsRgba.parentFill!.g
+      }, ${colorsRgba.parentFill!.b}, 1) 90%), url(${opacitysliderBackgroundImg})`
+    } else {
+      opacitySliderWrapper.current!.style.backgroundImage = `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${
+        colorsRgba[`${$currentFillOrStroke.get()}`]!.r
+      }, ${colorsRgba[`${$currentFillOrStroke.get()}`]!.g}, ${
+        colorsRgba[`${$currentFillOrStroke.get()}`]!.b
+      }, 1) 90%), url(${opacitysliderBackgroundImg})`
+    }
+  }, [colorsRgba, updateParent])
+
+  useEffect(() => {
     opacitySlider.current!.addEventListener('mousedown', () => {
       $mouseEventCallback.set(handleNewManipulatorPosition)
     })
@@ -43,14 +66,7 @@ export default function OpacitySlider() {
 
   return (
     <div className="c-slider u-mt-16">
-      <div
-        className="c-slider__canvas"
-        style={{
-          backgroundImage: `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${colorsRgba[`${$currentFillOrStroke.get()}`]!.r}, ${
-            colorsRgba[`${$currentFillOrStroke.get()}`]!.g
-          }, ${colorsRgba[`${$currentFillOrStroke.get()}`]!.b}, 1) 90%), url(${opacitysliderBackgroundImg})`
-        }}
-      >
+      <div ref={opacitySliderWrapper} className="c-slider__canvas">
         <div ref={opacitySlider} className="u-w-full u-h-full" id="opacity-slider"></div>
       </div>
 

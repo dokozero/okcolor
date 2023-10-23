@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { selectInputContent } from '../../helpers/others'
-import { consoleLogInfos } from '../../../constants'
+import { selectInputContent } from '../../../helpers/others'
+import { consoleLogInfos } from '../../../../constants'
 import {
   $colorHxya,
   $currentColorModel,
@@ -10,29 +10,30 @@ import {
   $relativeChroma,
   $uiMessage,
   updateColorHxyaAndSyncColorsRgbaAndPlugin
-} from '../../store'
+} from '../../../store'
 import { useStore } from '@nanostores/react'
-import convertRelativeChromaToAbsolute from '../../helpers/convertRelativeChromaToAbsolute'
+import convertRelativeChromaToAbsolute from '../../../helpers/convertRelativeChromaToAbsolute'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
 
 const updateColorHxyaChroma = (eventTarget: HTMLInputElement, newRelativeChroma: number) => {
-  if (newRelativeChroma >= 0 && newRelativeChroma <= 100 && newRelativeChroma !== $relativeChroma.get()) {
-    const newColorX = convertRelativeChromaToAbsolute({
-      colorHxy: { h: $colorHxya.get().h!, x: $colorHxya.get().x, y: $colorHxya.get().y },
-      relativeChroma: newRelativeChroma
-    })
-
-    // This condition could be true if for example user is updating relative chroma near white of black, in this case we'll have multiple absolute chroma values for the same relative chroma one.
-    // In that case we want to update directly the $relativeChroma value or the input would not be updated.
-    if (newColorX === $colorHxya.get().x) {
-      $relativeChroma.set(newRelativeChroma)
-    } else {
-      updateColorHxyaAndSyncColorsRgbaAndPlugin({ x: newColorX })
-    }
-  } else {
+  if (newRelativeChroma < 0 || newRelativeChroma > 100 || newRelativeChroma === $relativeChroma.get()) {
     eventTarget.value = $relativeChroma.get() + '%'
+    return
+  }
+
+  const newColorX = convertRelativeChromaToAbsolute({
+    colorHxy: { h: $colorHxya.get().h!, x: $colorHxya.get().x, y: $colorHxya.get().y },
+    relativeChroma: newRelativeChroma
+  })
+
+  // This condition could be true if for example user is updating relative chroma near white of black, in this case we'll have multiple absolute chroma values for the same relative chroma one.
+  // In that case we want to update directly the $relativeChroma value or the input would not be updated.
+  if (newColorX === $colorHxya.get().x) {
+    $relativeChroma.set(newRelativeChroma)
+  } else {
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ x: newColorX })
   }
 }
 
@@ -132,14 +133,14 @@ export default function RelativeChromaInput() {
   }, [])
 
   return (
-    <div className={(showRelativeChroma ? '' : 'u-visibility-hidden u-position-absolute ') + 'c-relative-chroma'}>
+    <div className={(showRelativeChroma ? '' : 'u-visibility-hidden u-position-absolute ') + 'c-single-input-with-lock'}>
       <p>Relative chroma</p>
-      <div className="input-wrapper">
+      <div className="input-wrapper c-single-input-with-lock__input-wrapper u-ml-auto">
         <input ref={input} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
       </div>
 
-      <div className="c-relative-chroma__lock-wrapper" onClick={handleLockRelativeChroma}>
-        <div className={'c-relative-chroma__lock' + (lockRelativeChroma ? ' c-relative-chroma__lock--closed' : '')}>
+      <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockRelativeChroma}>
+        <div className={'c-single-input-with-lock__lock' + (lockRelativeChroma ? ' c-single-input-with-lock__lock--closed' : '')}>
           <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
             {!lockRelativeChroma ? (
               <path
