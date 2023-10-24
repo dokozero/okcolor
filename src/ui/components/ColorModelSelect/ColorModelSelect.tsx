@@ -6,7 +6,9 @@ import {
   $currentFillOrStroke,
   $fileColorProfile,
   $colorsRgba,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin
+  updateColorHxyaAndSyncColorsRgbaAndPlugin,
+  $lockRelativeChroma,
+  $lockContrast
 } from '../../store'
 import { useStore } from '@nanostores/react'
 import { CurrentColorModel } from '../../../types'
@@ -47,10 +49,18 @@ export default function ColorModelSelect() {
       fileColorProfile: $fileColorProfile.get()!
     })
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ ...newColorHxy, a: $colorHxya.get().a }, false, false)
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({
+      newColorHxya: { ...newColorHxy, a: $colorHxya.get().a },
+      syncColorsRgba: false,
+      syncColorRgbWithPlugin: false
+    })
 
-    // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3's space.
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {
+      // If one of these values are true, we need to set them to false as relativeChroma and contrast are hiddne in OkHSV or OkHSL
+      if ($lockRelativeChroma.get()) $lockRelativeChroma.set(false)
+      if ($lockContrast.get()) $lockContrast.set(false)
+
+      // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3's space.
       $fileColorProfile.set('rgb')
 
       parent.postMessage(

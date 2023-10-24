@@ -29,11 +29,9 @@ export default function getColorCodeStrings(): NewColorStrings {
     b: 0
   }
 
-  const chroma = $currentColorModel.get() === 'oklch' ? $colorHxya.get().x / 100 : $colorHxya.get().x
-
   // We don't clamp chroma with the models that don't use it because they already work in sRGB.
   if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-    clamped = clampChromaInGamut({ mode: 'oklch', l: $colorHxya.get().y / 100, c: chroma, h: $colorHxya.get().h }, 'oklch', 'rgb')
+    clamped = clampChromaInGamut({ mode: 'oklch', l: $colorHxya.get().y / 100, c: $colorHxya.get().x, h: $colorHxya.get().h }, 'oklch', 'rgb')
     rgbSrgb = convertHxyToRgb({
       colorHxy: {
         h: clamped.h,
@@ -46,7 +44,7 @@ export default function getColorCodeStrings(): NewColorStrings {
     rgbP3 = convertHxyToRgb({
       colorHxy: {
         h: $colorHxya.get().h!,
-        x: chroma * 100,
+        x: $colorHxya.get().x * 100,
         y: $colorHxya.get().y
       },
       originColorModel: $currentColorModel.get()!,
@@ -68,7 +66,7 @@ export default function getColorCodeStrings(): NewColorStrings {
 
   if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
     newColorStrings.currentColorModel =
-      `oklch(${$colorHxya.get().y}% ${roundWithDecimal(chroma, 6)} ${$colorHxya.get().h}` + (opacity !== 1 ? ` / ${opacity})` : ')')
+      `oklch(${$colorHxya.get().y}% ${roundWithDecimal($colorHxya.get().x, 6)} ${$colorHxya.get().h}` + (opacity !== 1 ? ` / ${opacity})` : ')')
   } else if ($currentColorModel.get() === 'okhsl') {
     newColorStrings.currentColorModel = `{mode: "okhsl", h: ${$colorHxya.get().h}, s: ${$colorHxya.get().x}, l: ${$colorHxya.get().y}}`
   } else if ($currentColorModel.get() === 'okhsv') {

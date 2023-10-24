@@ -12,7 +12,8 @@ import {
   $mouseEventCallback,
   $lockContrast,
   $contrast,
-  $relativeChroma
+  $relativeChroma,
+  $colorsRgba
 } from '../../store'
 import { limitMouseManipulatorPosition, roundWithDecimal } from '../../helpers/others'
 
@@ -35,14 +36,11 @@ import vShader from '@virtual:shaders/src/ui/shaders/v_shader.glsl'
 import * as twgl from 'twgl.js'
 
 import { inGamut } from '../../helpers/culori.mjs'
-import getClampedChroma from '../../helpers/getClampedChroma'
 import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit'
 import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit'
 import { ColorModels } from '../../../types'
-import convertRelativeChromaToAbsolute from '../../helpers/convertRelativeChromaToAbsolute'
 import convertAbsoluteChromaToRelative from '../../helpers/convertAbsoluteChromaToRelative'
 import getContrastStrokeLimit from './helpers/getContrastStrokeLimit'
-import convertContrastToLightness from '../../helpers/convertContrastToLightness'
 
 let colorPickerGlContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
@@ -85,12 +83,15 @@ export default function ColorPicker() {
   const contrastStroke = useRef<SVGPathElement>(null)
 
   const updateManipulatorPosition = () => {
-    let x = $currentColorModel.get() === 'oklchCss' ? $colorHxya.get().x : $colorHxya.get().x / 100
-    const y = $colorHxya.get().y / 100
+    let x: number
 
     if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-      x *= OKLCH_CHROMA_SCALE
+      x = $colorHxya.get().x * OKLCH_CHROMA_SCALE
+    } else {
+      x = $colorHxya.get().x / 100
     }
+
+    const y = $colorHxya.get().y / 100
 
     manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(PICKER_SIZE * x, PICKER_SIZE * (1 - y))
   }
@@ -116,60 +117,16 @@ export default function ColorPicker() {
     if ($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'vertical' && !$lockRelativeChroma.get()) {
       currentContrainedMove = true
     } else {
-      if (['oklch', 'oklchCss'].includes($currentColorModel.get()!) && $lockRelativeChroma.get() && !$currentKeysPressed.get().includes('ctrl')) {
-        newColorHxya.x = convertRelativeChromaToAbsolute({
-          colorHxy: {
-            h: $colorHxya.get().h!,
-            x: newColorHxya.x,
-            y: newColorHxya.y
-          }
-        })
-      } else {
-        newColorHxya.x = roundWithDecimal(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, $colorValueDecimals.get()!.x)
+      newColorHxya.x = roundWithDecimal(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, $colorValueDecimals.get()!.x)
 
-        switch ($currentColorModel.get()) {
-          case 'oklch':
-            newColorHxya.x = roundWithDecimal(newColorHxya.x / OKLCH_CHROMA_SCALE, $colorValueDecimals.get()!.x)
-            break
-          case 'oklchCss':
-            newColorHxya.x = roundWithDecimal(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, $colorValueDecimals.get()!.x)
-            break
-        }
+      if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
+        newColorHxya.x = roundWithDecimal(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, $colorValueDecimals.get()!.x)
       }
-
-      if ($lockContrast.get()) {
-        if ($contrast.get() !== 0) {
-          const newHxy = convertContrastToLightness(
-            {
-              h: $colorHxya.get().h!,
-              x: newColorHxya.x,
-              y: $colorHxya.get().y,
-              a: $colorHxya.get().a
-            },
-            $contrast.get()!
-          )
-
-          newColorHxya.y = newHxy.y
-        }
-      }
-    }
-
-    if (['oklch', 'oklchCss'].includes($currentColorModel.get()!) && !$lockRelativeChroma.get()) {
-      newColorHxya.x = getClampedChroma({ h: $colorHxya.get().h!, x: newColorHxya.x, y: newColorHxya.y })
     }
 
     if ($currentKeysPressed.get().includes('ctrl')) {
       if (mainMouseMovement === 'vertical' && Math.round(newColorHxya.y) % 5 === 0) {
-        if ($lockRelativeChroma.get()) {
-          newColorHxya.x = convertRelativeChromaToAbsolute({
-            colorHxy: {
-              h: $colorHxya.get().h!,
-              x: newColorHxya.x,
-              y: Math.round(newColorHxya.y)
-            }
-          })
-        }
-        updateColorHxyaAndSyncColorsRgbaAndPlugin({ x: newColorHxya.x, y: Math.round(newColorHxya.y) })
+        updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { x: newColorHxya.x, y: Math.round(newColorHxya.y) } })
       } else if (mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) {
         let valueToTest = newColorHxya.x
 
@@ -178,11 +135,11 @@ export default function ColorPicker() {
         }
 
         if (valueToTest % 5 === 0) {
-          updateColorHxyaAndSyncColorsRgbaAndPlugin({ x: newColorHxya.x, y: newColorHxya.y })
+          updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { x: newColorHxya.x, y: newColorHxya.y } })
         }
       }
     } else {
-      updateColorHxyaAndSyncColorsRgbaAndPlugin(newColorHxya)
+      updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxya })
     }
 
     updateManipulatorPosition()
@@ -205,7 +162,7 @@ export default function ColorPicker() {
   }
 
   const renderContrastStroke = () => {
-    if ($lockContrast.get()) {
+    if ($lockContrast.get() && $colorsRgba.get().parentFill) {
       contrastStroke.current!.setAttribute('d', getContrastStrokeLimit())
     } else {
       contrastStroke.current!.setAttribute('d', '')
@@ -251,9 +208,7 @@ export default function ColorPicker() {
     let newValue: keyof typeof ColorSpacesNames | '' = ''
 
     if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-      const currentChroma = $currentColorModel.get() === 'oklch' ? $colorHxya.get().x / 100 : $colorHxya.get().x - 0.001
-
-      if (inGamutSrgb(`oklch(${$colorHxya.get().y / 100} ${currentChroma} ${$colorHxya.get().h})`)) {
+      if (inGamutSrgb(`oklch(${$colorHxya.get().y / 100} ${$colorHxya.get().x - 0.001} ${$colorHxya.get().h})`)) {
         newValue = 'sRGB'
       } else {
         newValue = 'P3'
@@ -270,6 +225,8 @@ export default function ColorPicker() {
   }, [currentColorModel])
 
   useEffect(() => {
+    if (colorHxya.h === null) return
+
     updateManipulatorPosition()
     updateColorSpaceLabelInColorPicker()
   }, [colorHxya.x, colorHxya.y])
@@ -278,13 +235,17 @@ export default function ColorPicker() {
     if (colorHxya.h === null) return
 
     renderColorPickerCanvas()
-  }, [colorHxya.h])
+  }, [colorHxya.h, currentColorModel])
 
   useEffect(() => {
+    if (colorHxya.h === null) return
+
     renderRelativeChromaStroke()
   }, [relativeChroma, lockRelativeChroma])
 
   useEffect(() => {
+    if (colorHxya.h === null) return
+
     renderContrastStroke()
   }, [contrast, lockContrast])
 

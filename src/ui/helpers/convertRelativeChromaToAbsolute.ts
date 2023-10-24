@@ -1,19 +1,19 @@
 import { MAX_CHROMA_P3 } from '../../constants'
-import { ColorHxy } from '../../types'
-import { $colorValueDecimals, $currentColorModel, $fileColorProfile, $relativeChroma } from '../store'
+import { ColorHxya } from '../../types'
+import { $colorValueDecimals, $fileColorProfile, $relativeChroma } from '../store'
 import { clampChromaInGamut } from './culori.mjs'
 import { roundWithDecimal } from './others'
 
 interface Props {
-  colorHxy: ColorHxy
+  colorHxya: ColorHxya
   relativeChroma?: number
 }
 
 /**
- * @returns {number} between 0 and MAX_CHROMA_P3 * 100 for oklch or 0 and MAX_CHROMA_P3 for oklchCss.
+ * @returns {number} between 0 and MAX_CHROMA_P3.
  */
 export default function convertRelativeChromaToAbsolute(props: Props): number {
-  const { colorHxy, relativeChroma = $relativeChroma.get()! } = props
+  const { colorHxya: colorHxy, relativeChroma = $relativeChroma.get()! } = props
 
   // We do this test because with a lightness of 0, we get an undefined value for currentMaxChroma.c.
   if (colorHxy.y === 0) return 0
@@ -23,8 +23,8 @@ export default function convertRelativeChromaToAbsolute(props: Props): number {
     'oklch',
     $fileColorProfile.get()
   ).c
-  let returnValue = relativeChroma * currentMaxChroma
-  if ($currentColorModel.get() === 'oklchCss') returnValue /= 100
+
+  const returnValue = (relativeChroma * currentMaxChroma) / 100
 
   return roundWithDecimal(returnValue, $colorValueDecimals.get()!.x)
 }

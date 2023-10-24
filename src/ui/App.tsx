@@ -50,8 +50,9 @@ function App() {
       $figmaEditorType.set(pluginMessage.initData.figmaEditorType)
       $fileColorProfile.set(pluginMessage.initData.fileColorProfile)
       $currentColorModel.set(pluginMessage.initData.currentColorModel)
-      $lockRelativeChroma.set(pluginMessage.initData.lockRelativeChroma)
       $showCssColorCodes.set(pluginMessage.initData.showCssColorCodes)
+      $lockRelativeChroma.set(pluginMessage.initData.lockRelativeChroma)
+      $lockContrast.set(pluginMessage.initData.lockContrast)
     }
     // Update the color based on the selected shape in Figma.
     else if (pluginMessage.message === 'newColorsRgba') {
@@ -69,7 +70,7 @@ function App() {
     else if (pluginMessage.message === 'displayUiMessage') {
       if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
       $uiMessage.setKey('show', true)
-      updateColorHxyaAndSyncColorsRgbaAndPlugin({ h: 0, x: 0, y: 0, a: 0 }, false, false)
+      updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { h: 0, x: 0, y: 0, a: 0 }, syncColorsRgba: false, syncColorRgbWithPlugin: false })
       document.body.classList.add('deactivated')
 
       let message = uiMessageTexts[`${pluginMessage.displayUiMessageData.uiMessageCode}`]

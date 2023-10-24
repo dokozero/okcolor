@@ -77,8 +77,14 @@ export default function ColorCodeInputs() {
     }
 
     const newColorHxya = getNewColorHxya(eventTargetId, eventTarget.value)
-    if (newColorHxya) updateColorHxyaAndSyncColorsRgbaAndPlugin(newColorHxya as PartialColorHxya)
-    else eventTarget.value = colorCodesInputValues[eventTargetId]
+
+    if (newColorHxya) {
+      updateColorHxyaAndSyncColorsRgbaAndPlugin({
+        newColorHxya: newColorHxya as PartialColorHxya,
+        bypassLockRelativeChromaFilter: true,
+        bypassLockContrastFilter: true
+      })
+    } else eventTarget.value = colorCodesInputValues[eventTargetId]
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

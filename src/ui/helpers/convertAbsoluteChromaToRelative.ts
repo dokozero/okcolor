@@ -1,6 +1,6 @@
 import { MAX_CHROMA_P3 } from '../../constants'
 import { ColorHxy } from '../../types'
-import { $fileColorProfile, $currentColorModel } from '../store'
+import { $fileColorProfile } from '../store'
 import { clampChromaInGamut } from './culori.mjs'
 import { clampNumber } from './others'
 
@@ -18,9 +18,6 @@ export default function convertAbsoluteChromaToRelative(colorHxy: ColorHxy): num
     $fileColorProfile.get()
   ).c
 
-  // 0 - MAX_CHROMA_P3
-  const actualChromaFormated = $currentColorModel.get() === 'oklchCss' ? colorHxy.x : colorHxy.x / 100
-
   // Some times we can get 101%, like with #FFFF00, so we use clampNumber().
-  return clampNumber(Math.round((actualChromaFormated * 100) / currentMaxChroma), 0, 100)
+  return clampNumber(Math.round((colorHxy.x * 100) / currentMaxChroma), 0, 100)
 }

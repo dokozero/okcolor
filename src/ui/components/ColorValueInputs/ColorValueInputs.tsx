@@ -5,15 +5,12 @@ import {
   $currentColorModel,
   $currentKeysPressed,
   $isMouseInsideDocument,
-  $lockRelativeChroma,
   updateColorHxyaAndSyncColorsRgbaAndPlugin
 } from '../../store'
 import { selectInputContent, roundWithDecimal } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
-import getClampedChroma from '../../helpers/getClampedChroma'
-import convertRelativeChromaToAbsolute from '../../helpers/convertRelativeChromaToAbsolute'
-import { PartialColorHxya, HxyaLabels, ColorHxy } from '../../../types'
+import { PartialColorHxya, HxyaLabels } from '../../../types'
 
 let lastKeyPressed: string = ''
 const keepInputSelected = {
@@ -51,26 +48,10 @@ const updateColorHxyaTargetValue = (eventTarget: HTMLInputElement, eventId: keyo
     newColorHxya[`${eventId}`] = newValue
   }
 
-  const colorHxyaTempsFunctionProp: ColorHxy = {
-    h: $colorHxya.get().h!,
-    x: $colorHxya.get().x,
-    y: $colorHxya.get().y
-  }
-
-  // We need to clamp the chroma if we are in oklch mode and user changed any of the hxy value.
-  if (['oklch', 'oklchCss'].includes($currentColorModel.get()!) && eventId !== 'a' && !$lockRelativeChroma.get()) {
-    colorHxyaTempsFunctionProp[`${eventId}`] = newValue
-
-    newColorHxya.x = getClampedChroma(colorHxyaTempsFunctionProp)
-    if (eventId === 'x') newValue = newColorHxya.x
-  } else if (['oklch', 'oklchCss'].includes($currentColorModel.get()!) && eventId !== 'a' && eventId !== 'x' && $lockRelativeChroma.get()) {
-    colorHxyaTempsFunctionProp[`${eventId}`] = newValue
-
-    newColorHxya.x = convertRelativeChromaToAbsolute({ colorHxy: colorHxyaTempsFunctionProp })
-  }
-
   if (newValue >= 0 && newValue <= (eventId === 'h' ? 360 : 100) && newValue !== oldValue) {
-    updateColorHxyaAndSyncColorsRgbaAndPlugin(newColorHxya)
+    if ($currentColorModel.get() === 'oklch' && newColorHxya.x) newColorHxya.x /= 100
+
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxya })
   } else {
     eventTarget.value = oldValue!.toString() + (eventId === 'a' ? '%' : '')
   }
@@ -120,8 +101,12 @@ export default function ColorValueInputs() {
 
     const eventId = eventTarget.id as HxyaLabels
 
-    const oldValue = getOldValue(eventId)
+    let oldValue = getOldValue(eventId)
     const newValue = parseFloat(eventTarget.value)
+
+    if ($currentColorModel.get() === 'oklch' && eventId === 'x') {
+      oldValue = roundWithDecimal(oldValue! * 100, 1)
+    }
 
     if (lastKeyPressed === 'Escape' || isNaN(newValue) || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
       eventTarget.value = oldValue!.toString() + (eventId === 'a' ? '%' : '')
@@ -170,9 +155,15 @@ export default function ColorValueInputs() {
     if (colorHxya.h === null) return
 
     inputH.current!.value = colorHxya.h.toString()
-    inputX.current!.value = colorHxya.x.toString()
     inputY.current!.value = colorHxya.y.toString()
     inputA.current!.value = colorHxya.a.toString() + '%'
+
+    if ($currentColorModel.get() === 'oklch') {
+      const newX = roundWithDecimal(colorHxya.x * 100, 1)
+      inputX.current!.value = newX.toString()
+    } else {
+      inputX.current!.value = colorHxya.x.toString()
+    }
 
     if (keepInputSelected.state) {
       if (keepInputSelected.inputId == 'h') inputH.current!.select()

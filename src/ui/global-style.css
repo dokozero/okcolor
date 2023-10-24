@@ -197,6 +197,10 @@ body.deactivated .c-bottom-controls {
   margin-left: auto;
 }
 
+.u-opacity-50 {
+  opacity: 0.5;
+}
+
 .u-order-0 {
   order: 0;
 }

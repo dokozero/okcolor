@@ -24,7 +24,7 @@ const updateColorHxyaChroma = (eventTarget: HTMLInputElement, newRelativeChroma:
   }
 
   const newColorX = convertRelativeChromaToAbsolute({
-    colorHxy: { h: $colorHxya.get().h!, x: $colorHxya.get().x, y: $colorHxya.get().y },
+    colorHxya: $colorHxya.get(),
     relativeChroma: newRelativeChroma
   })
 
@@ -32,9 +32,10 @@ const updateColorHxyaChroma = (eventTarget: HTMLInputElement, newRelativeChroma:
   // In that case we want to update directly the $relativeChroma value or the input would not be updated.
   if (newColorX === $colorHxya.get().x) {
     $relativeChroma.set(newRelativeChroma)
-  } else {
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ x: newColorX })
+    return
   }
+
+  updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { x: newColorX }, bypassLockRelativeChromaFilter: true })
 }
 
 export default function RelativeChromaInput() {
@@ -90,6 +91,9 @@ export default function RelativeChromaInput() {
 
     $lockRelativeChroma.set(newValue)
 
+    // To avoid getting relative chroma and contrast locked at the same time, which would block the color picker and the hxya inputs
+    // if ($lockContrast.get() && newValue) $lockContrast.set(false)
+
     parent.postMessage(
       {
         pluginMessage: {
@@ -106,7 +110,6 @@ export default function RelativeChromaInput() {
       setShowRelativeChroma(true)
     } else {
       setShowRelativeChroma(false)
-      $lockRelativeChroma.set(false)
     }
   }, [currentColorModel])
 
@@ -123,12 +126,12 @@ export default function RelativeChromaInput() {
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
+      if (!['oklch', 'oklchCss'].includes($currentColorModel.get()!)) return
+
       // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
-      if ((event.key === 'c' || event.key === 'C') && !$uiMessage.get().show && document.activeElement?.tagName !== 'INPUT') {
-        if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-          handleLockRelativeChroma()
-        }
-      }
+      if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
+
+      if (['c', 'C'].includes(event.key)) handleLockRelativeChroma()
     })
   }, [])
 

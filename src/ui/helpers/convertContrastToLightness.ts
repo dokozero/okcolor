@@ -5,10 +5,11 @@ import getClampedChroma from './getClampedChroma'
 import { roundWithDecimal, clampNumber } from './others'
 import getContrastFromBgandFgRgba from './getContrastFromBgandFgRgba'
 
-// convertLightnessToContrast(hxy)
-
+/**
+ * Find the lightness for the given contrast on the current hue and chroma.
+ */
 export default function convertContrastToLightness(currentColorHxya: ColorHxya, targetContrast: ApcaContrast): ColorHxy {
-  let newY = 100
+  let newY: number | undefined
   let newX = currentColorHxya.x
   let newRgb: ColorRgb
   let tempNewContrast = 0
@@ -20,36 +21,25 @@ export default function convertContrastToLightness(currentColorHxya: ColorHxya, 
   const newYStep = [50, 25, 10, 5, 1, 0.1]
   let currentStepIndex = 0
 
+  // We need this because based on $updateParent, the condition will not be the same
+  let newYUpdateCondition: boolean
+
+  // The approach to find the lightness is to start from the top (newY = 100) and go one step bellow (newYStep[0] = 50),
+  // then if tempNewContrast === targetContrast we are done, but if that's not the case, we continue. When we go too far, we change the order
+  // of scanning from top-bottom to bottom-up while making the step smaller (newY += newYStep[currentStepIndex] where currentStepIndex is incremented),
+  // then, if again we go to far on this new direction, we reverse order with a smaller newYStep, until we find the goo lightness.
   do {
+    // TODO - remove count
     count++
 
-    // We don't check if we are on oklch or okhsl for example because we allow contrast checking only with oklch.
-    newX = getClampedChroma({ h: currentColorHxya.h!, x: currentColorHxya.x, y: newY })
+    newYUpdateCondition = $updateParent.get() ? tempNewContrast > targetContrast : tempNewContrast < targetContrast
 
-    newRgb = convertHxyToRgb({
-      colorHxy: {
-        h: currentColorHxya.h!,
-        x: $currentColorModel.get() === 'oklchCss' ? newX * 100 : newX,
-        y: newY
-      },
-      originColorModel: $currentColorModel.get()!,
-      fileColorProfile: $fileColorProfile.get()!
-    })
-
-    if ($updateParent.get()) {
-      tempNewContrast = getContrastFromBgandFgRgba(newRgb, $colorsRgba.get().fill!)
-    } else {
-      tempNewContrast = getContrastFromBgandFgRgba($colorsRgba.get().parentFill!, { ...newRgb, a: $colorsRgba.get().fill!.a })
-    }
-
-    if (tempNewContrast === targetContrast) break
-
-    const condition = $updateParent.get() ? tempNewContrast > targetContrast : tempNewContrast < targetContrast
-
-    if (condition) {
+    if (newY === undefined) {
+      newY = 100
+    } else if (newYUpdateCondition) {
       if (topTrigger) {
-        bottomTrigger = true
         topTrigger = false
+        bottomTrigger = true
         if (currentStepIndex < 5) currentStepIndex++
       }
       newY -= newYStep[currentStepIndex]
@@ -61,10 +51,27 @@ export default function convertContrastToLightness(currentColorHxya: ColorHxya, 
       }
       newY += newYStep[currentStepIndex]
     }
-
     newY = roundWithDecimal(newY, 1)
-
     if (newY < 0 || newY > 100) break
+
+    // We don't check if we are on oklch or okhsl for example because we allow contrast checking only with oklch.
+    newX = getClampedChroma({ h: currentColorHxya.h!, x: currentColorHxya.x, y: newY })
+
+    newRgb = convertHxyToRgb({
+      colorHxy: {
+        h: currentColorHxya.h!,
+        x: newX * 100,
+        y: newY
+      },
+      originColorModel: $currentColorModel.get()!,
+      fileColorProfile: $fileColorProfile.get()!
+    })
+
+    if ($updateParent.get()) {
+      tempNewContrast = getContrastFromBgandFgRgba(newRgb, $colorsRgba.get().fill!)
+    } else {
+      tempNewContrast = getContrastFromBgandFgRgba($colorsRgba.get().parentFill!, { ...newRgb, a: $colorsRgba.get().fill!.a })
+    }
   } while (tempNewContrast !== targetContrast && count < 100)
 
   newY = clampNumber(newY, 0, 100)
@@ -75,103 +82,3 @@ export default function convertContrastToLightness(currentColorHxya: ColorHxya, 
     y: newY
   }
 }
-
-// function getNewHxyFromNewContrast(currentColorHxya: ColorHxya, currentContrast: number, newContrast: number): ColorHxy {
-//   let foreground: [number, number, number, number] = [0, 0, 0, 0]
-//   let background: [number, number, number] = [0, 0, 0]
-//   let newY = currentColorHxya.y
-//   let newX = currentColorHxya.x
-//   let newRgb: ColorRgb
-//   let tempNewContrast: number | null = null
-//   let APCAContrastResult: number | string
-//   const direction = newContrast > Math.abs(currentContrast) ? 'up' : 'down'
-
-//   if ($updateParent.get()) {
-//     if ($fileColorProfile.get() === 'rgb') {
-//       foreground = [$colorsRgba.get().fill!.r, $colorsRgba.get().fill!.g, $colorsRgba.get().fill!.b, $colorsRgba.get().fill!.a / 100]
-//     } else {
-//       foreground = [
-//         $colorsRgba.get().fill!.r / 255,
-//         $colorsRgba.get().fill!.g / 255,
-//         $colorsRgba.get().fill!.b / 255,
-//         $colorsRgba.get().fill!.a / 100
-//       ]
-//     }
-//   } else {
-//     if ($fileColorProfile.get() === 'rgb') {
-//       background = [$colorsRgba.get().parentFill!.r, $colorsRgba.get().parentFill!.g, $colorsRgba.get().parentFill!.b]
-//     } else {
-//       background = [$colorsRgba.get().parentFill!.r / 255, $colorsRgba.get().parentFill!.g / 255, $colorsRgba.get().parentFill!.b / 255]
-//     }
-//   }
-
-//   let count = 0
-
-//   let newYBigStep: number
-//   let newYSmallStep: number
-
-//   if (currentContrast <= 0) {
-//     newYBigStep = $updateParent.get() ? -1 : 1
-//     newYSmallStep = $updateParent.get() ? -0.1 : 0.1
-//   } else {
-//     newYBigStep = $updateParent.get() ? 1 : -1
-//     newYSmallStep = $updateParent.get() ? 0.1 : -0.1
-//   }
-
-//   do {
-//     count++
-
-//     if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-//       newX = getClampedChroma({ h: currentColorHxya.h!, x: currentColorHxya.x, y: newY })
-//     }
-
-//     newRgb = convertHxyToRgb({
-//       colorHxy: {
-//         h: currentColorHxya.h!,
-//         x: $currentColorModel.get() === 'oklchCss' ? newX * 100 : newX,
-//         y: newY
-//       },
-//       originColorModel: $currentColorModel.get()!,
-//       fileColorProfile: $fileColorProfile.get()!
-//     })
-
-//     if ($fileColorProfile.get() === 'rgb') {
-//       if ($updateParent.get()) {
-//         background = [newRgb.r, newRgb.g, newRgb.b]
-//       } else {
-//         foreground = [newRgb.r, newRgb.g, newRgb.b, $colorsRgba.get().fill!.a / 100]
-//       }
-
-//       APCAContrastResult = APCAcontrast(sRGBtoY(alphaBlend(foreground, background)), sRGBtoY(background))
-//     } else {
-//       if ($updateParent.get()) {
-//         background = [newRgb.r / 255, newRgb.g / 255, newRgb.b / 255]
-//       } else {
-//         foreground = [newRgb.r / 255, newRgb.g / 255, newRgb.b / 255, $colorsRgba.get().fill!.a / 100]
-//       }
-
-//       APCAContrastResult = APCAcontrast(displayP3toY(alphaBlend(foreground, background, false)), displayP3toY(background))
-//     }
-
-//     if (typeof APCAContrastResult === 'string') tempNewContrast = parseInt(APCAContrastResult)
-//     else tempNewContrast = APCAContrastResult
-
-//     tempNewContrast = Math.abs(tempNewContrast)
-//     tempNewContrast = Math.round(tempNewContrast)
-
-//     if (direction === 'up') {
-//       if (tempNewContrast < newContrast) newY += newYBigStep
-//       else newY -= newYSmallStep
-//     } else {
-//       if (tempNewContrast > newContrast) newY -= newYBigStep
-//       else newY += newYSmallStep
-//     }
-//     newY = roundWithDecimal(newY, 1)
-//   } while (tempNewContrast !== newContrast && tempNewContrast !== 0 && count < 100)
-
-//   // console.log(count)
-
-//   newY = clampNumber(newY, 0, 100)
-
-//   return { h: currentColorHxya.h!, x: newX, y: newY }
-// }

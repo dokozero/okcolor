@@ -49,7 +49,11 @@ export default function FillStrokeSelect() {
       fileColorProfile: $fileColorProfile.get()!
     })
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ ...newColorHxy, a: newColorRgba.a }, false, false)
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({
+      newColorHxya: { ...newColorHxy, a: newColorRgba.a },
+      syncColorsRgba: false,
+      syncColorRgbWithPlugin: false
+    })
 
     parent.postMessage(
       {

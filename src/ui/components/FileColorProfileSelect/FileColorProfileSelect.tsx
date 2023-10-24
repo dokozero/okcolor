@@ -38,7 +38,11 @@ export default function FileColorProfileSelect() {
       fileColorProfile: newFileColorProfile
     })
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ ...newColorHxy, a: $colorHxya.get().a }, false, false)
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({
+      newColorHxya: { ...newColorHxy, a: $colorHxya.get().a },
+      syncColorsRgba: false,
+      syncColorRgbWithPlugin: false
+    })
 
     parent.postMessage(
       {

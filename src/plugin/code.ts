@@ -9,12 +9,13 @@ import sendMessageToUi from './helpers/sendMessageToUi'
 let currentFillOrStroke: CurrentFillOrStroke = 'fill'
 let fileColorProfile: FileColorProfile
 let currentColorModel: CurrentColorModel
-let lockRelativeChroma: boolean
 let showCssColorCodes: boolean
+let lockRelativeChroma: boolean
+let lockContrast: boolean
 
 const pluginHeights = {
-  okHsvlWithoutColorCodes: 470,
-  okHsvlWithColorCodes: 598,
+  okHsvlWithoutColorCodes: 435,
+  okHsvlWithColorCodes: 564,
   okLchWithoutColorCodes: 503,
   okLchWithColorCodes: 632
 }
@@ -72,8 +73,9 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
   else if (figma.editorType === 'figjam') fileColorProfile = 'rgb'
 
   currentColorModel = (await figma.clientStorage.getAsync('currentColorModel')) || 'oklchCss'
-  lockRelativeChroma = (await figma.clientStorage.getAsync('lockRelativeChroma')) || false
   showCssColorCodes = (await figma.clientStorage.getAsync('showCssColorCodes')) || false
+  lockRelativeChroma = (await figma.clientStorage.getAsync('lockRelativeChroma')) || false
+  lockContrast = (await figma.clientStorage.getAsync('lockContrast')) || false
 
   let initialUiHeight = showCssColorCodes ? pluginHeights.okLchWithColorCodes : pluginHeights.okLchWithoutColorCodes
   if (['okhsv', 'okhsl'].includes(currentColorModel)) {
@@ -93,8 +95,9 @@ const init = async () => {
       figmaEditorType: figma.editorType,
       fileColorProfile: fileColorProfile,
       currentColorModel: currentColorModel,
+      showCssColorCodes: showCssColorCodes,
       lockRelativeChroma: lockRelativeChroma,
-      showCssColorCodes: showCssColorCodes
+      lockContrast: lockContrast
     }
   })
 
@@ -187,6 +190,7 @@ interface OnMessageEvent {
   currentColorModel?: CurrentColorModel
   showCssColorCodes?: boolean
   lockRelativeChroma?: boolean
+  lockContrast?: boolean
 }
 
 figma.ui.onmessage = (event: OnMessageEvent) => {
@@ -230,6 +234,10 @@ figma.ui.onmessage = (event: OnMessageEvent) => {
 
     case 'syncLockRelativeChromaWithPlugin':
       figma.clientStorage.setAsync('lockRelativeChroma', event.lockRelativeChroma)
+      break
+
+    case 'syncLockContrastWithPlugin':
+      figma.clientStorage.setAsync('lockContrast', event.lockContrast)
       break
   }
 }

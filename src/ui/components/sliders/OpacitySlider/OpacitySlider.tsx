@@ -37,7 +37,7 @@ export default function OpacitySlider() {
     const canvasY = event.clientX - rect.left - 7
 
     const newColorA = Math.round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 100)
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ a: newColorA })
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { a: newColorA } })
   }
 
   useEffect(() => {

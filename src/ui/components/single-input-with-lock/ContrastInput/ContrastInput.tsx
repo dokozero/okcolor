@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { selectInputContent } from '../../../helpers/others'
 import { consoleLogInfos } from '../../../../constants'
 import {
@@ -12,15 +12,13 @@ import {
   $updateParent,
   updateColorHxyaAndSyncColorsRgbaAndPlugin,
   $uiMessage,
-  $colorHxya,
-  $lockRelativeChroma
+  $colorHxya
 } from '../../../store'
 import { useStore } from '@nanostores/react'
 import convertRgbToHxy from '../../../helpers/convertRgbToHxy'
 import { ColorRgb, ColorRgba } from '../../../../types'
 import { APCAcontrast, displayP3toY, sRGBtoY } from 'apca-w3'
 import convertContrastToLightness from '../../../helpers/convertContrastToLightness'
-import convertRelativeChromaToAbsolute from '../../../helpers/convertRelativeChromaToAbsolute'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
@@ -33,17 +31,7 @@ const updateColorHxyaXandY = (eventTarget: HTMLInputElement, newContrast: number
 
   const newHxy = convertContrastToLightness($colorHxya.get(), newContrast)
 
-  if ($lockRelativeChroma.get()) {
-    newHxy.x = convertRelativeChromaToAbsolute({
-      colorHxy: {
-        h: $colorHxya.get().h!,
-        x: newHxy.x,
-        y: newHxy.y
-      }
-    })
-  }
-
-  updateColorHxyaAndSyncColorsRgbaAndPlugin(newHxy)
+  updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newHxy, bypassLockContrastFilter: true })
 }
 
 export default function ContrastInput() {
@@ -55,6 +43,9 @@ export default function ContrastInput() {
   const contrast = useStore($contrast)
   const lockContrast = useStore($lockContrast)
   const updateParent = useStore($updateParent)
+  const currentColorModel = useStore($currentColorModel)
+
+  const [showContrast, setShowContrast] = useState<boolean | undefined>(undefined)
 
   const bgToggle = useRef<HTMLDivElement>(null)
   const bgToggleText = useRef<HTMLDivElement>(null)
@@ -123,7 +114,7 @@ export default function ContrastInput() {
       fileColorProfile: $fileColorProfile.get()!
     })
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin(newColorHxy, false, false)
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxy, syncColorsRgba: false, syncColorRgbWithPlugin: false })
 
     bgToggle.current!.style.outlineOffset = '2px'
 
@@ -132,10 +123,27 @@ export default function ContrastInput() {
   }
 
   const handleLockContrast = () => {
-    $lockContrast.set(!$lockContrast.get())
+    const newValue = !$lockContrast.get()
+
+    $lockContrast.set(newValue)
+
+    // To avoid getting relative chroma and contrast locked at the same time, which would block the color picker and the hxya inputs
+    // if ($lockRelativeChroma.get() && $lockContrast.get()) $lockRelativeChroma.set(false)
+
+    parent.postMessage(
+      {
+        pluginMessage: {
+          message: 'syncLockContrastWithPlugin',
+          lockContrast: newValue
+        }
+      },
+      '*'
+    )
   }
 
   useEffect(() => {
+    if (['okhsv', 'okhsl'].includes($currentColorModel.get()!)) return
+
     if (!colorsRgba.parentFill) {
       bgToggle.current!.style.background = 'none'
       return
@@ -167,11 +175,17 @@ export default function ContrastInput() {
 
     if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) bgToggleText.current!.style.color = '#FFFFFF'
     else bgToggleText.current!.style.color = '#000000'
-  }, [colorsRgba])
+  }, [colorsRgba, currentColorModel])
 
   useEffect(() => {
-    // input.current!.value = String(Math.abs(contrast!))
-    input.current!.value = String(contrast!)
+    if (contrast === null) {
+      input.current!.value = '-'
+
+      // If the user select a new shape that doensdoesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
+      if (!$colorsRgba.get().parentFill && $lockContrast.get()) $lockContrast.set(false)
+    } else {
+      input.current!.value = String(contrast!)
+    }
 
     if (keepInputSelected) {
       input.current!.select()
@@ -185,27 +199,43 @@ export default function ContrastInput() {
   }, [updateParent])
 
   useEffect(() => {
-    document.addEventListener('keydown', (event) => {
-      // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
-      if ((event.key === 'l' || event.key === 'L') && !$uiMessage.get().show && document.activeElement?.tagName !== 'INPUT') {
-        if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-          handleLockContrast()
-        }
-      }
+    if (['oklch', 'oklchCss'].includes(currentColorModel!)) {
+      setShowContrast(true)
+    } else {
+      setShowContrast(false)
+    }
+  }, [currentColorModel])
 
-      if ((event.key === 'b' || event.key === 'B') && !$uiMessage.get().show && document.activeElement?.tagName !== 'INPUT') {
-        if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-          handleUpdateParentSelector()
-        }
-      }
+  useEffect(() => {
+    document.addEventListener('keydown', (event) => {
+      if (!['oklch', 'oklchCss'].includes($currentColorModel.get()!)) return
+
+      // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
+      if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
+
+      if (!$colorsRgba.get().parentFill) return
+
+      if (['l', 'L'].includes(event.key)) handleLockContrast()
+      if (['b', 'B'].includes(event.key)) handleUpdateParentSelector()
     })
   }, [])
 
   return (
-    <div className="c-single-input-with-lock">
+    <div
+      className={
+        (showContrast ? '' : 'u-visibility-hidden u-position-absolute ') +
+        (!colorsRgba.parentFill ? 'u-pointer-events-none u-opacity-50 ' : '') +
+        'c-single-input-with-lock'
+      }
+    >
       <p>APCA contrast</p>
 
-      <div ref={bgToggle} className="u-ml-auto" onClick={handleUpdateParentSelector} style={{ padding: '3px', border: '1px solid #888888' }}>
+      <div
+        ref={bgToggle}
+        className={(!colorsRgba.parentFill ? 'u-visibility-hidden ' : '') + 'u-ml-auto'}
+        onClick={handleUpdateParentSelector}
+        style={{ padding: '3px', border: '1px solid #888888' }}
+      >
         <div ref={bgToggleText} style={{ fontSize: '11px' }}>
           Bg
         </div>

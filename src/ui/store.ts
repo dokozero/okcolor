@@ -16,6 +16,7 @@ import convertAbsoluteChromaToRelative from './helpers/convertAbsoluteChromaToRe
 import { consoleLogInfos } from '../constants'
 
 import getContrastFromBgandFgRgba from './helpers/getContrastFromBgandFgRgba'
+import filterNewColorHxya from './helpers/filterNewColorHxya'
 
 export const $uiMessage = map({
   show: false,
@@ -86,7 +87,7 @@ export const updateColorsRgbaAndSyncColorHxya = action(
   }
 )
 
-// This map contain the current color being used in the UI, it can be the fill or the stroke but also the foreground or the background (always the fill) of the current selected object.
+// This map contain the current color being used in the UI, it can be the fill or the stroke of the foreground but also the background (colorsRgba.parentFill) of the current selected object.
 export const $colorHxya = map<ColorHxya>({
   h: null,
   x: 0,
@@ -94,16 +95,46 @@ export const $colorHxya = map<ColorHxya>({
   a: 0
 })
 
+interface UpdateColorHxyaAndSyncColorsRgbaAndPlugin {
+  newColorHxya: PartialColorHxya
+  syncColorsRgba?: boolean
+  syncColorRgbWithPlugin?: boolean
+  bypassLockRelativeChromaFilter?: boolean
+  bypassLockContrastFilter?: boolean
+}
+
+/**
+ * @param bypassLockRelativeChromaFilter False by default, this value says: "update the chroma even if lockRelativeChroma is true". This is useful for example if the user update the relative chroma value from the input while lockRelativeChroma is true, without this bypass value, it wouldn't be possible as relativeChroma and contrast value are updated after colorHxya is updated, so in filterNewColorHxya(), we would still get the old values.
+ * @param bypassLockContrastFilter Same reason than bypassLockRelativeChromaFilter, this value says: "update the contrast even if lockChroma is true".
+ */
+
 export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
   $colorHxya,
   'updateColorHxy',
-  (colorHxya, newColorHxya: PartialColorHxya, syncColorsRgba = true, syncColorRgbWithPlugin = true) => {
+  (colorHxya, props: UpdateColorHxyaAndSyncColorsRgbaAndPlugin) => {
+    const {
+      newColorHxya,
+      syncColorsRgba = true,
+      syncColorRgbWithPlugin = true,
+      bypassLockRelativeChromaFilter = false,
+      bypassLockContrastFilter = false
+    } = props
+
     if (consoleLogInfos.includes('Store updates')) {
       console.log('Store update — updateColorHxya')
       console.log(`    newColorHxya: ${JSON.stringify(newColorHxya)}`)
     }
 
-    const { h, x, y, a } = newColorHxya
+    const { h, x, y, a } = filterNewColorHxya(
+      {
+        h: newColorHxya.h !== undefined ? newColorHxya.h : $colorHxya.get().h!,
+        x: newColorHxya.x !== undefined ? newColorHxya.x : $colorHxya.get().x,
+        y: newColorHxya.y !== undefined ? newColorHxya.y : $colorHxya.get().y,
+        a: newColorHxya.a !== undefined ? newColorHxya.a : $colorHxya.get().a
+      },
+      bypassLockRelativeChromaFilter,
+      bypassLockContrastFilter
+    )
 
     colorHxya.set({
       h: h !== undefined ? h : colorHxya.get().h,
@@ -114,7 +145,7 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
 
     if (!syncColorsRgba && !syncColorRgbWithPlugin) return
 
-    const chroma = $currentColorModel.get() === 'oklchCss' ? colorHxya.get().x * 100 : colorHxya.get().x
+    const chroma = ['oklch', 'oklchCss'].includes($currentColorModel.get()!) ? colorHxya.get().x * 100 : colorHxya.get().x
     const newColorRgb = convertHxyToRgb({
       colorHxy: {
         h: colorHxya.get().h!,
@@ -146,8 +177,11 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
   }
 )
 
+// Update $relativeChroma when $colorHxya changes.
 // We don't use computed() to calculate $relativeChroma because we need to update from other places.
 $colorHxya.subscribe((newColorHxya) => {
+  if (['okhsv', 'okhsl'].includes($currentColorModel.get()!)) return
+
   if (consoleLogInfos.includes('Store updates')) {
     console.log('Store update — $relativeChroma (subscribed on $colorHxya)')
     console.log(`    newColorHxya: ${JSON.stringify(newColorHxya)}`)
@@ -162,15 +196,18 @@ $colorHxya.subscribe((newColorHxya) => {
   $relativeChroma.set(convertAbsoluteChromaToRelative({ h: newColorHxya.h, x: newColorHxya.x, y: newColorHxya.y }))
 })
 
+// Update $contrast when $colorsRgba changes.
 // We don't use computed() to calculate $contrast because we need to update from other places.
 $colorsRgba.subscribe((newColorsRgba) => {
+  if (['okhsv', 'okhsl'].includes($currentColorModel.get()!)) return
+
   if (consoleLogInfos.includes('Store updates')) {
     console.log('Store update — $contrast (subscribed on $colorsRgba)')
     console.log(`    newColorHxya: ${JSON.stringify(newColorsRgba)}`)
   }
 
   if (!newColorsRgba.parentFill) {
-    $contrast.set(0)
+    $contrast.set(null)
     return
   }
 
@@ -199,7 +236,6 @@ export const $colorValueDecimals = computed(
       case 'okhsv':
         return { h: 0, x: 0, y: 0 }
       case 'oklch':
-        return { h: 0, x: lockRelativeChroma ? 4 : 1, y: 0 }
       case 'oklchCss':
         return { h: 1, x: lockRelativeChroma ? 6 : 3, y: 1 }
       default:

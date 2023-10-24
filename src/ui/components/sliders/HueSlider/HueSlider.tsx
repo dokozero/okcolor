@@ -2,17 +2,8 @@ import { useEffect, useRef } from 'react'
 
 import { consoleLogInfos, SLIDER_SIZE } from '../../../../constants'
 import { limitMouseManipulatorPosition, roundWithDecimal } from '../../../helpers/others'
-import {
-  $currentColorModel,
-  $colorHxya,
-  $lockRelativeChroma,
-  $colorValueDecimals,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin,
-  $mouseEventCallback
-} from '../../../store'
+import { $colorHxya, $colorValueDecimals, updateColorHxyaAndSyncColorsRgbaAndPlugin, $mouseEventCallback } from '../../../store'
 import { useStore } from '@nanostores/react'
-import getClampedChroma from '../../../helpers/getClampedChroma'
-import convertRelativeChromaToAbsolute from '../../../helpers/convertRelativeChromaToAbsolute'
 
 export default function HueSlider() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -33,21 +24,7 @@ export default function HueSlider() {
       x: $colorHxya.get().x
     }
 
-    if ($lockRelativeChroma.get()) {
-      newColorHxya.x = convertRelativeChromaToAbsolute({
-        colorHxy: {
-          h: newColorHxya.h,
-          x: $colorHxya.get().x,
-          y: $colorHxya.get().y
-        }
-      })
-    } else {
-      if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-        newColorHxya.x = getClampedChroma({ h: newColorHxya.h, x: $colorHxya.get().x, y: $colorHxya.get().y })
-      }
-    }
-
-    updateColorHxyaAndSyncColorsRgbaAndPlugin(newColorHxya)
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxya })
   }
 
   useEffect(() => {

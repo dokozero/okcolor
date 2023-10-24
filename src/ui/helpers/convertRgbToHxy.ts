@@ -84,7 +84,7 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
     case 'oklch':
       newColorHxy = {
         h: Math.round(culoriResult.h),
-        x: roundWithDecimal(culoriResult.c * 100, $colorValueDecimals.get()!.x),
+        x: roundWithDecimal(culoriResult.c, $colorValueDecimals.get()!.x),
         y: Math.round(culoriResult.l * 100)
       }
       break
