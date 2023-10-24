@@ -5,6 +5,8 @@ import {
   $currentColorModel,
   $currentKeysPressed,
   $isMouseInsideDocument,
+  $lockContrast,
+  $lockRelativeChroma,
   updateColorHxyaAndSyncColorsRgbaAndPlugin
 } from '../../store'
 import { selectInputContent, roundWithDecimal } from '../../helpers/others'
@@ -37,6 +39,9 @@ function getStepUpdateValue(eventId: string): number {
 }
 
 const updateColorHxyaTargetValue = (eventTarget: HTMLInputElement, eventId: keyof typeof HxyaLabels, newValue: number) => {
+  if ($lockRelativeChroma.get() && eventId === 'x') return
+  if ($lockContrast.get() && eventId === 'y') return
+
   const oldValue = getOldValue(eventId)
 
   const newColorHxya: PartialColorHxya = { h: undefined, x: undefined, y: undefined, a: undefined }
