@@ -83,22 +83,6 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     }
   }
 
-  // If user select multiple shape and not all of them have a stroke of a fill, or if it is the case but one of them is a gradient, we disable the UI.
-  if (selection.length > 1) {
-    let fillsCount = 0
-    let strokesCount = 0
-
-    for (const node of selection) {
-      if (node.fills[0]?.type === 'SOLID') fillsCount++
-      if (node.strokes[0]?.type === 'SOLID') strokesCount++
-    }
-
-    if (selection.length !== fillsCount && selection.length !== strokesCount) {
-      returnObject.uiMessageCode = 'not_all_shapes_have_fill_or_stroke'
-      return returnObject
-    }
-  }
-
   if (selection[0].parent?.fills) {
     let currentObject = selection[0].parent
 
@@ -115,6 +99,28 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
       } else {
         break
       }
+    }
+  }
+
+  // If user select multiple shape and not all of them have a stroke of a fill, or if it is the case but one of them is a gradient, we disable the UI.
+  if (selection.length > 1) {
+    // If the first selected shape has a prent fill, we set it back to null as we don't want to display the contrast because
+    // it would show one value although and that wouldn't be clear of which one it would be.
+    if (returnObject.newColorsRgba.parentFill) {
+      returnObject.newColorsRgba.parentFill = null
+    }
+
+    let fillsCount = 0
+    let strokesCount = 0
+
+    for (const node of selection) {
+      if (node.fills[0]?.type === 'SOLID') fillsCount++
+      if (node.strokes[0]?.type === 'SOLID') strokesCount++
+    }
+
+    if (selection.length !== fillsCount && selection.length !== strokesCount) {
+      returnObject.uiMessageCode = 'not_all_shapes_have_fill_or_stroke'
+      return returnObject
     }
   }
 
