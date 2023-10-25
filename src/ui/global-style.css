@@ -99,7 +99,7 @@ select {
  */
 
 body.deactivated .c-file-color-profile-select,
-body.deactivated .c-bottom-controls {
+body.deactivated .s-bottom-controls {
   pointer-events: none;
   opacity: 0.5;
   filter: grayscale(1);

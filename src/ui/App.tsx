@@ -34,6 +34,7 @@ import { consoleLogInfos } from '../constants'
 
 import { uiMessageTexts } from './ui-messages'
 import { OnMessageFromPlugin } from '../types'
+import setValuesForUiMessage from './helpers/setValuesForUiMessage'
 
 let isMouseDown = false
 
@@ -58,6 +59,7 @@ function App() {
     // Update the color based on the selected shape in Figma.
     else if (pluginMessage.message === 'newColorsRgba') {
       if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
+
       if (document.body.classList.contains('deactivated')) document.body.classList.remove('deactivated')
       if ($uiMessage.get().show) $uiMessage.setKey('show', false)
 
@@ -70,20 +72,11 @@ function App() {
     // Set the UI in a disabled mode and update the UI message.
     else if (pluginMessage.message === 'displayUiMessage') {
       if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
+
       $uiMessage.setKey('show', true)
-
-      // Reset interface state, we use these values to have a nice base look when the UI message is on.
-      $lockRelativeChroma.set(false)
-      $lockContrast.set(false)
-      $colorsRgba.setKey('parentFill', null)
-      $colorsRgba.setKey('fill', { r: 128, g: 128, b: 128, a: 100 })
-      $colorsRgba.setKey('stroke', null)
-      $currentFillOrStroke.set('fill')
-      if ($updateParent.get()) $updateParent.set(false)
-
-      updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { h: 0, x: 0, y: 0, a: 0 }, syncColorsRgba: false, syncColorRgbWithPlugin: false })
-
       document.body.classList.add('deactivated')
+
+      setValuesForUiMessage()
 
       let message = uiMessageTexts[`${pluginMessage.displayUiMessageData.uiMessageCode}`]
       if (pluginMessage.displayUiMessageData.nodeType) {
@@ -158,7 +151,7 @@ function App() {
       <FileColorProfileSelect />
       <ColorPicker />
 
-      <div className="c-bottom-controls">
+      <div className="s-bottom-controls">
         <div className="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
           <FillStrokeSelect />
 
