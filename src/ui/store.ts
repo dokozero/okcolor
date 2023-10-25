@@ -217,7 +217,6 @@ $colorsRgba.subscribe((newColorsRgba) => {
 
   if (newContrast !== null) {
     newContrast = Math.round(newContrast)
-
     $contrast.set(newContrast)
   }
 })

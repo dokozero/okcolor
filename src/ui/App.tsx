@@ -15,7 +15,8 @@ import {
   $figmaEditorType,
   updateColorHxyaAndSyncColorsRgbaAndPlugin,
   $updateParent,
-  $lockContrast
+  $lockContrast,
+  $colorsRgba
 } from './store'
 
 import FileColorProfileSelect from './components/FileColorProfileSelect/FileColorProfileSelect'
@@ -70,7 +71,18 @@ function App() {
     else if (pluginMessage.message === 'displayUiMessage') {
       if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
       $uiMessage.setKey('show', true)
+
+      // Reset interface state, we use these values to have a nice base look when the UI message is on.
+      $lockRelativeChroma.set(false)
+      $lockContrast.set(false)
+      $colorsRgba.setKey('parentFill', null)
+      $colorsRgba.setKey('fill', { r: 128, g: 128, b: 128, a: 100 })
+      $colorsRgba.setKey('stroke', null)
+      $currentFillOrStroke.set('fill')
+      if ($updateParent.get()) $updateParent.set(false)
+
       updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { h: 0, x: 0, y: 0, a: 0 }, syncColorsRgba: false, syncColorRgbWithPlugin: false })
+
       document.body.classList.add('deactivated')
 
       let message = uiMessageTexts[`${pluginMessage.displayUiMessageData.uiMessageCode}`]
