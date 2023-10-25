@@ -69,21 +69,34 @@ export default function FillStrokeSelect() {
   useEffect(() => {
     updateRenderFillStrokeSelectColor()
 
-    if (colorsRgba.fill && colorsRgba.stroke) {
+    // If the bg is selected and it has a stroke, we don't want to allow selecting it as in this mode, we just want to update the bg to change the contrast an the border doesn't play a role here.
+    // That is why we do this these tests bellow with updateParent.
+
+    // In case the stroke of the foreground shape was selected and we are now updating the parent, we need to get back to fill.
+    if (updateParent && $currentFillOrStroke.get() === 'stroke') $currentFillOrStroke.set('fill')
+
+    // If the shape has a fill and a stroke (and we are not updating the parent), we allow he user to click on it to toggle, otherwise no.
+    if (colorsRgba.fill && colorsRgba.stroke && !updateParent) {
       fillOrStrokeSelector.current!.classList.remove('u-pointer-events-none')
     } else {
       fillOrStrokeSelector.current!.classList.add('u-pointer-events-none')
     }
 
+    // For the style, for example if there is no stroke, we set a data attribue to false in order to give it the right style.
     fillOrStrokeSelector.current!.setAttribute('data-has-fill', colorsRgba.fill ? 'true' : 'false')
-    fillOrStrokeSelector.current!.setAttribute('data-has-stroke', colorsRgba.stroke ? 'true' : 'false')
+
+    if (!updateParent) {
+      fillOrStrokeSelector.current!.setAttribute('data-has-stroke', colorsRgba.stroke ? 'true' : 'false')
+    } else {
+      // If we are updating the parent, in all case we want to set this as false.
+      fillOrStrokeSelector.current!.setAttribute('data-has-stroke', 'false')
+    }
 
     if (updateParent) {
       fillOrStrokeSelector_fill.current!.setAttribute(
         'fill',
         `rgb(${colorsRgba.parentFill!.r}, ${colorsRgba.parentFill!.g}, ${colorsRgba.parentFill!.b})`
       )
-
       fillOrStrokeSelector_stroke.current!.setAttribute('fill', 'none')
     } else {
       fillOrStrokeSelector_fill.current!.setAttribute(

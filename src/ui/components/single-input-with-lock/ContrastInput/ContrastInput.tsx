@@ -181,7 +181,7 @@ export default function ContrastInput() {
     if (contrast === null) {
       input.current!.value = '-'
 
-      // If the user select a new shape that doensdoesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
+      // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
       if (!$colorsRgba.get().parentFill && $lockContrast.get()) $lockContrast.set(false)
     } else {
       input.current!.value = String(contrast!)
