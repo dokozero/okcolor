@@ -224,7 +224,7 @@ export default function ContrastInput() {
     <div
       className={
         (showContrast ? '' : 'u-visibility-hidden u-position-absolute ') +
-        (!colorsRgba.parentFill ? 'u-pointer-events-none u-opacity-50 ' : '') +
+        (!colorsRgba.parentFill && !$uiMessage.get().show ? 'u-pointer-events-none u-opacity-50 ' : '') +
         'c-single-input-with-lock'
       }
     >
