@@ -103,7 +103,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     let currentObject = selection[0].parent
 
     while (currentObject) {
-      if (currentObject.fills.length !== 0) {
+      if (currentObject.fills && currentObject?.fills?.length !== 0) {
         returnObject.newColorsRgba.parentFill = {
           r: currentObject.fills[0].color.r * 255,
           g: currentObject.fills[0].color.g * 255,
