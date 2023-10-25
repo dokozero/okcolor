@@ -29,7 +29,7 @@ let colorsRgba: ColorsRgba = {
   stroke: null
 }
 
-const changePropertiesToReactTo = ['fills', 'fillStyleId', 'strokes', 'strokeWeight']
+const changePropertiesToReactTo = ['fills', 'fillStyleId', 'strokes', 'strokeStyleId', 'strokeWeight', 'textStyleId']
 
 /**
  * Local helpers
