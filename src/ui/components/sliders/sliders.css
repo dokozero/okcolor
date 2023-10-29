@@ -3,6 +3,10 @@
   width: 160px;
   height: 12px;
 }
+.c-slider--deactivated {
+  pointer-events: none;
+  opacity: 0.5;
+}
 .c-slider__canvas {
   border-radius: 999px;
   box-shadow: rgb(0 0 0 / 20%) 0px 0px 0px 0.6px inset;

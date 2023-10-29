@@ -100,11 +100,13 @@ export default function ContrastInput() {
     $updateParent.set(!$updateParent.get())
 
     let newColorRgba: ColorRgb | ColorRgba
+    let opacity: Opacity = 100
 
     if ($updateParent.get()) {
       newColorRgba = $colorsRgba.get().parentFill!
     } else {
       newColorRgba = $colorsRgba.get().fill!
+      opacity = $colorsRgba.get().fill!.a
     }
 
     const newColorHxy = convertRgbToHxy({
@@ -117,7 +119,7 @@ export default function ContrastInput() {
       fileColorProfile: $fileColorProfile.get()
     })
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxy, syncColorsRgba: false, syncColorRgbWithPlugin: false })
+    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { ...newColorHxy, a: opacity }, syncColorsRgba: false, syncColorRgbWithPlugin: false })
 
     bgToggle.current!.style.outlineOffset = '2px'
 

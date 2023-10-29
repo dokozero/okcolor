@@ -46,9 +46,7 @@ export default function OpacitySlider() {
 
   useEffect(() => {
     if (updateParent) {
-      opacitySliderWrapper.current!.style.backgroundImage = `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${colorsRgba.parentFill!.r}, ${
-        colorsRgba.parentFill!.g
-      }, ${colorsRgba.parentFill!.b}, 1) 90%), url(${opacitysliderBackgroundImg})`
+      opacitySliderWrapper.current!.style.backgroundImage = `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(0, 0, 0, 1) 90%), url(${opacitysliderBackgroundImg})`
     } else {
       opacitySliderWrapper.current!.style.backgroundImage = `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${
         colorsRgba[`${$currentFillOrStroke.get()}`]!.r
@@ -65,7 +63,7 @@ export default function OpacitySlider() {
   }, [])
 
   return (
-    <div className="c-slider u-mt-16">
+    <div className={(updateParent ? 'c-slider--deactivated ' : '') + 'c-slider u-mt-16'}>
       <div ref={opacitySliderWrapper} className="c-slider__canvas">
         <div ref={opacitySlider} className="u-w-full u-h-full" id="opacity-slider"></div>
       </div>

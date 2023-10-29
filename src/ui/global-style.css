@@ -89,6 +89,10 @@ select:focus,
 input:focus {
   outline: none;
 }
+input:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
 
 select {
   appearance: none;
