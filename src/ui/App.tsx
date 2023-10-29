@@ -42,6 +42,7 @@ function App() {
   if (consoleLogInfos.includes('Component renders')) {
     console.log('Component render — App')
   }
+  const [areStoreValuesReady, setAreStoreValuesReady] = useState(false)
 
   // Updates from the plugin.
   onmessage = (event: OnMessageFromPlugin) => {
@@ -66,8 +67,9 @@ function App() {
       // If on previous selected shape we had the parent selected, we set it to false as default.
       if ($updateParent.get()) $updateParent.set(false)
 
-      $currentFillOrStroke.set(pluginMessage.newColorsRgbaData.currentFillOrStroke)
-      updateColorsRgbaAndSyncColorHxya(pluginMessage.newColorsRgbaData.colorsRgba, true)
+
+      // This says "when all the store value are filled, show the UI components".
+      if (!areStoreValuesReady) setAreStoreValuesReady(true)
     }
     // Set the UI in a disabled mode and update the UI message.
     else if (pluginMessage.message === 'displayUiMessage') {
@@ -83,6 +85,9 @@ function App() {
         message = message.replace('$SHAPE', pluginMessage.displayUiMessageData.nodeType.toLowerCase())
       }
       $uiMessage.setKey('message', message)
+
+      // This says "when all the store value are filled, show the UI components".
+      if (!areStoreValuesReady) setAreStoreValuesReady(true)
     }
   }
 
@@ -146,32 +151,36 @@ function App() {
     parent.postMessage({ pluginMessage: { message: 'init' } }, '*')
   }, [])
 
-  return (
-    <>
-      <FileColorProfileSelect />
-      <ColorPicker />
+  if (!areStoreValuesReady) {
+    return
+  } else {
+    return (
+      <>
+        <FileColorProfileSelect />
+        <ColorPicker />
 
-      <div className="s-bottom-controls">
-        <div className="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
-          <FillStrokeSelect />
+        <div className="s-bottom-controls">
+          <div className="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
+            <FillStrokeSelect />
 
-          <div className="u-flex u-flex-col">
-            <HueSlider />
-            <OpacitySlider />
+            <div className="u-flex u-flex-col">
+              <HueSlider />
+              <OpacitySlider />
+            </div>
           </div>
-        </div>
 
-        <div className="c-select-input-controls">
-          <ColorModelSelect />
-          <ColorValueInputs />
-        </div>
+          <div className="c-select-input-controls">
+            <ColorModelSelect />
+            <ColorValueInputs />
+          </div>
 
-        <RelativeChromaInput />
-        <ContrastInput />
-        <ColorCodeInputs />
-      </div>
-    </>
-  )
+          <RelativeChromaInput />
+          <ContrastInput />
+          <ColorCodeInputs />
+        </div>
+      </>
+    )
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
