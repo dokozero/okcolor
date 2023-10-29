@@ -64,6 +64,8 @@ export default function ColorPicker() {
     console.log('Component render — ColorPicker')
   }
 
+  const isMounted = useRef(false)
+
   const [colorSpaceOfCurrentColor, setColorSpaceOfCurrentColor] = useState<keyof typeof ColorSpacesNames | ''>('')
 
   const uiMessage = useStore($uiMessage)
@@ -221,30 +223,32 @@ export default function ColorPicker() {
   }
 
   useEffect(() => {
+    if (!isMounted.current) return
+
     scaleColorPickerCanvas()
   }, [currentColorModel])
 
   useEffect(() => {
-    if (colorHxya.h === null) return
+    if (!isMounted.current) return
 
     updateManipulatorPosition()
     updateColorSpaceLabelInColorPicker()
   }, [colorHxya.x, colorHxya.y])
 
   useEffect(() => {
-    if (colorHxya.h === null) return
+    if (!isMounted.current) return
 
     renderColorPickerCanvas()
   }, [colorHxya.h, currentColorModel])
 
   useEffect(() => {
-    if (colorHxya.h === null) return
+    if (!isMounted.current) return
 
     renderRelativeChromaStroke()
   }, [relativeChroma, lockRelativeChroma])
 
   useEffect(() => {
-    if (colorHxya.h === null) return
+    if (!isMounted.current) return
 
     renderContrastStroke()
   }, [contrast, lockContrast])
@@ -258,6 +262,8 @@ export default function ColorPicker() {
   }, [uiMessage])
 
   useEffect(() => {
+    scaleColorPickerCanvas()
+
     colorPickerGlContext = colorPickerCanvas.current!.getContext('webgl2')
     const gl = colorPickerGlContext!
     const arrays = {
@@ -269,6 +275,10 @@ export default function ColorPicker() {
 
     gl.useProgram(programInfo.program)
     twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo)
+
+    renderColorPickerCanvas()
+    updateManipulatorPosition()
+    updateColorSpaceLabelInColorPicker()
 
     colorPickerCanvas.current!.addEventListener('mousedown', () => {
       $mouseEventCallback.set(handleNewManipulatorPosition)
@@ -291,6 +301,8 @@ export default function ColorPicker() {
       lastMouseX = event.clientX
       lastMouseY = event.clientY
     })
+
+    isMounted.current = true
   }, [])
 
   return (
