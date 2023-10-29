@@ -7,8 +7,10 @@ import type {
   ColorHxya,
   CurrentKeysPressed,
   CurrentFillOrStroke,
-  PartialColorHxya,
-  ColorValueDecimals
+  ColorValueDecimals,
+  UpdateShapeColorData,
+  ApcaContrast,
+  RelativeChroma
 } from '../types'
 import convertRgbToHxy from './helpers/convertRgbToHxy'
 import convertHxyToRgb from './helpers/convertHxyToRgb'
@@ -17,42 +19,40 @@ import { consoleLogInfos } from '../constants'
 
 import getContrastFromBgandFgRgba from './helpers/getContrastFromBgandFgRgba'
 import filterNewColorHxya from './helpers/filterNewColorHxya'
+import sendMessageToBackend from './helpers/sendMessageToBackend'
 
 export const $uiMessage = map({
   show: false,
   message: ''
 })
 
+// TODO change currentFillOrStroke -> fillOrStroke
 export const $figmaEditorType = atom<FigmaEditorType | null>(null)
-export const $fileColorProfile = atom<FileColorProfile | null>(null)
-export const $currentColorModel = atom<CurrentColorModel | null>(null)
+export const $fileColorProfile = atom<FileColorProfile>('rgb')
+export const $currentColorModel = atom<CurrentColorModel>('oklchCss')
 export const $currentFillOrStroke = atom<CurrentFillOrStroke>('fill')
 export const $showCssColorCodes = atom(true)
 export const $currentKeysPressed = atom<CurrentKeysPressed>([''])
 export const $isMouseInsideDocument = atom(false)
 export const $mouseEventCallback = atom<((event: MouseEvent) => void) | null>(null)
-export const $relativeChroma = atom<number | null>(null)
-export const $lockRelativeChroma = atom<boolean | null>(null)
+export const $relativeChroma = atom<RelativeChroma>(0)
+export const $lockRelativeChroma = atom<boolean>(false)
 export const $updateParent = atom(false)
-export const $contrast = atom<number | null>(null)
-export const $lockContrast = atom<boolean | null>(null)
+export const $contrast = atom<ApcaContrast>(0)
+export const $lockContrast = atom<boolean>(false)
 
 export const $colorsRgba = deepMap<ColorsRgba>({
   parentFill: null,
   fill: {
-    r: 255,
-    g: 255,
-    b: 255,
+    r: 0,
+    g: 0,
+    b: 0,
     a: 0
   },
-  stroke: {
-    r: 255,
-    g: 255,
-    b: 255,
-    a: 0
-  }
+  stroke: null
 })
 
+// TODO - remove and put code in App with updateColorHxyaAndSyncColorsRgbaAndPlugin false false ?
 export const updateColorsRgbaAndSyncColorHxya = action(
   $colorsRgba,
   'updateColorsRgba',
@@ -73,8 +73,8 @@ export const updateColorsRgbaAndSyncColorHxya = action(
         g: newColorRgba!.g,
         b: newColorRgba!.b
       },
-      targetColorModel: $currentColorModel.get()!,
-      fileColorProfile: $fileColorProfile.get()!,
+      targetColorModel: $currentColorModel.get(),
+      fileColorProfile: $fileColorProfile.get(),
       keepOklchCssDoubleDigit: keepOklchCssDoubleDigit
     })
 
@@ -89,14 +89,14 @@ export const updateColorsRgbaAndSyncColorHxya = action(
 
 // This map contain the current color being used in the UI, it can be the fill or the stroke of the foreground but also the background (colorsRgba.parentFill) of the current selected object.
 export const $colorHxya = map<ColorHxya>({
-  h: null,
+  h: 0,
   x: 0,
   y: 0,
   a: 0
 })
 
-interface UpdateColorHxyaAndSyncColorsRgbaAndPlugin {
-  newColorHxya: PartialColorHxya
+type UpdateColorHxyaAndSyncColorsRgbaAndPlugin = {
+  newColorHxya: Partial<ColorHxya>
   syncColorsRgba?: boolean
   syncColorRgbWithPlugin?: boolean
   bypassLockRelativeChromaFilter?: boolean
@@ -127,7 +127,7 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
 
     const { h, x, y, a } = filterNewColorHxya(
       {
-        h: newColorHxya.h !== undefined ? newColorHxya.h : $colorHxya.get().h!,
+        h: newColorHxya.h !== undefined ? newColorHxya.h : $colorHxya.get().h,
         x: newColorHxya.x !== undefined ? newColorHxya.x : $colorHxya.get().x,
         y: newColorHxya.y !== undefined ? newColorHxya.y : $colorHxya.get().y,
         a: newColorHxya.a !== undefined ? newColorHxya.a : $colorHxya.get().a
@@ -145,15 +145,15 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
 
     if (!syncColorsRgba && !syncColorRgbWithPlugin) return
 
-    const chroma = ['oklch', 'oklchCss'].includes($currentColorModel.get()!) ? colorHxya.get().x * 100 : colorHxya.get().x
+    const chroma = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? colorHxya.get().x * 100 : colorHxya.get().x
     const newColorRgb = convertHxyToRgb({
       colorHxy: {
-        h: colorHxya.get().h!,
+        h: colorHxya.get().h,
         x: chroma,
         y: colorHxya.get().y
       },
-      originColorModel: $currentColorModel.get()!,
-      fileColorProfile: $fileColorProfile.get()!
+      originColorModel: $currentColorModel.get(),
+      fileColorProfile: $fileColorProfile.get()
     })
 
     if (syncColorsRgba) {
@@ -163,16 +163,13 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
     }
 
     if (syncColorRgbWithPlugin) {
-      parent.postMessage(
-        {
-          pluginMessage: {
-            message: 'updateShapeColor',
-            newColorRgba: { ...newColorRgb, a: $colorHxya.get().a },
-            updateParent: $updateParent.get()
-          }
-        },
-        '*'
-      )
+      sendMessageToBackend<UpdateShapeColorData>({
+        type: 'updateShapeColor',
+        data: {
+          newColorRgba: { ...newColorRgb, a: $colorHxya.get().a },
+          updateParent: $updateParent.get()
+        }
+      })
     }
   }
 )
@@ -180,14 +177,12 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
 // Update $relativeChroma when $colorHxya changes.
 // We don't use computed() to calculate $relativeChroma because we need to update from other places.
 $colorHxya.subscribe((newColorHxya) => {
-  if (['okhsv', 'okhsl'].includes($currentColorModel.get()!)) return
+  if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
 
   if (consoleLogInfos.includes('Store updates')) {
     console.log('Store update — $relativeChroma (subscribed on $colorHxya)')
     console.log(`    newColorHxya: ${JSON.stringify(newColorHxya)}`)
   }
-
-  if (newColorHxya.h === null) return
 
   // We don't want to get a new relative chroma value if the lock is on, but we also check if relativeChroma value is not undefined, if that the case we first need to set it.
   // And if lightness is 0 or 100, there is no need to continue either.
@@ -199,19 +194,16 @@ $colorHxya.subscribe((newColorHxya) => {
 // Update $contrast when $colorsRgba changes.
 // We don't use computed() to calculate $contrast because we need to update from other places.
 $colorsRgba.subscribe((newColorsRgba) => {
-  if (['okhsv', 'okhsl'].includes($currentColorModel.get()!)) return
+  if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
 
   if (consoleLogInfos.includes('Store updates')) {
     console.log('Store update — $contrast (subscribed on $colorsRgba)')
     console.log(`    newColorHxya: ${JSON.stringify(newColorsRgba)}`)
   }
 
-  if (!newColorsRgba.parentFill) {
-    $contrast.set(null)
-    return
-  }
+  if (!newColorsRgba.parentFill || !newColorsRgba.fill) return
 
-  let newContrast: number | null = null
+  let newContrast: ApcaContrast | null = null
 
   newContrast = getContrastFromBgandFgRgba(newColorsRgba.parentFill!, newColorsRgba.fill!)
 
@@ -223,7 +215,7 @@ $colorsRgba.subscribe((newColorsRgba) => {
 
 export const $colorValueDecimals = computed(
   [$currentColorModel, $lockRelativeChroma],
-  (currentColorModel, lockRelativeChroma): ColorValueDecimals | undefined => {
+  (currentColorModel, lockRelativeChroma): ColorValueDecimals => {
     if (consoleLogInfos.includes('Store updates')) {
       console.log('Store update — $colorValueDecimals (computed from $currentColorModel or $lockRelativeChroma)')
       console.log(`    currentColorModel: ${currentColorModel}`)
@@ -238,7 +230,7 @@ export const $colorValueDecimals = computed(
       case 'oklchCss':
         return { h: 1, x: lockRelativeChroma ? 6 : 3, y: 1 }
       default:
-        return
+        return { h: 0, x: 0, y: 0 }
     }
   }
 )

@@ -11,8 +11,9 @@ import {
   $lockContrast
 } from '../../store'
 import { useStore } from '@nanostores/react'
-import { CurrentColorModel } from '../../../types'
+import { CurrentColorModel, SyncCurrentColorModelData, SyncFileColorProfileData } from '../../../types'
 import convertRgbToHxy from '../../helpers/convertRgbToHxy'
+import sendMessageToBackend from '../../helpers/sendMessageToBackend'
 
 export default function ColorModelSelect() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -27,28 +28,26 @@ export default function ColorModelSelect() {
 
     $currentColorModel.set(newCurrentColorModel)
 
-    parent.postMessage(
-      {
-        pluginMessage: {
-          message: 'syncCurrentColorModel',
-          currentColorModel: newCurrentColorModel
-        }
-      },
-      '*'
-    )
+    sendMessageToBackend<SyncCurrentColorModelData>({
+      type: 'syncCurrentColorModel',
+      data: {
+        currentColorModel: newCurrentColorModel
+      }
+    })
 
-    const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]!
+    const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
 
     const newColorHxy = convertRgbToHxy({
       colorRgb: {
-        r: currentColorRgba.r,
-        g: currentColorRgba.g,
-        b: currentColorRgba.b
+        r: currentColorRgba!.r,
+        g: currentColorRgba!.g,
+        b: currentColorRgba!.b
       },
       targetColorModel: newCurrentColorModel,
-      fileColorProfile: $fileColorProfile.get()!
+      fileColorProfile: $fileColorProfile.get()
     })
 
+    // TODO - withBackend
     updateColorHxyaAndSyncColorsRgbaAndPlugin({
       newColorHxya: { ...newColorHxy, a: $colorHxya.get().a },
       syncColorsRgba: false,
@@ -56,22 +55,19 @@ export default function ColorModelSelect() {
     })
 
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {
-      // If one of these values are true, we need to set them to false as relativeChroma and contrast are hiddne in OkHSV or OkHSL
+      // If one of these values are true, we need to set them to false as relativeChroma and contrast are hidden in OkHSV or OkHSL
       if ($lockRelativeChroma.get()) $lockRelativeChroma.set(false)
       if ($lockContrast.get()) $lockContrast.set(false)
 
       // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3's space.
       $fileColorProfile.set('rgb')
 
-      parent.postMessage(
-        {
-          pluginMessage: {
-            message: 'syncFileColorProfile',
-            fileColorProfile: 'rgb'
-          }
-        },
-        '*'
-      )
+      sendMessageToBackend<SyncFileColorProfileData>({
+        type: 'syncFileColorProfile',
+        data: {
+          fileColorProfile: 'rgb'
+        }
+      })
     }
   }
 

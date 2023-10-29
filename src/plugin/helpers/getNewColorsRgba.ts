@@ -17,7 +17,7 @@ const supportedNodeTypes = [
   'HIGHLIGHT'
 ]
 
-interface GetNewColorsRgbaReturn {
+type GetNewColorsRgbaReturn = {
   newColorsRgba: ColorsRgba
   uiMessageCode: keyof typeof uiMessageTexts | null
   nodeType: string | null
@@ -51,8 +51,10 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     }
   }
 
-  const selectionFill = selection[0].fills[0]
-  const selectionStroke = selection[0].strokes[0]
+  // We do this because the previous test garanties that selection[0] will have the properties we will use.
+  const firstSelection = selection[0] as any
+  const selectionFill = firstSelection.fills[0]
+  const selectionStroke = firstSelection.strokes[0]
 
   if (!selectionFill && !selectionStroke) {
     returnObject.uiMessageCode = 'no_color_in_shape'
@@ -83,8 +85,8 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     }
   }
 
-  if (selection[0].parent?.fills) {
-    let currentObject = selection[0].parent
+  if (firstSelection.parent?.fills) {
+    let currentObject = firstSelection.parent
 
     while (currentObject) {
       if (currentObject.fills && currentObject?.fills?.length !== 0) {
@@ -113,7 +115,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     let fillsCount = 0
     let strokesCount = 0
 
-    for (const node of selection) {
+    for (const node of selection as any) {
       if (node.fills[0]?.type === 'SOLID') fillsCount++
       if (node.strokes[0]?.type === 'SOLID') strokesCount++
     }

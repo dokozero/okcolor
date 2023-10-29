@@ -20,7 +20,7 @@ export default function HueSlider() {
     const canvasY = event.clientX - rect.left - 7
 
     const newColorHxya = {
-      h: roundWithDecimal(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, $colorValueDecimals.get()!.h),
+      h: roundWithDecimal(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, $colorValueDecimals.get().h),
       x: $colorHxya.get().x
     }
 
@@ -28,9 +28,7 @@ export default function HueSlider() {
   }
 
   useEffect(() => {
-    if (colorHxya.h === null) return
-
-    manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate(SLIDER_SIZE * ($colorHxya.get().h! / 360) - 1, -1)
+    manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate(SLIDER_SIZE * ($colorHxya.get().h / 360) - 1, -1)
   }, [colorHxya.h])
 
   useEffect(() => {

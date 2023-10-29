@@ -1,5 +1,19 @@
 import { uiMessageTexts } from './ui/ui-messages'
 
+export type RgbElement = number // 0 - 255
+
+export type Hue = number // 0 - 360
+export type AbsoluteChroma = number // 0 - MAX_CHROMA_P3
+export type RelativeChroma = number // 0 - 100
+export type Saturation = number // 0 - 100
+export type Lightness = number // 0 - 100
+export type Opacity = number // 0 - 100
+
+export type ApcaContrast = number // -108 - 106
+
+export type SvgPath = string
+
+// We use enums to get the value when hovering variable that use these types like FigmaEditorType
 enum FigmaEditorTypes {
   'figjam',
   'figma',
@@ -35,55 +49,44 @@ export enum HxyaLabels {
   'a' = 'a'
 }
 
-export interface ColorRgb {
-  r: number // 0 - 255
-  g: number // 0 - 255
-  b: number // 0 - 255
+export type ColorRgb = {
+  r: RgbElement
+  g: RgbElement
+  b: RgbElement
 }
 
-export interface ColorRgba {
-  r: number // 0 - 255
-  g: number // 0 - 255
-  b: number // 0 - 255
-  a: number // 0 - 100
+export type ColorRgba = {
+  r: RgbElement
+  g: RgbElement
+  b: RgbElement
+  a: RgbElement
 }
 
-export interface ColorHxy {
-  h: number // 0 - 360
-  x: number // oklch and oklchCss = 0 - MAX_CHROMA_P3, others: 0 - 100
-  y: number // 0 - 100
+export type ColorHxy = {
+  h: Hue
+  x: AbsoluteChroma | Saturation
+  y: Lightness
 }
 
-export interface ColorHxya {
-  h: number | null // 0 - 360
-  x: number // oklch and oklchCss = 0 - MAX_CHROMA_P3, others: 0 - 100
-  y: number // 0 - 100
-  a: number // 0 - 100
+export type ColorHxya = {
+  h: Hue
+  x: AbsoluteChroma | Saturation
+  y: Lightness
+  a: Opacity
 }
 
-export interface PartialColorHxya {
-  h?: number | undefined // 0 - 360
-  x?: number | undefined // oklch and oklchCss = 0 - MAX_CHROMA_P3, others: 0 - 100
-  y?: number | undefined // 0 - 100
-  a?: number | undefined // 0 - 100
-}
-
-export interface ColorsRgba {
+export type ColorsRgba = {
   [key: string]: ColorRgba | ColorRgb | null
   parentFill: ColorRgb | null
   fill: ColorRgba | null
   stroke: ColorRgba | null
 }
 
-enum KeysPressed {
-  'shift',
-  'ctrl',
-  ''
-}
+type KeysPressed = 'shift' | 'ctrl' | ''
 
-export type CurrentKeysPressed = (keyof typeof KeysPressed)[]
+export type CurrentKeysPressed = KeysPressed[]
 
-export interface ColorValueDecimals {
+export type ColorValueDecimals = {
   [key: string]: number
   h: 0 | 1
   x: 0 | 1 | 3 | 4 | 6
@@ -97,7 +100,11 @@ export enum ColorCodesInputValues {
   'hex' = 'hex'
 }
 
-export interface InitData {
+// Message for UI types
+
+export type MessageForUiTypes = 'syncLocalStorageValues' | 'syncCurrentFillOrStrokeAndColorsRgba' | 'displayUiMessage'
+
+export type SyncLocalStorageValuesData = {
   figmaEditorType: FigmaEditorType
   fileColorProfile: FileColorProfile
   currentColorModel: CurrentColorModel
@@ -106,25 +113,74 @@ export interface InitData {
   lockContrast: boolean
 }
 
-export interface NewColorsRgbaData {
+export type SyncCurrentFillOrStrokeAndColorsRgbaData = {
   currentFillOrStroke: CurrentFillOrStroke
   colorsRgba: ColorsRgba
 }
 
-export interface DisplayUiMessageData {
+export type DisplayUiMessageData = {
   uiMessageCode: keyof typeof uiMessageTexts
   nodeType: string | null
 }
 
-export interface OnMessageFromPlugin {
-  data: {
-    pluginMessage: {
-      message: string
-      initData: InitData
-      newColorsRgbaData: NewColorsRgbaData
-      displayUiMessageData: DisplayUiMessageData
-    }
-  }
+export type MessageForUiData = SyncLocalStorageValuesData | SyncCurrentFillOrStrokeAndColorsRgbaData | DisplayUiMessageData
+
+export type MessageForUi = {
+  type: MessageForUiTypes
+  data: MessageForUiData
 }
 
-export type ApcaContrast = number // between -108 and 106
+// Message for backend types
+
+export type MessageForBackendTypes =
+  | 'triggerInit'
+  | 'updateShapeColor'
+  | 'syncFileColorProfile'
+  | 'syncCurrentFillOrStroke'
+  | 'syncCurrentColorModel'
+  | 'syncShowCssColorCodes'
+  | 'syncLockRelativeChroma'
+  | 'syncLockContrast'
+
+export type UpdateShapeColorData = {
+  newColorRgba: ColorRgba
+  updateParent: boolean
+}
+
+export type SyncFileColorProfileData = {
+  fileColorProfile: FileColorProfile
+}
+
+export type SyncCurrentFillOrStrokeData = {
+  currentFillOrStroke: CurrentFillOrStroke
+}
+
+export type SyncCurrentColorModelData = {
+  currentColorModel: CurrentColorModel
+}
+
+export type SyncShowCssColorCodesData = {
+  showCssColorCodes: boolean
+}
+
+export type SyncLockRelativeChromaData = {
+  lockRelativeChroma: boolean
+}
+
+export type SyncLockContrastData = {
+  lockContrast: boolean
+}
+
+export type MessageForBackendData =
+  | UpdateShapeColorData
+  | SyncFileColorProfileData
+  | SyncCurrentFillOrStrokeData
+  | SyncCurrentColorModelData
+  | SyncShowCssColorCodesData
+  | SyncLockRelativeChromaData
+  | SyncLockContrastData
+
+export type MessageForBackend = {
+  type: MessageForBackendTypes
+  data: MessageForBackendData
+}

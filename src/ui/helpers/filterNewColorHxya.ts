@@ -12,7 +12,7 @@ export default function filterNewColorHxya(
   bypassLockRelativeChromaFilter: boolean,
   bypassLockContrastFilter: boolean
 ): ColorHxya {
-  if (['okhsv', 'okhsl'].includes($currentColorModel.get()!)) return newColorHxya
+  if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return newColorHxya
 
   const filteredColorHxya = newColorHxya
 
@@ -22,18 +22,18 @@ export default function filterNewColorHxya(
     })
   } else {
     // If lockRelativeChroma is true, we don't need to clamp the chroma because it always be inside, hence the below code in the else.
-    filteredColorHxya.x = getClampedChroma({ h: newColorHxya.h!, x: newColorHxya.x, y: newColorHxya.y })
+    filteredColorHxya.x = getClampedChroma({ h: newColorHxya.h, x: newColorHxya.x, y: newColorHxya.y })
   }
 
   if ($lockContrast.get() && $contrast.get() !== 0 && !bypassLockContrastFilter) {
     const newHxy = convertContrastToLightness(
       {
-        h: newColorHxya.h!,
+        h: newColorHxya.h,
         x: newColorHxya.x,
         y: newColorHxya.y,
         a: newColorHxya.a
       },
-      $contrast.get()!
+      $contrast.get()
     )
     newColorHxya.y = newHxy.y
   }

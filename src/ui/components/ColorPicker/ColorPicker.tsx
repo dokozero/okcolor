@@ -38,7 +38,7 @@ import * as twgl from 'twgl.js'
 import { inGamut } from '../../helpers/culori.mjs'
 import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit'
 import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit'
-import { ColorModels } from '../../../types'
+import { AbsoluteChroma, ColorModels, Saturation } from '../../../types'
 import convertAbsoluteChromaToRelative from '../../helpers/convertAbsoluteChromaToRelative'
 import getContrastStrokeLimit from './helpers/getContrastStrokeLimit'
 
@@ -85,9 +85,9 @@ export default function ColorPicker() {
   const contrastStroke = useRef<SVGPathElement>(null)
 
   const updateManipulatorPosition = () => {
-    let x: number
+    let x: AbsoluteChroma | Saturation
 
-    if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
+    if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
       x = $colorHxya.get().x * OKLCH_CHROMA_SCALE
     } else {
       x = $colorHxya.get().x / 100
@@ -112,17 +112,17 @@ export default function ColorPicker() {
     if (($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) || $lockContrast.get()) {
       currentContrainedMove = true
     } else {
-      newColorHxya.y = roundWithDecimal(limitMouseManipulatorPosition(1 - canvasY / PICKER_SIZE) * 100, $colorValueDecimals.get()!.y)
+      newColorHxya.y = roundWithDecimal(limitMouseManipulatorPosition(1 - canvasY / PICKER_SIZE) * 100, $colorValueDecimals.get().y)
     }
 
     // Get the new X value.
     if ($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'vertical' && !$lockRelativeChroma.get()) {
       currentContrainedMove = true
     } else {
-      newColorHxya.x = roundWithDecimal(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, $colorValueDecimals.get()!.x)
+      newColorHxya.x = roundWithDecimal(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, $colorValueDecimals.get().x)
 
-      if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-        newColorHxya.x = roundWithDecimal(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, $colorValueDecimals.get()!.x)
+      if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+        newColorHxya.x = roundWithDecimal(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, $colorValueDecimals.get().x)
       }
     }
 
@@ -132,8 +132,8 @@ export default function ColorPicker() {
       } else if (mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) {
         let valueToTest = newColorHxya.x
 
-        if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-          valueToTest = convertAbsoluteChromaToRelative({ h: $colorHxya.get().h!, x: newColorHxya.x, y: newColorHxya.y })
+        if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+          valueToTest = convertAbsoluteChromaToRelative({ h: $colorHxya.get().h, x: newColorHxya.x, y: newColorHxya.y })
         }
 
         if (valueToTest % 5 === 0) {
@@ -164,7 +164,7 @@ export default function ColorPicker() {
   }
 
   const renderContrastStroke = () => {
-    if ($lockContrast.get() && $colorsRgba.get().parentFill) {
+    if ($lockContrast.get() && $colorsRgba.get().parentFill && $colorsRgba.get().fill) {
       contrastStroke.current!.setAttribute('d', getContrastStrokeLimit())
     } else {
       contrastStroke.current!.setAttribute('d', '')
@@ -177,25 +177,27 @@ export default function ColorPicker() {
     renderContrastStroke()
 
     const gl = colorPickerGlContext
-    const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()!) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
+    if (!gl) return
 
-    gl!.viewport(0, 0, size, size)
-    gl!.drawingBufferColorSpace = $fileColorProfile.get() === 'p3' ? 'display-p3' : 'srgb'
-    gl!.clearColor(0, 0, 0, 1)
-    gl!.clear(gl!.COLOR_BUFFER_BIT)
+    const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
+
+    gl.viewport(0, 0, size, size)
+    gl.drawingBufferColorSpace = $fileColorProfile.get() === 'p3' ? 'display-p3' : 'srgb'
+    gl.clearColor(0, 0, 0, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
     twgl.setUniforms(programInfo, {
       resolution: [size, size],
       dark: document.documentElement.classList.contains('figma-dark'),
       chroma_scale: OKLCH_CHROMA_SCALE,
       showP3: $fileColorProfile.get() === 'p3',
-      mode: ColorModels[$currentColorModel.get()!],
-      hue_rad: ($colorHxya.get().h! * Math.PI) / 180
+      mode: ColorModels[$currentColorModel.get()],
+      hue_rad: ($colorHxya.get().h * Math.PI) / 180
     })
-    twgl.drawBufferInfo(gl!, bufferInfo)
+    twgl.drawBufferInfo(gl, bufferInfo)
   }
 
   const scaleColorPickerCanvas = () => {
-    if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
+    if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
       colorPickerCanvas.current!.style.transform = `scale(${RES_PICKER_FACTOR_OKLCH})`
       colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKLCH
       colorPickerCanvas.current!.height = RES_PICKER_SIZE_OKLCH
@@ -209,7 +211,7 @@ export default function ColorPicker() {
   const updateColorSpaceLabelInColorPicker = () => {
     let newValue: keyof typeof ColorSpacesNames | '' = ''
 
-    if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
+    if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
       if (inGamutSrgb(`oklch(${$colorHxya.get().y / 100} ${$colorHxya.get().x - 0.001} ${$colorHxya.get().h})`)) {
         newValue = 'sRGB'
       } else {
@@ -306,7 +308,7 @@ export default function ColorPicker() {
   }, [])
 
   return (
-    <div ref={colorPicker} className="c-color-picker c-color-picker--deactivated" style={{ width: `${PICKER_SIZE}px`, height: `${PICKER_SIZE}px` }}>
+    <div ref={colorPicker} className="c-color-picker" style={{ width: `${PICKER_SIZE}px`, height: `${PICKER_SIZE}px` }}>
       <div className="c-color-picker__message-wrapper">
         <p className="c-color-picker__message-text">{uiMessage.message}</p>
       </div>

@@ -5,8 +5,9 @@ import { $colorHxya, $isMouseInsideDocument, $showCssColorCodes, updateColorHxya
 import { useStore } from '@nanostores/react'
 import getColorCodeStrings from './helpers/getColorCodeStrings'
 import getNewColorHxya from './helpers/getNewColorHxya'
-import { ColorCodesInputValues, PartialColorHxya } from '../../../types'
+import { ColorCodesInputValues, ColorHxya, SyncShowCssColorCodesData } from '../../../types'
 import copyToClipboard from '../../helpers/copyToClipboard'
+import sendMessageToBackend from '../../helpers/sendMessageToBackend'
 
 // We only need this object to check if the value of an input has been changed on blur.
 const colorCodesInputValues: { [key in ColorCodesInputValues]: string } = {
@@ -80,7 +81,7 @@ export default function ColorCodeInputs() {
 
     if (newColorHxya) {
       updateColorHxyaAndSyncColorsRgbaAndPlugin({
-        newColorHxya: newColorHxya as PartialColorHxya,
+        newColorHxya: newColorHxya as Partial<ColorHxya>,
         bypassLockRelativeChromaFilter: true,
         bypassLockContrastFilter: true
       })
@@ -101,8 +102,6 @@ export default function ColorCodeInputs() {
   }
 
   useEffect(() => {
-    if (colorHxya.h === null) return
-
     updateColorCodeInputs()
   }, [colorHxya])
 
@@ -112,7 +111,12 @@ export default function ColorCodeInputs() {
         className="c-color-code-inputs__title-wrapper"
         onClick={() => {
           $showCssColorCodes.set(!$showCssColorCodes.get())
-          parent.postMessage({ pluginMessage: { message: 'syncShowCssColorCodes', showCssColorCodes: $showCssColorCodes.get() } }, '*')
+          sendMessageToBackend<SyncShowCssColorCodesData>({
+            type: 'syncShowCssColorCodes',
+            data: {
+              showCssColorCodes: $showCssColorCodes.get()
+            }
+          })
         }}
       >
         <div>Color codes</div>

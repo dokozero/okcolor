@@ -60,7 +60,7 @@ const isColorCodeInGoodFormat = (color: string, format: string): boolean => {
     if (value2 < 0 || value2 > 100) return false
     if (value3 < 0 || value3 > 100) return false
   } else if (format === 'color') {
-    if (['okhsv', 'okhsl'].includes($currentColorModel.get()!)) {
+    if (['okhsv', 'okhsl'].includes($currentColorModel.get())) {
       regex = /color\(srgb\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)(\s\/\s(\d+(\.\d+)?))?\)/
     } else {
       regex = /color\(display-p3\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)(\s\/\s(\d+(\.\d+)?))?\)/
@@ -107,10 +107,10 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
   let colorFormat: keyof typeof ColorCodesInputValues | keyof typeof ColorModels = eventTargetId
 
   if (eventTargetId === 'currentColorModel') {
-    if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
+    if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
       colorFormat = 'oklch'
     } else {
-      colorFormat = $currentColorModel.get()!
+      colorFormat = $currentColorModel.get()
     }
   }
 
@@ -122,11 +122,15 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
   let regex: RegExp
   let matches: RegExpMatchArray | [] = []
 
-  let newColorHxy: ColorHxy
-  let newColorA: number
+  let newColorHxy: ColorHxy = {
+    h: 0,
+    x: 0,
+    y: 0
+  }
+  let newColorA = 100
 
   if (eventTargetId === 'currentColorModel') {
-    if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
+    if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
       regex = /(\d+(\.\d+)?)/g
       matches = eventTargetValue.match(regex)!
 
@@ -137,9 +141,9 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
       }
       if ($currentColorModel.get() === 'oklch') {
         newColorHxy = {
-          h: roundWithDecimal(newColorHxy.h, $colorValueDecimals.get()!.h),
-          x: roundWithDecimal(newColorHxy.x * 100, $colorValueDecimals.get()!.x),
-          y: roundWithDecimal(newColorHxy.y, $colorValueDecimals.get()!.y)
+          h: roundWithDecimal(newColorHxy.h, $colorValueDecimals.get().h),
+          x: roundWithDecimal(newColorHxy.x * 100, $colorValueDecimals.get().x),
+          y: roundWithDecimal(newColorHxy.y, $colorValueDecimals.get().y)
         }
       }
 
@@ -166,8 +170,8 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         g: parseFloat(matches![1]) * 255,
         b: parseFloat(matches![2]) * 255
       },
-      targetColorModel: $currentColorModel.get()!,
-      fileColorProfile: ['oklch', 'oklchCss'].includes($currentColorModel.get()!) ? 'p3' : 'rgb'
+      targetColorModel: $currentColorModel.get(),
+      fileColorProfile: ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? 'p3' : 'rgb'
     })
   } else if (eventTargetId === 'rgba') {
     regex = /(\d+(\.\d+)?)/g
@@ -179,7 +183,7 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         g: parseFloat(matches![1]),
         b: parseFloat(matches![2])
       },
-      targetColorModel: $currentColorModel.get()!,
+      targetColorModel: $currentColorModel.get(),
       fileColorProfile: 'rgb'
     })
   } else if (eventTargetId === 'hex') {
@@ -192,16 +196,16 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         g: newColorRgb.g * 255,
         b: newColorRgb.b * 255
       },
-      targetColorModel: $currentColorModel.get()!,
+      targetColorModel: $currentColorModel.get(),
       fileColorProfile: 'rgb'
     })
     if (newColorRgb.alpha) newColorA = Math.round(newColorRgb.alpha * 100)
   }
 
-  if (!newColorA! && matches[3]?.valueOf()) {
+  if (matches[3]?.valueOf()) {
     // We need to use Math.round here otherwise, parseFloat(0.55) * 100 will give 55.00...01 among other values like 0.56.
     newColorA = Math.round(parseFloat(matches![3]) * 100)
   }
 
-  return { ...newColorHxy!, a: newColorA! }
+  return { ...newColorHxy, a: newColorA }
 }

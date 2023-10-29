@@ -1,14 +1,14 @@
 import { APCAcontrast, sRGBtoY, alphaBlend, displayP3toY } from 'apca-w3'
-import { ApcaContrast, ColorRgb, ColorRgba } from '../../types'
+import { ApcaContrast, ColorRgb, ColorRgba, RgbElement } from '../../types'
 import { $fileColorProfile } from '../store'
 
-type RgbArray = [number, number, number]
-type RgbaArray = [number, number, number, number]
+type RgbArray = [RgbElement, RgbElement, RgbElement]
+type RgbaArray = [RgbElement, RgbElement, RgbElement, RgbElement]
 
 export default function getContrastFromBgandFgRgba(bg: ColorRgb, fg: ColorRgba): ApcaContrast {
   let background: RgbArray = [0, 0, 0]
   let foreground: RgbaArray = [0, 0, 0, 0]
-  let APCAContrastResult: number | string
+  let APCAContrastResult: ApcaContrast | string
   let newContrast: ApcaContrast
 
   if ($fileColorProfile.get() === 'rgb') {

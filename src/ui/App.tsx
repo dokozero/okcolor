@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   $fileColorProfile,
@@ -13,10 +13,8 @@ import {
   $currentFillOrStroke,
   $mouseEventCallback,
   $figmaEditorType,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin,
   $updateParent,
-  $lockContrast,
-  $colorsRgba
+  $lockContrast
 } from './store'
 
 import FileColorProfileSelect from './components/FileColorProfileSelect/FileColorProfileSelect'
@@ -33,56 +31,67 @@ import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 import { consoleLogInfos } from '../constants'
 
 import { uiMessageTexts } from './ui-messages'
-import { OnMessageFromPlugin } from '../types'
+import { DisplayUiMessageData, MessageForUi, SyncCurrentFillOrStrokeAndColorsRgbaData, SyncLocalStorageValuesData } from '../types'
 import setValuesForUiMessage from './helpers/setValuesForUiMessage'
+import sendMessageToBackend from './helpers/sendMessageToBackend'
 
 let isMouseDown = false
 
+// TODO - complete
+// The way we load the App is like this:
+// Because the plugin is split in two: the “plugin” part is the backend that have access to the Figma file and
+// the UI is to display the content according to the values we get from the plugin.
 function App() {
   if (consoleLogInfos.includes('Component renders')) {
     console.log('Component render — App')
   }
+
+  // We use this var to avoid loading the components before we have all te values from plugin's backend, see comment on the top of the file fore more infos.
   const [areStoreValuesReady, setAreStoreValuesReady] = useState(false)
 
   // Updates from the plugin.
-  onmessage = (event: OnMessageFromPlugin) => {
-    const pluginMessage = event.data.pluginMessage
+  onmessage = (event) => {
+    const pluginMessage = event.data.pluginMessage as MessageForUi
 
     // Set variables from local storage that only plugin code can get.
-    if (pluginMessage.message === 'init') {
-      $figmaEditorType.set(pluginMessage.initData.figmaEditorType)
-      $fileColorProfile.set(pluginMessage.initData.fileColorProfile)
-      $currentColorModel.set(pluginMessage.initData.currentColorModel)
-      $showCssColorCodes.set(pluginMessage.initData.showCssColorCodes)
-      $lockRelativeChroma.set(pluginMessage.initData.lockRelativeChroma)
-      $lockContrast.set(pluginMessage.initData.lockContrast)
+    if (pluginMessage.type === 'syncLocalStorageValues') {
+      const data = pluginMessage.data as SyncLocalStorageValuesData
+
+      $figmaEditorType.set(data.figmaEditorType)
+      $fileColorProfile.set(data.fileColorProfile)
+      $currentColorModel.set(data.currentColorModel)
+      $showCssColorCodes.set(data.showCssColorCodes)
+      $lockRelativeChroma.set(data.lockRelativeChroma)
+      $lockContrast.set(data.lockContrast)
     }
     // Update the color based on the selected shape in Figma.
-    else if (pluginMessage.message === 'newColorsRgba') {
-      if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
-
+    if (pluginMessage.type === 'syncCurrentFillOrStrokeAndColorsRgba') {
       if (document.body.classList.contains('deactivated')) document.body.classList.remove('deactivated')
       if ($uiMessage.get().show) $uiMessage.setKey('show', false)
 
       // If on previous selected shape we had the parent selected, we set it to false as default.
       if ($updateParent.get()) $updateParent.set(false)
 
+      const data = pluginMessage.data as SyncCurrentFillOrStrokeAndColorsRgbaData
+
+      $currentFillOrStroke.set(data.currentFillOrStroke)
+      updateColorsRgbaAndSyncColorHxya(data.colorsRgba, true)
 
       // This says "when all the store value are filled, show the UI components".
       if (!areStoreValuesReady) setAreStoreValuesReady(true)
     }
     // Set the UI in a disabled mode and update the UI message.
-    else if (pluginMessage.message === 'displayUiMessage') {
-      if (document.body.style.visibility === 'hidden') document.body.style.visibility = 'visible'
+    else if (pluginMessage.type === 'displayUiMessage') {
+      const data = pluginMessage.data as DisplayUiMessageData
 
       $uiMessage.setKey('show', true)
       document.body.classList.add('deactivated')
 
       setValuesForUiMessage()
 
-      let message = uiMessageTexts[`${pluginMessage.displayUiMessageData.uiMessageCode}`]
-      if (pluginMessage.displayUiMessageData.nodeType) {
-        message = message.replace('$SHAPE', pluginMessage.displayUiMessageData.nodeType.toLowerCase())
+      let message = uiMessageTexts[`${data.uiMessageCode}`]
+      if (data.nodeType) {
+        message = message.replace('$SHAPE', data.nodeType.toLowerCase())
       }
       $uiMessage.setKey('message', message)
 
@@ -148,7 +157,7 @@ function App() {
     })
 
     // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
-    parent.postMessage({ pluginMessage: { message: 'init' } }, '*')
+    sendMessageToBackend({ type: 'triggerInit' })
   }, [])
 
   if (!areStoreValuesReady) {

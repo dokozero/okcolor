@@ -1,10 +1,27 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { PICKER_SIZE } from '../constants'
-import type { ColorRgba, ColorsRgba, CurrentColorModel, CurrentFillOrStroke, FileColorProfile } from '../types'
+import type {
+  ColorsRgba,
+  CurrentColorModel,
+  CurrentFillOrStroke,
+  DisplayUiMessageData,
+  FileColorProfile,
+  MessageForBackend,
+  MessageForBackendData,
+  SyncCurrentColorModelData,
+  SyncCurrentFillOrStrokeAndColorsRgbaData,
+  SyncCurrentFillOrStrokeData,
+  SyncFileColorProfileData,
+  SyncLocalStorageValuesData,
+  SyncLockContrastData,
+  SyncLockRelativeChromaData,
+  SyncShowCssColorCodesData,
+  UpdateShapeColorData
+} from '../types'
 import getNewColorsRgba from './helpers/getNewColorsRgba'
-import updateShapeColor from './helpers/updateShapeColor'
 import sendMessageToUi from './helpers/sendMessageToUi'
+import updateShapeColor from './helpers/updateShapeColor'
 
 let currentFillOrStroke: CurrentFillOrStroke = 'fill'
 let fileColorProfile: FileColorProfile
@@ -49,9 +66,9 @@ const updateColorsRgbaOrSendUiMessageCodeToUi = (): string => {
   const result = getNewColorsRgba()
 
   if (result.uiMessageCode) {
-    sendMessageToUi({
-      messageType: 'displayUiMessage',
-      messageData: {
+    sendMessageToUi<DisplayUiMessageData>({
+      type: 'displayUiMessage',
+      data: {
         uiMessageCode: result.uiMessageCode,
         nodeType: result.nodeType
       }
@@ -74,8 +91,14 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
 
   currentColorModel = (await figma.clientStorage.getAsync('currentColorModel')) || 'oklchCss'
   showCssColorCodes = (await figma.clientStorage.getAsync('showCssColorCodes')) || false
-  lockRelativeChroma = (await figma.clientStorage.getAsync('lockRelativeChroma')) || false
-  lockContrast = (await figma.clientStorage.getAsync('lockContrast')) || false
+
+  if (currentColorModel === 'okhsv' || currentColorModel === 'okhsl') {
+    lockRelativeChroma = false
+    lockContrast = false
+  } else {
+    lockRelativeChroma = (await figma.clientStorage.getAsync('lockRelativeChroma')) || false
+    lockContrast = (await figma.clientStorage.getAsync('lockContrast')) || false
+  }
 
   let initialUiHeight = showCssColorCodes ? pluginHeights.okLchWithColorCodes : pluginHeights.okLchWithoutColorCodes
   if (['okhsv', 'okhsl'].includes(currentColorModel)) {
@@ -89,9 +112,9 @@ getLocalStorageValueAndCreateUiWindow()
 
 // Send the local storage value and the color of the shape on launch, we call it when the UI is ready, see below figma.ui.onmessage
 const init = async () => {
-  sendMessageToUi({
-    messageType: 'init',
-    messageData: {
+  sendMessageToUi<SyncLocalStorageValuesData>({
+    type: 'syncLocalStorageValues',
+    data: {
       figmaEditorType: figma.editorType,
       fileColorProfile: fileColorProfile,
       currentColorModel: currentColorModel,
@@ -104,11 +127,11 @@ const init = async () => {
   if (updateColorsRgbaOrSendUiMessageCodeToUi() === 'uiMessageCode sent') return
   currentFillOrStroke = colorsRgba.fill ? 'fill' : 'stroke'
 
-  sendMessageToUi({
-    messageType: 'newColorsRgba',
-    messageData: {
-      colorsRgba: colorsRgba,
-      currentFillOrStroke: currentFillOrStroke
+  sendMessageToUi<SyncCurrentFillOrStrokeAndColorsRgbaData>({
+    type: 'syncCurrentFillOrStrokeAndColorsRgba',
+    data: {
+      currentFillOrStroke: currentFillOrStroke,
+      colorsRgba: colorsRgba
     }
   })
 }
@@ -122,11 +145,11 @@ const handleFigmaOnSelectionChange = () => {
 
   currentFillOrStroke = colorsRgba.fill ? 'fill' : 'stroke'
 
-  sendMessageToUi({
-    messageType: 'newColorsRgba',
-    messageData: {
-      colorsRgba: colorsRgba,
-      currentFillOrStroke: currentFillOrStroke
+  sendMessageToUi<SyncCurrentFillOrStrokeAndColorsRgbaData>({
+    type: 'syncCurrentFillOrStrokeAndColorsRgba',
+    data: {
+      currentFillOrStroke: currentFillOrStroke,
+      colorsRgba: colorsRgba
     }
   })
 }
@@ -154,11 +177,11 @@ const handleFigmaOnDocumentChange = (event: DocumentChangeEvent) => {
       }
     }
 
-    sendMessageToUi({
-      messageType: 'newColorsRgba',
-      messageData: {
-        colorsRgba: colorsRgba,
-        currentFillOrStroke: currentFillOrStroke
+    sendMessageToUi<SyncCurrentFillOrStrokeAndColorsRgbaData>({
+      type: 'syncCurrentFillOrStrokeAndColorsRgba',
+      data: {
+        currentFillOrStroke: currentFillOrStroke,
+        colorsRgba: colorsRgba
       }
     })
   }
@@ -181,28 +204,20 @@ figma.on('close', () => {
 
 let timeoutId: number
 
-interface OnMessageEvent {
-  message: string
-  newColorRgba?: ColorRgba
-  updateParent?: boolean
-  fileColorProfile?: FileColorProfile
-  currentFillOrStroke?: CurrentFillOrStroke
-  currentColorModel?: CurrentColorModel
-  showCssColorCodes?: boolean
-  lockRelativeChroma?: boolean
-  lockContrast?: boolean
-}
+figma.ui.onmessage = (event: MessageForBackend) => {
+  let data: MessageForBackendData
 
-figma.ui.onmessage = (event: OnMessageEvent) => {
-  switch (event.message) {
-    case 'init':
+  switch (event.type) {
+    case 'triggerInit':
       // We wait for the UI to be ready before sending the init infos to it, see the useEffect on the App component.
       init()
       break
 
     case 'updateShapeColor':
+      data = event.data as UpdateShapeColorData
+
       itsAMe = true
-      updateShapeColor(event.newColorRgba!, currentFillOrStroke, event.updateParent!)
+      updateShapeColor(data.newColorRgba, currentFillOrStroke, data.updateParent)
 
       // We reset itsAMe value to false here because if we do it on the documentchange callback, when we move the hue cursor on FFFFFF or 000000 in OkHSL, this callback is not executed so itsAMe would stay on true and if for example user delete the fill of the shape, we would get an error.
       if (timeoutId) clearTimeout(timeoutId)
@@ -213,31 +228,37 @@ figma.ui.onmessage = (event: OnMessageEvent) => {
       break
 
     case 'syncFileColorProfile':
-      figma.clientStorage.setAsync('fileColorProfile', event.fileColorProfile)
+      data = event.data as SyncFileColorProfileData
+      figma.clientStorage.setAsync('fileColorProfile', data.fileColorProfile)
       break
 
     case 'syncCurrentFillOrStroke':
-      currentFillOrStroke = event.currentFillOrStroke!
+      data = event.data as SyncCurrentFillOrStrokeData
+      currentFillOrStroke = data.currentFillOrStroke
       break
 
     case 'syncCurrentColorModel':
-      currentColorModel = event.currentColorModel!
+      data = event.data as SyncCurrentColorModelData
+      currentColorModel = data.currentColorModel
       resizeWindowHeight()
-      figma.clientStorage.setAsync('currentColorModel', event.currentColorModel)
+      figma.clientStorage.setAsync('currentColorModel', data.currentColorModel)
       break
 
     case 'syncShowCssColorCodes':
-      showCssColorCodes = event.showCssColorCodes!
+      data = event.data as SyncShowCssColorCodesData
+      showCssColorCodes = data.showCssColorCodes
       resizeWindowHeight()
       figma.clientStorage.setAsync('showCssColorCodes', showCssColorCodes)
       break
 
-    case 'syncLockRelativeChromaWithPlugin':
-      figma.clientStorage.setAsync('lockRelativeChroma', event.lockRelativeChroma)
+    case 'syncLockRelativeChroma':
+      data = event.data as SyncLockRelativeChromaData
+      figma.clientStorage.setAsync('lockRelativeChroma', data.lockRelativeChroma)
       break
 
-    case 'syncLockContrastWithPlugin':
-      figma.clientStorage.setAsync('lockContrast', event.lockContrast)
+    case 'syncLockContrast':
+      data = event.data as SyncLockContrastData
+      figma.clientStorage.setAsync('lockContrast', data.lockContrast)
       break
   }
 }

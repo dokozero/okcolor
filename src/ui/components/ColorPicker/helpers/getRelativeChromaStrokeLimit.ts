@@ -1,8 +1,9 @@
 import { PICKER_SIZE, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../constants'
+import { SvgPath } from '../../../../types'
 import { clampChromaInGamut } from '../../../helpers/culori.mjs'
 import { $colorHxya, $fileColorProfile, $relativeChroma } from '../../../store'
 
-export default function getRelativeChromaStrokeLimit(): string {
+export default function getRelativeChromaStrokeLimit(): SvgPath {
   let d = 'M0 0 '
 
   const precision = 0.75
@@ -18,7 +19,7 @@ export default function getRelativeChromaStrokeLimit(): string {
       'oklch',
       $fileColorProfile.get()
     )
-    d += `L${(maxChromaCurrentProfil.c * ($relativeChroma.get()! / 100) * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `
+    d += `L${(maxChromaCurrentProfil.c * ($relativeChroma.get() / 100) * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `
   }
 
   return d

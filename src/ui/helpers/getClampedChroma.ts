@@ -1,12 +1,9 @@
-import { ColorHxy } from '../../types'
+import { ColorHxy, RelativeChroma } from '../../types'
 import { $fileColorProfile } from '../store'
 import { clampChromaInGamut } from './culori.mjs'
 import { roundWithDecimal } from './others'
 
-/**
- * @returns {number} between 0 and MAX_CHROMA_P3.
- */
-export default function getClampedChroma(props: ColorHxy): number {
+export default function getClampedChroma(props: ColorHxy): RelativeChroma {
   const { h, x, y } = props
 
   const clamped = clampChromaInGamut({ mode: 'oklch', l: y / 100, c: x, h: h }, 'oklch', $fileColorProfile.get())

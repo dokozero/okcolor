@@ -9,7 +9,7 @@ const convertToOkhsl = converter('okhsl')
 const convertToOkhsv = converter('okhsv')
 const convertToOklch = converter('oklch')
 
-interface Props {
+type Props = {
   colorRgb: ColorRgb
   targetColorModel: keyof typeof ColorModels
   fileColorProfile: string
@@ -84,16 +84,16 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
     case 'oklch':
       newColorHxy = {
         h: Math.round(culoriResult.h),
-        x: roundWithDecimal(culoriResult.c, $colorValueDecimals.get()!.x),
+        x: roundWithDecimal(culoriResult.c, $colorValueDecimals.get().x),
         y: Math.round(culoriResult.l * 100)
       }
       break
     case 'oklchCss':
       if (!keepOklchCssDoubleDigit) {
         newColorHxy = {
-          h: roundWithDecimal(culoriResult.h, $colorValueDecimals.get()!.h),
-          x: roundWithDecimal(culoriResult.c, $colorValueDecimals.get()!.x),
-          y: roundWithDecimal(culoriResult.l * 100, $colorValueDecimals.get()!.y)
+          h: roundWithDecimal(culoriResult.h, $colorValueDecimals.get().h),
+          x: roundWithDecimal(culoriResult.c, $colorValueDecimals.get().x),
+          y: roundWithDecimal(culoriResult.l * 100, $colorValueDecimals.get().y)
         }
       } else {
         newColorHxy = {

@@ -12,7 +12,7 @@ import {
 import { selectInputContent, roundWithDecimal } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
-import { PartialColorHxya, HxyaLabels } from '../../../types'
+import { HxyaLabels, AbsoluteChroma, Saturation, Lightness, Opacity, Hue, ColorHxya } from '../../../types'
 
 let lastKeyPressed: string = ''
 const keepInputSelected = {
@@ -20,12 +20,12 @@ const keepInputSelected = {
   inputId: ''
 }
 
-const getOldValue = (eventId: string): number | undefined => {
-  if (eventId === 'h') return $colorHxya.get().h!
+const getOldValue = (eventId: string): Hue | AbsoluteChroma | Saturation | Lightness | Opacity => {
+  if (eventId === 'h') return $colorHxya.get().h
   if (eventId === 'x') return $colorHxya.get().x
   if (eventId === 'y') return $colorHxya.get().y
   if (eventId === 'a') return $colorHxya.get().a
-  return
+  return 0
 }
 
 function getStepUpdateValue(eventId: string): number {
@@ -44,9 +44,9 @@ const updateColorHxyaTargetValue = (eventTarget: HTMLInputElement, eventId: keyo
 
   const oldValue = getOldValue(eventId)
 
-  const newColorHxya: PartialColorHxya = { h: undefined, x: undefined, y: undefined, a: undefined }
+  const newColorHxya: Partial<ColorHxya> = { h: undefined, x: undefined, y: undefined, a: undefined }
 
-  if (['okhsv', 'okhsl'].includes($currentColorModel.get()!)) {
+  if (['okhsv', 'okhsl'].includes($currentColorModel.get())) {
     // In case the user entered a value with a decimal in OkHSV or OkHSL mode.
     newColorHxya[`${eventId}`] = Math.round(newValue)
   } else {
@@ -58,7 +58,7 @@ const updateColorHxyaTargetValue = (eventTarget: HTMLInputElement, eventId: keyo
 
     updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxya })
   } else {
-    eventTarget.value = oldValue!.toString() + (eventId === 'a' ? '%' : '')
+    eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
   }
 }
 
@@ -110,11 +110,11 @@ export default function ColorValueInputs() {
     const newValue = parseFloat(eventTarget.value)
 
     if ($currentColorModel.get() === 'oklch' && eventId === 'x') {
-      oldValue = roundWithDecimal(oldValue! * 100, 1)
+      oldValue = roundWithDecimal(oldValue * 100, 1)
     }
 
     if (lastKeyPressed === 'Escape' || isNaN(newValue) || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
-      eventTarget.value = oldValue!.toString() + (eventId === 'a' ? '%' : '')
+      eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
       return
     } else {
       lastKeyPressed = ''
@@ -145,7 +145,7 @@ export default function ColorValueInputs() {
         else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
 
         // We need to round the value because sometimes we can get results like 55.8999999.
-        newValue = roundWithDecimal(newValue, $colorValueDecimals.get()![`${eventId}`])
+        newValue = roundWithDecimal(newValue, $colorValueDecimals.get()[`${eventId}`])
 
         updateColorHxyaTargetValue(eventTarget, eventId, newValue)
       }
@@ -157,8 +157,6 @@ export default function ColorValueInputs() {
   }, [currentColorModel])
 
   useEffect(() => {
-    if (colorHxya.h === null) return
-
     inputH.current!.value = colorHxya.h.toString()
     inputY.current!.value = colorHxya.y.toString()
     inputA.current!.value = colorHxya.a.toString() + '%'

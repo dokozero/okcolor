@@ -1,8 +1,9 @@
 import { PICKER_SIZE, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../constants'
 import { $colorHxya } from '../../../store'
 import { clampChromaInGamut } from '../../../helpers/culori.mjs'
+import { SvgPath } from '../../../../types'
 
-export default function getSrgbStrokeLimit(): string {
+export default function getSrgbStrokeLimit(): SvgPath {
   let d = 'M0 0 '
 
   const precision = 0.75

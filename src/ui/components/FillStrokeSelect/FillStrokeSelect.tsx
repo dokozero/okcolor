@@ -6,10 +6,13 @@ import {
   $fileColorProfile,
   $colorsRgba,
   updateColorHxyaAndSyncColorsRgbaAndPlugin,
-  $updateParent
+  $updateParent,
+  $lockContrast
 } from '../../store'
 import { useStore } from '@nanostores/react'
 import convertRgbToHxy from '../../helpers/convertRgbToHxy'
+import sendMessageToBackend from '../../helpers/sendMessageToBackend'
+import { SyncCurrentFillOrStrokeData } from '../../../types'
 
 export default function FillStrokeSelect() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -25,7 +28,9 @@ export default function FillStrokeSelect() {
   const fillOrStrokeSelector_stroke = useRef<SVGPathElement>(null)
 
   const updateRenderFillStrokeSelectColor = () => {
-    const currentColorRgb = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]!
+    const currentColorRgb = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
+
+    if (!currentColorRgb) return
 
     if ($currentFillOrStroke.get() === 'fill') {
       fillOrStrokeSelector_fill.current!.setAttribute('fill', `rgb(${currentColorRgb.r}, ${currentColorRgb.g}, ${currentColorRgb.b})`)
@@ -37,7 +42,11 @@ export default function FillStrokeSelect() {
   const handleFillOrStroke = () => {
     $currentFillOrStroke.set($currentFillOrStroke.get() === 'fill' ? 'stroke' : 'fill')
 
-    const newColorRgba = $colorsRgba.get()[$currentFillOrStroke.get()]!
+    if ($currentFillOrStroke.get() === 'stroke' && $lockContrast.get()) $lockContrast.set(false)
+
+    const newColorRgba = $colorsRgba.get()[$currentFillOrStroke.get()]
+
+    if (!newColorRgba) return
 
     const newColorHxy = convertRgbToHxy({
       colorRgb: {
@@ -45,8 +54,8 @@ export default function FillStrokeSelect() {
         g: newColorRgba.g,
         b: newColorRgba.b
       },
-      targetColorModel: $currentColorModel.get()!,
-      fileColorProfile: $fileColorProfile.get()!
+      targetColorModel: $currentColorModel.get(),
+      fileColorProfile: $fileColorProfile.get()
     })
 
     updateColorHxyaAndSyncColorsRgbaAndPlugin({
@@ -55,15 +64,12 @@ export default function FillStrokeSelect() {
       syncColorRgbWithPlugin: false
     })
 
-    parent.postMessage(
-      {
-        pluginMessage: {
-          message: 'syncCurrentFillOrStroke',
-          currentFillOrStroke: $currentFillOrStroke.get()
-        }
-      },
-      '*'
-    )
+    sendMessageToBackend<SyncCurrentFillOrStrokeData>({
+      type: 'syncCurrentFillOrStroke',
+      data: {
+        currentFillOrStroke: $currentFillOrStroke.get()
+      }
+    })
   }
 
   useEffect(() => {

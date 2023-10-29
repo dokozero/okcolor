@@ -1,19 +1,6 @@
-import { DisplayUiMessageData, InitData, NewColorsRgbaData } from '../../types'
+import { MessageForUiData, MessageForUiTypes } from '../../types'
 
-type typeList = 'init' | 'newColorsRgba' | 'displayUiMessage'
-
-export default function sendMessageToUi(props: { messageType: typeList; messageData: InitData | NewColorsRgbaData | DisplayUiMessageData }) {
-  const { messageType, messageData } = props
-
-  switch (messageType) {
-    case 'init':
-      figma.ui.postMessage({ message: messageType, initData: messageData })
-      break
-    case 'newColorsRgba':
-      figma.ui.postMessage({ message: messageType, newColorsRgbaData: messageData })
-      break
-    case 'displayUiMessage':
-      figma.ui.postMessage({ message: messageType, displayUiMessageData: messageData })
-      break
-  }
+// We use this simple fonction to get type completion.
+export default function sendMessageToUi<T extends MessageForUiData>(props: { type: MessageForUiTypes; data: T }) {
+  figma.ui.postMessage({ type: props.type, data: props.data })
 }

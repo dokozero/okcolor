@@ -12,19 +12,21 @@ import {
   $updateParent,
   updateColorHxyaAndSyncColorsRgbaAndPlugin,
   $uiMessage,
-  $colorHxya
+  $colorHxya,
+  $currentFillOrStroke
 } from '../../../store'
 import { useStore } from '@nanostores/react'
 import convertRgbToHxy from '../../../helpers/convertRgbToHxy'
-import { ColorRgb, ColorRgba } from '../../../../types'
+import { ApcaContrast, ColorRgb, ColorRgba, Opacity, SyncLockContrastData } from '../../../../types'
 import { APCAcontrast, displayP3toY, sRGBtoY } from 'apca-w3'
 import convertContrastToLightness from '../../../helpers/convertContrastToLightness'
+import sendMessageToBackend from '../../../helpers/sendMessageToBackend'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
 
-const updateColorHxyaXandY = (eventTarget: HTMLInputElement, newContrast: number) => {
-  if (newContrast < -108 || newContrast > 106 || newContrast === $contrast.get()!) {
+const updateColorHxyaXandY = (eventTarget: HTMLInputElement, newContrast: ApcaContrast) => {
+  if (newContrast < -108 || newContrast > 106 || newContrast === $contrast.get()) {
     eventTarget.value = String($contrast.get())
     return
   }
@@ -44,6 +46,7 @@ export default function ContrastInput() {
   const lockContrast = useStore($lockContrast)
   const updateParent = useStore($updateParent)
   const currentColorModel = useStore($currentColorModel)
+  const currentFillOrStroke = useStore($currentFillOrStroke)
 
   const [showContrast, setShowContrast] = useState<boolean | undefined>(undefined)
 
@@ -55,7 +58,7 @@ export default function ContrastInput() {
     const eventTarget = event.target
 
     if (lastKeyPressed === 'Escape' || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
-      eventTarget.value = String(contrast!)
+      eventTarget.value = String(contrast)
       return
     } else {
       lastKeyPressed = ''
@@ -106,12 +109,12 @@ export default function ContrastInput() {
 
     const newColorHxy = convertRgbToHxy({
       colorRgb: {
-        r: newColorRgba!.r,
-        g: newColorRgba!.g,
-        b: newColorRgba!.b
+        r: newColorRgba.r,
+        g: newColorRgba.g,
+        b: newColorRgba.b
       },
-      targetColorModel: $currentColorModel.get()!,
-      fileColorProfile: $fileColorProfile.get()!
+      targetColorModel: $currentColorModel.get(),
+      fileColorProfile: $fileColorProfile.get()
     })
 
     updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxy, syncColorsRgba: false, syncColorRgbWithPlugin: false })
@@ -130,29 +133,32 @@ export default function ContrastInput() {
     // To avoid getting relative chroma and contrast locked at the same time, which would block the color picker and the hxya inputs
     // if ($lockRelativeChroma.get() && $lockContrast.get()) $lockRelativeChroma.set(false)
 
-    parent.postMessage(
-      {
-        pluginMessage: {
-          message: 'syncLockContrastWithPlugin',
-          lockContrast: newValue
-        }
-      },
-      '*'
-    )
+    sendMessageToBackend<SyncLockContrastData>({
+      type: 'syncLockContrast',
+      data: {
+        lockContrast: newValue
+      }
+    })
   }
 
   useEffect(() => {
-    if (['okhsv', 'okhsl'].includes($currentColorModel.get()!)) return
+    if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
 
-    if (!colorsRgba.parentFill) {
+    if (!colorsRgba.parentFill || !colorsRgba.fill) {
       bgToggle.current!.style.background = 'none'
+      input.current!.value = '-'
+
+      // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
+      if ($lockContrast.get()) $lockContrast.set(false)
       return
+    } else {
+      input.current!.value = String($contrast.get())
     }
 
     bgToggle.current!.style.background = `rgb(${colorsRgba.parentFill.r}, ${colorsRgba.parentFill.g}, ${colorsRgba.parentFill.b})`
 
-    let whiteTextContrast: string | number = 0
-    let blackTextContrast: string | number = 0
+    let whiteTextContrast: string | ApcaContrast = 0
+    let blackTextContrast: string | ApcaContrast = 0
 
     if ($fileColorProfile.get() === 'rgb') {
       whiteTextContrast = APCAcontrast(sRGBtoY([255, 255, 255]), sRGBtoY([colorsRgba.parentFill.r, colorsRgba.parentFill.g, colorsRgba.parentFill.b]))
@@ -178,14 +184,7 @@ export default function ContrastInput() {
   }, [colorsRgba, currentColorModel])
 
   useEffect(() => {
-    if (contrast === null) {
-      input.current!.value = '-'
-
-      // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
-      if (!$colorsRgba.get().parentFill && $lockContrast.get()) $lockContrast.set(false)
-    } else {
-      input.current!.value = String(contrast!)
-    }
+    input.current!.value = String(contrast)
 
     if (keepInputSelected) {
       input.current!.select()
@@ -194,12 +193,12 @@ export default function ContrastInput() {
   }, [contrast])
 
   useEffect(() => {
-    if (updateParent) bgToggle.current!.style.outline = '1px solid white'
+    if (updateParent) bgToggle.current!.style.outline = '1px solid black'
     else bgToggle.current!.style.outline = '0px'
   }, [updateParent])
 
   useEffect(() => {
-    if (['oklch', 'oklchCss'].includes(currentColorModel!)) {
+    if (['oklch', 'oklchCss'].includes(currentColorModel)) {
       setShowContrast(true)
     } else {
       setShowContrast(false)
@@ -208,12 +207,12 @@ export default function ContrastInput() {
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
-      if (!['oklch', 'oklchCss'].includes($currentColorModel.get()!)) return
+      if (!['oklch', 'oklchCss'].includes($currentColorModel.get())) return
 
       // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
       if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
 
-      if (!$colorsRgba.get().parentFill) return
+      if (!$colorsRgba.get().parentFill || !$colorsRgba.get().fill || $currentFillOrStroke.get() === 'stroke') return
 
       if (['l', 'L'].includes(event.key)) handleLockContrast()
       if (['b', 'B'].includes(event.key)) handleUpdateParentSelector()
@@ -224,7 +223,9 @@ export default function ContrastInput() {
     <div
       className={
         (showContrast ? '' : 'u-visibility-hidden u-position-absolute ') +
-        (!colorsRgba.parentFill && !$uiMessage.get().show ? 'u-pointer-events-none u-opacity-50 ' : '') +
+        ((!colorsRgba.parentFill || !colorsRgba.fill || currentFillOrStroke === 'stroke') && !$uiMessage.get().show
+          ? 'u-pointer-events-none u-opacity-50 '
+          : '') +
         'c-single-input-with-lock'
       }
     >
@@ -232,9 +233,9 @@ export default function ContrastInput() {
 
       <div
         ref={bgToggle}
-        className={(!colorsRgba.parentFill ? 'u-visibility-hidden ' : '') + 'u-ml-auto'}
+        className={(!colorsRgba.parentFill || !colorsRgba.fill ? 'u-visibility-hidden ' : '') + 'u-ml-auto'}
         onClick={handleUpdateParentSelector}
-        style={{ padding: '3px', border: '1px solid #888888' }}
+        style={{ padding: '3px', border: '1px solid #DDDDDD' }}
       >
         <div ref={bgToggleText} style={{ fontSize: '11px' }}>
           Bg

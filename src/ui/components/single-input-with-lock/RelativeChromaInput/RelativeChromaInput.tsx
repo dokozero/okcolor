@@ -13,11 +13,13 @@ import {
 } from '../../../store'
 import { useStore } from '@nanostores/react'
 import convertRelativeChromaToAbsolute from '../../../helpers/convertRelativeChromaToAbsolute'
+import sendMessageToBackend from '../../../helpers/sendMessageToBackend'
+import { RelativeChroma, SyncLockRelativeChromaData } from '../../../../types'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
 
-const updateColorHxyaChroma = (eventTarget: HTMLInputElement, newRelativeChroma: number) => {
+const updateColorHxyaChroma = (eventTarget: HTMLInputElement, newRelativeChroma: RelativeChroma) => {
   if (newRelativeChroma < 0 || newRelativeChroma > 100 || newRelativeChroma === $relativeChroma.get()) {
     eventTarget.value = $relativeChroma.get() + '%'
     return
@@ -94,19 +96,16 @@ export default function RelativeChromaInput() {
     // To avoid getting relative chroma and contrast locked at the same time, which would block the color picker and the hxya inputs
     // if ($lockContrast.get() && newValue) $lockContrast.set(false)
 
-    parent.postMessage(
-      {
-        pluginMessage: {
-          message: 'syncLockRelativeChromaWithPlugin',
-          lockRelativeChroma: newValue
-        }
-      },
-      '*'
-    )
+    sendMessageToBackend<SyncLockRelativeChromaData>({
+      type: 'syncLockRelativeChroma',
+      data: {
+        lockRelativeChroma: newValue
+      }
+    })
   }
 
   useEffect(() => {
-    if (['oklch', 'oklchCss'].includes(currentColorModel!)) {
+    if (['oklch', 'oklchCss'].includes(currentColorModel)) {
       setShowRelativeChroma(true)
     } else {
       setShowRelativeChroma(false)
@@ -114,7 +113,7 @@ export default function RelativeChromaInput() {
   }, [currentColorModel])
 
   useEffect(() => {
-    if (!['oklch', 'oklchCss'].includes($currentColorModel.get()!)) return
+    if (!['oklch', 'oklchCss'].includes($currentColorModel.get())) return
 
     input.current!.value = relativeChroma + '%'
 
@@ -126,7 +125,7 @@ export default function RelativeChromaInput() {
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
-      if (!['oklch', 'oklchCss'].includes($currentColorModel.get()!)) return
+      if (!['oklch', 'oklchCss'].includes($currentColorModel.get())) return
 
       // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
       if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return

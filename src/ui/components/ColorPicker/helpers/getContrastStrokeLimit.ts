@@ -3,25 +3,26 @@ import { $colorHxya, $contrast } from '../../../store'
 import getClampedChroma from '../../../helpers/getClampedChroma'
 import convertContrastToLightness from '../../../helpers/convertContrastToLightness'
 import { roundWithDecimal } from '../../../helpers/others'
+import { Lightness, SvgPath } from '../../../../types'
 
-export default function getContrastStrokeLimit(): string {
-  let startY: number
-  let endY: number
+export default function getContrastStrokeLimit(): SvgPath {
+  let startY: Lightness
+  let endY: Lightness
 
   let clampedChroma = getClampedChroma({
-    h: $colorHxya.get().h!,
+    h: $colorHxya.get().h,
     x: 0.37,
     y: $colorHxya.get().y
   })
 
   const currentHxyFromContrast = convertContrastToLightness(
     {
-      h: $colorHxya.get().h!,
+      h: $colorHxya.get().h,
       x: $colorHxya.get().x,
       y: $colorHxya.get().y,
       a: $colorHxya.get().a
     },
-    $contrast.get()!
+    $contrast.get()
   )
 
   let adjustement = 0
@@ -31,22 +32,22 @@ export default function getContrastStrokeLimit(): string {
 
     const startHxy = convertContrastToLightness(
       {
-        h: $colorHxya.get().h!,
+        h: $colorHxya.get().h,
         x: 0,
         y: $colorHxya.get().y,
         a: $colorHxya.get().a
       },
-      $contrast.get()!
+      $contrast.get()
     )
 
     const endHxy = convertContrastToLightness(
       {
-        h: $colorHxya.get().h!,
+        h: $colorHxya.get().h,
         x: clampedChroma,
         y: $colorHxya.get().y,
         a: $colorHxya.get().a
       },
-      $contrast.get()!
+      $contrast.get()
     )
     startY = startHxy.y
     endY = endHxy.y
@@ -56,7 +57,7 @@ export default function getContrastStrokeLimit(): string {
   }
 
   clampedChroma = getClampedChroma({
-    h: $colorHxya.get().h!,
+    h: $colorHxya.get().h,
     x: 0.37,
     y: endY + adjustement
   })

@@ -7,7 +7,7 @@ import { ColorHxy, ColorModels, ColorRgb } from '../../types'
 const convertToRgb = converter('rgb')
 const convertToP3 = converter('p3')
 
-interface Props {
+type Props = {
   colorHxy: ColorHxy // x should always be between 0 and 100.
   originColorModel: keyof typeof ColorModels
   fileColorProfile: string

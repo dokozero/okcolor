@@ -1,4 +1,4 @@
-import { ApcaContrast, ColorHxy, ColorHxya, ColorRgb } from '../../types'
+import { ApcaContrast, ColorHxy, ColorHxya, ColorRgb, Lightness } from '../../types'
 import { $fileColorProfile, $colorsRgba, $currentColorModel, $updateParent } from '../store'
 import convertHxyToRgb from './convertHxyToRgb'
 import getClampedChroma from './getClampedChroma'
@@ -9,10 +9,10 @@ import getContrastFromBgandFgRgba from './getContrastFromBgandFgRgba'
  * Find the lightness for the given contrast on the current hue and chroma.
  */
 export default function convertContrastToLightness(currentColorHxya: ColorHxya, targetContrast: ApcaContrast): ColorHxy {
-  let newY: number | undefined
+  let newY: Lightness | undefined
   let newX = currentColorHxya.x
   let newRgb: ColorRgb
-  let tempNewContrast = 0
+  let tempNewContrast: ApcaContrast = 0
   let count = 0
 
   let bottomTrigger = true
@@ -55,16 +55,16 @@ export default function convertContrastToLightness(currentColorHxya: ColorHxya, 
     if (newY < 0 || newY > 100) break
 
     // We don't check if we are on oklch or okhsl for example because we allow contrast checking only with oklch.
-    newX = getClampedChroma({ h: currentColorHxya.h!, x: currentColorHxya.x, y: newY })
+    newX = getClampedChroma({ h: currentColorHxya.h, x: currentColorHxya.x, y: newY })
 
     newRgb = convertHxyToRgb({
       colorHxy: {
-        h: currentColorHxya.h!,
+        h: currentColorHxya.h,
         x: newX * 100,
         y: newY
       },
-      originColorModel: $currentColorModel.get()!,
-      fileColorProfile: $fileColorProfile.get()!
+      originColorModel: $currentColorModel.get(),
+      fileColorProfile: $fileColorProfile.get()
     })
 
     if ($updateParent.get()) {
@@ -77,7 +77,7 @@ export default function convertContrastToLightness(currentColorHxya: ColorHxya, 
   newY = clampNumber(newY, 0, 100)
 
   return {
-    h: currentColorHxya.h!,
+    h: currentColorHxya.h,
     x: newX,
     y: newY
   }

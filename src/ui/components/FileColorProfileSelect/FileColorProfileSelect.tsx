@@ -9,8 +9,9 @@ import {
   updateColorHxyaAndSyncColorsRgbaAndPlugin
 } from '../../store'
 import { consoleLogInfos } from '../../../constants'
-import { FileColorProfile } from '../../../types'
+import { FileColorProfile, SyncFileColorProfileData } from '../../../types'
 import convertRgbToHxy from '../../helpers/convertRgbToHxy'
+import sendMessageToBackend from '../../helpers/sendMessageToBackend'
 
 export default function FileColorProfileSelect() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -26,15 +27,15 @@ export default function FileColorProfileSelect() {
 
     $fileColorProfile.set(newFileColorProfile)
 
-    const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]!
+    const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
 
     const newColorHxy = convertRgbToHxy({
       colorRgb: {
-        r: currentColorRgba.r,
-        g: currentColorRgba.g,
-        b: currentColorRgba.b
+        r: currentColorRgba!.r,
+        g: currentColorRgba!.g,
+        b: currentColorRgba!.b
       },
-      targetColorModel: $currentColorModel.get()!,
+      targetColorModel: $currentColorModel.get(),
       fileColorProfile: newFileColorProfile
     })
 
@@ -44,15 +45,12 @@ export default function FileColorProfileSelect() {
       syncColorRgbWithPlugin: false
     })
 
-    parent.postMessage(
-      {
-        pluginMessage: {
-          message: 'syncFileColorProfile',
-          fileColorProfile: newFileColorProfile
-        }
-      },
-      '*'
-    )
+    sendMessageToBackend<SyncFileColorProfileData>({
+      type: 'syncFileColorProfile',
+      data: {
+        fileColorProfile: newFileColorProfile
+      }
+    })
   }
 
   return (
