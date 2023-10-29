@@ -18,9 +18,9 @@ import {
 import { useStore } from '@nanostores/react'
 import convertRgbToHxy from '../../../helpers/convertRgbToHxy'
 import { ApcaContrast, ColorRgb, ColorRgba, Opacity, SyncLockContrastData } from '../../../../types'
-import { APCAcontrast, displayP3toY, sRGBtoY } from 'apca-w3'
 import convertContrastToLightness from '../../../helpers/convertContrastToLightness'
 import sendMessageToBackend from '../../../helpers/sendMessageToBackend'
+import getContrastFromBgandFgRgba from '../../../helpers/getContrastFromBgandFgRgba'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
@@ -163,27 +163,8 @@ export default function ContrastInput() {
 
     bgToggle.current!.style.background = `rgb(${colorsRgba.parentFill.r}, ${colorsRgba.parentFill.g}, ${colorsRgba.parentFill.b})`
 
-    let whiteTextContrast: string | ApcaContrast = 0
-    let blackTextContrast: string | ApcaContrast = 0
-
-    if ($fileColorProfile.get() === 'rgb') {
-      whiteTextContrast = APCAcontrast(sRGBtoY([255, 255, 255]), sRGBtoY([colorsRgba.parentFill.r, colorsRgba.parentFill.g, colorsRgba.parentFill.b]))
-
-      blackTextContrast = APCAcontrast(sRGBtoY([0, 0, 0]), sRGBtoY([colorsRgba.parentFill.r, colorsRgba.parentFill.g, colorsRgba.parentFill.b]))
-    } else if ($fileColorProfile.get() === 'p3') {
-      whiteTextContrast = APCAcontrast(
-        displayP3toY([1, 1, 1]),
-        displayP3toY([colorsRgba.parentFill.r / 255, colorsRgba.parentFill.g / 255, colorsRgba.parentFill.b / 255])
-      )
-
-      blackTextContrast = APCAcontrast(
-        displayP3toY([0, 0, 0]),
-        displayP3toY([colorsRgba.parentFill.r / 255, colorsRgba.parentFill.g / 255, colorsRgba.parentFill.b / 255])
-      )
-    }
-
-    if (typeof whiteTextContrast === 'string') whiteTextContrast = parseInt(whiteTextContrast)
-    if (typeof blackTextContrast === 'string') blackTextContrast = parseInt(blackTextContrast)
+    const whiteTextContrast = getContrastFromBgandFgRgba(colorsRgba.parentFill, { r: 255, g: 255, b: 255, a: 100 })
+    const blackTextContrast = getContrastFromBgandFgRgba(colorsRgba.parentFill, { r: 0, g: 0, b: 0, a: 100 })
 
     if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) bgToggleText.current!.style.color = '#FFFFFF'
     else bgToggleText.current!.style.color = '#000000'
