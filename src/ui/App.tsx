@@ -9,12 +9,13 @@ import {
   $currentKeysPressed,
   $isMouseInsideDocument,
   $uiMessage,
-  updateColorsRgbaAndSyncColorHxya,
   $currentFillOrStroke,
   $mouseEventCallback,
   $figmaEditorType,
   $updateParent,
-  $lockContrast
+  $lockContrast,
+  $colorsRgba,
+  updateColorHxyaAndSyncColorsRgbaAndBackend
 } from './store'
 
 import FileColorProfileSelect from './components/FileColorProfileSelect/FileColorProfileSelect'
@@ -34,6 +35,7 @@ import { uiMessageTexts } from './ui-messages'
 import { DisplayUiMessageData, MessageForUi, SyncCurrentFillOrStrokeAndColorsRgbaData, SyncLocalStorageValuesData } from '../types'
 import setValuesForUiMessage from './helpers/setValuesForUiMessage'
 import sendMessageToBackend from './helpers/sendMessageToBackend'
+import convertRgbToHxy from './helpers/convertRgbToHxy'
 
 let isMouseDown = false
 
@@ -74,7 +76,32 @@ function App() {
       const data = pluginMessage.data as SyncCurrentFillOrStrokeAndColorsRgbaData
 
       $currentFillOrStroke.set(data.currentFillOrStroke)
-      updateColorsRgbaAndSyncColorHxya(data.colorsRgba, true)
+
+      $colorsRgba.set(data.colorsRgba)
+
+      const newColorRgba = data.colorsRgba[`${$currentFillOrStroke.get()}`]
+
+      const newColorHxy = convertRgbToHxy({
+        colorRgb: {
+          r: newColorRgba!.r,
+          g: newColorRgba!.g,
+          b: newColorRgba!.b
+        },
+        targetColorModel: $currentColorModel.get(),
+        fileColorProfile: $fileColorProfile.get(),
+        keepOklchCssDoubleDigit: true
+      })
+
+      updateColorHxyaAndSyncColorsRgbaAndBackend({
+        newColorHxya: {
+          h: newColorHxy.h,
+          x: newColorHxy.x,
+          y: newColorHxy.y,
+          a: newColorRgba!.a
+        },
+        syncColorsRgba: false,
+        syncColorRgbWithBackend: false
+      })
 
       // This says "when all the store value are filled, show the UI components".
       if (!areStoreValuesReady) setAreStoreValuesReady(true)

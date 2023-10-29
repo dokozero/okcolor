@@ -12,7 +12,6 @@ import type {
   ApcaContrast,
   RelativeChroma
 } from '../types'
-import convertRgbToHxy from './helpers/convertRgbToHxy'
 import convertHxyToRgb from './helpers/convertHxyToRgb'
 import convertAbsoluteChromaToRelative from './helpers/convertAbsoluteChromaToRelative'
 import { consoleLogInfos } from '../constants'
@@ -26,7 +25,6 @@ export const $uiMessage = map({
   message: ''
 })
 
-// TODO change currentFillOrStroke -> fillOrStroke
 // We use default values in the atoms but they are not used, because we get these values from backend.
 // They are useful however to not use null in their type (although some of them have it when we have to).
 // More infos in the comment on top in App component.
@@ -54,41 +52,6 @@ export const $colorsRgba = deepMap<ColorsRgba>({
   },
   stroke: null
 })
-
-// TODO - remove and put code in App with updateColorHxyaAndSyncColorsRgbaAndPlugin false false ?
-export const updateColorsRgbaAndSyncColorHxya = action(
-  $colorsRgba,
-  'updateColorsRgba',
-  (colorsRgba, newColorsRgba: ColorsRgba, keepOklchCssDoubleDigit: boolean = false) => {
-    if (consoleLogInfos.includes('Store updates')) {
-      console.log('Store update — updateColorsRgba')
-      console.log(`    newColorsRgba: ${JSON.stringify(newColorsRgba)}`)
-      console.log(`    keepOklchCssDoubleDigit: ${keepOklchCssDoubleDigit}`)
-    }
-
-    colorsRgba.set(newColorsRgba)
-
-    const newColorRgba = newColorsRgba[`${$currentFillOrStroke.get()}`]
-
-    const newColorHxy = convertRgbToHxy({
-      colorRgb: {
-        r: newColorRgba!.r,
-        g: newColorRgba!.g,
-        b: newColorRgba!.b
-      },
-      targetColorModel: $currentColorModel.get(),
-      fileColorProfile: $fileColorProfile.get(),
-      keepOklchCssDoubleDigit: keepOklchCssDoubleDigit
-    })
-
-    $colorHxya.set({
-      h: newColorHxy.h,
-      x: newColorHxy.x,
-      y: newColorHxy.y,
-      a: newColorRgba!.a
-    })
-  }
-)
 
 // This map contain the current color being used in the UI, it can be the fill or the stroke of the foreground but also the background (colorsRgba.parentFill) of the current selected object.
 export const $colorHxya = map<ColorHxya>({
