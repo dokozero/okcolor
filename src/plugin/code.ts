@@ -135,12 +135,12 @@ const handleFigmaOnDocumentChange = (event: DocumentChangeEvent) => {
   if (itsAMe) return
   if (event.documentChanges[0].type !== 'PROPERTY_CHANGE') return
 
-  const changeProperty = event.documentChanges[0].properties[0]
+  const changeProperties = event.documentChanges[0].properties
 
   // We don't run the code if for example the user has changed the rotation of the shape.
   // We take into account "strokeWeight" to handle the case where the user add a stroke but then remove it with cmd+z, that event has for some reasons the changeProperty "strokeWeight" and not "stroke".
   // For "fillStyleId", it's to take into account if user has a shape with a color style and he change it to another or if he uses the eyedropper thus removing the color style.
-  if (changePropertiesToReactTo.includes(changeProperty)) {
+  if (changeProperties.some((item) => changePropertiesToReactTo.includes(item))) {
     // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
     const oldColorsRgba = JSON.parse(JSON.stringify(colorsRgba))
 
