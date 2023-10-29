@@ -2,12 +2,9 @@
   "name": "OkColor",
   "id": "1173638098109123591",
   "api": "1.0.0",
-  "editorType": [
-    "figma",
-    "figjam"
-  ],
-  "main": "./dist/plugin/code.js",
-  "ui": "./dist/ui/index.html",
+  "editorType": ["figma", "figjam"],
+  "main": "dist/backend.js",
+  "ui": "dist/index.html",
   "networkAccess": {
     "allowedDomains": ["none"],
     "reasoning": ""

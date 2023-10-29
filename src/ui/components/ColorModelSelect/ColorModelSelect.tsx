@@ -6,7 +6,7 @@ import {
   $currentFillOrStroke,
   $fileColorProfile,
   $colorsRgba,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin,
+  updateColorHxyaAndSyncColorsRgbaAndBackend,
   $lockRelativeChroma,
   $lockContrast,
   $updateParent
@@ -51,10 +51,10 @@ export default function ColorModelSelect() {
     })
 
     // TODO - withBackend
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({
+    updateColorHxyaAndSyncColorsRgbaAndBackend({
       newColorHxya: { ...newColorHxy, a: $colorHxya.get().a },
       syncColorsRgba: false,
-      syncColorRgbWithPlugin: false
+      syncColorRgbWithBackend: false
     })
 
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {

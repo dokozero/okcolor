@@ -9,7 +9,7 @@ import {
   $lockRelativeChroma,
   $relativeChroma,
   $uiMessage,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin
+  updateColorHxyaAndSyncColorsRgbaAndBackend
 } from '../../../store'
 import { useStore } from '@nanostores/react'
 import convertRelativeChromaToAbsolute from '../../../helpers/convertRelativeChromaToAbsolute'
@@ -37,7 +37,7 @@ const updateColorHxyaChroma = (eventTarget: HTMLInputElement, newRelativeChroma:
     return
   }
 
-  updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { x: newColorX }, bypassLockRelativeChromaFilter: true })
+  updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { x: newColorX }, bypassLockRelativeChromaFilter: true })
 }
 
 export default function RelativeChromaInput() {

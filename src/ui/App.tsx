@@ -37,23 +37,22 @@ import sendMessageToBackend from './helpers/sendMessageToBackend'
 
 let isMouseDown = false
 
-// TODO - complete
-// The way we load the App is like this:
-// Because the plugin is split in two: the “plugin” part is the backend that have access to the Figma file and
-// the UI is to display the content according to the values we get from the plugin.
+// The way we load the App component and its childs is like this: The plugin is split in two: the “backend” is the part that have access to the Figma file like the selected shape color and the “ui” is to display the content according to the values we get from the plugin.
+// When the plugin is launched, we don't know yet if a shape is selected or not, its color(s), if it has a fill and/or a stroke, and we also don't have the values from local storage.
+// So when App component is mounted, we ask for these infos to the backend ('triggerInit' event at the end of the onMount useEffect) and when we have them, we set areStoreValuesReady to true which will load the children components.
 function App() {
   if (consoleLogInfos.includes('Component renders')) {
     console.log('Component render — App')
   }
 
-  // We use this var to avoid loading the components before we have all te values from plugin's backend, see comment on the top of the file fore more infos.
+  // We use this var to avoid loading the components before we have all te values from the backend, see comment on the top of the file fore more infos.
   const [areStoreValuesReady, setAreStoreValuesReady] = useState(false)
 
-  // Updates from the plugin.
+  // Updates from the backend.
   onmessage = (event) => {
     const pluginMessage = event.data.pluginMessage as MessageForUi
 
-    // Set variables from local storage that only plugin code can get.
+    // Set variables from local storage that only backend code can get.
     if (pluginMessage.type === 'syncLocalStorageValues') {
       const data = pluginMessage.data as SyncLocalStorageValuesData
 
@@ -107,7 +106,6 @@ function App() {
       if (document.hasFocus() === false) {
         // We set the focus back to the plugin window if user clicked outside of it, like this he doesn't need to click inside in order to use the shift or control keys.
         window.focus()
-
         // We test if any of the keys that are used in the plugin are pressed and set them to false to prevent this case: if user launches the plugin, enter the mouse inside (thus making it focused), leave the plugin, move a shape with shift key pressed in Figma (event listener will then trigger and add the 'shift' in $currentKeysPressed), then comes back to the plugin, $currentKeysPressed will still contains 'shift', even if he is not pressing it anymore, that's because the keyup event will not be triggered as the focus was lost when user moved the shape in Figma.
         // We could test if the mouse is inside on the keydown event but then, we will not be able to use the shift key to change the inputs values (by bigger steps for some of them, see in ColorValueInputs).
         // Same for ctrl key even if it is not used as much than shift in Figma.

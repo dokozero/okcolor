@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { selectInputContent } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
-import { $colorHxya, $isMouseInsideDocument, $showCssColorCodes, updateColorHxyaAndSyncColorsRgbaAndPlugin } from '../../store'
+import { $colorHxya, $isMouseInsideDocument, $showCssColorCodes, updateColorHxyaAndSyncColorsRgbaAndBackend } from '../../store'
 import { useStore } from '@nanostores/react'
 import getColorCodeStrings from './helpers/getColorCodeStrings'
 import getNewColorHxya from './helpers/getNewColorHxya'
@@ -80,7 +80,7 @@ export default function ColorCodeInputs() {
     const newColorHxya = getNewColorHxya(eventTargetId, eventTarget.value)
 
     if (newColorHxya) {
-      updateColorHxyaAndSyncColorsRgbaAndPlugin({
+      updateColorHxyaAndSyncColorsRgbaAndBackend({
         newColorHxya: newColorHxya as Partial<ColorHxya>,
         bypassLockRelativeChromaFilter: true,
         bypassLockContrastFilter: true

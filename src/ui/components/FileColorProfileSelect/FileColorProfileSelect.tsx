@@ -6,7 +6,7 @@ import {
   $colorsRgba,
   $currentFillOrStroke,
   $figmaEditorType,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin
+  updateColorHxyaAndSyncColorsRgbaAndBackend
 } from '../../store'
 import { consoleLogInfos } from '../../../constants'
 import { FileColorProfile, SyncFileColorProfileData } from '../../../types'
@@ -39,10 +39,10 @@ export default function FileColorProfileSelect() {
       fileColorProfile: newFileColorProfile
     })
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({
+    updateColorHxyaAndSyncColorsRgbaAndBackend({
       newColorHxya: { ...newColorHxy, a: $colorHxya.get().a },
       syncColorsRgba: false,
-      syncColorRgbWithPlugin: false
+      syncColorRgbWithBackend: false
     })
 
     sendMessageToBackend<SyncFileColorProfileData>({

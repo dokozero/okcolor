@@ -22,7 +22,7 @@ export default defineConfig({
   ],
   root: './src/ui',
   build: {
-    outDir: resolve(__dirname, 'dist/ui'),
+    outDir: resolve(__dirname, 'dist'),
     emptyOutDir: false
   }
 })

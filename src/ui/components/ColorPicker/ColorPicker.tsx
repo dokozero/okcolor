@@ -8,7 +8,7 @@ import {
   $currentKeysPressed,
   $colorValueDecimals,
   $uiMessage,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin,
+  updateColorHxyaAndSyncColorsRgbaAndBackend,
   $mouseEventCallback,
   $lockContrast,
   $contrast,
@@ -128,7 +128,7 @@ export default function ColorPicker() {
 
     if ($currentKeysPressed.get().includes('ctrl')) {
       if (mainMouseMovement === 'vertical' && Math.round(newColorHxya.y) % 5 === 0) {
-        updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { x: newColorHxya.x, y: Math.round(newColorHxya.y) } })
+        updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { x: newColorHxya.x, y: Math.round(newColorHxya.y) } })
       } else if (mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) {
         let valueToTest = newColorHxya.x
 
@@ -137,11 +137,11 @@ export default function ColorPicker() {
         }
 
         if (valueToTest % 5 === 0) {
-          updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { x: newColorHxya.x, y: newColorHxya.y } })
+          updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { x: newColorHxya.x, y: newColorHxya.y } })
         }
       }
     } else {
-      updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxya })
+      updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: newColorHxya })
     }
 
     updateManipulatorPosition()

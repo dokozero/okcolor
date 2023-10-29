@@ -4,7 +4,7 @@ import {
   $colorHxya,
   $currentFillOrStroke,
   $colorsRgba,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin,
+  updateColorHxyaAndSyncColorsRgbaAndBackend,
   $mouseEventCallback,
   $updateParent
 } from '../../../store'
@@ -37,7 +37,7 @@ export default function OpacitySlider() {
     const canvasY = event.clientX - rect.left - 7
 
     const newColorA = Math.round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 100)
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { a: newColorA } })
+    updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { a: newColorA } })
   }
 
   useEffect(() => {

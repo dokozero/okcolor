@@ -27,6 +27,9 @@ export const $uiMessage = map({
 })
 
 // TODO change currentFillOrStroke -> fillOrStroke
+// We use default values in the atoms but they are not used, because we get these values from backend.
+// They are useful however to not use null in their type (although some of them have it when we have to).
+// More infos in the comment on top in App component.
 export const $figmaEditorType = atom<FigmaEditorType | null>(null)
 export const $fileColorProfile = atom<FileColorProfile>('rgb')
 export const $currentColorModel = atom<CurrentColorModel>('oklchCss')
@@ -95,10 +98,10 @@ export const $colorHxya = map<ColorHxya>({
   a: 0
 })
 
-type UpdateColorHxyaAndSyncColorsRgbaAndPlugin = {
+type UpdateColorHxyaAndSyncColorsRgbaAndBackend = {
   newColorHxya: Partial<ColorHxya>
   syncColorsRgba?: boolean
-  syncColorRgbWithPlugin?: boolean
+  syncColorRgbWithBackend?: boolean
   bypassLockRelativeChromaFilter?: boolean
   bypassLockContrastFilter?: boolean
 }
@@ -108,14 +111,14 @@ type UpdateColorHxyaAndSyncColorsRgbaAndPlugin = {
  * @param bypassLockContrastFilter Same reason than bypassLockRelativeChromaFilter, this value says: "update the contrast even if lockChroma is true".
  */
 
-export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
+export const updateColorHxyaAndSyncColorsRgbaAndBackend = action(
   $colorHxya,
   'updateColorHxy',
-  (colorHxya, props: UpdateColorHxyaAndSyncColorsRgbaAndPlugin) => {
+  (colorHxya, props: UpdateColorHxyaAndSyncColorsRgbaAndBackend) => {
     const {
       newColorHxya,
       syncColorsRgba = true,
-      syncColorRgbWithPlugin = true,
+      syncColorRgbWithBackend = true,
       bypassLockRelativeChromaFilter = false,
       bypassLockContrastFilter = false
     } = props
@@ -143,7 +146,7 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
       a: a !== undefined ? a : colorHxya.get().a
     })
 
-    if (!syncColorsRgba && !syncColorRgbWithPlugin) return
+    if (!syncColorsRgba && !syncColorRgbWithBackend) return
 
     const chroma = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? colorHxya.get().x * 100 : colorHxya.get().x
     const newColorRgb = convertHxyToRgb({
@@ -162,7 +165,7 @@ export const updateColorHxyaAndSyncColorsRgbaAndPlugin = action(
       $colorsRgba.setKey(key, { ...newColorRgb, a: colorHxya.get().a })
     }
 
-    if (syncColorRgbWithPlugin) {
+    if (syncColorRgbWithBackend) {
       sendMessageToBackend<UpdateShapeColorData>({
         type: 'updateShapeColor',
         data: {

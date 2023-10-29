@@ -8,7 +8,7 @@ import {
   $lockContrast,
   $lockRelativeChroma,
   $updateParent,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin
+  updateColorHxyaAndSyncColorsRgbaAndBackend
 } from '../../store'
 import { selectInputContent, roundWithDecimal } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
@@ -57,7 +57,7 @@ const updateColorHxyaTargetValue = (eventTarget: HTMLInputElement, eventId: keyo
   if (newValue >= 0 && newValue <= (eventId === 'h' ? 360 : 100) && newValue !== oldValue) {
     if ($currentColorModel.get() === 'oklch' && newColorHxya.x) newColorHxya.x /= 100
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxya })
+    updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: newColorHxya })
   } else {
     eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
   }

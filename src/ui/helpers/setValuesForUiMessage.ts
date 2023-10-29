@@ -4,7 +4,7 @@ import {
   $colorsRgba,
   $currentFillOrStroke,
   $updateParent,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin
+  updateColorHxyaAndSyncColorsRgbaAndBackend
 } from '../store'
 
 /**
@@ -26,5 +26,5 @@ export default function setValuesForUiMessage() {
   if ($updateParent.get()) $updateParent.set(false)
 
   // We send this color to get '0' on all values of the UI.
-  updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { h: 0, x: 0, y: 0, a: 0 }, syncColorsRgba: false, syncColorRgbWithPlugin: false })
+  updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { h: 0, x: 0, y: 0, a: 0 }, syncColorsRgba: false, syncColorRgbWithBackend: false })
 }

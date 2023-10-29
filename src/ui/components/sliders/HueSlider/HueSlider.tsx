@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import { consoleLogInfos, SLIDER_SIZE } from '../../../../constants'
 import { limitMouseManipulatorPosition, roundWithDecimal } from '../../../helpers/others'
-import { $colorHxya, $colorValueDecimals, updateColorHxyaAndSyncColorsRgbaAndPlugin, $mouseEventCallback } from '../../../store'
+import { $colorHxya, $colorValueDecimals, updateColorHxyaAndSyncColorsRgbaAndBackend, $mouseEventCallback } from '../../../store'
 import { useStore } from '@nanostores/react'
 
 export default function HueSlider() {
@@ -24,7 +24,7 @@ export default function HueSlider() {
       x: $colorHxya.get().x
     }
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newColorHxya })
+    updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: newColorHxya })
   }
 
   useEffect(() => {

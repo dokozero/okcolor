@@ -10,7 +10,7 @@ import {
   $fileColorProfile,
   $isMouseInsideDocument,
   $updateParent,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin,
+  updateColorHxyaAndSyncColorsRgbaAndBackend,
   $uiMessage,
   $colorHxya,
   $currentFillOrStroke
@@ -33,7 +33,7 @@ const updateColorHxyaXandY = (eventTarget: HTMLInputElement, newContrast: ApcaCo
 
   const newHxy = convertContrastToLightness($colorHxya.get(), newContrast)
 
-  updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: newHxy, bypassLockContrastFilter: true })
+  updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: newHxy, bypassLockContrastFilter: true })
 }
 
 export default function ContrastInput() {
@@ -119,7 +119,11 @@ export default function ContrastInput() {
       fileColorProfile: $fileColorProfile.get()
     })
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({ newColorHxya: { ...newColorHxy, a: opacity }, syncColorsRgba: false, syncColorRgbWithPlugin: false })
+    updateColorHxyaAndSyncColorsRgbaAndBackend({
+      newColorHxya: { ...newColorHxy, a: opacity },
+      syncColorsRgba: false,
+      syncColorRgbWithBackend: false
+    })
 
     bgToggle.current!.style.outlineOffset = '2px'
 

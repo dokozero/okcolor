@@ -5,7 +5,7 @@ import {
   $currentFillOrStroke,
   $fileColorProfile,
   $colorsRgba,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin,
+  updateColorHxyaAndSyncColorsRgbaAndBackend,
   $updateParent,
   $lockContrast
 } from '../../store'
@@ -58,10 +58,10 @@ export default function FillStrokeSelect() {
       fileColorProfile: $fileColorProfile.get()
     })
 
-    updateColorHxyaAndSyncColorsRgbaAndPlugin({
+    updateColorHxyaAndSyncColorsRgbaAndBackend({
       newColorHxya: { ...newColorHxy, a: newColorRgba.a },
       syncColorsRgba: false,
-      syncColorRgbWithPlugin: false
+      syncColorRgbWithBackend: false
     })
 
     sendMessageToBackend<SyncCurrentFillOrStrokeData>({
