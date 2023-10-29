@@ -8,7 +8,8 @@ import {
   $colorsRgba,
   updateColorHxyaAndSyncColorsRgbaAndPlugin,
   $lockRelativeChroma,
-  $lockContrast
+  $lockContrast,
+  $updateParent
 } from '../../store'
 import { useStore } from '@nanostores/react'
 import { CurrentColorModel, SyncCurrentColorModelData, SyncFileColorProfileData } from '../../../types'
@@ -34,6 +35,8 @@ export default function ColorModelSelect() {
         currentColorModel: newCurrentColorModel
       }
     })
+
+    if ($updateParent.get()) $updateParent.set(false)
 
     const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
 
