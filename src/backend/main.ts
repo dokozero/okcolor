@@ -16,7 +16,7 @@ import type {
   SyncLocalStorageValuesData,
   SyncLockContrastData,
   SyncLockRelativeChromaData,
-  SyncShowCssColorCodesData,
+  SyncIsColorCodeInputsOpenData,
   UpdateShapeColorData
 } from '../types'
 import getNewColorsRgba from './helpers/getNewColorsRgba'
@@ -26,7 +26,7 @@ import updateShapeColor from './helpers/updateShapeColor'
 let currentFillOrStroke: CurrentFillOrStroke = 'fill'
 let fileColorProfile: FileColorProfile
 let currentColorModel: CurrentColorModel
-let showCssColorCodes: boolean
+let isColorCodeInputsOpen: boolean
 let lockRelativeChroma: boolean
 let lockContrast: boolean
 
@@ -53,7 +53,7 @@ const changePropertiesToReactTo = ['fills', 'fillStyleId', 'strokes', 'strokeSty
  */
 
 const resizeWindowHeight = () => {
-  if (showCssColorCodes) {
+  if (isColorCodeInputsOpen) {
     if (['oklch', 'oklchCss'].includes(currentColorModel)) figma.ui.resize(PICKER_SIZE, pluginHeights.okLchWithColorCodes)
     else figma.ui.resize(PICKER_SIZE, pluginHeights.okHsvlWithColorCodes)
   } else {
@@ -90,7 +90,7 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
   else if (figma.editorType === 'figjam') fileColorProfile = 'rgb'
 
   currentColorModel = (await figma.clientStorage.getAsync('currentColorModel')) || 'oklchCss'
-  showCssColorCodes = (await figma.clientStorage.getAsync('showCssColorCodes')) || false
+  isColorCodeInputsOpen = (await figma.clientStorage.getAsync('isColorCodeInputsOpen')) || false
 
   if (currentColorModel === 'okhsv' || currentColorModel === 'okhsl') {
     lockRelativeChroma = false
@@ -100,9 +100,9 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
     lockContrast = (await figma.clientStorage.getAsync('lockContrast')) || false
   }
 
-  let initialUiHeight = showCssColorCodes ? pluginHeights.okLchWithColorCodes : pluginHeights.okLchWithoutColorCodes
+  let initialUiHeight = isColorCodeInputsOpen ? pluginHeights.okLchWithColorCodes : pluginHeights.okLchWithoutColorCodes
   if (['okhsv', 'okhsl'].includes(currentColorModel)) {
-    initialUiHeight = showCssColorCodes ? pluginHeights.okHsvlWithColorCodes : pluginHeights.okHsvlWithoutColorCodes
+    initialUiHeight = isColorCodeInputsOpen ? pluginHeights.okHsvlWithColorCodes : pluginHeights.okHsvlWithoutColorCodes
   }
 
   figma.showUI(__html__, { width: PICKER_SIZE, height: initialUiHeight, themeColors: true })
@@ -118,7 +118,7 @@ const init = async () => {
       figmaEditorType: figma.editorType,
       fileColorProfile: fileColorProfile,
       currentColorModel: currentColorModel,
-      showCssColorCodes: showCssColorCodes,
+      isColorCodeInputsOpen: isColorCodeInputsOpen,
       lockRelativeChroma: lockRelativeChroma,
       lockContrast: lockContrast
     }
@@ -244,11 +244,11 @@ figma.ui.onmessage = (event: MessageForBackend) => {
       figma.clientStorage.setAsync('currentColorModel', data.currentColorModel)
       break
 
-    case 'syncShowCssColorCodes':
-      data = event.data as SyncShowCssColorCodesData
-      showCssColorCodes = data.showCssColorCodes
+    case 'syncIsColorCodeInputsOpen':
+      data = event.data as SyncIsColorCodeInputsOpenData
+      isColorCodeInputsOpen = data.isColorCodeInputsOpen
       resizeWindowHeight()
-      figma.clientStorage.setAsync('showCssColorCodes', showCssColorCodes)
+      figma.clientStorage.setAsync('isColorCodeInputsOpen', isColorCodeInputsOpen)
       break
 
     case 'syncLockRelativeChroma':

@@ -108,7 +108,7 @@ export type SyncLocalStorageValuesData = {
   figmaEditorType: FigmaEditorType
   fileColorProfile: FileColorProfile
   currentColorModel: CurrentColorModel
-  showCssColorCodes: boolean
+  isColorCodeInputsOpen: boolean
   lockRelativeChroma: boolean
   lockContrast: boolean
 }
@@ -138,7 +138,7 @@ export type MessageForBackendTypes =
   | 'syncFileColorProfile'
   | 'syncCurrentFillOrStroke'
   | 'syncCurrentColorModel'
-  | 'syncShowCssColorCodes'
+  | 'syncIsColorCodeInputsOpen'
   | 'syncLockRelativeChroma'
   | 'syncLockContrast'
 
@@ -159,8 +159,8 @@ export type SyncCurrentColorModelData = {
   currentColorModel: CurrentColorModel
 }
 
-export type SyncShowCssColorCodesData = {
-  showCssColorCodes: boolean
+export type SyncIsColorCodeInputsOpenData = {
+  isColorCodeInputsOpen: boolean
 }
 
 export type SyncLockRelativeChromaData = {
@@ -176,7 +176,7 @@ export type MessageForBackendData =
   | SyncFileColorProfileData
   | SyncCurrentFillOrStrokeData
   | SyncCurrentColorModelData
-  | SyncShowCssColorCodesData
+  | SyncIsColorCodeInputsOpenData
   | SyncLockRelativeChromaData
   | SyncLockContrastData
 

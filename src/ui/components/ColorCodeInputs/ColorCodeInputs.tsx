@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { selectInputContent } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
-import { $colorHxya, $isMouseInsideDocument, $showCssColorCodes, updateColorHxyaAndSyncColorsRgbaAndBackend } from '../../store'
+import { $colorHxya, $isMouseInsideDocument, $isColorCodeInputsOpen, updateColorHxyaAndSyncColorsRgbaAndBackend } from '../../store'
 import { useStore } from '@nanostores/react'
 import getColorCodeStrings from './helpers/getColorCodeStrings'
 import getNewColorHxya from './helpers/getNewColorHxya'
-import { ColorCodesInputValues, ColorHxya, SyncShowCssColorCodesData } from '../../../types'
+import { ColorCodesInputValues, ColorHxya, SyncIsColorCodeInputsOpenData } from '../../../types'
 import copyToClipboard from '../../helpers/copyToClipboard'
 import sendMessageToBackend from '../../helpers/sendMessageToBackend'
 
@@ -26,7 +26,7 @@ export default function ColorCodeInputs() {
 
   const colorHxya = useStore($colorHxya)
 
-  const showCssColorCodes = useStore($showCssColorCodes)
+  const isColorCodeInputsOpen = useStore($isColorCodeInputsOpen)
 
   const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null)
   const colorCode_colorInput = useRef<HTMLInputElement>(null)
@@ -106,22 +106,22 @@ export default function ColorCodeInputs() {
   }, [colorHxya])
 
   return (
-    <div className={'c-color-code-inputs' + (showCssColorCodes ? ' c-color-code-inputs--open' : '')}>
+    <div className={'c-color-code-inputs' + (isColorCodeInputsOpen ? ' c-color-code-inputs--open' : '')}>
       <div
         className="c-color-code-inputs__title-wrapper"
         onClick={() => {
-          $showCssColorCodes.set(!$showCssColorCodes.get())
-          sendMessageToBackend<SyncShowCssColorCodesData>({
-            type: 'syncShowCssColorCodes',
+          $isColorCodeInputsOpen.set(!$isColorCodeInputsOpen.get())
+          sendMessageToBackend<SyncIsColorCodeInputsOpenData>({
+            type: 'syncIsColorCodeInputsOpen',
             data: {
-              showCssColorCodes: $showCssColorCodes.get()
+              isColorCodeInputsOpen: $isColorCodeInputsOpen.get()
             }
           })
         }}
       >
         <div>Color codes</div>
 
-        <div className={'c-color-code-inputs__arrow-icon' + (showCssColorCodes ? ' c-color-code-inputs__arrow-icon--open' : '')}>
+        <div className={'c-color-code-inputs__arrow-icon' + (isColorCodeInputsOpen ? ' c-color-code-inputs__arrow-icon--open' : '')}>
           <svg className="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
             <path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fillRule="nonzero" fillOpacity="1" stroke="none"></path>
           </svg>
@@ -129,7 +129,7 @@ export default function ColorCodeInputs() {
       </div>
 
       <div
-        className={'c-color-code-inputs__inputs-wraper ' + (showCssColorCodes ? '' : ' u-display-none')}
+        className={'c-color-code-inputs__inputs-wraper ' + (isColorCodeInputsOpen ? '' : ' u-display-none')}
         onMouseLeave={removeModifierClassOnCopyActions}
       >
         <div className="input-wrapper">

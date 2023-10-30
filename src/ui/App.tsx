@@ -5,7 +5,7 @@ import {
   $fileColorProfile,
   $currentColorModel,
   $lockRelativeChroma,
-  $showCssColorCodes,
+  $isColorCodeInputsOpen,
   $currentKeysPressed,
   $isMouseInsideDocument,
   $uiMessage,
@@ -61,7 +61,7 @@ function App() {
       $figmaEditorType.set(data.figmaEditorType)
       $fileColorProfile.set(data.fileColorProfile)
       $currentColorModel.set(data.currentColorModel)
-      $showCssColorCodes.set(data.showCssColorCodes)
+      $isColorCodeInputsOpen.set(data.isColorCodeInputsOpen)
       $lockRelativeChroma.set(data.lockRelativeChroma)
       $lockContrast.set(data.lockContrast)
     }
