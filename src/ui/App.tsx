@@ -12,10 +12,12 @@ import {
   $currentFillOrStroke,
   $mouseEventCallback,
   $figmaEditorType,
-  $updateParent,
+  $currentBgOrFg,
   $lockContrast,
   $colorsRgba,
-  updateColorHxyaAndSyncColorsRgbaAndBackend
+  updateColorHxyaAndSyncColorsRgbaAndBackend,
+  $isContrastInputOpen,
+  $currentContrastMethod
 } from './store'
 
 import FileColorProfileSelect from './components/FileColorProfileSelect/FileColorProfileSelect'
@@ -60,10 +62,12 @@ function App() {
 
       $figmaEditorType.set(data.figmaEditorType)
       $fileColorProfile.set(data.fileColorProfile)
-      $currentColorModel.set(data.currentColorModel)
-      $isColorCodeInputsOpen.set(data.isColorCodeInputsOpen)
+      $isContrastInputOpen.set(data.isContrastInputOpen)
       $lockRelativeChroma.set(data.lockRelativeChroma)
+      $currentContrastMethod.set(data.currentContrastMethod)
       $lockContrast.set(data.lockContrast)
+      $isColorCodeInputsOpen.set(data.isColorCodeInputsOpen)
+      $currentColorModel.set(data.currentColorModel)
     }
     // Update the color based on the selected shape in Figma.
     if (pluginMessage.type === 'syncCurrentFillOrStrokeAndColorsRgba') {
@@ -71,7 +75,7 @@ function App() {
       if ($uiMessage.get().show) $uiMessage.setKey('show', false)
 
       // If on previous selected shape we had the parent selected, we set it to false as default.
-      if ($updateParent.get()) $updateParent.set(false)
+      if ($currentBgOrFg.get() === 'bg') $currentBgOrFg.set('fg')
 
       const data = pluginMessage.data as SyncCurrentFillOrStrokeAndColorsRgbaData
 
@@ -193,7 +197,7 @@ function App() {
         <FileColorProfileSelect />
         <ColorPicker />
 
-        <div className="s-bottom-controls">
+        <div className="o-bottom-controls">
           <div className="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
             <FillStrokeSelect />
 
@@ -203,7 +207,7 @@ function App() {
             </div>
           </div>
 
-          <div className="c-select-input-controls">
+          <div className="c-select-input-controls u-mt-12">
             <ColorModelSelect />
             <ColorValueInputs />
           </div>

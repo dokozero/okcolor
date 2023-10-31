@@ -1,14 +1,7 @@
-@import 'components/ColorCodeInputs/ColorCodeInputs.css';
-@import 'components/ColorPicker/ColorPicker.css';
-@import 'components/FileColorProfileSelect/FileColorProfileSelect.css';
-@import 'components/FileColorProfileSelect/FileColorProfileSelect.css';
-@import 'components/FillStrokeSelect/FillStrokeSelect.css';
-@import 'components/sliders/sliders.css';
-@import 'components/single-input-with-lock/single-input-with-lock.css';
-
-/**
- * Bases
- */
+:root {
+  --base-font-size: 11px;
+  --base-border-radius: 2px;
+}
 
 * {
   box-sizing: border-box;
@@ -36,7 +29,7 @@ p {
 
 .input-wrapper {
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: var(--base-border-radius);
 }
 
 .input-wrapper:hover,
@@ -69,7 +62,7 @@ input {
   height: 100%;
   padding: 7px 4px;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: var(--base-font-size);
   font-weight: 400;
   line-height: 100%;
   color: var(--figma-color-text);
@@ -96,128 +89,4 @@ input:disabled {
 
 select {
   appearance: none;
-}
-
-/** 
- * Global components
- */
-
-body.deactivated .c-file-color-profile-select,
-body.deactivated .s-bottom-controls {
-  pointer-events: none;
-  opacity: 0.5;
-  filter: grayscale(1);
-}
-
-.c-select-input-controls {
-  display: flex;
-  height: 28px;
-  align-items: center;
-  position: relative;
-  padding: 0 9px;
-  margin-top: 12px;
-}
-.c-select-input-controls__select-wrapper,
-.c-select-input-controls__input-wrapper {
-  height: 100%;
-}
-
-.c-select-input-controls__select-wrapper {
-  flex: 0 0 60px;
-}
-.c-select-input-controls__input-wrapper {
-  border: 1px solid transparent;
-  border-radius: 2px;
-  margin-top: 1px;
-  margin-bottom: 1px;
-}
-.c-select-input-controls__input-wrapper:hover input:not(:last-child),
-.c-select-input-controls__input-wrapper:focus-within input:not(:last-child) {
-  border-right-color: var(--figma-color-border, rgba(0, 0, 0, 0.1));
-}
-
-/** 
- * Utilities
- */
-
-.u-display-none {
-  display: none;
-}
-.u-visibility-hidden {
-  visibility: hidden;
-}
-
-.u-position-absolute {
-  position: absolute;
-}
-
-.u-flex {
-  display: flex;
-}
-.u-items-center {
-  align-items: center;
-}
-.u-flex-col {
-  flex-direction: column;
-}
-.u-items-end {
-  align-items: flex-end;
-}
-.u-justify-between {
-  justify-content: space-between;
-}
-
-.u-w-full {
-  width: 100%;
-}
-.u-h-full {
-  height: 100%;
-}
-
-.u-mt-4 {
-  margin-top: 4px;
-}
-.u-mt-12 {
-  margin-top: 12px;
-}
-.u-mt-16 {
-  margin-top: 16px;
-}
-.u-mt-18 {
-  margin-top: 18px;
-}
-.u-mt-20 {
-  margin-top: 20px;
-}
-.u-px-8 {
-  padding-left: 8px;
-  padding-right: 8px;
-}
-.u-px-16 {
-  padding-left: 16px;
-  padding-right: 16px;
-}
-.u-ml-auto {
-  margin-left: auto;
-}
-
-.u-opacity-50 {
-  opacity: 0.5;
-}
-
-.u-order-0 {
-  order: 0;
-}
-.u-order-1 {
-  order: 1;
-}
-.u-order-2 {
-  order: 2;
-}
-.u-order-3 {
-  order: 3;
-}
-
-.u-pointer-events-none {
-  pointer-events: none;
 }

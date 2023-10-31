@@ -17,25 +17,24 @@ import type {
   SyncLockContrastData,
   SyncLockRelativeChromaData,
   SyncIsColorCodeInputsOpenData,
-  UpdateShapeColorData
+  UpdateShapeColorData,
+  SyncIsContrastInputOpenData,
+  CurrentContrastMethod,
+  SyncCurrentContrastMethodData
 } from '../types'
 import getNewColorsRgba from './helpers/getNewColorsRgba'
+import getWindowHeigh from './helpers/getWindowHeigh'
 import sendMessageToUi from './helpers/sendMessageToUi'
 import updateShapeColor from './helpers/updateShapeColor'
 
 let currentFillOrStroke: CurrentFillOrStroke = 'fill'
 let fileColorProfile: FileColorProfile
 let currentColorModel: CurrentColorModel
-let isColorCodeInputsOpen: boolean
+let isContrastInputOpen: boolean
 let lockRelativeChroma: boolean
+let currentContrastMethod: CurrentContrastMethod
 let lockContrast: boolean
-
-const pluginHeights = {
-  okHsvlWithoutColorCodes: 435,
-  okHsvlWithColorCodes: 564,
-  okLchWithoutColorCodes: 503,
-  okLchWithColorCodes: 632
-}
+let isColorCodeInputsOpen: boolean
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
 let itsAMe = false
@@ -53,13 +52,13 @@ const changePropertiesToReactTo = ['fills', 'fillStyleId', 'strokes', 'strokeSty
  */
 
 const resizeWindowHeight = () => {
-  if (isColorCodeInputsOpen) {
-    if (['oklch', 'oklchCss'].includes(currentColorModel)) figma.ui.resize(PICKER_SIZE, pluginHeights.okLchWithColorCodes)
-    else figma.ui.resize(PICKER_SIZE, pluginHeights.okHsvlWithColorCodes)
-  } else {
-    if (['oklch', 'oklchCss'].includes(currentColorModel)) figma.ui.resize(PICKER_SIZE, pluginHeights.okLchWithoutColorCodes)
-    else figma.ui.resize(PICKER_SIZE, pluginHeights.okHsvlWithoutColorCodes)
-  }
+  const windowHeight = getWindowHeigh({
+    currentColorModel: currentColorModel,
+    isColorCodeInputsOpen: isColorCodeInputsOpen,
+    isContrastInputOpen: isContrastInputOpen
+  })
+
+  figma.ui.resize(PICKER_SIZE, windowHeight)
 }
 
 const updateColorsRgbaOrSendUiMessageCodeToUi = (): string => {
@@ -89,8 +88,10 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
   if (figma.editorType === 'figma') fileColorProfile = (await figma.clientStorage.getAsync('fileColorProfile')) || 'rgb'
   else if (figma.editorType === 'figjam') fileColorProfile = 'rgb'
 
-  currentColorModel = (await figma.clientStorage.getAsync('currentColorModel')) || 'oklchCss'
+  isContrastInputOpen = (await figma.clientStorage.getAsync('isContrastInputOpen')) || false
   isColorCodeInputsOpen = (await figma.clientStorage.getAsync('isColorCodeInputsOpen')) || false
+  currentContrastMethod = (await figma.clientStorage.getAsync('currentContrastMethod')) || 'apca'
+  currentColorModel = (await figma.clientStorage.getAsync('currentColorModel')) || 'oklchCss'
 
   if (currentColorModel === 'okhsv' || currentColorModel === 'okhsl') {
     lockRelativeChroma = false
@@ -100,12 +101,13 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
     lockContrast = (await figma.clientStorage.getAsync('lockContrast')) || false
   }
 
-  let initialUiHeight = isColorCodeInputsOpen ? pluginHeights.okLchWithColorCodes : pluginHeights.okLchWithoutColorCodes
-  if (['okhsv', 'okhsl'].includes(currentColorModel)) {
-    initialUiHeight = isColorCodeInputsOpen ? pluginHeights.okHsvlWithColorCodes : pluginHeights.okHsvlWithoutColorCodes
-  }
+  const initialWindowHeight = getWindowHeigh({
+    currentColorModel: currentColorModel,
+    isColorCodeInputsOpen: isColorCodeInputsOpen,
+    isContrastInputOpen: isContrastInputOpen
+  })
 
-  figma.showUI(__html__, { width: PICKER_SIZE, height: initialUiHeight, themeColors: true })
+  figma.showUI(__html__, { width: PICKER_SIZE, height: initialWindowHeight, themeColors: true })
 }
 
 getLocalStorageValueAndCreateUiWindow()
@@ -117,10 +119,12 @@ const init = async () => {
     data: {
       figmaEditorType: figma.editorType,
       fileColorProfile: fileColorProfile,
-      currentColorModel: currentColorModel,
-      isColorCodeInputsOpen: isColorCodeInputsOpen,
+      isContrastInputOpen: isContrastInputOpen,
       lockRelativeChroma: lockRelativeChroma,
-      lockContrast: lockContrast
+      currentContrastMethod: currentContrastMethod,
+      lockContrast: lockContrast,
+      isColorCodeInputsOpen: isColorCodeInputsOpen,
+      currentColorModel: currentColorModel
     }
   })
 
@@ -217,7 +221,7 @@ figma.ui.onmessage = (event: MessageForBackend) => {
       data = event.data as UpdateShapeColorData
 
       itsAMe = true
-      updateShapeColor(data.newColorRgba, currentFillOrStroke, data.updateParent)
+      updateShapeColor(data.newColorRgba, currentFillOrStroke, data.currentBgOrFg)
 
       // We reset itsAMe value to false here because if we do it on the documentchange callback, when we move the hue cursor on FFFFFF or 000000 in OkHSL, this callback is not executed so itsAMe would stay on true and if for example user delete the fill of the shape, we would get an error.
       if (timeoutId) clearTimeout(timeoutId)
@@ -244,11 +248,11 @@ figma.ui.onmessage = (event: MessageForBackend) => {
       figma.clientStorage.setAsync('currentColorModel', data.currentColorModel)
       break
 
-    case 'syncIsColorCodeInputsOpen':
-      data = event.data as SyncIsColorCodeInputsOpenData
-      isColorCodeInputsOpen = data.isColorCodeInputsOpen
+    case 'syncIsContrastInputOpen':
+      data = event.data as SyncIsContrastInputOpenData
+      isContrastInputOpen = data.isContrastInputOpen
       resizeWindowHeight()
-      figma.clientStorage.setAsync('isColorCodeInputsOpen', isColorCodeInputsOpen)
+      figma.clientStorage.setAsync('isContrastInputOpen', isContrastInputOpen)
       break
 
     case 'syncLockRelativeChroma':
@@ -256,9 +260,21 @@ figma.ui.onmessage = (event: MessageForBackend) => {
       figma.clientStorage.setAsync('lockRelativeChroma', data.lockRelativeChroma)
       break
 
+    case 'syncCurrentContrastMethod':
+      data = event.data as SyncCurrentContrastMethodData
+      figma.clientStorage.setAsync('currentContrastMethod', data.currentContrastMethod)
+      break
+
     case 'syncLockContrast':
       data = event.data as SyncLockContrastData
       figma.clientStorage.setAsync('lockContrast', data.lockContrast)
+      break
+
+    case 'syncIsColorCodeInputsOpen':
+      data = event.data as SyncIsColorCodeInputsOpenData
+      isColorCodeInputsOpen = data.isColorCodeInputsOpen
+      resizeWindowHeight()
+      figma.clientStorage.setAsync('isColorCodeInputsOpen', isColorCodeInputsOpen)
       break
   }
 }

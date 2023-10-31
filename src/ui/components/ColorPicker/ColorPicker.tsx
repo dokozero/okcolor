@@ -13,9 +13,12 @@ import {
   $lockContrast,
   $contrast,
   $relativeChroma,
-  $colorsRgba
+  $colorsRgba,
+  $lockContrastEndY,
+  $lockContrastStartY,
+  $currentBgOrFg
 } from '../../store'
-import { limitMouseManipulatorPosition, roundWithDecimal } from '../../helpers/others'
+import { findYOnLockedChromaLine, limitMouseManipulatorPosition, roundWithDecimal } from '../../helpers/others'
 
 import {
   consoleLogInfos,
@@ -38,9 +41,10 @@ import * as twgl from 'twgl.js'
 import { inGamut } from '../../helpers/culori.mjs'
 import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit'
 import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit'
-import { AbsoluteChroma, ColorModels, Saturation } from '../../../types'
+import { AbsoluteChroma, ColorModelList, Saturation } from '../../../types'
 import convertAbsoluteChromaToRelative from '../../helpers/convertAbsoluteChromaToRelative'
 import getContrastStrokeLimit from './helpers/getContrastStrokeLimit'
+import getClampedChroma from '../../helpers/getClampedChroma'
 
 let colorPickerGlContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
@@ -76,6 +80,7 @@ export default function ColorPicker() {
   const lockContrast = useStore($lockContrast)
   const relativeChroma = useStore($relativeChroma)
   const contrast = useStore($contrast)
+  const currentBgOrFg = useStore($currentBgOrFg)
 
   const colorPicker = useRef<HTMLDivElement>(null)
   const colorPickerCanvas = useRef<HTMLCanvasElement>(null)
@@ -190,7 +195,7 @@ export default function ColorPicker() {
       dark: document.documentElement.classList.contains('figma-dark'),
       chroma_scale: OKLCH_CHROMA_SCALE,
       showP3: $fileColorProfile.get() === 'p3',
-      mode: ColorModels[$currentColorModel.get()],
+      mode: ColorModelList[$currentColorModel.get()],
       hue_rad: ($colorHxya.get().h * Math.PI) / 180
     })
     twgl.drawBufferInfo(gl, bufferInfo)
@@ -253,7 +258,17 @@ export default function ColorPicker() {
     if (!isMounted.current) return
 
     renderContrastStroke()
-  }, [contrast, lockContrast])
+
+    // if (lockContrast) {
+    //   const clampedChroma = getClampedChroma({
+    //     h: $colorHxya.get().h,
+    //     x: 0.37,
+    //     y: $lockContrastEndY.get()!
+    //   })
+    //   const newY = findYOnLockedChromaLine($colorHxya.get().x, [0, $lockContrastStartY.get()!], [clampedChroma, $lockContrastEndY.get()!])
+    //   updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { y: newY } })
+    // }
+  }, [contrast, lockContrast, currentBgOrFg])
 
   useEffect(() => {
     if (uiMessage.show) {

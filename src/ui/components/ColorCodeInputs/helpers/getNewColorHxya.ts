@@ -1,8 +1,8 @@
 import getClampedChroma from '../../../helpers/getClampedChroma'
 import { roundWithDecimal } from '../../../helpers/others'
-import { $currentColorModel, $colorValueDecimals, $colorHxya, $updateParent } from '../../../store'
+import { $currentColorModel, $colorValueDecimals, $colorHxya, $currentBgOrFg } from '../../../store'
 import { converter } from '../../../helpers/culori.mjs'
-import { ColorCodesInputValues, ColorHxy, ColorHxya, ColorModels, Opacity } from '../../../../types'
+import { ColorCodesInputValues, ColorHxy, ColorHxya, ColorModelList, Opacity } from '../../../../types'
 import convertRgbToHxy from '../../../helpers/convertRgbToHxy'
 
 const convertToRgb = converter('rgb')
@@ -104,7 +104,7 @@ const isColorCodeInGoodFormat = (color: string, format: string): boolean => {
 }
 
 export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesInputValues, eventTargetValue: string): ColorHxya | undefined {
-  let colorFormat: keyof typeof ColorCodesInputValues | keyof typeof ColorModels = eventTargetId
+  let colorFormat: keyof typeof ColorCodesInputValues | keyof typeof ColorModelList = eventTargetId
 
   if (eventTargetId === 'currentColorModel') {
     if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
@@ -158,7 +158,7 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         x: parseInt(matches[2]),
         y: parseInt(matches[3])
       }
-      if (!$updateParent.get()) newColorA = $colorHxya.get().a
+      if ($currentBgOrFg.get() === 'fg') newColorA = $colorHxya.get().a
     }
   } else if (eventTargetId === 'color') {
     regex = /(\b\d+(\.\d+)?\b)/g
@@ -199,10 +199,10 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
       targetColorModel: $currentColorModel.get(),
       fileColorProfile: 'rgb'
     })
-    if (newColorRgb.alpha && !$updateParent.get()) newColorA = Math.round(newColorRgb.alpha * 100)
+    if (newColorRgb.alpha && $currentBgOrFg.get() === 'fg') newColorA = Math.round(newColorRgb.alpha * 100)
   }
 
-  if (matches[3]?.valueOf() && !$updateParent.get()) {
+  if (matches[3]?.valueOf() && $currentBgOrFg.get() === 'fg') {
     // We need to use Math.round here otherwise, parseFloat(0.55) * 100 will give 55.00...01 among other values like 0.56.
     newColorA = Math.round(parseFloat(matches![3]) * 100)
   }

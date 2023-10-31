@@ -1,0 +1,18 @@
+.c-copy-action {
+  visibility: hidden;
+  position: absolute;
+  right: 0;
+  height: 26px;
+  line-height: 26px;
+  padding: 0 6px;
+  background-color: var(--figma-color-bg);
+}
+.c-copy-action--copied {
+  color: var(--figma-color-text-secondary);
+}
+.c-dropdown__content-wraper .input-wrapper:hover .c-copy-action {
+  visibility: visible;
+}
+.c-copy-action:hover {
+  cursor: pointer;
+}

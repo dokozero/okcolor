@@ -1,32 +1,52 @@
 import { useEffect, useRef, useState } from 'react'
-import { selectInputContent } from '../../../helpers/others'
-import { consoleLogInfos } from '../../../../constants'
+import { roundWithDecimal, selectInputContent } from '../../../helpers/others'
+import { MAX_APCA_CONTRAST, MAX_WCAG_CONTRAST, MIN_APCA_CONTRAST, MIN_WCAG_CONTRAST, consoleLogInfos } from '../../../../constants'
 import {
   $lockContrast,
   $colorsRgba,
   $contrast,
   $currentColorModel,
   $currentKeysPressed,
-  $fileColorProfile,
   $isMouseInsideDocument,
-  $updateParent,
   updateColorHxyaAndSyncColorsRgbaAndBackend,
   $uiMessage,
   $colorHxya,
-  $currentFillOrStroke
+  $currentFillOrStroke,
+  $isContrastInputOpen,
+  $currentContrastMethod
 } from '../../../store'
 import { useStore } from '@nanostores/react'
-import convertRgbToHxy from '../../../helpers/convertRgbToHxy'
-import { ApcaContrast, ColorRgb, ColorRgba, Opacity, SyncLockContrastData } from '../../../../types'
+import {
+  ApcaContrast,
+  CurrentContrastMethod,
+  SyncCurrentContrastMethodData,
+  SyncIsContrastInputOpenData,
+  SyncLockContrastData,
+  WcagContrast
+} from '../../../../types'
 import convertContrastToLightness from '../../../helpers/convertContrastToLightness'
 import sendMessageToBackend from '../../../helpers/sendMessageToBackend'
+import BgFgToggle from './BgFgToggle'
+import OpenLockIcon from '../OpenLockIcon'
+import ClosedLockIcon from './ClosedLockIcon'
 import getContrastFromBgandFgRgba from '../../../helpers/getContrastFromBgandFgRgba'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
 
-const updateColorHxyaXandY = (eventTarget: HTMLInputElement, newContrast: ApcaContrast) => {
-  if (newContrast < -108 || newContrast > 106 || newContrast === $contrast.get()) {
+const updateColorHxyaXandY = (eventTarget: HTMLInputElement, newContrast: ApcaContrast | WcagContrast) => {
+  let minContrast: ApcaContrast | WcagContrast
+  let maxContrast: ApcaContrast | WcagContrast
+
+  if ($currentContrastMethod.get() === 'apca') {
+    minContrast = MIN_APCA_CONTRAST
+    maxContrast = MAX_APCA_CONTRAST
+  } else {
+    minContrast = MIN_WCAG_CONTRAST
+    maxContrast = MAX_WCAG_CONTRAST
+  }
+
+  if (newContrast < minContrast || newContrast > maxContrast || newContrast === $contrast.get()) {
     eventTarget.value = String($contrast.get())
     return
   }
@@ -44,15 +64,31 @@ export default function ContrastInput() {
   const colorsRgba = useStore($colorsRgba)
   const contrast = useStore($contrast)
   const lockContrast = useStore($lockContrast)
-  const updateParent = useStore($updateParent)
   const currentColorModel = useStore($currentColorModel)
   const currentFillOrStroke = useStore($currentFillOrStroke)
+  const currentContrastMethod = useStore($currentContrastMethod)
 
+  const isContrastInputOpen = useStore($isContrastInputOpen)
   const [showContrast, setShowContrast] = useState<boolean | undefined>(undefined)
 
-  const bgToggle = useRef<HTMLDivElement>(null)
-  const bgToggleText = useRef<HTMLDivElement>(null)
+  const contrastMethodSelect = useRef<HTMLSelectElement>(null)
   const input = useRef<HTMLInputElement>(null)
+
+  const handleContrastMethod = (event: { target: HTMLSelectElement }) => {
+    const newCurrentContrastMethod = event.target.value as CurrentContrastMethod
+
+    $currentContrastMethod.set(newCurrentContrastMethod)
+
+    sendMessageToBackend<SyncCurrentContrastMethodData>({
+      type: 'syncCurrentContrastMethod',
+      data: {
+        currentContrastMethod: newCurrentContrastMethod
+      }
+    })
+
+    const newContrast = getContrastFromBgandFgRgba($colorsRgba.get().fill!, $colorsRgba.get().parentFill!)
+    $contrast.set(newContrast)
+  }
 
   const handleInputOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const eventTarget = event.target
@@ -64,7 +100,10 @@ export default function ContrastInput() {
       lastKeyPressed = ''
     }
 
-    updateColorHxyaXandY(eventTarget, parseInt(eventTarget.value))
+    const newValue: ApcaContrast | WcagContrast =
+      $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
+
+    updateColorHxyaXandY(eventTarget, newValue)
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -75,60 +114,47 @@ export default function ContrastInput() {
       lastKeyPressed = eventKey
       ;(event.target as HTMLInputElement).blur()
     } else if (['ArrowUp', 'ArrowDown'].includes(eventKey)) {
-      let newValue = parseInt(eventTarget.value)
+      const currentValue: ApcaContrast | WcagContrast =
+        $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
+
+      let newValue: ApcaContrast | WcagContrast
+
+      // if ($currentContrastMethod.get() === 'wcag' && $contrast.get() < 0) newValue = -newValue
 
       event.preventDefault()
       keepInputSelected = true
 
-      const stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 10 : 1
+      let stepUpdateValue: number
 
-      if (eventKey === 'ArrowUp') {
-        if (newValue === 0) newValue = 7
-        else newValue += stepUpdateValue
-      } else if (eventKey === 'ArrowDown') {
-        if (newValue === 0) newValue = -7
-        else newValue -= stepUpdateValue
+      if ($currentContrastMethod.get() === 'apca') {
+        stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 10 : 1
+
+        if (eventKey === 'ArrowUp') {
+          if (currentValue === 0) newValue = 7
+          else newValue = currentValue + stepUpdateValue
+        } else if (eventKey === 'ArrowDown') {
+          if (currentValue === 0) newValue = -7
+          else newValue = currentValue - stepUpdateValue
+        }
+
+        if (currentValue > -7 && currentValue < 7 && currentValue !== 0) newValue = 0
+      } else {
+        stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 1 : 0.1
+
+        if (eventKey === 'ArrowUp') {
+          if (currentValue === -1) newValue = 1
+          else newValue = currentValue + stepUpdateValue
+        } else if (eventKey === 'ArrowDown') {
+          if (currentValue === 1) newValue = -1
+          else newValue = currentValue - stepUpdateValue
+        }
+
+        // We need to this because in some cases we can have values like 1.2999999999999998.
+        newValue = roundWithDecimal(newValue!, 1)
       }
 
-      if (newValue > -7 && newValue < 7 && newValue !== 0) newValue = 0
-
-      updateColorHxyaXandY(eventTarget, newValue)
+      updateColorHxyaXandY(eventTarget, newValue!)
     }
-  }
-
-  const handleUpdateParentSelector = () => {
-    $updateParent.set(!$updateParent.get())
-
-    let newColorRgba: ColorRgb | ColorRgba
-    let opacity: Opacity = 100
-
-    if ($updateParent.get()) {
-      newColorRgba = $colorsRgba.get().parentFill!
-    } else {
-      newColorRgba = $colorsRgba.get().fill!
-      opacity = $colorsRgba.get().fill!.a
-    }
-
-    const newColorHxy = convertRgbToHxy({
-      colorRgb: {
-        r: newColorRgba.r,
-        g: newColorRgba.g,
-        b: newColorRgba.b
-      },
-      targetColorModel: $currentColorModel.get(),
-      fileColorProfile: $fileColorProfile.get()
-    })
-
-    updateColorHxyaAndSyncColorsRgbaAndBackend({
-      newColorHxya: { ...newColorHxy, a: opacity },
-      syncColorsRgba: false,
-      syncColorRgbWithBackend: false
-    })
-
-    bgToggle.current!.style.outlineOffset = '2px'
-
-    if ($updateParent.get()) bgToggle.current!.style.outline = '1px solid black'
-    else bgToggle.current!.style.outline = '0px'
   }
 
   const handleLockContrast = () => {
@@ -151,26 +177,14 @@ export default function ContrastInput() {
     if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
 
     if (!colorsRgba.parentFill || !colorsRgba.fill) {
-      bgToggle.current!.style.background = 'none'
-      input.current!.value = '-'
+      // input.current!.value = '-'
 
       // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
-      if ($lockContrast.get()) $lockContrast.set(false)
+      // if ($lockContrast.get()) $lockContrast.set(false)
       return
     } else {
-      input.current!.value = String($contrast.get())
+      // const newContrast = $currentContrastMethod.get() === 'wcag' ? Math.abs($contrast.get()) : $contrast.get()
     }
-
-    bgToggle.current!.style.background = `rgb(${colorsRgba.parentFill.r}, ${colorsRgba.parentFill.g}, ${colorsRgba.parentFill.b})`
-
-    const whiteTextContrast = getContrastFromBgandFgRgba(colorsRgba.parentFill, { r: 255, g: 255, b: 255, a: 100 })
-    const blackTextContrast = getContrastFromBgandFgRgba(colorsRgba.parentFill, { r: 0, g: 0, b: 0, a: 100 })
-
-    if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) bgToggleText.current!.style.color = '#FFFFFF'
-    else bgToggleText.current!.style.color = '#000000'
-  }, [colorsRgba, currentColorModel])
-
-  useEffect(() => {
     input.current!.value = String(contrast)
 
     if (keepInputSelected) {
@@ -180,9 +194,17 @@ export default function ContrastInput() {
   }, [contrast])
 
   useEffect(() => {
-    if (updateParent) bgToggle.current!.style.outline = '1px solid black'
-    else bgToggle.current!.style.outline = '0px'
-  }, [updateParent])
+    if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
+
+    if (!colorsRgba.parentFill || !colorsRgba.fill) {
+      input.current!.value = '-'
+
+      // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
+      if ($lockContrast.get()) handleLockContrast()
+    } else {
+      input.current!.value = String(contrast)
+    }
+  }, [colorsRgba])
 
   useEffect(() => {
     if (['oklch', 'oklchCss'].includes(currentColorModel)) {
@@ -195,61 +217,73 @@ export default function ContrastInput() {
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
       if (!['oklch', 'oklchCss'].includes($currentColorModel.get())) return
-
       // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
       if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
-
       if (!$colorsRgba.get().parentFill || !$colorsRgba.get().fill || $currentFillOrStroke.get() === 'stroke') return
 
       if (['l', 'L'].includes(event.key)) handleLockContrast()
-      if (['b', 'B'].includes(event.key)) handleUpdateParentSelector()
     })
   }, [])
 
   return (
     <div
       className={
-        (showContrast ? '' : 'u-visibility-hidden u-position-absolute ') +
-        ((!colorsRgba.parentFill || !colorsRgba.fill || currentFillOrStroke === 'stroke') && !$uiMessage.get().show
-          ? 'u-pointer-events-none u-opacity-50 '
-          : '') +
-        'c-single-input-with-lock'
+        'c-dropdown u-mt-10' +
+        (isContrastInputOpen ? ' c-dropdown--open' : ' -u-mb-10') +
+        (showContrast ? '' : ' u-visibility-hidden u-position-absolute')
       }
     >
-      <p>APCA contrast</p>
-
       <div
-        ref={bgToggle}
-        className={(!colorsRgba.parentFill || !colorsRgba.fill ? 'u-visibility-hidden ' : '') + 'u-ml-auto'}
-        onClick={handleUpdateParentSelector}
-        style={{ padding: '3px', border: '1px solid #DDDDDD' }}
+        className="c-dropdown__title-wrapper"
+        onClick={() => {
+          $isContrastInputOpen.set(!$isContrastInputOpen.get())
+          sendMessageToBackend<SyncIsContrastInputOpenData>({
+            type: 'syncIsContrastInputOpen',
+            data: {
+              isContrastInputOpen: $isContrastInputOpen.get()
+            }
+          })
+        }}
       >
-        <div ref={bgToggleText} style={{ fontSize: '11px' }}>
-          Bg
+        <div>Contrast</div>
+
+        <div className={'c-dropdown__arrow-icon' + (isContrastInputOpen ? ' c-dropdown__arrow-icon--open' : '')}>
+          <svg className="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
+            <path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fillRule="nonzero" fillOpacity="1" stroke="none"></path>
+          </svg>
         </div>
       </div>
 
-      <div className="input-wrapper c-single-input-with-lock__input-wrapper">
-        <input ref={input} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
-      </div>
+      <div
+        className={
+          'c-single-input-with-lock c-single-input-with-lock--with-select c-dropdown__content-wraper u-mb-10' +
+          (isContrastInputOpen ? '' : ' u-display-none') +
+          ((!colorsRgba.parentFill || !colorsRgba.fill || currentFillOrStroke === 'stroke') && !$uiMessage.get().show
+            ? ' c-single-input-with-lock--deactivated'
+            : '')
+        }
+      >
+        <div className="select-wrapper c-select-input-controls__select-wrapper">
+          <select ref={contrastMethodSelect} onChange={handleContrastMethod} name="contrast_method" id="contrast_method">
+            <option value="apca" selected={currentContrastMethod === 'apca' ? true : false}>
+              APCA
+            </option>
+            <option value="wcag" selected={currentContrastMethod === 'wcag' ? true : false}>
+              WCAG
+            </option>
+          </select>
+        </div>
 
-      <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockContrast}>
-        <div className={'c-single-input-with-lock__lock' + (lockContrast ? ' c-single-input-with-lock__lock--closed' : '')}>
-          <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
-            {!lockContrast ? (
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M8 5V6H8.5C8.776 6 9 6.224 9 6.5V11.5C9 11.776 8.776 12 8.5 12H2.5C2.224 12 2 11.776 2 11.5V6.5C2 6.224 2.224 6 2.5 6H7V3.5C7 2.12 8.12 1 9.5 1C10.88 1 12 2.12 12 3.5V5H11V3.5C11 2.672 10.328 2 9.5 2C8.672 2 8 2.672 8 3.5V5Z"
-              />
-            ) : (
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M7 4.5V6H4V4.5C4 3.672 4.672 3 5.5 3C6.328 3 7 3.672 7 4.5ZM3 6V4.5C3 3.12 4.12 2 5.5 2C6.88 2 8 3.12 8 4.5V6H8.5C8.776 6 9 6.224 9 6.5V11.5C9 11.776 8.776 12 8.5 12H2.5C2.224 12 2 11.776 2 11.5V6.5C2 6.224 2.224 6 2.5 6H3Z"
-              />
-            )}
-          </svg>
+        <BgFgToggle />
+
+        <div className="input-wrapper c-single-input-with-lock__input-wrapper">
+          <input ref={input} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
+        </div>
+
+        <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockContrast}>
+          <div className={'c-single-input-with-lock__lock' + (lockContrast ? ' c-single-input-with-lock__lock--closed' : '')}>
+            {!lockContrast ? <OpenLockIcon /> : <ClosedLockIcon />}
+          </div>
         </div>
       </div>
     </div>

@@ -8,8 +8,8 @@
   pointer-events: none;
   opacity: 0.5;
 }
-.c-file-color-profile-select p {
-  font-size: 11px;
+.c-file-color-profile-select__label {
+  font-size: var(--base-font-size);
   color: var(--figma-color-text);
 }
 .c-file-color-profile-select .select-wrapper {

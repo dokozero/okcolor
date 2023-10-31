@@ -6,7 +6,7 @@ import {
   $fileColorProfile,
   $colorsRgba,
   updateColorHxyaAndSyncColorsRgbaAndBackend,
-  $updateParent,
+  $currentBgOrFg,
   $lockContrast
 } from '../../store'
 import { useStore } from '@nanostores/react'
@@ -21,7 +21,7 @@ export default function FillStrokeSelect() {
 
   const currentFillOrStroke = useStore($currentFillOrStroke)
   const colorsRgba = useStore($colorsRgba)
-  const updateParent = useStore($updateParent)
+  const currentBgOrFg = useStore($currentBgOrFg)
 
   const fillOrStrokeSelector = useRef<HTMLDivElement>(null)
   const fillOrStrokeSelector_fill = useRef<SVGCircleElement>(null)
@@ -76,13 +76,13 @@ export default function FillStrokeSelect() {
     updateRenderFillStrokeSelectColor()
 
     // If the bg is selected and it has a stroke, we don't want to allow selecting it as in this mode, we just want to update the bg to change the contrast an the border doesn't play a role here.
-    // That is why we do this these tests bellow with updateParent.
+    // That is why we do this these tests bellow with currentBgOrFg.
 
     // In case the stroke of the foreground shape was selected and we are now updating the parent, we need to get back to fill.
-    if (updateParent && $currentFillOrStroke.get() === 'stroke') $currentFillOrStroke.set('fill')
+    if (currentBgOrFg === 'bg' && $currentFillOrStroke.get() === 'stroke') $currentFillOrStroke.set('fill')
 
     // If the shape has a fill and a stroke (and we are not updating the parent), we allow he user to click on it to toggle, otherwise no.
-    if (colorsRgba.fill && colorsRgba.stroke && !updateParent) {
+    if (colorsRgba.fill && colorsRgba.stroke && currentBgOrFg === 'fg') {
       fillOrStrokeSelector.current!.classList.remove('u-pointer-events-none')
     } else {
       fillOrStrokeSelector.current!.classList.add('u-pointer-events-none')
@@ -91,14 +91,14 @@ export default function FillStrokeSelect() {
     // For the style, for example if there is no stroke, we set a data attribue to false in order to give it the right style.
     fillOrStrokeSelector.current!.setAttribute('data-has-fill', colorsRgba.fill ? 'true' : 'false')
 
-    if (!updateParent) {
+    if (currentBgOrFg === 'fg') {
       fillOrStrokeSelector.current!.setAttribute('data-has-stroke', colorsRgba.stroke ? 'true' : 'false')
     } else {
       // If we are updating the parent, in all case we want to set this as false.
       fillOrStrokeSelector.current!.setAttribute('data-has-stroke', 'false')
     }
 
-    if (updateParent) {
+    if (currentBgOrFg === 'bg') {
       fillOrStrokeSelector_fill.current!.setAttribute(
         'fill',
         `rgb(${colorsRgba.parentFill!.r}, ${colorsRgba.parentFill!.g}, ${colorsRgba.parentFill!.b})`
@@ -114,7 +114,7 @@ export default function FillStrokeSelect() {
         colorsRgba.stroke ? `rgb(${colorsRgba.stroke.r}, ${colorsRgba.stroke.g}, ${colorsRgba.stroke.b})` : 'none'
       )
     }
-  }, [colorsRgba, updateParent])
+  }, [colorsRgba, currentBgOrFg])
 
   return (
     <div

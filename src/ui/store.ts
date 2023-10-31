@@ -10,7 +10,10 @@ import type {
   ColorValueDecimals,
   UpdateShapeColorData,
   ApcaContrast,
-  RelativeChroma
+  RelativeChroma,
+  CurrentContrastMethod,
+  CurrentBgOrFg,
+  WcagContrast
 } from '../types'
 import convertHxyToRgb from './helpers/convertHxyToRgb'
 import convertAbsoluteChromaToRelative from './helpers/convertAbsoluteChromaToRelative'
@@ -32,15 +35,20 @@ export const $figmaEditorType = atom<FigmaEditorType | null>(null)
 export const $fileColorProfile = atom<FileColorProfile>('rgb')
 export const $currentColorModel = atom<CurrentColorModel>('oklchCss')
 export const $currentFillOrStroke = atom<CurrentFillOrStroke>('fill')
-export const $isColorCodeInputsOpen = atom(true)
 export const $currentKeysPressed = atom<CurrentKeysPressed>([''])
 export const $isMouseInsideDocument = atom(false)
 export const $mouseEventCallback = atom<((event: MouseEvent) => void) | null>(null)
 export const $relativeChroma = atom<RelativeChroma>(0)
-export const $lockRelativeChroma = atom<boolean>(false)
-export const $updateParent = atom(false)
-export const $contrast = atom<ApcaContrast>(0)
-export const $lockContrast = atom<boolean>(false)
+export const $lockRelativeChroma = atom(false)
+export const $isContrastInputOpen = atom(false)
+export const $currentBgOrFg = atom<CurrentBgOrFg>('fg')
+export const $currentContrastMethod = atom<CurrentContrastMethod>('apca')
+export const $contrast = atom<ApcaContrast | WcagContrast | null>(null)
+export const $lockContrast = atom(false)
+export const $isColorCodeInputsOpen = atom(false)
+
+export const $lockContrastStartY = atom<number | null>(null)
+export const $lockContrastEndY = atom<number | null>(null)
 
 export const $colorsRgba = deepMap<ColorsRgba>({
   parentFill: null,
@@ -91,16 +99,7 @@ export const updateColorHxyaAndSyncColorsRgbaAndBackend = action(
       console.log(`    newColorHxya: ${JSON.stringify(newColorHxya)}`)
     }
 
-    const { h, x, y, a } = filterNewColorHxya(
-      {
-        h: newColorHxya.h !== undefined ? newColorHxya.h : $colorHxya.get().h,
-        x: newColorHxya.x !== undefined ? newColorHxya.x : $colorHxya.get().x,
-        y: newColorHxya.y !== undefined ? newColorHxya.y : $colorHxya.get().y,
-        a: newColorHxya.a !== undefined ? newColorHxya.a : $colorHxya.get().a
-      },
-      bypassLockRelativeChromaFilter,
-      bypassLockContrastFilter
-    )
+    const { h, x, y, a } = filterNewColorHxya(newColorHxya, bypassLockRelativeChromaFilter, bypassLockContrastFilter)
 
     colorHxya.set({
       h: h !== undefined ? h : colorHxya.get().h,
@@ -123,7 +122,7 @@ export const updateColorHxyaAndSyncColorsRgbaAndBackend = action(
     })
 
     if (syncColorsRgba) {
-      const key = $updateParent.get() ? 'parentFill' : `${$currentFillOrStroke.get()}`
+      const key = $currentBgOrFg.get() === 'bg' ? 'parentFill' : `${$currentFillOrStroke.get()}`
 
       $colorsRgba.setKey(key, { ...newColorRgb, a: colorHxya.get().a })
     }
@@ -133,7 +132,7 @@ export const updateColorHxyaAndSyncColorsRgbaAndBackend = action(
         type: 'updateShapeColor',
         data: {
           newColorRgba: { ...newColorRgb, a: $colorHxya.get().a },
-          updateParent: $updateParent.get()
+          currentBgOrFg: $currentBgOrFg.get()
         }
       })
     }
@@ -167,16 +166,13 @@ $colorsRgba.subscribe((newColorsRgba) => {
     console.log(`    newColorHxya: ${JSON.stringify(newColorsRgba)}`)
   }
 
-  if (!newColorsRgba.parentFill || !newColorsRgba.fill) return
+  if (!newColorsRgba.parentFill || !newColorsRgba.fill || ($lockContrast.get() && $contrast.get() !== null)) return
 
-  let newContrast: ApcaContrast | null = null
+  let newContrast: ApcaContrast | WcagContrast | null = null
 
-  newContrast = getContrastFromBgandFgRgba(newColorsRgba.parentFill!, newColorsRgba.fill!)
+  newContrast = getContrastFromBgandFgRgba(newColorsRgba.fill!, newColorsRgba.parentFill!)
 
-  if (newContrast !== null) {
-    newContrast = Math.round(newContrast)
-    $contrast.set(newContrast)
-  }
+  if (newContrast !== null) $contrast.set(newContrast)
 })
 
 export const $colorValueDecimals = computed(

@@ -1,3 +1,5 @@
+import { AbsoluteChroma, Lightness } from '../../types'
+
 export const clampNumber = (num: number, min: number, max: number): number => {
   if (num < min) return min
   else if (num > max) return max
@@ -29,4 +31,21 @@ export const selectInputContent = (event: React.MouseEvent<HTMLInputElement>) =>
 export const roundWithDecimal = (value: number, numberOfDecimal = 1): number => {
   const roundFormulaValue = Math.pow(10, numberOfDecimal)
   return Math.round(value * roundFormulaValue) / roundFormulaValue
+}
+
+export const findYOnLockedChromaLine = (
+  targetX: AbsoluteChroma,
+  pointA: [Lightness, AbsoluteChroma],
+  pointB: [Lightness, AbsoluteChroma]
+): Lightness => {
+  // calculate the slope
+  const slope = (pointB[1] - pointA[1]) / (pointB[0] - pointA[0])
+
+  // calculate the y-intercept
+  const yIntercep = pointA[1]
+
+  // calculate y
+  const y = slope * targetX + yIntercep
+
+  return roundWithDecimal(y, 1)
 }

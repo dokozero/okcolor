@@ -62,7 +62,7 @@ export default function FileColorProfileSelect() {
           : '')
       }
     >
-      <p>File color profile</p>
+      <div className="c-file-color-profile-select__label">File color profile</div>
 
       <div className="select-wrapper">
         <select onChange={handleFileColorProfile} name="file_color_profile" id="file_color_profile">

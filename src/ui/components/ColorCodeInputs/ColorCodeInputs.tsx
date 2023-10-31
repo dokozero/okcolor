@@ -39,10 +39,10 @@ export default function ColorCodeInputs() {
   const colorCode_hexCopyAction = useRef<HTMLDivElement>(null)
 
   const removeModifierClassOnCopyActions = () => {
-    colorCode_currentColorModelCopyAction.current!.classList.remove('c-color-code-inputs__copy-action--copied')
-    colorCode_colorCopyAction.current!.classList.remove('c-color-code-inputs__copy-action--copied')
-    colorCode_rgbaCopyAction.current!.classList.remove('c-color-code-inputs__copy-action--copied')
-    colorCode_hexCopyAction.current!.classList.remove('c-color-code-inputs__copy-action--copied')
+    colorCode_currentColorModelCopyAction.current!.classList.remove('c-copy-action--copied')
+    colorCode_colorCopyAction.current!.classList.remove('c-copy-action--copied')
+    colorCode_rgbaCopyAction.current!.classList.remove('c-copy-action--copied')
+    colorCode_hexCopyAction.current!.classList.remove('c-copy-action--copied')
   }
 
   const updateColorCodeInputs = () => {
@@ -98,17 +98,20 @@ export default function ColorCodeInputs() {
   const handleCopyActionOnClick = (event: React.MouseEvent<HTMLDivElement>, input: HTMLInputElement) => {
     removeModifierClassOnCopyActions()
     copyToClipboard(input.value)
-    ;(event.target as HTMLDivElement).classList.add('c-color-code-inputs__copy-action--copied')
+    ;(event.target as HTMLDivElement).classList.add('c-copy-action--copied')
   }
 
   useEffect(() => {
     updateColorCodeInputs()
   }, [colorHxya])
 
+  // TODO - move onClick sync with backend to a function.
+  // Same in ContrastInput
+
   return (
-    <div className={'c-color-code-inputs' + (isColorCodeInputsOpen ? ' c-color-code-inputs--open' : '')}>
+    <div className={'c-dropdown u-mt-10' + (isColorCodeInputsOpen ? ' c-dropdown--open' : '')}>
       <div
-        className="c-color-code-inputs__title-wrapper"
+        className="c-dropdown__title-wrapper"
         onClick={() => {
           $isColorCodeInputsOpen.set(!$isColorCodeInputsOpen.get())
           sendMessageToBackend<SyncIsColorCodeInputsOpenData>({
@@ -121,7 +124,7 @@ export default function ColorCodeInputs() {
       >
         <div>Color codes</div>
 
-        <div className={'c-color-code-inputs__arrow-icon' + (isColorCodeInputsOpen ? ' c-color-code-inputs__arrow-icon--open' : '')}>
+        <div className={'c-dropdown__arrow-icon' + (isColorCodeInputsOpen ? ' c-dropdown__arrow-icon--open' : '')}>
           <svg className="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
             <path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fillRule="nonzero" fillOpacity="1" stroke="none"></path>
           </svg>
@@ -129,7 +132,7 @@ export default function ColorCodeInputs() {
       </div>
 
       <div
-        className={'c-color-code-inputs__inputs-wraper ' + (isColorCodeInputsOpen ? '' : ' u-display-none')}
+        className={'c-dropdown__content-wraper u-px-9' + (isColorCodeInputsOpen ? '' : ' u-display-none')}
         onMouseLeave={removeModifierClassOnCopyActions}
       >
         <div className="input-wrapper">
@@ -143,7 +146,7 @@ export default function ColorCodeInputs() {
           />
           <div
             ref={colorCode_currentColorModelCopyAction}
-            className="c-color-code-inputs__copy-action"
+            className="c-copy-action"
             onClick={(event) => {
               handleCopyActionOnClick(event, colorCode_currentColorModelInput.current!)
             }}
@@ -163,7 +166,7 @@ export default function ColorCodeInputs() {
           />
           <div
             ref={colorCode_colorCopyAction}
-            className="c-color-code-inputs__copy-action"
+            className="c-copy-action"
             onClick={(event) => {
               handleCopyActionOnClick(event, colorCode_colorInput.current!)
             }}
@@ -183,7 +186,7 @@ export default function ColorCodeInputs() {
           />
           <div
             ref={colorCode_rgbaCopyAction}
-            className="c-color-code-inputs__copy-action"
+            className="c-copy-action"
             onClick={(event) => {
               handleCopyActionOnClick(event, colorCode_rgbaInput.current!)
             }}
@@ -203,7 +206,7 @@ export default function ColorCodeInputs() {
           />
           <div
             ref={colorCode_hexCopyAction}
-            className="c-color-code-inputs__copy-action"
+            className="c-copy-action"
             onClick={(event) => {
               handleCopyActionOnClick(event, colorCode_hexInput.current!)
             }}

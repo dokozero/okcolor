@@ -9,7 +9,7 @@ import {
   updateColorHxyaAndSyncColorsRgbaAndBackend,
   $lockRelativeChroma,
   $lockContrast,
-  $updateParent
+  $currentBgOrFg
 } from '../../store'
 import { useStore } from '@nanostores/react'
 import { CurrentColorModel, SyncCurrentColorModelData, SyncFileColorProfileData } from '../../../types'
@@ -36,7 +36,7 @@ export default function ColorModelSelect() {
       }
     })
 
-    if ($updateParent.get()) $updateParent.set(false)
+    if ($currentBgOrFg.get() === 'bg') $currentBgOrFg.set('fg')
 
     const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
 
@@ -50,7 +50,6 @@ export default function ColorModelSelect() {
       fileColorProfile: $fileColorProfile.get()
     })
 
-    // TODO - withBackend
     updateColorHxyaAndSyncColorsRgbaAndBackend({
       newColorHxya: { ...newColorHxy, a: $colorHxya.get().a },
       syncColorsRgba: false,

@@ -6,7 +6,8 @@ import {
   $colorsRgba,
   updateColorHxyaAndSyncColorsRgbaAndBackend,
   $mouseEventCallback,
-  $updateParent
+  $currentBgOrFg,
+  $lockContrast
 } from '../../../store'
 import { limitMouseManipulatorPosition } from '../../../helpers/others'
 import { useStore } from '@nanostores/react'
@@ -21,7 +22,8 @@ export default function OpacitySlider() {
 
   const colorHxya = useStore($colorHxya)
   const colorsRgba = useStore($colorsRgba)
-  const updateParent = useStore($updateParent)
+  const currentBgOrFg = useStore($currentBgOrFg)
+  const lockContrast = useStore($lockContrast)
 
   const opacitySliderWrapper = useRef<HTMLDivElement>(null)
   const opacitySlider = useRef<HTMLDivElement>(null)
@@ -45,7 +47,7 @@ export default function OpacitySlider() {
   }, [colorHxya.a])
 
   useEffect(() => {
-    if (updateParent) {
+    if (currentBgOrFg === 'bg' || lockContrast) {
       opacitySliderWrapper.current!.style.backgroundImage = `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(0, 0, 0, 1) 90%), url(${opacitysliderBackgroundImg})`
     } else {
       opacitySliderWrapper.current!.style.backgroundImage = `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${
@@ -54,7 +56,7 @@ export default function OpacitySlider() {
         colorsRgba[`${$currentFillOrStroke.get()}`]!.b
       }, 1) 90%), url(${opacitysliderBackgroundImg})`
     }
-  }, [colorsRgba, updateParent])
+  }, [colorsRgba, currentBgOrFg, lockContrast])
 
   useEffect(() => {
     opacitySlider.current!.addEventListener('mousedown', () => {
@@ -63,7 +65,7 @@ export default function OpacitySlider() {
   }, [])
 
   return (
-    <div className={(updateParent ? 'c-slider--deactivated ' : '') + 'c-slider u-mt-16'}>
+    <div className={'c-slider u-mt-16' + (currentBgOrFg === 'bg' || lockContrast ? ' c-slider--deactivated' : '')}>
       <div ref={opacitySliderWrapper} className="c-slider__canvas">
         <div ref={opacitySlider} className="u-w-full u-h-full" id="opacity-slider"></div>
       </div>

@@ -1,29 +1,35 @@
 .c-single-input-with-lock {
   height: 28px;
-  padding: 0 12px 0 14px;
-  margin-top: 6px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.c-single-input-with-lock p {
-  font-size: 11px;
-  color: var(--figma-color-text);
+.c-single-input-with-lock--with-label {
+  padding: 0 12px 0 14px;
 }
-.c-single-input-with-lock p {
+.c-single-input-with-lock--with-select {
+  padding: 0 12px 0 9px;
+}
+.c-single-input-with-lock--deactivated {
+  pointer-events: none;
+  opacity: 0.5;
+}
+.c-single-input-with-lock__label {
+  font-size: var(--base-font-size);
+  color: var(--figma-color-text);
   white-space: nowrap;
 }
 
 .c-single-input-with-lock__input-wrapper {
   max-width: 40px;
-  margin-left: 8px;
+  margin-left: 9px;
 }
 
 .c-single-input-with-lock__lock-wrapper {
   height: 100%;
   margin-left: 4px;
   padding: 2px;
-  border-radius: 2px;
+  border-radius: var(--base-border-radius);
 }
 .c-single-input-with-lock__lock-wrapper:hover {
   outline: 1px solid var(--figma-color-border);
@@ -32,7 +38,7 @@
 .c-single-input-with-lock__lock {
   height: 100%;
   padding: 0 6px 0 5px;
-  border-radius: 2px;
+  border-radius: var(--base-border-radius);
   display: flex;
   align-items: center;
 }

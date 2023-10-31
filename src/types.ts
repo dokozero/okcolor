@@ -10,37 +10,53 @@ export type Lightness = number // 0 - 100
 export type Opacity = number // 0 - 100
 
 export type ApcaContrast = number // -108 - 106
+export type WcagContrast = number // -21 - 21, normally WCAG contrast is between 0 and 21 but because APCA one can be negative, we also use a negative value here as it easier to work with, for example in convertContrastToLightness().
 
 export type SvgPath = string
 
+export type RgbArray = [RgbElement, RgbElement, RgbElement]
+export type RgbaArray = [RgbElement, RgbElement, RgbElement, RgbElement]
+
 // We use enums to get the value when hovering variable that use these types like FigmaEditorType
-enum FigmaEditorTypes {
+enum FigmaEditorTypeList {
   'figjam',
   'figma',
   'dev'
 }
-export type FigmaEditorType = keyof typeof FigmaEditorTypes
+export type FigmaEditorType = keyof typeof FigmaEditorTypeList
 
 // We use 'rgb' and not 'srgb' because Culori use it like this, even if it's confusing because rgb is a color model, not a space.
-enum FileColorProfiles {
+enum FileColorProfileList {
   'rgb',
   'p3'
 }
-export type FileColorProfile = keyof typeof FileColorProfiles
+export type FileColorProfile = keyof typeof FileColorProfileList
 
-export enum ColorModels {
+export enum ColorModelList {
   'oklchCss',
   'oklch',
   'okhsl',
   'okhsv'
 }
-export type CurrentColorModel = keyof typeof ColorModels
+export type CurrentColorModel = keyof typeof ColorModelList
 
-enum FillOrStrokes {
+enum ContrastMethodList {
+  'apca',
+  'wcag'
+}
+export type CurrentContrastMethod = keyof typeof ContrastMethodList
+
+enum FillOrStrokeList {
   'fill',
   'stroke'
 }
-export type CurrentFillOrStroke = keyof typeof FillOrStrokes
+export type CurrentFillOrStroke = keyof typeof FillOrStrokeList
+
+enum CurrentBgOrFgList {
+  'bg',
+  'fg'
+}
+export type CurrentBgOrFg = keyof typeof CurrentBgOrFgList
 
 export enum HxyaLabels {
   'h' = 'h',
@@ -107,10 +123,12 @@ export type MessageForUiTypes = 'syncLocalStorageValues' | 'syncCurrentFillOrStr
 export type SyncLocalStorageValuesData = {
   figmaEditorType: FigmaEditorType
   fileColorProfile: FileColorProfile
-  currentColorModel: CurrentColorModel
-  isColorCodeInputsOpen: boolean
+  isContrastInputOpen: boolean
   lockRelativeChroma: boolean
+  currentContrastMethod: CurrentContrastMethod
   lockContrast: boolean
+  isColorCodeInputsOpen: boolean
+  currentColorModel: CurrentColorModel
 }
 
 export type SyncCurrentFillOrStrokeAndColorsRgbaData = {
@@ -138,13 +156,15 @@ export type MessageForBackendTypes =
   | 'syncFileColorProfile'
   | 'syncCurrentFillOrStroke'
   | 'syncCurrentColorModel'
-  | 'syncIsColorCodeInputsOpen'
+  | 'syncIsContrastInputOpen'
   | 'syncLockRelativeChroma'
+  | 'syncCurrentContrastMethod'
   | 'syncLockContrast'
+  | 'syncIsColorCodeInputsOpen'
 
 export type UpdateShapeColorData = {
   newColorRgba: ColorRgba
-  updateParent: boolean
+  currentBgOrFg: CurrentBgOrFg
 }
 
 export type SyncFileColorProfileData = {
@@ -159,16 +179,24 @@ export type SyncCurrentColorModelData = {
   currentColorModel: CurrentColorModel
 }
 
-export type SyncIsColorCodeInputsOpenData = {
-  isColorCodeInputsOpen: boolean
+export type SyncIsContrastInputOpenData = {
+  isContrastInputOpen: boolean
 }
 
 export type SyncLockRelativeChromaData = {
   lockRelativeChroma: boolean
 }
 
+export type SyncCurrentContrastMethodData = {
+  currentContrastMethod: CurrentContrastMethod
+}
+
 export type SyncLockContrastData = {
   lockContrast: boolean
+}
+
+export type SyncIsColorCodeInputsOpenData = {
+  isColorCodeInputsOpen: boolean
 }
 
 export type MessageForBackendData =
@@ -176,9 +204,11 @@ export type MessageForBackendData =
   | SyncFileColorProfileData
   | SyncCurrentFillOrStrokeData
   | SyncCurrentColorModelData
-  | SyncIsColorCodeInputsOpenData
+  | SyncIsContrastInputOpenData
   | SyncLockRelativeChromaData
+  | SyncCurrentContrastMethodData
   | SyncLockContrastData
+  | SyncIsColorCodeInputsOpenData
 
 export type MessageForBackend = {
   type: MessageForBackendTypes

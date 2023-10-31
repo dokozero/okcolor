@@ -3,7 +3,7 @@ import type { Rgb, Okhsl, Okhsv, Oklch } from '../helpers/culori.mjs'
 
 import { roundWithDecimal } from './others'
 import { $colorValueDecimals } from '../store'
-import { ColorHxy, ColorModels, ColorRgb } from '../../types'
+import { ColorHxy, ColorModelList, ColorRgb, FileColorProfile } from '../../types'
 
 const convertToOkhsl = converter('okhsl')
 const convertToOkhsv = converter('okhsv')
@@ -11,8 +11,8 @@ const convertToOklch = converter('oklch')
 
 type Props = {
   colorRgb: ColorRgb
-  targetColorModel: keyof typeof ColorModels
-  fileColorProfile: string
+  targetColorModel: keyof typeof ColorModelList
+  fileColorProfile: FileColorProfile
   keepOklchCssDoubleDigit?: boolean
 }
 

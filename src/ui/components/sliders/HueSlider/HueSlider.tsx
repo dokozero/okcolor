@@ -20,8 +20,7 @@ export default function HueSlider() {
     const canvasY = event.clientX - rect.left - 7
 
     const newColorHxya = {
-      h: roundWithDecimal(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, $colorValueDecimals.get().h),
-      x: $colorHxya.get().x
+      h: roundWithDecimal(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, $colorValueDecimals.get().h)
     }
 
     updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: newColorHxya })

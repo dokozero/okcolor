@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { ColorRgba, CurrentFillOrStroke } from '../../types'
+import { ColorRgba, CurrentBgOrFg, CurrentFillOrStroke } from '../../types'
 
-export default function updateShapeColor(newColorRgba: ColorRgba, currentFillOrStroke: CurrentFillOrStroke, updateParent: boolean) {
+export default function updateShapeColor(newColorRgba: ColorRgba, currentFillOrStroke: CurrentFillOrStroke, currentBgOrFg: CurrentBgOrFg) {
   const newColorRgbaFormated = {
     r: newColorRgba.r / 255,
     g: newColorRgba.g / 255,
@@ -17,8 +17,8 @@ export default function updateShapeColor(newColorRgba: ColorRgba, currentFillOrS
 
     // Deep copy of node[types] is necessary to update it as explained in Figma's dev doc: https://www.figma.com/plugin-docs/editing-properties/
     // We use ts-ignore because know here that node will always have a fills or strokes properties because the user can't use the plugin if the selected shape(s) are not of the types from supportedNodeTypes.
-    if (updateParent) {
-      parentObject = node.parent as any // We know that node.parent will have the properties if updateParent is true.
+    if (currentBgOrFg === 'bg') {
+      parentObject = node.parent as any // We know that node.parent will have the properties if currentBgOrFg === 'bg'.
       while (parentObject) {
         if (parentObject.fills?.length !== 0) {
           break
@@ -40,7 +40,7 @@ export default function updateShapeColor(newColorRgba: ColorRgba, currentFillOrS
     copyNode[0].color.b = newColorRgbaFormated.b
     copyNode[0].opacity = newColorRgbaFormated.a
 
-    if (updateParent) {
+    if (currentBgOrFg === 'bg') {
       // @ts-ignore
       parentObject.fills = copyNode
     } else {

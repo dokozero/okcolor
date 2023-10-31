@@ -7,7 +7,7 @@ import {
   $isMouseInsideDocument,
   $lockContrast,
   $lockRelativeChroma,
-  $updateParent,
+  $currentBgOrFg,
   updateColorHxyaAndSyncColorsRgbaAndBackend
 } from '../../store'
 import { selectInputContent, roundWithDecimal } from '../../helpers/others'
@@ -70,7 +70,8 @@ export default function ColorValueInputs() {
 
   const currentColorModel = useStore($currentColorModel)
   const colorHxya = useStore($colorHxya)
-  const updateParent = useStore($updateParent)
+  const currentBgOrFg = useStore($currentBgOrFg)
+  const lockContrast = useStore($lockContrast)
 
   const inputH = useRef<HTMLInputElement>(null)
   const inputX = useRef<HTMLInputElement>(null)
@@ -193,7 +194,7 @@ export default function ColorValueInputs() {
         onBlur={handleInputOnBlur}
         onKeyDown={handleInputOnKeyDown}
         tabIndex={4}
-        disabled={updateParent ? true : false}
+        disabled={currentBgOrFg === 'bg' || lockContrast ? true : false}
       />
     </div>
   )
