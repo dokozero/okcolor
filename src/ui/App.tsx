@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 
 import FileColorProfileSelect from './components/FileColorProfileSelect/FileColorProfileSelect'
 import ColorPicker from './components/ColorPicker/ColorPicker'
-import FillStrokeSelect from './components/FillStrokeSelect/FillStrokeSelect'
+import FillOrStrokeToggle from './components/FillOrStrokeToggle/FillOrStrokeToggle'
 import HueSlider from './components/sliders/HueSlider/HueSlider'
 import OpacitySlider from './components/sliders/OpacitySlider/OpacitySlider'
 import ColorModelSelect from './components/ColorModelSelect/ColorModelSelect'
@@ -173,7 +173,7 @@ function App() {
 
         <div className="o-bottom-controls">
           <div className="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
-            <FillStrokeSelect />
+            <FillOrStrokeToggle />
 
             <div className="u-flex u-flex-col">
               <HueSlider />

@@ -1,13 +1,13 @@
-.c-bg-fg-toggle {
+.c-bg-or-fg-toggle {
   display: flex;
   gap: 8px;
   padding: 3px;
 }
-.c-bg-fg-toggle:hover {
+.c-bg-or-fg-toggle:hover {
   cursor: pointer;
 }
 
-.c-bg-fg-toggle__element {
+.c-bg-or-fg-toggle__element {
   padding: 3px;
   border: 1px solid;
   outline-width: 2px;
@@ -15,17 +15,17 @@
   outline-offset: 2px;
   border-radius: 1px;
 }
-.figma-light .c-bg-fg-toggle__element {
+.figma-light .c-bg-or-fg-toggle__element {
   border-color: rgb(0, 0, 0, 0.3);
 }
-.figma-dark .c-bg-fg-toggle__element {
+.figma-dark .c-bg-or-fg-toggle__element {
   border-color: rgb(255, 255, 255, 0.3);
 }
 
-.c-bg-fg-toggle__element-label {
+.c-bg-or-fg-toggle__element-label {
   font-size: var(--base-font-size);
   font-weight: 400;
 }
-.c-bg-fg-toggle__element-label--active {
+.c-bg-or-fg-toggle__element-label--active {
   font-weight: 500;
 }

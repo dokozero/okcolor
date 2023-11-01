@@ -4,7 +4,7 @@ import { MAX_APCA_CONTRAST, MAX_WCAG_CONTRAST, MIN_APCA_CONTRAST, MIN_WCAG_CONTR
 import { useStore } from '@nanostores/react'
 import { ApcaContrast, CurrentContrastMethod, SyncLockContrastData, WcagContrast } from '../../../../types'
 import sendMessageToBackend from '../../../helpers/sendMessageToBackend'
-import BgFgToggle from './BgFgToggle'
+import BgOrFgToggle from './BgOrFgToggle'
 import OpenLockIcon from '../OpenLockIcon'
 import ClosedLockIcon from './ClosedLockIcon'
 import getContrastFromBgandFgRgba from '../../../helpers/getContrastFromBgandFgRgba'
@@ -247,7 +247,7 @@ export default function ContrastInput() {
           </select>
         </div>
 
-        <BgFgToggle />
+        <BgOrFgToggle />
 
         <div className="input-wrapper c-single-input-with-lock__input-wrapper">
           <input ref={input} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />

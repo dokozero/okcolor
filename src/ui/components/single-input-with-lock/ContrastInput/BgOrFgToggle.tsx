@@ -13,12 +13,12 @@ import { $currentBgOrFg, setCurrentBgOrFg } from '../../../stores/contrasts/curr
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke'
 import { $uiMessage } from '../../../stores/uiMessage'
 
-export default function BgFgToggle() {
+export default function BgOrFgToggle() {
   if (consoleLogInfos.includes('Component renders')) {
-    console.log('Component render — BgFgToggle')
+    console.log('Component render — BgOrFgToggle')
   }
 
-  const bgFgToggle = useRef<HTMLDivElement>(null)
+  const bgOrFgToggle = useRef<HTMLDivElement>(null)
   const bgToggle = useRef<HTMLDivElement>(null)
   const fgToggle = useRef<HTMLDivElement>(null)
   const bgToggleText = useRef<HTMLDivElement>(null)
@@ -29,7 +29,7 @@ export default function BgFgToggle() {
   const currentColorModel = useStore($currentColorModel)
   const currentBgOrFg = useStore($currentBgOrFg)
 
-  const handleBgFgToggle = () => {
+  const handleBgOrFgToggle = () => {
     if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
     else setCurrentBgOrFg('bg')
 
@@ -66,7 +66,7 @@ export default function BgFgToggle() {
     if (['okhsv', 'okhsl'].includes(currentColorModel)) return
 
     if (!colorsRgba.parentFill || !colorsRgba.fill) {
-      bgFgToggle.current!.style.background = 'none'
+      bgOrFgToggle.current!.style.background = 'none'
       return
     }
 
@@ -124,29 +124,29 @@ export default function BgFgToggle() {
       if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
       if (!$colorsRgba.get().parentFill || !$colorsRgba.get().fill || $currentFillOrStroke.get() === 'stroke') return
 
-      if (['b', 'B', 'f', 'F'].includes(event.key)) handleBgFgToggle()
+      if (['b', 'B', 'f', 'F'].includes(event.key)) handleBgOrFgToggle()
     })
   }, [])
 
   return (
     <div
-      ref={bgFgToggle}
-      className={'c-bg-fg-toggle u-ml-auto ' + (!colorsRgba.parentFill || !colorsRgba.fill ? 'u-visibility-hidden' : '')}
-      onClick={handleBgFgToggle}
+      ref={bgOrFgToggle}
+      className={'c-bg-or-fg-toggle u-ml-auto ' + (!colorsRgba.parentFill || !colorsRgba.fill ? 'u-visibility-hidden' : '')}
+      onClick={handleBgOrFgToggle}
     >
-      <div ref={bgToggle} className="c-bg-fg-toggle__element">
+      <div ref={bgToggle} className="c-bg-or-fg-toggle__element">
         <div
           ref={bgToggleText}
-          className={'c-bg-fg-toggle__element-label' + (currentBgOrFg === 'bg' ? ' c-bg-fg-toggle__element-label--active' : '')}
+          className={'c-bg-or-fg-toggle__element-label' + (currentBgOrFg === 'bg' ? ' c-bg-or-fg-toggle__element-label--active' : '')}
         >
           Bg
         </div>
       </div>
 
-      <div ref={fgToggle} className="c-bg-fg-toggle__element">
+      <div ref={fgToggle} className="c-bg-or-fg-toggle__element">
         <div
           ref={fgToggleText}
-          className={'c-bg-fg-toggle__element-label' + (currentBgOrFg === 'fg' ? ' c-bg-fg-toggle__element-label--active' : '')}
+          className={'c-bg-or-fg-toggle__element-label' + (currentBgOrFg === 'fg' ? ' c-bg-or-fg-toggle__element-label--active' : '')}
         >
           Fg
         </div>

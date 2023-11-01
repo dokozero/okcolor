@@ -1,0 +1,29 @@
+.c-fill-or-stroke-toggle {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  padding: 5px;
+  border-radius: 3px;
+}
+.c-fill-or-stroke-toggle:hover {
+  background: var(--figma-color-bg-hover);
+}
+.c-fill-or-stroke-toggle__fill,
+.c-fill-or-stroke-toggle__stroke {
+  position: absolute;
+}
+.c-fill-or-stroke-toggle[data-active='fill'] .c-fill-or-stroke-toggle__fill {
+  z-index: 1;
+}
+.c-fill-or-stroke-toggle[data-active='stroke'] .c-fill-or-stroke-toggle__stroke {
+  z-index: 1;
+}
+.c-fill-or-stroke-toggle__stroke {
+  left: 13px;
+  top: 13px;
+}
+.c-fill-or-stroke-toggle[data-has-fill='false'] .c-fill-or-stroke-toggle__fill circle,
+.c-fill-or-stroke-toggle[data-has-stroke='false'] .c-fill-or-stroke-toggle__stroke path {
+  fill: none;
+  opacity: 0.3;
+}
