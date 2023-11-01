@@ -1,16 +1,13 @@
 import { useRef, useEffect } from 'react'
 import { SLIDER_SIZE, consoleLogInfos } from '../../../../constants'
-import {
-  $colorHxya,
-  $currentFillOrStroke,
-  $colorsRgba,
-  updateColorHxyaAndSyncColorsRgbaAndBackend,
-  $mouseEventCallback,
-  $currentBgOrFg,
-  $lockContrast
-} from '../../../store'
 import { limitMouseManipulatorPosition } from '../../../helpers/others'
 import { useStore } from '@nanostores/react'
+import { $colorHxya, setColorHxyaWithSideEffects } from '../../../stores/colors/colorHxya'
+import { $colorsRgba } from '../../../stores/colors/colorsRgba'
+import { $currentBgOrFg } from '../../../stores/contrasts/currentBgOrFg'
+import { $lockContrast } from '../../../stores/contrasts/lockContrast'
+import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke'
+import { setMouseEventCallback } from '../../../stores/mouseEventCallback'
 
 const opacitysliderBackgroundImg =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII='
@@ -38,8 +35,11 @@ export default function OpacitySlider() {
     const rect = opacitySlider.current!.getBoundingClientRect()
     const canvasY = event.clientX - rect.left - 7
 
-    const newColorA = Math.round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 100)
-    updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { a: newColorA } })
+    setColorHxyaWithSideEffects({
+      newColorHxya: {
+        a: Math.round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 100)
+      }
+    })
   }
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function OpacitySlider() {
 
   useEffect(() => {
     opacitySlider.current!.addEventListener('mousedown', () => {
-      $mouseEventCallback.set(handleNewManipulatorPosition)
+      setMouseEventCallback(handleNewManipulatorPosition)
     })
   }, [])
 

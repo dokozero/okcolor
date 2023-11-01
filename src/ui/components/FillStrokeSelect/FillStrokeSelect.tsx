@@ -1,18 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
-import {
-  $currentColorModel,
-  $currentFillOrStroke,
-  $fileColorProfile,
-  $colorsRgba,
-  updateColorHxyaAndSyncColorsRgbaAndBackend,
-  $currentBgOrFg,
-  $lockContrast
-} from '../../store'
 import { useStore } from '@nanostores/react'
-import convertRgbToHxy from '../../helpers/convertRgbToHxy'
-import sendMessageToBackend from '../../helpers/sendMessageToBackend'
-import { SyncCurrentFillOrStrokeData } from '../../../types'
+import { $colorsRgba } from '../../stores/colors/colorsRgba'
+import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg'
+import { $currentFillOrStroke, setCurrentFillOrStroke, setCurrentFillOrStrokeWithSideEffects } from '../../stores/currentFillOrStroke'
 
 export default function FillStrokeSelect() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -40,35 +31,8 @@ export default function FillStrokeSelect() {
   }
 
   const handleFillOrStroke = () => {
-    $currentFillOrStroke.set($currentFillOrStroke.get() === 'fill' ? 'stroke' : 'fill')
-
-    if ($currentFillOrStroke.get() === 'stroke' && $lockContrast.get()) $lockContrast.set(false)
-
-    const newColorRgba = $colorsRgba.get()[$currentFillOrStroke.get()]
-
-    if (!newColorRgba) return
-
-    const newColorHxy = convertRgbToHxy({
-      colorRgb: {
-        r: newColorRgba.r,
-        g: newColorRgba.g,
-        b: newColorRgba.b
-      },
-      targetColorModel: $currentColorModel.get(),
-      fileColorProfile: $fileColorProfile.get()
-    })
-
-    updateColorHxyaAndSyncColorsRgbaAndBackend({
-      newColorHxya: { ...newColorHxy, a: newColorRgba.a },
-      syncColorsRgba: false,
-      syncColorRgbWithBackend: false
-    })
-
-    sendMessageToBackend<SyncCurrentFillOrStrokeData>({
-      type: 'syncCurrentFillOrStroke',
-      data: {
-        currentFillOrStroke: $currentFillOrStroke.get()
-      }
+    setCurrentFillOrStrokeWithSideEffects({
+      newCurrentFillOrStroke: $currentFillOrStroke.get() === 'fill' ? 'stroke' : 'fill'
     })
   }
 
@@ -79,7 +43,7 @@ export default function FillStrokeSelect() {
     // That is why we do this these tests bellow with currentBgOrFg.
 
     // In case the stroke of the foreground shape was selected and we are now updating the parent, we need to get back to fill.
-    if (currentBgOrFg === 'bg' && $currentFillOrStroke.get() === 'stroke') $currentFillOrStroke.set('fill')
+    if (currentBgOrFg === 'bg' && $currentFillOrStroke.get() === 'stroke') setCurrentFillOrStroke('fill')
 
     // If the shape has a fill and a stroke (and we are not updating the parent), we allow he user to click on it to toggle, otherwise no.
     if (colorsRgba.fill && colorsRgba.stroke && currentBgOrFg === 'fg') {

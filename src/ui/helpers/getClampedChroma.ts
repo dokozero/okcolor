@@ -1,5 +1,5 @@
 import { ColorHxy, RelativeChroma } from '../../types'
-import { $fileColorProfile } from '../store'
+import { $fileColorProfile } from '../stores/colors/fileColorProfile'
 import { clampChromaInGamut } from './culori.mjs'
 import { roundWithDecimal } from './others'
 

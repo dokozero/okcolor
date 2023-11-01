@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { selectInputContent } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
-import { $colorHxya, $isMouseInsideDocument, $isColorCodeInputsOpen, updateColorHxyaAndSyncColorsRgbaAndBackend } from '../../store'
 import { useStore } from '@nanostores/react'
 import getColorCodeStrings from './helpers/getColorCodeStrings'
 import getNewColorHxya from './helpers/getNewColorHxya'
-import { ColorCodesInputValues, ColorHxya, SyncIsColorCodeInputsOpenData } from '../../../types'
+import { ColorCodesInputValues, ColorHxya } from '../../../types'
 import copyToClipboard from '../../helpers/copyToClipboard'
-import sendMessageToBackend from '../../helpers/sendMessageToBackend'
+import { $isColorCodeInputsOpen, setIsColorCodeInputsOpenWithSideEffects } from '../../stores/isColorCodeInputsOpen'
+import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya'
+import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument'
 
 // We only need this object to check if the value of an input has been changed on blur.
 const colorCodesInputValues: { [key in ColorCodesInputValues]: string } = {
@@ -37,6 +38,10 @@ export default function ColorCodeInputs() {
   const colorCode_colorCopyAction = useRef<HTMLDivElement>(null)
   const colorCode_rgbaCopyAction = useRef<HTMLDivElement>(null)
   const colorCode_hexCopyAction = useRef<HTMLDivElement>(null)
+
+  const handleIsColorCodeInputsOpen = () => {
+    setIsColorCodeInputsOpenWithSideEffects({ newIsColorCodeInputsOpen: !$isColorCodeInputsOpen.get() })
+  }
 
   const removeModifierClassOnCopyActions = () => {
     colorCode_currentColorModelCopyAction.current!.classList.remove('c-copy-action--copied')
@@ -80,7 +85,7 @@ export default function ColorCodeInputs() {
     const newColorHxya = getNewColorHxya(eventTargetId, eventTarget.value)
 
     if (newColorHxya) {
-      updateColorHxyaAndSyncColorsRgbaAndBackend({
+      setColorHxyaWithSideEffects({
         newColorHxya: newColorHxya as Partial<ColorHxya>,
         bypassLockRelativeChromaFilter: true,
         bypassLockContrastFilter: true
@@ -105,23 +110,9 @@ export default function ColorCodeInputs() {
     updateColorCodeInputs()
   }, [colorHxya])
 
-  // TODO - move onClick sync with backend to a function.
-  // Same in ContrastInput
-
   return (
     <div className={'c-dropdown u-mt-10' + (isColorCodeInputsOpen ? ' c-dropdown--open' : '')}>
-      <div
-        className="c-dropdown__title-wrapper"
-        onClick={() => {
-          $isColorCodeInputsOpen.set(!$isColorCodeInputsOpen.get())
-          sendMessageToBackend<SyncIsColorCodeInputsOpenData>({
-            type: 'syncIsColorCodeInputsOpen',
-            data: {
-              isColorCodeInputsOpen: $isColorCodeInputsOpen.get()
-            }
-          })
-        }}
-      >
+      <div className="c-dropdown__title-wrapper" onClick={handleIsColorCodeInputsOpen}>
         <div>Color codes</div>
 
         <div className={'c-dropdown__arrow-icon' + (isColorCodeInputsOpen ? ' c-dropdown__arrow-icon--open' : '')}>

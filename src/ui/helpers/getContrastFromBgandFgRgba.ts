@@ -1,7 +1,8 @@
 import { APCAcontrast, sRGBtoY, alphaBlend, displayP3toY } from 'apca-w3'
 import { ApcaContrast, ColorRgb, ColorRgba, CurrentContrastMethod, RgbArray, RgbaArray, WcagContrast } from '../../types'
-import { $currentContrastMethod, $fileColorProfile } from '../store'
 import WCAGcontrast from './WCAGcontrast'
+import { $currentContrastMethod } from '../stores/contrasts/currentContrastMethod'
+import { $fileColorProfile } from '../stores/colors/fileColorProfile'
 
 export default function getContrastFromBgandFgRgba(
   fg: ColorRgba,

@@ -16,7 +16,7 @@ const alphaCompositing = (fg: RgbaArray, bg: RgbArray): RgbArray => {
   return resultRgbColor
 }
 
-export const getLuminanceOfRgbArray = (rgbArray: RgbaArray | RgbArray) => {
+const getLuminanceOfRgbArray = (rgbArray: RgbaArray | RgbArray) => {
   const formatedRgbArray = [rgbArray[0] / 255, rgbArray[1] / 255, rgbArray[2] / 255]
 
   for (let i = 0; i < formatedRgbArray.length; i++) {

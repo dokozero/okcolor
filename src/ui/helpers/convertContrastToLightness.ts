@@ -1,9 +1,12 @@
 import { ApcaContrast, ColorHxy, ColorHxya, ColorRgb, Lightness, WcagContrast } from '../../types'
-import { $fileColorProfile, $colorsRgba, $currentColorModel, $currentBgOrFg } from '../store'
 import convertHxyToRgb from './convertHxyToRgb'
 import getClampedChroma from './getClampedChroma'
 import { roundWithDecimal, clampNumber } from './others'
 import getContrastFromBgandFgRgba from './getContrastFromBgandFgRgba'
+import { $currentBgOrFg } from '../stores/contrasts/currentBgOrFg'
+import { $colorsRgba } from '../stores/colors/colorsRgba'
+import { $currentColorModel } from '../stores/colors/currentColorModel'
+import { $fileColorProfile } from '../stores/colors/fileColorProfile'
 
 /**
  * Find the lightness for the given contrast on the current hue and chroma.

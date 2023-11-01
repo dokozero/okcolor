@@ -1,9 +1,11 @@
 import { PICKER_SIZE, OKLCH_CHROMA_SCALE } from '../../../../constants'
-import { $colorHxya, $contrast, $currentContrastMethod, $lockContrastEndY, $lockContrastStartY } from '../../../store'
 import getClampedChroma from '../../../helpers/getClampedChroma'
 import convertContrastToLightness from '../../../helpers/convertContrastToLightness'
 import { roundWithDecimal } from '../../../helpers/others'
 import { Lightness, SvgPath } from '../../../../types'
+import { $colorHxya } from '../../../stores/colors/colorHxya'
+import { $contrast } from '../../../stores/contrasts/contrast'
+import { $currentContrastMethod } from '../../../stores/contrasts/currentContrastMethod'
 
 export default function getContrastStrokeLimit(): SvgPath {
   let startY: Lightness
@@ -71,8 +73,9 @@ export default function getContrastStrokeLimit(): SvgPath {
   const pointA = `0 ${PICKER_SIZE - (startY * PICKER_SIZE) / 100}`
   const pointB = `${clampedChroma * PICKER_SIZE * OKLCH_CHROMA_SCALE} ${PICKER_SIZE - (endY * PICKER_SIZE) / 100}`
 
-  $lockContrastStartY.set(startY)
-  $lockContrastEndY.set(endY)
+  // TODO - delete
+  // $lockContrastStartY.set(startY)
+  // $lockContrastEndY.set(endY)
 
   return `M${pointA} L${pointB}`
 }

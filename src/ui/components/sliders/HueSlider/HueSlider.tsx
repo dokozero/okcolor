@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react'
 
 import { consoleLogInfos, SLIDER_SIZE } from '../../../../constants'
 import { limitMouseManipulatorPosition, roundWithDecimal } from '../../../helpers/others'
-import { $colorHxya, $colorValueDecimals, updateColorHxyaAndSyncColorsRgbaAndBackend, $mouseEventCallback } from '../../../store'
 import { useStore } from '@nanostores/react'
+import { $colorHxya, getColorValueDecimals, setColorHxyaWithSideEffects } from '../../../stores/colors/colorHxya'
+import { setMouseEventCallback } from '../../../stores/mouseEventCallback'
 
 export default function HueSlider() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -19,11 +20,11 @@ export default function HueSlider() {
     const rect = hueSlider.current!.getBoundingClientRect()
     const canvasY = event.clientX - rect.left - 7
 
-    const newColorHxya = {
-      h: roundWithDecimal(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, $colorValueDecimals.get().h)
-    }
-
-    updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: newColorHxya })
+    setColorHxyaWithSideEffects({
+      newColorHxya: {
+        h: roundWithDecimal(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorValueDecimals().h)
+      }
+    })
   }
 
   useEffect(() => {
@@ -32,7 +33,7 @@ export default function HueSlider() {
 
   useEffect(() => {
     hueSlider.current!.addEventListener('mousedown', () => {
-      $mouseEventCallback.set(handleNewManipulatorPosition)
+      setMouseEventCallback(handleNewManipulatorPosition)
     })
   }, [])
 

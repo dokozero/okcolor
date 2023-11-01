@@ -2,8 +2,8 @@ import { converter } from '../helpers/culori.mjs'
 import type { Rgb, Okhsl, Okhsv, Oklch } from '../helpers/culori.mjs'
 
 import { roundWithDecimal } from './others'
-import { $colorValueDecimals } from '../store'
 import { ColorHxy, ColorModelList, ColorRgb, FileColorProfile } from '../../types'
+import { getColorValueDecimals } from '../stores/colors/colorHxya'
 
 const convertToOkhsl = converter('okhsl')
 const convertToOkhsv = converter('okhsv')
@@ -13,11 +13,11 @@ type Props = {
   colorRgb: ColorRgb
   targetColorModel: keyof typeof ColorModelList
   fileColorProfile: FileColorProfile
-  keepOklchCssDoubleDigit?: boolean
+  keepOklchDoubleDigit?: boolean
 }
 
 export default function convertRgbToHxy(props: Props): ColorHxy {
-  const { colorRgb, targetColorModel, fileColorProfile, keepOklchCssDoubleDigit = false } = props
+  const { colorRgb, targetColorModel, fileColorProfile, keepOklchDoubleDigit = false } = props
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch
   let newColorHxy: ColorHxy
@@ -82,18 +82,12 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
       }
       break
     case 'oklch':
-      newColorHxy = {
-        h: Math.round(culoriResult.h),
-        x: roundWithDecimal(culoriResult.c, $colorValueDecimals.get().x),
-        y: Math.round(culoriResult.l * 100)
-      }
-      break
     case 'oklchCss':
-      if (!keepOklchCssDoubleDigit) {
+      if (!keepOklchDoubleDigit) {
         newColorHxy = {
-          h: roundWithDecimal(culoriResult.h, $colorValueDecimals.get().h),
-          x: roundWithDecimal(culoriResult.c, $colorValueDecimals.get().x),
-          y: roundWithDecimal(culoriResult.l * 100, $colorValueDecimals.get().y)
+          h: roundWithDecimal(culoriResult.h, getColorValueDecimals().h),
+          x: roundWithDecimal(culoriResult.c, getColorValueDecimals().x),
+          y: roundWithDecimal(culoriResult.l * 100, getColorValueDecimals().y)
         }
       } else {
         newColorHxy = {

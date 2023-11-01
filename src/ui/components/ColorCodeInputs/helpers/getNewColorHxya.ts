@@ -1,9 +1,11 @@
 import getClampedChroma from '../../../helpers/getClampedChroma'
 import { roundWithDecimal } from '../../../helpers/others'
-import { $currentColorModel, $colorValueDecimals, $colorHxya, $currentBgOrFg } from '../../../store'
 import { converter } from '../../../helpers/culori.mjs'
 import { ColorCodesInputValues, ColorHxy, ColorHxya, ColorModelList, Opacity } from '../../../../types'
 import convertRgbToHxy from '../../../helpers/convertRgbToHxy'
+import { $colorHxya, getColorValueDecimals } from '../../../stores/colors/colorHxya'
+import { $currentColorModel } from '../../../stores/colors/currentColorModel'
+import { $currentBgOrFg } from '../../../stores/contrasts/currentBgOrFg'
 
 const convertToRgb = converter('rgb')
 
@@ -141,9 +143,9 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
       }
       if ($currentColorModel.get() === 'oklch') {
         newColorHxy = {
-          h: roundWithDecimal(newColorHxy.h, $colorValueDecimals.get().h),
-          x: roundWithDecimal(newColorHxy.x * 100, $colorValueDecimals.get().x),
-          y: roundWithDecimal(newColorHxy.y, $colorValueDecimals.get().y)
+          h: roundWithDecimal(newColorHxy.h, getColorValueDecimals().h),
+          x: roundWithDecimal(newColorHxy.x * 100, getColorValueDecimals().x),
+          y: roundWithDecimal(newColorHxy.y, getColorValueDecimals().y)
         }
       }
 

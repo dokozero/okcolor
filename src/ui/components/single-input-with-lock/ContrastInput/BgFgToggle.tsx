@@ -1,20 +1,17 @@
 import { useRef, useEffect } from 'react'
-import {
-  $currentColorModel,
-  $uiMessage,
-  $colorsRgba,
-  $currentFillOrStroke,
-  $fileColorProfile,
-  $currentBgOrFg,
-  updateColorHxyaAndSyncColorsRgbaAndBackend,
-  $colorHxya
-} from '../../../store'
 import { ApcaContrast, ColorRgb, ColorRgba, Lightness, Opacity, WcagContrast } from '../../../../types'
 import convertRgbToHxy from '../../../helpers/convertRgbToHxy'
 import { useStore } from '@nanostores/react'
 import { consoleLogInfos } from '../../../../constants'
 import getContrastFromBgandFgRgba from '../../../helpers/getContrastFromBgandFgRgba'
 import convertHxyToRgb from '../../../helpers/convertHxyToRgb'
+import { $colorHxya, setColorHxyaWithSideEffects } from '../../../stores/colors/colorHxya'
+import { $colorsRgba } from '../../../stores/colors/colorsRgba'
+import { $currentColorModel } from '../../../stores/colors/currentColorModel'
+import { $fileColorProfile } from '../../../stores/colors/fileColorProfile'
+import { $currentBgOrFg, setCurrentBgOrFg } from '../../../stores/contrasts/currentBgOrFg'
+import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke'
+import { $uiMessage } from '../../../stores/uiMessage'
 
 export default function BgFgToggle() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -33,8 +30,8 @@ export default function BgFgToggle() {
   const currentBgOrFg = useStore($currentBgOrFg)
 
   const handleBgFgToggle = () => {
-    if ($currentBgOrFg.get() === 'bg') $currentBgOrFg.set('fg')
-    else $currentBgOrFg.set('bg')
+    if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
+    else setCurrentBgOrFg('bg')
 
     let newColorRgba: ColorRgb | ColorRgba
     let opacity: Opacity = 100
@@ -56,7 +53,7 @@ export default function BgFgToggle() {
       fileColorProfile: $fileColorProfile.get()
     })
 
-    updateColorHxyaAndSyncColorsRgbaAndBackend({
+    setColorHxyaWithSideEffects({
       newColorHxya: { ...newColorHxy, a: opacity },
       syncColorsRgba: false,
       syncColorRgbWithBackend: false,
@@ -104,7 +101,7 @@ export default function BgFgToggle() {
     const toggleOutlineColor = convertHxyToRgb({
       colorHxy: {
         h: $colorHxya.get().h,
-        x: $currentColorModel.get() === 'oklchCss' ? $colorHxya.get().x * 100 : $colorHxya.get().x,
+        x: $colorHxya.get().x * 100,
         y: outlineLightness
       },
       originColorModel: $currentColorModel.get(),

@@ -1,24 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import {
-  $colorHxya,
-  $fileColorProfile,
-  $currentColorModel,
-  $lockRelativeChroma,
-  $currentKeysPressed,
-  $colorValueDecimals,
-  $uiMessage,
-  updateColorHxyaAndSyncColorsRgbaAndBackend,
-  $mouseEventCallback,
-  $lockContrast,
-  $contrast,
-  $relativeChroma,
-  $colorsRgba,
-  $lockContrastEndY,
-  $lockContrastStartY,
-  $currentBgOrFg
-} from '../../store'
-import { findYOnLockedChromaLine, limitMouseManipulatorPosition, roundWithDecimal } from '../../helpers/others'
+import { limitMouseManipulatorPosition, roundWithDecimal } from '../../helpers/others'
 
 import {
   consoleLogInfos,
@@ -44,7 +26,18 @@ import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit
 import { AbsoluteChroma, ColorModelList, Saturation } from '../../../types'
 import convertAbsoluteChromaToRelative from '../../helpers/convertAbsoluteChromaToRelative'
 import getContrastStrokeLimit from './helpers/getContrastStrokeLimit'
-import getClampedChroma from '../../helpers/getClampedChroma'
+import { $colorHxya, getColorValueDecimals, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya'
+import { $colorsRgba } from '../../stores/colors/colorsRgba'
+import { $currentColorModel } from '../../stores/colors/currentColorModel'
+import { $fileColorProfile } from '../../stores/colors/fileColorProfile'
+import { $lockRelativeChroma } from '../../stores/colors/lockRelativeChroma'
+import { $relativeChroma } from '../../stores/colors/relativeChroma'
+import { $contrast } from '../../stores/contrasts/contrast'
+import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg'
+import { $lockContrast } from '../../stores/contrasts/lockContrast'
+import { $currentKeysPressed } from '../../stores/currentKeysPressed'
+import { setMouseEventCallback } from '../../stores/mouseEventCallback'
+import { $uiMessage } from '../../stores/uiMessage'
 
 let colorPickerGlContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
@@ -117,23 +110,23 @@ export default function ColorPicker() {
     if (($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) || $lockContrast.get()) {
       currentContrainedMove = true
     } else {
-      newColorHxya.y = roundWithDecimal(limitMouseManipulatorPosition(1 - canvasY / PICKER_SIZE) * 100, $colorValueDecimals.get().y)
+      newColorHxya.y = roundWithDecimal(limitMouseManipulatorPosition(1 - canvasY / PICKER_SIZE) * 100, getColorValueDecimals().y)
     }
 
     // Get the new X value.
     if ($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'vertical' && !$lockRelativeChroma.get()) {
       currentContrainedMove = true
     } else {
-      newColorHxya.x = roundWithDecimal(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, $colorValueDecimals.get().x)
+      newColorHxya.x = roundWithDecimal(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, getColorValueDecimals().x)
 
       if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
-        newColorHxya.x = roundWithDecimal(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, $colorValueDecimals.get().x)
+        newColorHxya.x = roundWithDecimal(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, getColorValueDecimals().x)
       }
     }
 
     if ($currentKeysPressed.get().includes('ctrl')) {
       if (mainMouseMovement === 'vertical' && Math.round(newColorHxya.y) % 5 === 0) {
-        updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { x: newColorHxya.x, y: Math.round(newColorHxya.y) } })
+        setColorHxyaWithSideEffects({ newColorHxya: { x: newColorHxya.x, y: Math.round(newColorHxya.y) } })
       } else if (mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) {
         let valueToTest = newColorHxya.x
 
@@ -142,11 +135,11 @@ export default function ColorPicker() {
         }
 
         if (valueToTest % 5 === 0) {
-          updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { x: newColorHxya.x, y: newColorHxya.y } })
+          setColorHxyaWithSideEffects({ newColorHxya: { x: newColorHxya.x, y: newColorHxya.y } })
         }
       }
     } else {
-      updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: newColorHxya })
+      setColorHxyaWithSideEffects({ newColorHxya: newColorHxya })
     }
 
     updateManipulatorPosition()
@@ -266,7 +259,7 @@ export default function ColorPicker() {
     //     y: $lockContrastEndY.get()!
     //   })
     //   const newY = findYOnLockedChromaLine($colorHxya.get().x, [0, $lockContrastStartY.get()!], [clampedChroma, $lockContrastEndY.get()!])
-    //   updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { y: newY } })
+    //   setColorHxya({ newColorHxya: { y: newY } })
     // }
   }, [contrast, lockContrast, currentBgOrFg])
 
@@ -298,7 +291,7 @@ export default function ColorPicker() {
     updateColorSpaceLabelInColorPicker()
 
     colorPickerCanvas.current!.addEventListener('mousedown', () => {
-      $mouseEventCallback.set(handleNewManipulatorPosition)
+      setMouseEventCallback(handleNewManipulatorPosition)
     })
 
     document.addEventListener('keyup', () => {

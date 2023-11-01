@@ -1,6 +1,6 @@
 import { MAX_CHROMA_P3 } from '../../constants'
 import { AbsoluteChroma, ColorHxy, RelativeChroma } from '../../types'
-import { $fileColorProfile } from '../store'
+import { $fileColorProfile } from '../stores/colors/fileColorProfile'
 import { clampChromaInGamut } from './culori.mjs'
 import { clampNumber } from './others'
 

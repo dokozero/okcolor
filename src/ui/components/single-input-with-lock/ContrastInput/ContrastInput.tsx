@@ -1,40 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { roundWithDecimal, selectInputContent } from '../../../helpers/others'
 import { MAX_APCA_CONTRAST, MAX_WCAG_CONTRAST, MIN_APCA_CONTRAST, MIN_WCAG_CONTRAST, consoleLogInfos } from '../../../../constants'
-import {
-  $lockContrast,
-  $colorsRgba,
-  $contrast,
-  $currentColorModel,
-  $currentKeysPressed,
-  $isMouseInsideDocument,
-  updateColorHxyaAndSyncColorsRgbaAndBackend,
-  $uiMessage,
-  $colorHxya,
-  $currentFillOrStroke,
-  $isContrastInputOpen,
-  $currentContrastMethod
-} from '../../../store'
 import { useStore } from '@nanostores/react'
-import {
-  ApcaContrast,
-  CurrentContrastMethod,
-  SyncCurrentContrastMethodData,
-  SyncIsContrastInputOpenData,
-  SyncLockContrastData,
-  WcagContrast
-} from '../../../../types'
-import convertContrastToLightness from '../../../helpers/convertContrastToLightness'
+import { ApcaContrast, CurrentContrastMethod, SyncLockContrastData, WcagContrast } from '../../../../types'
 import sendMessageToBackend from '../../../helpers/sendMessageToBackend'
 import BgFgToggle from './BgFgToggle'
 import OpenLockIcon from '../OpenLockIcon'
 import ClosedLockIcon from './ClosedLockIcon'
 import getContrastFromBgandFgRgba from '../../../helpers/getContrastFromBgandFgRgba'
+import { $colorsRgba } from '../../../stores/colors/colorsRgba'
+import { $currentColorModel } from '../../../stores/colors/currentColorModel'
+import { $contrast, setContrast, setContrastWithSideEffects } from '../../../stores/contrasts/contrast'
+import { $currentContrastMethod, setCurrentContrastMethodWithSideEffects } from '../../../stores/contrasts/currentContrastMethod'
+import { $isContrastInputOpen, setIsContrastInputOpenWithSideEffects } from '../../../stores/contrasts/isContrastInputOpen'
+import { $lockContrast, setLockContrast } from '../../../stores/contrasts/lockContrast'
+import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke'
+import { $currentKeysPressed } from '../../../stores/currentKeysPressed'
+import { $isMouseInsideDocument } from '../../../stores/isMouseInsideDocument'
+import { $uiMessage } from '../../../stores/uiMessage'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
 
-const updateColorHxyaXandY = (eventTarget: HTMLInputElement, newContrast: ApcaContrast | WcagContrast) => {
+const updateContrastOrSetBackPreviousValue = (eventTarget: HTMLInputElement, newContrast: ApcaContrast | WcagContrast) => {
   let minContrast: ApcaContrast | WcagContrast
   let maxContrast: ApcaContrast | WcagContrast
 
@@ -51,9 +39,7 @@ const updateColorHxyaXandY = (eventTarget: HTMLInputElement, newContrast: ApcaCo
     return
   }
 
-  const newHxy = convertContrastToLightness($colorHxya.get(), newContrast)
-
-  updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: newHxy, bypassLockContrastFilter: true })
+  setContrastWithSideEffects({ newContrast: newContrast })
 }
 
 export default function ContrastInput() {
@@ -74,20 +60,17 @@ export default function ContrastInput() {
   const contrastMethodSelect = useRef<HTMLSelectElement>(null)
   const input = useRef<HTMLInputElement>(null)
 
+  const handleIsContrastInputOpen = () => {
+    setIsContrastInputOpenWithSideEffects({ newIsContrastInputOpen: !$isContrastInputOpen.get() })
+  }
+
   const handleContrastMethod = (event: { target: HTMLSelectElement }) => {
     const newCurrentContrastMethod = event.target.value as CurrentContrastMethod
 
-    $currentContrastMethod.set(newCurrentContrastMethod)
-
-    sendMessageToBackend<SyncCurrentContrastMethodData>({
-      type: 'syncCurrentContrastMethod',
-      data: {
-        currentContrastMethod: newCurrentContrastMethod
-      }
-    })
+    setCurrentContrastMethodWithSideEffects({ newCurrentContrastMethod: newCurrentContrastMethod })
 
     const newContrast = getContrastFromBgandFgRgba($colorsRgba.get().fill!, $colorsRgba.get().parentFill!)
-    $contrast.set(newContrast)
+    setContrast(newContrast)
   }
 
   const handleInputOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -103,7 +86,7 @@ export default function ContrastInput() {
     const newValue: ApcaContrast | WcagContrast =
       $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
 
-    updateColorHxyaXandY(eventTarget, newValue)
+    updateContrastOrSetBackPreviousValue(eventTarget, newValue)
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -126,6 +109,7 @@ export default function ContrastInput() {
 
       let stepUpdateValue: number
 
+      // TODO - refactor into a function ouside of component
       if ($currentContrastMethod.get() === 'apca') {
         stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 10 : 1
 
@@ -137,7 +121,7 @@ export default function ContrastInput() {
           else newValue = currentValue - stepUpdateValue
         }
 
-        if (currentValue > -7 && currentValue < 7 && currentValue !== 0) newValue = 0
+        if (newValue! > -7 && newValue! < 7) newValue = 0
       } else {
         stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 1 : 0.1
 
@@ -153,17 +137,17 @@ export default function ContrastInput() {
         newValue = roundWithDecimal(newValue!, 1)
       }
 
-      updateColorHxyaXandY(eventTarget, newValue!)
+      updateContrastOrSetBackPreviousValue(eventTarget, newValue!)
     }
   }
 
   const handleLockContrast = () => {
     const newValue = !$lockContrast.get()
 
-    $lockContrast.set(newValue)
+    setLockContrast(newValue)
 
     // To avoid getting relative chroma and contrast locked at the same time, which would block the color picker and the hxya inputs
-    // if ($lockRelativeChroma.get() && $lockContrast.get()) $lockRelativeChroma.set(false)
+    // if ($lockRelativeChroma.get() && $lockContrast.get()) setLockRelativeChroma(false)
 
     sendMessageToBackend<SyncLockContrastData>({
       type: 'syncLockContrast',
@@ -180,7 +164,7 @@ export default function ContrastInput() {
       // input.current!.value = '-'
 
       // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
-      // if ($lockContrast.get()) $lockContrast.set(false)
+      // if ($lockContrast.get()) setLockContrast(false)
       return
     } else {
       // const newContrast = $currentContrastMethod.get() === 'wcag' ? Math.abs($contrast.get()) : $contrast.get()
@@ -233,18 +217,7 @@ export default function ContrastInput() {
         (showContrast ? '' : ' u-visibility-hidden u-position-absolute')
       }
     >
-      <div
-        className="c-dropdown__title-wrapper"
-        onClick={() => {
-          $isContrastInputOpen.set(!$isContrastInputOpen.get())
-          sendMessageToBackend<SyncIsContrastInputOpenData>({
-            type: 'syncIsContrastInputOpen',
-            data: {
-              isContrastInputOpen: $isContrastInputOpen.get()
-            }
-          })
-        }}
-      >
+      <div className="c-dropdown__title-wrapper" onClick={handleIsContrastInputOpen}>
         <div>Contrast</div>
 
         <div className={'c-dropdown__arrow-icon' + (isContrastInputOpen ? ' c-dropdown__arrow-icon--open' : '')}>

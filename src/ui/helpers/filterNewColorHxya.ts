@@ -1,9 +1,12 @@
 import { ColorHxya } from '../../types'
-import { $colorHxya, $contrast, $currentColorModel, $lockContrast, $lockContrastEndY, $lockContrastStartY, $lockRelativeChroma } from '../store'
+import { $colorHxya } from '../stores/colors/colorHxya'
+import { $currentColorModel } from '../stores/colors/currentColorModel'
+import { $lockRelativeChroma } from '../stores/colors/lockRelativeChroma'
+import { $contrast } from '../stores/contrasts/contrast'
+import { $lockContrast } from '../stores/contrasts/lockContrast'
 import convertContrastToLightness from './convertContrastToLightness'
 import convertRelativeChromaToAbsolute from './convertRelativeChromaToAbsolute'
 import getClampedChroma from './getClampedChroma'
-import { findYOnLockedChromaLine } from './others'
 
 /**
  * This function is to filter the hxy values because when we are in oklch, we can receive values that are out of gamut or we might need to constrain them relative chroma or contrast are locked.
@@ -32,8 +35,8 @@ export default function filterNewColorHxya(
   }
 
   if (!$lockContrast.get() || $contrast.get() === 0 || bypassLockContrastFilter) return filteredColorHxya
-  if ($lockContrastStartY.get() === null || $lockContrastEndY.get() === null) return filteredColorHxya
-  if (newColorHxya.x === undefined && newColorHxya.y === undefined && newColorHxya.a === undefined) return filteredColorHxya
+  // if ($lockContrastStartY.get() === null || $lockContrastEndY.get() === null) return filteredColorHxya
+  // if (newColorHxya.x === undefined && newColorHxya.y === undefined && newColorHxya.a === undefined) return filteredColorHxya
 
   const newHxy = convertContrastToLightness(
     {

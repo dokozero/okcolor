@@ -1,19 +1,15 @@
 import { useEffect, useRef } from 'react'
-import {
-  $colorHxya,
-  $colorValueDecimals,
-  $currentColorModel,
-  $currentKeysPressed,
-  $isMouseInsideDocument,
-  $lockContrast,
-  $lockRelativeChroma,
-  $currentBgOrFg,
-  updateColorHxyaAndSyncColorsRgbaAndBackend
-} from '../../store'
 import { selectInputContent, roundWithDecimal } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
 import { HxyaLabels, AbsoluteChroma, Saturation, Lightness, Opacity, Hue, ColorHxya } from '../../../types'
+import { $colorHxya, getColorValueDecimals, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya'
+import { $currentColorModel } from '../../stores/colors/currentColorModel'
+import { $lockRelativeChroma } from '../../stores/colors/lockRelativeChroma'
+import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg'
+import { $lockContrast } from '../../stores/contrasts/lockContrast'
+import { $currentKeysPressed } from '../../stores/currentKeysPressed'
+import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument'
 
 let lastKeyPressed: string = ''
 const keepInputSelected = {
@@ -39,7 +35,7 @@ function getStepUpdateValue(eventId: string): number {
   return shiftPressed ? 10 : 1
 }
 
-const updateColorHxyaTargetValue = (eventTarget: HTMLInputElement, eventId: keyof typeof HxyaLabels, newValue: number) => {
+const updateColorHxyaOrSetBackPreviousValue = (eventTarget: HTMLInputElement, eventId: keyof typeof HxyaLabels, newValue: number) => {
   if ($lockRelativeChroma.get() && eventId === 'x') return
   if ($lockContrast.get() && eventId === 'y') return
 
@@ -57,7 +53,7 @@ const updateColorHxyaTargetValue = (eventTarget: HTMLInputElement, eventId: keyo
   if (newValue >= 0 && newValue <= (eventId === 'h' ? 360 : 100) && newValue !== oldValue) {
     if ($currentColorModel.get() === 'oklch' && newColorHxya.x) newColorHxya.x /= 100
 
-    updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: newColorHxya })
+    setColorHxyaWithSideEffects({ newColorHxya: newColorHxya })
   } else {
     eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
   }
@@ -123,7 +119,7 @@ export default function ColorValueInputs() {
       lastKeyPressed = ''
     }
 
-    updateColorHxyaTargetValue(eventTarget, eventId, newValue)
+    updateColorHxyaOrSetBackPreviousValue(eventTarget, eventId, newValue)
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -148,9 +144,9 @@ export default function ColorValueInputs() {
         else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
 
         // We need to round the value because sometimes we can get results like 55.8999999.
-        newValue = roundWithDecimal(newValue, $colorValueDecimals.get()[`${eventId}`])
+        newValue = roundWithDecimal(newValue, getColorValueDecimals()[`${eventId}`])
 
-        updateColorHxyaTargetValue(eventTarget, eventId, newValue)
+        updateColorHxyaOrSetBackPreviousValue(eventTarget, eventId, newValue)
       }
     }
   }

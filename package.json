@@ -10,6 +10,7 @@
     "build": "pnpm run build-backend && pnpm run build-ui"
   },
   "dependencies": {
+    "@nanostores/logger": "^0.2.4",
     "@nanostores/react": "^0.7.1",
     "@types/apca-w3": "^0.1.2",
     "apca-w3": "^0.1.9",

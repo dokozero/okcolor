@@ -1,17 +1,9 @@
 import { useStore } from '@nanostores/react'
-import {
-  $fileColorProfile,
-  $currentColorModel,
-  $colorHxya,
-  $colorsRgba,
-  $currentFillOrStroke,
-  $figmaEditorType,
-  updateColorHxyaAndSyncColorsRgbaAndBackend
-} from '../../store'
 import { consoleLogInfos } from '../../../constants'
-import { FileColorProfile, SyncFileColorProfileData } from '../../../types'
-import convertRgbToHxy from '../../helpers/convertRgbToHxy'
-import sendMessageToBackend from '../../helpers/sendMessageToBackend'
+import { FileColorProfile } from '../../../types'
+import { $currentColorModel } from '../../stores/colors/currentColorModel'
+import { $fileColorProfile, setFileColorProfileWithSideEffects } from '../../stores/colors/fileColorProfile'
+import { $figmaEditorType } from '../../stores/figmaEditorType'
 
 export default function FileColorProfileSelect() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -23,34 +15,7 @@ export default function FileColorProfileSelect() {
   const fileColorProfile = useStore($fileColorProfile)
 
   const handleFileColorProfile = (event: { target: HTMLSelectElement }) => {
-    const newFileColorProfile = event.target.value as FileColorProfile
-
-    $fileColorProfile.set(newFileColorProfile)
-
-    const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
-
-    const newColorHxy = convertRgbToHxy({
-      colorRgb: {
-        r: currentColorRgba!.r,
-        g: currentColorRgba!.g,
-        b: currentColorRgba!.b
-      },
-      targetColorModel: $currentColorModel.get(),
-      fileColorProfile: newFileColorProfile
-    })
-
-    updateColorHxyaAndSyncColorsRgbaAndBackend({
-      newColorHxya: { ...newColorHxy, a: $colorHxya.get().a },
-      syncColorsRgba: false,
-      syncColorRgbWithBackend: false
-    })
-
-    sendMessageToBackend<SyncFileColorProfileData>({
-      type: 'syncFileColorProfile',
-      data: {
-        fileColorProfile: newFileColorProfile
-      }
-    })
+    setFileColorProfileWithSideEffects({ newFileColorProfile: event.target.value as FileColorProfile })
   }
 
   return (

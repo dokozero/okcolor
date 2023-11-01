@@ -1,45 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import { selectInputContent } from '../../../helpers/others'
 import { consoleLogInfos } from '../../../../constants'
-import {
-  $colorHxya,
-  $currentColorModel,
-  $currentKeysPressed,
-  $isMouseInsideDocument,
-  $lockRelativeChroma,
-  $relativeChroma,
-  $uiMessage,
-  updateColorHxyaAndSyncColorsRgbaAndBackend
-} from '../../../store'
 import { useStore } from '@nanostores/react'
-import convertRelativeChromaToAbsolute from '../../../helpers/convertRelativeChromaToAbsolute'
-import sendMessageToBackend from '../../../helpers/sendMessageToBackend'
-import { RelativeChroma, SyncLockRelativeChromaData } from '../../../../types'
+import { RelativeChroma } from '../../../../types'
 import ClosedLockIcon from '../ContrastInput/ClosedLockIcon'
 import OpenLockIcon from '../OpenLockIcon'
+import { $currentColorModel } from '../../../stores/colors/currentColorModel'
+import { $lockRelativeChroma, setLockRelativeChromaWithSideEffects } from '../../../stores/colors/lockRelativeChroma'
+import { $relativeChroma, setRelativeChromaWithSideEffects } from '../../../stores/colors/relativeChroma'
+import { $currentKeysPressed } from '../../../stores/currentKeysPressed'
+import { $isMouseInsideDocument } from '../../../stores/isMouseInsideDocument'
+import { $uiMessage } from '../../../stores/uiMessage'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
 
-const updateColorHxyaChroma = (eventTarget: HTMLInputElement, newRelativeChroma: RelativeChroma) => {
+const updateRelativeChromaOrSetBackPreviousValue = (eventTarget: HTMLInputElement, newRelativeChroma: RelativeChroma) => {
   if (newRelativeChroma < 0 || newRelativeChroma > 100 || newRelativeChroma === $relativeChroma.get()) {
     eventTarget.value = $relativeChroma.get() + '%'
     return
   }
 
-  const newColorX = convertRelativeChromaToAbsolute({
-    colorHxya: $colorHxya.get(),
-    relativeChroma: newRelativeChroma
-  })
-
-  // This condition could be true if for example user is updating relative chroma near white of black, in this case we'll have multiple absolute chroma values for the same relative chroma one.
-  // In that case we want to update directly the $relativeChroma value or the input would not be updated.
-  if (newColorX === $colorHxya.get().x) {
-    $relativeChroma.set(newRelativeChroma)
-    return
-  }
-
-  updateColorHxyaAndSyncColorsRgbaAndBackend({ newColorHxya: { x: newColorX }, bypassLockRelativeChromaFilter: true })
+  setRelativeChromaWithSideEffects({ newRelativeChroma: newRelativeChroma })
 }
 
 export default function RelativeChromaInput() {
@@ -65,7 +47,7 @@ export default function RelativeChromaInput() {
       lastKeyPressed = ''
     }
 
-    updateColorHxyaChroma(eventTarget, parseInt(eventTarget.value))
+    updateRelativeChromaOrSetBackPreviousValue(eventTarget, parseInt(eventTarget.value))
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -86,24 +68,17 @@ export default function RelativeChromaInput() {
       if (eventKey === 'ArrowUp') newValue += stepUpdateValue
       else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
 
-      updateColorHxyaChroma(eventTarget, newValue)
+      updateRelativeChromaOrSetBackPreviousValue(eventTarget, newValue)
     }
   }
 
   const handleLockRelativeChroma = () => {
     const newValue = !$lockRelativeChroma.get()
 
-    $lockRelativeChroma.set(newValue)
+    setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: newValue })
 
     // To avoid getting relative chroma and contrast locked at the same time, which would block the color picker and the hxya inputs
-    // if ($lockContrast.get() && newValue) $lockContrast.set(false)
-
-    sendMessageToBackend<SyncLockRelativeChromaData>({
-      type: 'syncLockRelativeChroma',
-      data: {
-        lockRelativeChroma: newValue
-      }
-    })
+    // if ($lockContrast.get() && newValue) setLockContrast(false)
   }
 
   useEffect(() => {

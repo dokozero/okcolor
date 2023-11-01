@@ -1,25 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
 
-import {
-  $fileColorProfile,
-  $currentColorModel,
-  $lockRelativeChroma,
-  $isColorCodeInputsOpen,
-  $currentKeysPressed,
-  $isMouseInsideDocument,
-  $uiMessage,
-  $currentFillOrStroke,
-  $mouseEventCallback,
-  $figmaEditorType,
-  $currentBgOrFg,
-  $lockContrast,
-  $colorsRgba,
-  updateColorHxyaAndSyncColorsRgbaAndBackend,
-  $isContrastInputOpen,
-  $currentContrastMethod
-} from './store'
-
 import FileColorProfileSelect from './components/FileColorProfileSelect/FileColorProfileSelect'
 import ColorPicker from './components/ColorPicker/ColorPicker'
 import FillStrokeSelect from './components/FillStrokeSelect/FillStrokeSelect'
@@ -37,7 +18,21 @@ import { uiMessageTexts } from './ui-messages'
 import { DisplayUiMessageData, MessageForUi, SyncCurrentFillOrStrokeAndColorsRgbaData, SyncLocalStorageValuesData } from '../types'
 import setValuesForUiMessage from './helpers/setValuesForUiMessage'
 import sendMessageToBackend from './helpers/sendMessageToBackend'
-import convertRgbToHxy from './helpers/convertRgbToHxy'
+import { setFigmaEditorType } from './stores/figmaEditorType'
+import { setCurrentColorModel } from './stores/colors/currentColorModel'
+import { setFileColorProfile } from './stores/colors/fileColorProfile'
+import { setLockRelativeChroma } from './stores/colors/lockRelativeChroma'
+import { $currentBgOrFg, setCurrentBgOrFg } from './stores/contrasts/currentBgOrFg'
+import { setCurrentContrastMethod } from './stores/contrasts/currentContrastMethod'
+import { setIsContrastInputOpen } from './stores/contrasts/isContrastInputOpen'
+import { setLockContrast } from './stores/contrasts/lockContrast'
+import { setCurrentFillOrStroke } from './stores/currentFillOrStroke'
+import { $currentKeysPressed, setCurrentKeysPressed } from './stores/currentKeysPressed'
+import { setIsColorCodeInputsOpen } from './stores/isColorCodeInputsOpen'
+import { setIsMouseInsideDocument } from './stores/isMouseInsideDocument'
+import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventCallback'
+import { $uiMessage, setUiMessage } from './stores/uiMessage'
+import { setColorsRgbaWithSideEffects } from './stores/colors/colorsRgba'
 
 let isMouseDown = false
 
@@ -60,51 +55,31 @@ function App() {
     if (pluginMessage.type === 'syncLocalStorageValues') {
       const data = pluginMessage.data as SyncLocalStorageValuesData
 
-      $figmaEditorType.set(data.figmaEditorType)
-      $fileColorProfile.set(data.fileColorProfile)
-      $isContrastInputOpen.set(data.isContrastInputOpen)
-      $lockRelativeChroma.set(data.lockRelativeChroma)
-      $currentContrastMethod.set(data.currentContrastMethod)
-      $lockContrast.set(data.lockContrast)
-      $isColorCodeInputsOpen.set(data.isColorCodeInputsOpen)
-      $currentColorModel.set(data.currentColorModel)
+      setFigmaEditorType(data.figmaEditorType)
+      setFileColorProfile(data.fileColorProfile)
+      setIsContrastInputOpen(data.isContrastInputOpen)
+      setLockRelativeChroma(data.lockRelativeChroma)
+      setCurrentContrastMethod(data.currentContrastMethod)
+      setLockContrast(data.lockContrast)
+      setIsColorCodeInputsOpen(data.isColorCodeInputsOpen)
+      setCurrentColorModel(data.currentColorModel)
     }
     // Update the color based on the selected shape in Figma.
     if (pluginMessage.type === 'syncCurrentFillOrStrokeAndColorsRgba') {
       if (document.body.classList.contains('deactivated')) document.body.classList.remove('deactivated')
-      if ($uiMessage.get().show) $uiMessage.setKey('show', false)
+      if ($uiMessage.get().show) setUiMessage({ ...$uiMessage.get(), show: false })
 
       // If on previous selected shape we had the parent selected, we set it to false as default.
-      if ($currentBgOrFg.get() === 'bg') $currentBgOrFg.set('fg')
+      if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
 
       const data = pluginMessage.data as SyncCurrentFillOrStrokeAndColorsRgbaData
 
-      $currentFillOrStroke.set(data.currentFillOrStroke)
+      setCurrentFillOrStroke(data.currentFillOrStroke)
 
-      $colorsRgba.set(data.colorsRgba)
-
-      const newColorRgba = data.colorsRgba[`${$currentFillOrStroke.get()}`]
-
-      const newColorHxy = convertRgbToHxy({
-        colorRgb: {
-          r: newColorRgba!.r,
-          g: newColorRgba!.g,
-          b: newColorRgba!.b
-        },
-        targetColorModel: $currentColorModel.get(),
-        fileColorProfile: $fileColorProfile.get(),
-        keepOklchCssDoubleDigit: true
-      })
-
-      updateColorHxyaAndSyncColorsRgbaAndBackend({
-        newColorHxya: {
-          h: newColorHxy.h,
-          x: newColorHxy.x,
-          y: newColorHxy.y,
-          a: newColorRgba!.a
-        },
-        syncColorsRgba: false,
-        syncColorRgbWithBackend: false
+      setColorsRgbaWithSideEffects({
+        newColorsRgba: data.colorsRgba,
+        keepOklchDoubleDigit: true,
+        bypassLockRelativeChromaFilter: true
       })
 
       // This says "when all the store value are filled, show the UI components".
@@ -114,16 +89,15 @@ function App() {
     else if (pluginMessage.type === 'displayUiMessage') {
       const data = pluginMessage.data as DisplayUiMessageData
 
-      $uiMessage.setKey('show', true)
+      // setUiMessage({ ...$uiMessage.get(), show: true })
       document.body.classList.add('deactivated')
-
-      setValuesForUiMessage()
-
       let message = uiMessageTexts[`${data.uiMessageCode}`]
       if (data.nodeType) {
         message = message.replace('$SHAPE', data.nodeType.toLowerCase())
       }
-      $uiMessage.setKey('message', message)
+      setUiMessage({ show: true, message: message })
+
+      setValuesForUiMessage()
 
       // This says "when all the store value are filled, show the UI components".
       if (!areStoreValuesReady) setAreStoreValuesReady(true)
@@ -132,7 +106,7 @@ function App() {
 
   useEffect(() => {
     document.addEventListener('mouseenter', () => {
-      $isMouseInsideDocument.set(true)
+      setIsMouseInsideDocument(true)
 
       if (document.hasFocus() === false) {
         // We set the focus back to the plugin window if user clicked outside of it, like this he doesn't need to click inside in order to use the shift or control keys.
@@ -140,17 +114,17 @@ function App() {
         // We test if any of the keys that are used in the plugin are pressed and set them to false to prevent this case: if user launches the plugin, enter the mouse inside (thus making it focused), leave the plugin, move a shape with shift key pressed in Figma (event listener will then trigger and add the 'shift' in $currentKeysPressed), then comes back to the plugin, $currentKeysPressed will still contains 'shift', even if he is not pressing it anymore, that's because the keyup event will not be triggered as the focus was lost when user moved the shape in Figma.
         // We could test if the mouse is inside on the keydown event but then, we will not be able to use the shift key to change the inputs values (by bigger steps for some of them, see in ColorValueInputs).
         // Same for ctrl key even if it is not used as much than shift in Figma.
-        if ($currentKeysPressed.get()) $currentKeysPressed.set([''])
+        if ($currentKeysPressed.get()) setCurrentKeysPressed([''])
       }
     })
 
     // This is in case the user has multiple Figma files open with OkColor open in them as well. Without this if the plugin is focused, by pressing "ctrl + tab", the plugin in the previous tab will get the 'ctrl' in $currentKeysPressed and when the user comes back and move the manipulator in the ColorPicker, the ctrl modifier effect will be taken into account even if he's not pressing it.
     window.addEventListener('blur', () => {
-      if ($currentKeysPressed.get()) $currentKeysPressed.set([''])
+      if ($currentKeysPressed.get()) setCurrentKeysPressed([''])
     })
 
     document.addEventListener('mouseleave', () => {
-      $isMouseInsideDocument.set(false)
+      setIsMouseInsideDocument(false)
     })
 
     document.addEventListener('mousedown', (event) => {
@@ -166,22 +140,22 @@ function App() {
 
     document.addEventListener('mouseup', () => {
       isMouseDown = false
-      $mouseEventCallback.set(null)
+      setMouseEventCallback(null)
     })
 
     // We want to know if the user has one of these two keys down because in ColorPciker we constrain the color picker manipulator depending on them and in others parts like ColorValueInputs.
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Shift') {
-        $currentKeysPressed.set([...$currentKeysPressed.get(), 'shift'])
+        setCurrentKeysPressed([...$currentKeysPressed.get(), 'shift'])
       } else if (event.key === 'Control') {
-        $currentKeysPressed.set([...$currentKeysPressed.get(), 'ctrl'])
+        setCurrentKeysPressed([...$currentKeysPressed.get(), 'ctrl'])
       }
     })
 
     document.addEventListener('keyup', (event) => {
       // We do this test on 'ArrowDown' and 'ArrowUp' because if not, in the inputs like relative chroma's one, we wouldn't be able to keep shift pressed more than one time.
       if (!['ArrowUp', 'ArrowDown'].includes(event.key) && $currentKeysPressed.get()) {
-        $currentKeysPressed.set([''])
+        setCurrentKeysPressed([''])
       }
     })
 
