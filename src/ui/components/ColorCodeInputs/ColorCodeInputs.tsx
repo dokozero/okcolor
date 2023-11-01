@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { selectInputContent } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
 import getColorCodeStrings from './helpers/getColorCodeStrings'
@@ -9,6 +8,7 @@ import copyToClipboard from '../../helpers/copyToClipboard'
 import { $isColorCodeInputsOpen, setIsColorCodeInputsOpenWithSideEffects } from '../../stores/isColorCodeInputsOpen'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya'
 import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument'
+import selectInputContent from '../../helpers/selectInputContent'
 
 // We only need this object to check if the value of an input has been changed on blur.
 const colorCodesInputValues: { [key in ColorCodesInputValues]: string } = {

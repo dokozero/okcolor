@@ -5,9 +5,6 @@
 import { map, action } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { ColorHxya, ColorValueDecimals, UpdateShapeColorData } from '../../../types'
-import convertAbsoluteChromaToRelative from '../../helpers/convertAbsoluteChromaToRelative'
-import convertHxyToRgb from '../../helpers/convertHxyToRgb'
-import filterNewColorHxya from '../../helpers/filterNewColorHxya'
 import sendMessageToBackend from '../../helpers/sendMessageToBackend'
 import { $currentBgOrFg } from '../contrasts/currentBgOrFg'
 import { $currentFillOrStroke } from '../currentFillOrStroke'
@@ -17,6 +14,9 @@ import { $fileColorProfile } from './fileColorProfile'
 import { $lockRelativeChroma } from './lockRelativeChroma'
 import { $relativeChroma, setRelativeChroma } from './relativeChroma'
 import { consoleLogInfos } from '../../../constants'
+import convertAbsoluteChromaToRelative from '../../helpers/colors/convertAbsoluteChromaToRelative'
+import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb'
+import filterNewColorHxya from '../../helpers/colors/filterNewColorHxya'
 
 // This map contain the current color being used in the UI, it can be the fill or the stroke of the foreground but also the background (colorsRgba.parentFill) of the current selected object.
 export const $colorHxya = map<ColorHxya>({

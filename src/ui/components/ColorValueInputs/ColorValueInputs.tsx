@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { selectInputContent, roundWithDecimal } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
 import { HxyaLabels, AbsoluteChroma, Saturation, Lightness, Opacity, Hue, ColorHxya } from '../../../types'
@@ -10,6 +9,8 @@ import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg'
 import { $lockContrast } from '../../stores/contrasts/lockContrast'
 import { $currentKeysPressed } from '../../stores/currentKeysPressed'
 import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument'
+import roundWithDecimal from '../../helpers/numbers/roundWithDecimal'
+import selectInputContent from '../../helpers/selectInputContent'
 
 let lastKeyPressed: string = ''
 const keepInputSelected = {

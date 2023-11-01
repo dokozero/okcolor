@@ -1,11 +1,11 @@
 import { PICKER_SIZE, OKLCH_CHROMA_SCALE } from '../../../../constants'
-import getClampedChroma from '../../../helpers/getClampedChroma'
-import convertContrastToLightness from '../../../helpers/convertContrastToLightness'
-import { roundWithDecimal } from '../../../helpers/others'
+import getClampedChroma from '../../../helpers/colors/getClampedChroma'
+import convertContrastToLightness from '../../../helpers/contrasts/convertContrastToLightness'
 import { Lightness, SvgPath } from '../../../../types'
 import { $colorHxya } from '../../../stores/colors/colorHxya'
 import { $contrast } from '../../../stores/contrasts/contrast'
 import { $currentContrastMethod } from '../../../stores/contrasts/currentContrastMethod'
+import roundWithDecimal from '../../../helpers/numbers/roundWithDecimal'
 
 export default function getContrastStrokeLimit(): SvgPath {
   let startY: Lightness

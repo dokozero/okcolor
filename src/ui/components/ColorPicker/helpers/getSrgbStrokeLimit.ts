@@ -1,5 +1,5 @@
 import { PICKER_SIZE, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../constants'
-import { clampChromaInGamut } from '../../../helpers/culori.mjs'
+import { clampChromaInGamut } from '../../../helpers/colors/culori.mjs'
 import { SvgPath } from '../../../../types'
 import { $colorHxya } from '../../../stores/colors/colorHxya'
 

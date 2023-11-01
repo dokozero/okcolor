@@ -1,10 +1,10 @@
-import { MAX_CHROMA_P3 } from '../../constants'
-import { ColorHxya, RelativeChroma } from '../../types'
-import { getColorValueDecimals } from '../stores/colors/colorHxya'
-import { $fileColorProfile } from '../stores/colors/fileColorProfile'
-import { $relativeChroma } from '../stores/colors/relativeChroma'
+import { MAX_CHROMA_P3 } from '../../../constants'
+import { ColorHxya, RelativeChroma } from '../../../types'
+import { getColorValueDecimals } from '../../stores/colors/colorHxya'
+import { $fileColorProfile } from '../../stores/colors/fileColorProfile'
+import { $relativeChroma } from '../../stores/colors/relativeChroma'
+import roundWithDecimal from '../numbers/roundWithDecimal'
 import { clampChromaInGamut } from './culori.mjs'
-import { roundWithDecimal } from './others'
 
 type Props = {
   colorHxya: ColorHxya

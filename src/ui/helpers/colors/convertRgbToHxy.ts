@@ -1,9 +1,8 @@
-import { converter } from '../helpers/culori.mjs'
-import type { Rgb, Okhsl, Okhsv, Oklch } from '../helpers/culori.mjs'
-
-import { roundWithDecimal } from './others'
-import { ColorHxy, ColorModelList, ColorRgb, FileColorProfile } from '../../types'
-import { getColorValueDecimals } from '../stores/colors/colorHxya'
+import { ColorRgb, ColorModelList, FileColorProfile, ColorHxy } from '../../../types'
+import { getColorValueDecimals } from '../../stores/colors/colorHxya'
+import roundWithDecimal from '../numbers/roundWithDecimal'
+import { converter } from './culori.mjs'
+import type { Rgb, Okhsl, Okhsv, Oklch } from './culori.mjs'
 
 const convertToOkhsl = converter('okhsl')
 const convertToOkhsv = converter('okhsv')

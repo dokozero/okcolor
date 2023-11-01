@@ -1,11 +1,11 @@
-import getClampedChroma from '../../../helpers/getClampedChroma'
-import { roundWithDecimal } from '../../../helpers/others'
-import { converter } from '../../../helpers/culori.mjs'
+import getClampedChroma from '../../../helpers/colors/getClampedChroma'
+import { converter } from '../../../helpers/colors/culori.mjs'
 import { ColorCodesInputValues, ColorHxy, ColorHxya, ColorModelList, Opacity } from '../../../../types'
-import convertRgbToHxy from '../../../helpers/convertRgbToHxy'
+import convertRgbToHxy from '../../../helpers/colors/convertRgbToHxy'
 import { $colorHxya, getColorValueDecimals } from '../../../stores/colors/colorHxya'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel'
 import { $currentBgOrFg } from '../../../stores/contrasts/currentBgOrFg'
+import roundWithDecimal from '../../../helpers/numbers/roundWithDecimal'
 
 const convertToRgb = converter('rgb')
 

@@ -1,10 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { ApcaContrast, ColorRgb, ColorRgba, Lightness, Opacity, WcagContrast } from '../../../../types'
-import convertRgbToHxy from '../../../helpers/convertRgbToHxy'
 import { useStore } from '@nanostores/react'
 import { consoleLogInfos } from '../../../../constants'
-import getContrastFromBgandFgRgba from '../../../helpers/getContrastFromBgandFgRgba'
-import convertHxyToRgb from '../../../helpers/convertHxyToRgb'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../../stores/colors/colorHxya'
 import { $colorsRgba } from '../../../stores/colors/colorsRgba'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel'
@@ -12,6 +9,9 @@ import { $fileColorProfile } from '../../../stores/colors/fileColorProfile'
 import { $currentBgOrFg, setCurrentBgOrFg } from '../../../stores/contrasts/currentBgOrFg'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke'
 import { $uiMessage } from '../../../stores/uiMessage'
+import convertHxyToRgb from '../../../helpers/colors/convertHxyToRgb'
+import convertRgbToHxy from '../../../helpers/colors/convertRgbToHxy'
+import getContrastFromBgandFgRgba from '../../../helpers/contrasts/getContrastFromBgandFgRgba'
 
 export default function BgOrFgToggle() {
   if (consoleLogInfos.includes('Component renders')) {

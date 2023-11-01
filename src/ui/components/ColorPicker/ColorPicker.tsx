@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import { limitMouseManipulatorPosition, roundWithDecimal } from '../../helpers/others'
 
 import {
   consoleLogInfos,
@@ -20,11 +19,11 @@ import vShader from '@virtual:shaders/src/ui/shaders/v_shader.glsl'
 
 import * as twgl from 'twgl.js'
 
-import { inGamut } from '../../helpers/culori.mjs'
+import { inGamut } from '../../helpers/colors/culori.mjs'
 import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit'
 import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit'
 import { AbsoluteChroma, ColorModelList, Saturation } from '../../../types'
-import convertAbsoluteChromaToRelative from '../../helpers/convertAbsoluteChromaToRelative'
+import convertAbsoluteChromaToRelative from '../../helpers/colors/convertAbsoluteChromaToRelative'
 import getContrastStrokeLimit from './helpers/getContrastStrokeLimit'
 import { $colorHxya, getColorValueDecimals, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya'
 import { $colorsRgba } from '../../stores/colors/colorsRgba'
@@ -38,6 +37,8 @@ import { $lockContrast } from '../../stores/contrasts/lockContrast'
 import { $currentKeysPressed } from '../../stores/currentKeysPressed'
 import { setMouseEventCallback } from '../../stores/mouseEventCallback'
 import { $uiMessage } from '../../stores/uiMessage'
+import limitMouseManipulatorPosition from '../../helpers/limitMouseManipulatorPosition'
+import roundWithDecimal from '../../helpers/numbers/roundWithDecimal'
 
 let colorPickerGlContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo

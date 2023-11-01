@@ -2,8 +2,8 @@
 
 import { RES_PICKER_SIZE_OKHSLV, RES_PICKER_SIZE_OKLCH, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../constants'
 
-import { converter, clampChromaInGamut } from '../helpers/culori.mjs'
-import type { Rgb, Oklch } from '../helpers/culori.mjs'
+import { converter, clampChromaInGamut } from './colors/culori.mjs'
+import type { Rgb, Oklch } from './colors/culori.mjs'
 
 const localDebugMode = false
 

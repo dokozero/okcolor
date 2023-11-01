@@ -1,8 +1,8 @@
-import { MAX_CHROMA_P3 } from '../../constants'
-import { AbsoluteChroma, ColorHxy, RelativeChroma } from '../../types'
-import { $fileColorProfile } from '../stores/colors/fileColorProfile'
+import { MAX_CHROMA_P3 } from '../../../constants'
+import { ColorHxy, RelativeChroma, AbsoluteChroma } from '../../../types'
+import { $fileColorProfile } from '../../stores/colors/fileColorProfile'
+import clampNumber from '../numbers/clampNumber'
 import { clampChromaInGamut } from './culori.mjs'
-import { clampNumber } from './others'
 
 export default function convertAbsoluteChromaToRelative(colorHxy: ColorHxy): RelativeChroma {
   // We do this test because with a lightness of 0, we get an undefined value for currentMaxChroma.c

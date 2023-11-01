@@ -1,10 +1,10 @@
 import { formatHex8, formatHex } from 'culori'
-import { roundWithDecimal } from '../../../helpers/others'
-import { clampChromaInGamut } from '../../../helpers/culori.mjs'
+import { clampChromaInGamut } from '../../../helpers/colors/culori.mjs'
 import { ColorCodesInputValues, ColorRgb } from '../../../../types'
-import convertHxyToRgb from '../../../helpers/convertHxyToRgb'
+import convertHxyToRgb from '../../../helpers/colors/convertHxyToRgb'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel'
 import { $colorHxya } from '../../../stores/colors/colorHxya'
+import roundWithDecimal from '../../../helpers/numbers/roundWithDecimal'
 
 type NewColorStrings = {
   [key in ColorCodesInputValues]: string

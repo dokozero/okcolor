@@ -2,12 +2,12 @@ import { action, atom } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { FileColorProfile, SyncFileColorProfileData } from '../../../types'
 import { consoleLogInfos } from '../../../constants'
-import convertRgbToHxy from '../../helpers/convertRgbToHxy'
 import sendMessageToBackend from '../../helpers/sendMessageToBackend'
 import { $currentFillOrStroke } from '../currentFillOrStroke'
 import { setColorHxyaWithSideEffects, $colorHxya } from './colorHxya'
 import { $colorsRgba } from './colorsRgba'
 import { $currentColorModel } from './currentColorModel'
+import convertRgbToHxy from '../../helpers/colors/convertRgbToHxy'
 
 export const $fileColorProfile = atom<FileColorProfile>('rgb')
 

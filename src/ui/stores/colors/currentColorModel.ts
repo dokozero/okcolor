@@ -4,15 +4,15 @@ import { $colorHxya, setColorHxya } from './colorHxya'
 import { $fileColorProfile, setFileColorProfileWithSideEffects } from './fileColorProfile'
 import { CurrentColorModel, SyncCurrentColorModelData } from '../../../types'
 import { consoleLogInfos } from '../../../constants'
-import convertRgbToHxy from '../../helpers/convertRgbToHxy'
 import sendMessageToBackend from '../../helpers/sendMessageToBackend'
 import { $currentBgOrFg, setCurrentBgOrFg } from '../contrasts/currentBgOrFg'
 import { $lockContrast, setLockContrast } from '../contrasts/lockContrast'
 import { $currentFillOrStroke } from '../currentFillOrStroke'
 import { $colorsRgba } from './colorsRgba'
 import { $lockRelativeChroma, setLockRelativeChroma } from './lockRelativeChroma'
-import getContrastFromBgandFgRgba from '../../helpers/getContrastFromBgandFgRgba'
 import { setContrast } from '../contrasts/contrast'
+import convertRgbToHxy from '../../helpers/colors/convertRgbToHxy'
+import getContrastFromBgandFgRgba from '../../helpers/contrasts/getContrastFromBgandFgRgba'
 
 export const $currentColorModel = atom<CurrentColorModel>('oklchCss')
 

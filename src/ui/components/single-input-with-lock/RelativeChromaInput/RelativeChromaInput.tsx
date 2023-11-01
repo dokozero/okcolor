@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { selectInputContent } from '../../../helpers/others'
 import { consoleLogInfos } from '../../../../constants'
 import { useStore } from '@nanostores/react'
 import { RelativeChroma } from '../../../../types'
@@ -11,6 +10,7 @@ import { $relativeChroma, setRelativeChromaWithSideEffects } from '../../../stor
 import { $currentKeysPressed } from '../../../stores/currentKeysPressed'
 import { $isMouseInsideDocument } from '../../../stores/isMouseInsideDocument'
 import { $uiMessage } from '../../../stores/uiMessage'
+import selectInputContent from '../../../helpers/selectInputContent'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false

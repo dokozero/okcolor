@@ -1,5 +1,5 @@
-import { RgbArray, RgbaArray, WcagContrast } from '../../types'
-import { roundWithDecimal } from './others'
+import { RgbArray, RgbaArray, WcagContrast } from '../../../types'
+import roundWithDecimal from '../numbers/roundWithDecimal'
 
 // Formulas for contrast from https://www.w3.org/WAI/WCAG22/Techniques/general/G145#tests
 // For alphaCompositing, thanks to GPT-4

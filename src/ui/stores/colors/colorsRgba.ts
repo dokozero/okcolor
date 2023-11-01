@@ -1,15 +1,14 @@
 import { deepMap, action } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { ColorsRgba, ApcaContrast, WcagContrast } from '../../../types'
-import convertRgbToHxy from '../../helpers/convertRgbToHxy'
-import getContrastFromBgandFgRgba from '../../helpers/getContrastFromBgandFgRgba'
-import { $contrast, setContrast } from '../contrasts/contrast'
-import { $lockContrast } from '../contrasts/lockContrast'
 import { $currentFillOrStroke } from '../currentFillOrStroke'
 import { $currentColorModel } from './currentColorModel'
 import { $fileColorProfile } from './fileColorProfile'
 import { setColorHxyaWithSideEffects } from './colorHxya'
 import { consoleLogInfos } from '../../../constants'
+import convertRgbToHxy from '../../helpers/colors/convertRgbToHxy'
+import getContrastFromBgandFgRgba from '../../helpers/contrasts/getContrastFromBgandFgRgba'
+import { setContrast } from '../contrasts/contrast'
 
 export const $colorsRgba = deepMap<ColorsRgba>({
   parentFill: null,

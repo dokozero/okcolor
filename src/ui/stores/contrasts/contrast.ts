@@ -2,10 +2,10 @@ import { action, atom } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { ApcaContrast, WcagContrast } from '../../../types'
 import { consoleLogInfos } from '../../../constants'
-import convertContrastToLightness from '../../helpers/convertContrastToLightness'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../colors/colorHxya'
-import getContrastFromBgandFgRgba from '../../helpers/getContrastFromBgandFgRgba'
 import { $colorsRgba } from '../colors/colorsRgba'
+import convertContrastToLightness from '../../helpers/contrasts/convertContrastToLightness'
+import getContrastFromBgandFgRgba from '../../helpers/contrasts/getContrastFromBgandFgRgba'
 
 export const $contrast = atom<ApcaContrast | WcagContrast>(0)
 

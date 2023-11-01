@@ -1,7 +1,7 @@
-import { ColorHxy, RelativeChroma } from '../../types'
-import { $fileColorProfile } from '../stores/colors/fileColorProfile'
+import { ColorHxy, RelativeChroma } from '../../../types'
+import { $fileColorProfile } from '../../stores/colors/fileColorProfile'
+import roundWithDecimal from '../numbers/roundWithDecimal'
 import { clampChromaInGamut } from './culori.mjs'
-import { roundWithDecimal } from './others'
 
 export default function getClampedChroma(props: ColorHxy): RelativeChroma {
   const { h, x, y } = props

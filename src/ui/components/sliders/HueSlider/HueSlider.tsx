@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
 
 import { consoleLogInfos, SLIDER_SIZE } from '../../../../constants'
-import { limitMouseManipulatorPosition, roundWithDecimal } from '../../../helpers/others'
 import { useStore } from '@nanostores/react'
 import { $colorHxya, getColorValueDecimals, setColorHxyaWithSideEffects } from '../../../stores/colors/colorHxya'
 import { setMouseEventCallback } from '../../../stores/mouseEventCallback'
+import limitMouseManipulatorPosition from '../../../helpers/limitMouseManipulatorPosition'
+import roundWithDecimal from '../../../helpers/numbers/roundWithDecimal'
 
 export default function HueSlider() {
   if (consoleLogInfos.includes('Component renders')) {

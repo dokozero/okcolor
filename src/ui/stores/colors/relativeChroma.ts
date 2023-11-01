@@ -3,7 +3,7 @@ import { logger } from '@nanostores/logger'
 import { RelativeChroma } from '../../../types'
 import { consoleLogInfos } from '../../../constants'
 import { $colorHxya, setColorHxyaWithSideEffects } from './colorHxya'
-import convertRelativeChromaToAbsolute from '../../helpers/convertRelativeChromaToAbsolute'
+import convertRelativeChromaToAbsolute from '../../helpers/colors/convertRelativeChromaToAbsolute'
 
 export const $relativeChroma = atom<RelativeChroma>(0)
 

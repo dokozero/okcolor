@@ -1,8 +1,7 @@
-import { converter } from '../helpers/culori.mjs'
-import type { Rgb, Okhsl, Okhsv, Oklch } from '../helpers/culori.mjs'
-
-import { clampNumber } from './others'
-import { ColorHxy, ColorModelList, ColorRgb } from '../../types'
+import { converter } from './culori.mjs'
+import type { Rgb, Okhsl, Okhsv, Oklch } from './culori.mjs'
+import { ColorHxy, ColorModelList, ColorRgb } from '../../../types'
+import clampNumber from '../numbers/clampNumber'
 
 const convertToRgb = converter('rgb')
 const convertToP3 = converter('p3')
