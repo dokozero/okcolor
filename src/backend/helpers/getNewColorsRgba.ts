@@ -36,6 +36,9 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     nodeType: null
   }
 
+  let doesAllShapesHaveAFill = true
+  let doesAllShapesHaveAStroke = true
+
   if (!selection[0]) {
     returnObject.uiMessageCode = 'no_selection'
     return returnObject
@@ -65,24 +68,6 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
   if (selectionFill?.type !== 'SOLID' && selectionStroke?.type !== 'SOLID') {
     returnObject.uiMessageCode = 'no_solid_color'
     return returnObject
-  }
-
-  if (selectionFill?.type === 'SOLID') {
-    returnObject.newColorsRgba.fill = {
-      r: selectionFill.color.r * 255,
-      g: selectionFill.color.g * 255,
-      b: selectionFill.color.b * 255,
-      a: Math.round(selectionFill.opacity * 100)
-    }
-  }
-
-  if (selectionStroke?.type === 'SOLID') {
-    returnObject.newColorsRgba.stroke = {
-      r: selectionStroke.color.r * 255,
-      g: selectionStroke.color.g * 255,
-      b: selectionStroke.color.b * 255,
-      a: Math.round(selectionStroke.opacity * 100)
-    }
   }
 
   if (firstSelection.parent?.fills) {
@@ -123,6 +108,30 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     if (selection.length !== fillsCount && selection.length !== strokesCount) {
       returnObject.uiMessageCode = 'not_all_shapes_have_fill_or_stroke'
       return returnObject
+    } else if (selection.length !== fillsCount) {
+      // If all selected shapes don't have a fill in common we prevent getting the fill color in returnObject in the next code block.
+      doesAllShapesHaveAFill = false
+    } else if (selection.length !== strokesCount) {
+      // Same reason than above but for the stroke.
+      doesAllShapesHaveAStroke = false
+    }
+  }
+
+  if (selectionFill?.type === 'SOLID' && doesAllShapesHaveAFill) {
+    returnObject.newColorsRgba.fill = {
+      r: selectionFill.color.r * 255,
+      g: selectionFill.color.g * 255,
+      b: selectionFill.color.b * 255,
+      a: Math.round(selectionFill.opacity * 100)
+    }
+  }
+
+  if (selectionStroke?.type === 'SOLID' && doesAllShapesHaveAStroke) {
+    returnObject.newColorsRgba.stroke = {
+      r: selectionStroke.color.r * 255,
+      g: selectionStroke.color.g * 255,
+      b: selectionStroke.color.b * 255,
+      a: Math.round(selectionStroke.opacity * 100)
     }
   }
 
