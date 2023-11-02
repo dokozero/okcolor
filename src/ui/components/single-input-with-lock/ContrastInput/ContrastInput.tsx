@@ -42,6 +42,42 @@ const updateContrastOrSetBackPreviousValue = (eventTarget: HTMLInputElement, new
   setContrastWithSideEffects({ newContrast: newContrast })
 }
 
+const getNewContrastValueFromArrowKey = (
+  eventKey: 'ArrowDown' | 'ArrowUp',
+  currentValue: ApcaContrast | WcagContrast
+): ApcaContrast | WcagContrast => {
+  let newValue: ApcaContrast | WcagContrast
+
+  let stepUpdateValue: number
+
+  if ($currentContrastMethod.get() === 'apca') {
+    stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 10 : 1
+
+    if (eventKey === 'ArrowUp') {
+      if (currentValue === 0) newValue = 7
+      else newValue = currentValue + stepUpdateValue
+    } else if (eventKey === 'ArrowDown') {
+      if (currentValue === 0) newValue = -7
+      else newValue = currentValue - stepUpdateValue
+    }
+
+    if (newValue! > -7 && newValue! < 7) newValue = 0
+  } else {
+    stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 1 : 0.1
+
+    if (eventKey === 'ArrowUp') {
+      if (currentValue === -1) newValue = 1
+      else newValue = currentValue + stepUpdateValue
+    } else if (eventKey === 'ArrowDown') {
+      if (currentValue === 1) newValue = -1
+      else newValue = currentValue - stepUpdateValue
+    }
+  }
+
+  // We need to this because in some cases we can have values like 1.2999999999999998.
+  return roundWithDecimal(newValue!, 1)
+}
+
 const handleLockContrast = () => {
   setLockContrastWithSideEffects({ newLockContrast: !$lockContrast.get() })
 }
@@ -104,59 +140,18 @@ export default function ContrastInput() {
       const currentValue: ApcaContrast | WcagContrast =
         $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
 
-      let newValue: ApcaContrast | WcagContrast
-
-      // if ($currentContrastMethod.get() === 'wcag' && $contrast.get() < 0) newValue = -newValue
-
       event.preventDefault()
       keepInputSelected = true
 
-      let stepUpdateValue: number
-
-      // TODO - refactor into a function ouside of component
-      if ($currentContrastMethod.get() === 'apca') {
-        stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 10 : 1
-
-        if (eventKey === 'ArrowUp') {
-          if (currentValue === 0) newValue = 7
-          else newValue = currentValue + stepUpdateValue
-        } else if (eventKey === 'ArrowDown') {
-          if (currentValue === 0) newValue = -7
-          else newValue = currentValue - stepUpdateValue
-        }
-
-        if (newValue! > -7 && newValue! < 7) newValue = 0
-      } else {
-        stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 1 : 0.1
-
-        if (eventKey === 'ArrowUp') {
-          if (currentValue === -1) newValue = 1
-          else newValue = currentValue + stepUpdateValue
-        } else if (eventKey === 'ArrowDown') {
-          if (currentValue === 1) newValue = -1
-          else newValue = currentValue - stepUpdateValue
-        }
-
-        // We need to this because in some cases we can have values like 1.2999999999999998.
-        newValue = roundWithDecimal(newValue!, 1)
-      }
-
-      updateContrastOrSetBackPreviousValue(eventTarget, newValue!)
+      const newValue = getNewContrastValueFromArrowKey(eventKey as 'ArrowDown' | 'ArrowUp', currentValue)
+      updateContrastOrSetBackPreviousValue(eventTarget, newValue)
     }
   }
 
   useEffect(() => {
     if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
+    if (!colorsRgba.parentFill || !colorsRgba.fill) return
 
-    if (!colorsRgba.parentFill || !colorsRgba.fill) {
-      // input.current!.value = '-'
-
-      // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
-      // if ($lockContrast.get()) setLockContrast(false)
-      return
-    } else {
-      // const newContrast = $currentContrastMethod.get() === 'wcag' ? Math.abs($contrast.get()) : $contrast.get()
-    }
     input.current!.value = String(contrast)
 
     if (keepInputSelected) {
