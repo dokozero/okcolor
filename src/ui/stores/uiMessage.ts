@@ -8,6 +8,7 @@ export const $uiMessage = map({
   message: ''
 })
 
+// TODO - add setUiMessageWithSideEffects
 export const setUiMessage = action($uiMessage, 'setUiMessage', (uiMessage, newUiMessage) => {
   uiMessage.set(newUiMessage)
 })

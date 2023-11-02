@@ -24,6 +24,10 @@ const updateRelativeChromaOrSetBackPreviousValue = (eventTarget: HTMLInputElemen
   setRelativeChromaWithSideEffects({ newRelativeChroma: newRelativeChroma })
 }
 
+const handleLockRelativeChroma = () => {
+  setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: !$lockRelativeChroma.get() })
+}
+
 export default function RelativeChromaInput() {
   if (consoleLogInfos.includes('Component renders')) {
     console.log('Component render — RelativeChromaInput')
@@ -70,15 +74,6 @@ export default function RelativeChromaInput() {
 
       updateRelativeChromaOrSetBackPreviousValue(eventTarget, newValue)
     }
-  }
-
-  const handleLockRelativeChroma = () => {
-    const newValue = !$lockRelativeChroma.get()
-
-    setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: newValue })
-
-    // To avoid getting relative chroma and contrast locked at the same time, which would block the color picker and the hxya inputs
-    // if ($lockContrast.get() && newValue) setLockContrast(false)
   }
 
   useEffect(() => {

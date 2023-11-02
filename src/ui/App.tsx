@@ -15,17 +15,17 @@ import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 import { consoleLogInfos } from '../constants'
 
 import { uiMessageTexts } from './ui-messages'
-import { DisplayUiMessageData, MessageForUi, SyncCurrentFillOrStrokeAndColorsRgbaData, SyncLocalStorageValuesData } from '../types'
+import { DisplayUiMessageData, MessageForUi, SyncNewShapeData, SyncLocalStorageValuesData } from '../types'
 import setValuesForUiMessage from './helpers/setValuesForUiMessage'
 import sendMessageToBackend from './helpers/sendMessageToBackend'
 import { setFigmaEditorType } from './stores/figmaEditorType'
-import { setCurrentColorModel } from './stores/colors/currentColorModel'
+import { $currentColorModel, setCurrentColorModel } from './stores/colors/currentColorModel'
 import { setFileColorProfile } from './stores/colors/fileColorProfile'
-import { setLockRelativeChroma } from './stores/colors/lockRelativeChroma'
+import { $lockRelativeChroma, setLockRelativeChroma } from './stores/colors/lockRelativeChroma'
 import { $currentBgOrFg, setCurrentBgOrFg } from './stores/contrasts/currentBgOrFg'
 import { setCurrentContrastMethod } from './stores/contrasts/currentContrastMethod'
 import { setIsContrastInputOpen } from './stores/contrasts/isContrastInputOpen'
-import { setLockContrast } from './stores/contrasts/lockContrast'
+import { $lockContrast, setLockContrast } from './stores/contrasts/lockContrast'
 import { setCurrentFillOrStroke } from './stores/currentFillOrStroke'
 import { $currentKeysPressed, setCurrentKeysPressed } from './stores/currentKeysPressed'
 import { setIsColorCodeInputsOpen } from './stores/isColorCodeInputsOpen'
@@ -65,21 +65,41 @@ function App() {
       setCurrentColorModel(data.currentColorModel)
     }
     // Update the color based on the selected shape in Figma.
-    if (pluginMessage.type === 'syncCurrentFillOrStrokeAndColorsRgba') {
+
+    // synNewShape
+    if (pluginMessage.type === 'syncNewShape') {
+      const data = pluginMessage.data as SyncNewShapeData
+
       if (document.body.classList.contains('deactivated')) document.body.classList.remove('deactivated')
-      if ($uiMessage.get().show) setUiMessage({ ...$uiMessage.get(), show: false })
+
+      if ($uiMessage.get().show) {
+        setUiMessage({ ...$uiMessage.get(), show: false })
+      }
+
+      if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+        // We update these two values in the case the user had one or the two set to true with a shape selected then deselected it, without this when he select a shape again, theses values would always be false as we set them to this value in setValuesForUiMessage() called when we show as UI message.
+        if (data.lockRelativeChroma !== $lockRelativeChroma.get()) {
+          setLockRelativeChroma(data.lockRelativeChroma)
+        }
+        //For this value, we have the same same reason but also another one: if the user has the plugin running with a shape that has a parent fill then select another one that doesn't have one, if he select back a shape with a parent fill, we need to check if $lockContrast is not equal to the one from backend and update it in accordance.
+        if (data.lockContrast !== $lockContrast.get() && data.colorsRgba.parentFill) {
+          setLockContrast(data.lockContrast)
+        } else if (!data.colorsRgba.parentFill || !data.colorsRgba.fill) {
+          // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
+          if ($lockContrast.get()) setLockContrast(false)
+        }
+      }
 
       // If on previous selected shape we had the parent selected, we set it to false as default.
       if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
-
-      const data = pluginMessage.data as SyncCurrentFillOrStrokeAndColorsRgbaData
 
       setCurrentFillOrStroke(data.currentFillOrStroke)
 
       setColorsRgbaWithSideEffects({
         newColorsRgba: data.colorsRgba,
         keepOklchDoubleDigit: true,
-        bypassLockRelativeChromaFilter: true
+        bypassLockRelativeChromaFilter: true,
+        bypassLockContrastFilter: true
       })
 
       // This says "when all the store value are filled, show the UI components".

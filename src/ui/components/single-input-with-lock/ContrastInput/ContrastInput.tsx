@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MAX_APCA_CONTRAST, MAX_WCAG_CONTRAST, MIN_APCA_CONTRAST, MIN_WCAG_CONTRAST, consoleLogInfos } from '../../../../constants'
 import { useStore } from '@nanostores/react'
-import { ApcaContrast, CurrentContrastMethod, SyncLockContrastData, WcagContrast } from '../../../../types'
-import sendMessageToBackend from '../../../helpers/sendMessageToBackend'
+import { ApcaContrast, CurrentContrastMethod, WcagContrast } from '../../../../types'
 import BgOrFgToggle from './BgOrFgToggle'
 import OpenLockIcon from '../OpenLockIcon'
 import ClosedLockIcon from './ClosedLockIcon'
@@ -12,7 +11,7 @@ import { $currentColorModel } from '../../../stores/colors/currentColorModel'
 import { $contrast, setContrast, setContrastWithSideEffects } from '../../../stores/contrasts/contrast'
 import { $currentContrastMethod, setCurrentContrastMethodWithSideEffects } from '../../../stores/contrasts/currentContrastMethod'
 import { $isContrastInputOpen, setIsContrastInputOpenWithSideEffects } from '../../../stores/contrasts/isContrastInputOpen'
-import { $lockContrast, setLockContrast } from '../../../stores/contrasts/lockContrast'
+import { $lockContrast, setLockContrastWithSideEffects } from '../../../stores/contrasts/lockContrast'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke'
 import { $currentKeysPressed } from '../../../stores/currentKeysPressed'
 import { $isMouseInsideDocument } from '../../../stores/isMouseInsideDocument'
@@ -41,6 +40,10 @@ const updateContrastOrSetBackPreviousValue = (eventTarget: HTMLInputElement, new
   }
 
   setContrastWithSideEffects({ newContrast: newContrast })
+}
+
+const handleLockContrast = () => {
+  setLockContrastWithSideEffects({ newLockContrast: !$lockContrast.get() })
 }
 
 export default function ContrastInput() {
@@ -142,22 +145,6 @@ export default function ContrastInput() {
     }
   }
 
-  const handleLockContrast = () => {
-    const newValue = !$lockContrast.get()
-
-    setLockContrast(newValue)
-
-    // To avoid getting relative chroma and contrast locked at the same time, which would block the color picker and the hxya inputs
-    // if ($lockRelativeChroma.get() && $lockContrast.get()) setLockRelativeChroma(false)
-
-    sendMessageToBackend<SyncLockContrastData>({
-      type: 'syncLockContrast',
-      data: {
-        lockContrast: newValue
-      }
-    })
-  }
-
   useEffect(() => {
     if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
 
@@ -183,9 +170,6 @@ export default function ContrastInput() {
 
     if (!colorsRgba.parentFill || !colorsRgba.fill) {
       input.current!.value = '-'
-
-      // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
-      if ($lockContrast.get()) handleLockContrast()
     } else {
       input.current!.value = String(contrast)
     }

@@ -10,7 +10,7 @@ import type {
   MessageForBackend,
   MessageForBackendData,
   SyncCurrentColorModelData,
-  SyncCurrentFillOrStrokeAndColorsRgbaData,
+  SyncNewShapeData,
   SyncCurrentFillOrStrokeData,
   SyncFileColorProfileData,
   SyncLocalStorageValuesData,
@@ -131,11 +131,13 @@ const init = async () => {
   if (updateColorsRgbaOrSendUiMessageCodeToUi() === 'uiMessageCode sent') return
   currentFillOrStroke = colorsRgba.fill ? 'fill' : 'stroke'
 
-  sendMessageToUi<SyncCurrentFillOrStrokeAndColorsRgbaData>({
-    type: 'syncCurrentFillOrStrokeAndColorsRgba',
+  sendMessageToUi<SyncNewShapeData>({
+    type: 'syncNewShape',
     data: {
       currentFillOrStroke: currentFillOrStroke,
-      colorsRgba: colorsRgba
+      colorsRgba: colorsRgba,
+      lockRelativeChroma: lockRelativeChroma,
+      lockContrast: lockContrast
     }
   })
 }
@@ -149,11 +151,13 @@ const handleFigmaOnSelectionChange = () => {
 
   currentFillOrStroke = colorsRgba.fill ? 'fill' : 'stroke'
 
-  sendMessageToUi<SyncCurrentFillOrStrokeAndColorsRgbaData>({
-    type: 'syncCurrentFillOrStrokeAndColorsRgba',
+  sendMessageToUi<SyncNewShapeData>({
+    type: 'syncNewShape',
     data: {
       currentFillOrStroke: currentFillOrStroke,
-      colorsRgba: colorsRgba
+      colorsRgba: colorsRgba,
+      lockRelativeChroma: lockRelativeChroma,
+      lockContrast: lockContrast
     }
   })
 }
@@ -181,11 +185,13 @@ const handleFigmaOnDocumentChange = (event: DocumentChangeEvent) => {
       }
     }
 
-    sendMessageToUi<SyncCurrentFillOrStrokeAndColorsRgbaData>({
-      type: 'syncCurrentFillOrStrokeAndColorsRgba',
+    sendMessageToUi<SyncNewShapeData>({
+      type: 'syncNewShape',
       data: {
         currentFillOrStroke: currentFillOrStroke,
-        colorsRgba: colorsRgba
+        colorsRgba: colorsRgba,
+        lockRelativeChroma: lockRelativeChroma,
+        lockContrast: lockContrast
       }
     })
   }
@@ -233,6 +239,7 @@ figma.ui.onmessage = (event: MessageForBackend) => {
 
     case 'syncFileColorProfile':
       data = event.data as SyncFileColorProfileData
+      fileColorProfile = data.fileColorProfile
       figma.clientStorage.setAsync('fileColorProfile', data.fileColorProfile)
       break
 
@@ -244,37 +251,40 @@ figma.ui.onmessage = (event: MessageForBackend) => {
     case 'syncCurrentColorModel':
       data = event.data as SyncCurrentColorModelData
       currentColorModel = data.currentColorModel
-      resizeWindowHeight()
       figma.clientStorage.setAsync('currentColorModel', data.currentColorModel)
+      resizeWindowHeight()
       break
 
     case 'syncIsContrastInputOpen':
       data = event.data as SyncIsContrastInputOpenData
       isContrastInputOpen = data.isContrastInputOpen
-      resizeWindowHeight()
       figma.clientStorage.setAsync('isContrastInputOpen', isContrastInputOpen)
+      resizeWindowHeight()
       break
 
     case 'syncLockRelativeChroma':
       data = event.data as SyncLockRelativeChromaData
+      lockRelativeChroma = data.lockRelativeChroma
       figma.clientStorage.setAsync('lockRelativeChroma', data.lockRelativeChroma)
       break
 
     case 'syncCurrentContrastMethod':
       data = event.data as SyncCurrentContrastMethodData
+      currentContrastMethod = data.currentContrastMethod
       figma.clientStorage.setAsync('currentContrastMethod', data.currentContrastMethod)
       break
 
     case 'syncLockContrast':
       data = event.data as SyncLockContrastData
+      lockContrast = data.lockContrast
       figma.clientStorage.setAsync('lockContrast', data.lockContrast)
       break
 
     case 'syncIsColorCodeInputsOpen':
       data = event.data as SyncIsColorCodeInputsOpenData
       isColorCodeInputsOpen = data.isColorCodeInputsOpen
-      resizeWindowHeight()
       figma.clientStorage.setAsync('isColorCodeInputsOpen', isColorCodeInputsOpen)
+      resizeWindowHeight()
       break
   }
 }

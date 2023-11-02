@@ -118,7 +118,7 @@ export enum ColorCodesInputValues {
 
 // Message for UI types
 
-export type MessageForUiTypes = 'syncLocalStorageValues' | 'syncCurrentFillOrStrokeAndColorsRgba' | 'displayUiMessage'
+export type MessageForUiTypes = 'syncLocalStorageValues' | 'syncNewShape' | 'displayUiMessage'
 
 export type SyncLocalStorageValuesData = {
   figmaEditorType: FigmaEditorType
@@ -131,9 +131,11 @@ export type SyncLocalStorageValuesData = {
   currentColorModel: CurrentColorModel
 }
 
-export type SyncCurrentFillOrStrokeAndColorsRgbaData = {
+export type SyncNewShapeData = {
   currentFillOrStroke: CurrentFillOrStroke
   colorsRgba: ColorsRgba
+  lockContrast: boolean
+  lockRelativeChroma: boolean
 }
 
 export type DisplayUiMessageData = {
@@ -141,7 +143,7 @@ export type DisplayUiMessageData = {
   nodeType: string | null
 }
 
-export type MessageForUiData = SyncLocalStorageValuesData | SyncCurrentFillOrStrokeAndColorsRgbaData | DisplayUiMessageData
+export type MessageForUiData = SyncLocalStorageValuesData | SyncNewShapeData | DisplayUiMessageData
 
 export type MessageForUi = {
   type: MessageForUiTypes

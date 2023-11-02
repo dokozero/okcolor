@@ -12,20 +12,20 @@ export const setLockRelativeChroma = action($lockRelativeChroma, 'setLockRelativ
 
 type Props = {
   newLockRelativeChroma: boolean
-  syncRelativeChromaWithBackend?: boolean
+  syncLockRelativeChromaWithBackend?: boolean
 }
 
 /**
- * Side effects (true by default): syncRelativeChromaWithBackend.
+ * Side effects (true by default): syncLockRelativeChromaWithBackend.
  */
 export const setLockRelativeChromaWithSideEffects = action(
   $lockRelativeChroma,
   'setLockRelativeChromaWithSideEffects',
   (lockRelativeChroma, props: Props) => {
-    const { newLockRelativeChroma, syncRelativeChromaWithBackend = true } = props
+    const { newLockRelativeChroma, syncLockRelativeChromaWithBackend = true } = props
     lockRelativeChroma.set(newLockRelativeChroma)
 
-    if (syncRelativeChromaWithBackend) {
+    if (syncLockRelativeChromaWithBackend) {
       sendMessageToBackend<SyncLockRelativeChromaData>({
         type: 'syncLockRelativeChroma',
         data: {

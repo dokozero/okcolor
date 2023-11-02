@@ -6,10 +6,10 @@ import { CurrentColorModel, SyncCurrentColorModelData } from '../../../types'
 import { consoleLogInfos } from '../../../constants'
 import sendMessageToBackend from '../../helpers/sendMessageToBackend'
 import { $currentBgOrFg, setCurrentBgOrFg } from '../contrasts/currentBgOrFg'
-import { $lockContrast, setLockContrast } from '../contrasts/lockContrast'
+import { $lockContrast, setLockContrastWithSideEffects } from '../contrasts/lockContrast'
 import { $currentFillOrStroke } from '../currentFillOrStroke'
 import { $colorsRgba } from './colorsRgba'
-import { $lockRelativeChroma, setLockRelativeChroma } from './lockRelativeChroma'
+import { $lockRelativeChroma, setLockRelativeChromaWithSideEffects } from './lockRelativeChroma'
 import { setContrast } from '../contrasts/contrast'
 import convertRgbToHxy from '../../helpers/colors/convertRgbToHxy'
 import getContrastFromBgandFgRgba from '../../helpers/contrasts/getContrastFromBgandFgRgba'
@@ -86,8 +86,8 @@ export const setCurrentColorModelWithSideEffects = action(
 
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {
       // If one of these values are true, we need to set them to false as relativeChroma and contrast are hidden in OkHSV or OkHSL
-      if (syncLockRelativeChroma && $lockRelativeChroma.get()) setLockRelativeChroma(false)
-      if (syncLockContrast && $lockContrast.get()) setLockContrast(false)
+      if (syncLockRelativeChroma && $lockRelativeChroma.get()) setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: false })
+      if (syncLockContrast && $lockContrast.get()) setLockContrastWithSideEffects({ newLockContrast: false })
 
       if (syncFileColorProfileWithSideEffects) {
         // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3's space.
