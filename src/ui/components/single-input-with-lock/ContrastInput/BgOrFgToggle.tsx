@@ -92,6 +92,8 @@ export default function BgOrFgToggle() {
   }, [colorsRgba, currentColorModel])
 
   useEffect(() => {
+    if ($currentFillOrStroke.get() === 'stroke') return
+
     let outlineLightness: Lightness = 80
 
     if (document.documentElement.classList.contains('figma-dark')) {
