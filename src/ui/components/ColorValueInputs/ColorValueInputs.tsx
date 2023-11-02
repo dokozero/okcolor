@@ -68,6 +68,7 @@ export default function ColorValueInputs() {
   const currentColorModel = useStore($currentColorModel)
   const colorHxya = useStore($colorHxya)
   const currentBgOrFg = useStore($currentBgOrFg)
+  const lockRelativeChroma = useStore($lockRelativeChroma)
   const lockContrast = useStore($lockContrast)
 
   const inputH = useRef<HTMLInputElement>(null)
@@ -78,27 +79,30 @@ export default function ColorValueInputs() {
   const updateInputPositions = () => {
     if ($currentColorModel.get() === 'oklchCss') {
       inputH.current!.classList.add('u-order-2')
-      inputH.current!.tabIndex = 3
-
       inputX.current!.classList.add('u-order-1')
-      inputX.current!.tabIndex = 2
-
       inputY.current!.classList.add('u-order-0')
-      inputY.current!.tabIndex = 1
-
       inputA.current!.classList.add('u-order-3')
     } else {
       inputH.current!.classList.remove('u-order-2')
-      inputH.current!.tabIndex = 1
-
       inputX.current!.classList.remove('u-order-1')
-      inputX.current!.tabIndex = 2
-
       inputY.current!.classList.remove('u-order-0')
-      inputY.current!.tabIndex = 3
-
       inputA.current!.classList.remove('u-order-3')
     }
+  }
+
+  const updateInputTabIndexes = () => {
+    // In this function, we changes the tab indexes to -1 when an input is disabled (with css class), like this the user can't focus the input with tab key. See comment in "bases.css" for "input.disabled" for the reason why.
+
+    if ($currentColorModel.get() === 'oklchCss') {
+      inputH.current!.tabIndex = 3
+      inputX.current!.tabIndex = $lockRelativeChroma.get() ? -1 : 2
+      inputY.current!.tabIndex = $lockContrast.get() ? -1 : 1
+    } else {
+      inputH.current!.tabIndex = 1
+      inputX.current!.tabIndex = $lockRelativeChroma.get() ? -1 : 2
+      inputY.current!.tabIndex = $lockContrast.get() ? -1 : 3
+    }
+    inputA.current!.tabIndex = $currentBgOrFg.get() === 'bg' || $lockContrast.get() ? -1 : 4
   }
 
   const handleInputOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -154,7 +158,37 @@ export default function ColorValueInputs() {
 
   useEffect(() => {
     updateInputPositions()
+    updateInputTabIndexes()
   }, [currentColorModel])
+
+  useEffect(() => {
+    // We use this tricks with disabled classes because of a bug using atoms to conditonaly use disabled attribute on input, see comment in "bases.css" for "input.disabled".
+    if (lockRelativeChroma) {
+      inputX.current!.classList.add('disabled')
+    } else {
+      inputX.current!.classList.remove('disabled')
+    }
+
+    // In this function, we changes the tab indexes to -1 when an input is disabled (with css class), like this the user can't focus the input with tab key.
+    updateInputTabIndexes()
+  }, [lockRelativeChroma])
+
+  useEffect(() => {
+    // Same comment on previous useEffect for reason of this code.
+    if (lockContrast) {
+      inputY.current!.classList.add('disabled')
+    } else {
+      inputY.current!.classList.remove('disabled')
+    }
+
+    if (currentBgOrFg === 'bg' || lockContrast) {
+      inputA.current!.classList.add('disabled')
+    } else {
+      inputA.current!.classList.remove('disabled')
+    }
+
+    updateInputTabIndexes()
+  }, [lockContrast, currentBgOrFg])
 
   useEffect(() => {
     inputH.current!.value = colorHxya.h.toString()
@@ -184,15 +218,7 @@ export default function ColorValueInputs() {
       <input id="h" ref={inputH} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
       <input id="x" ref={inputX} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
       <input id="y" ref={inputY} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
-      <input
-        id="a"
-        ref={inputA}
-        onClick={selectInputContent}
-        onBlur={handleInputOnBlur}
-        onKeyDown={handleInputOnKeyDown}
-        tabIndex={4}
-        disabled={currentBgOrFg === 'bg' || lockContrast ? true : false}
-      />
+      <input id="a" ref={inputA} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
     </div>
   )
 }

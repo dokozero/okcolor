@@ -82,7 +82,8 @@ select:focus,
 input:focus {
   outline: none;
 }
-input:disabled {
+/* We don't use disabled attribute because of a weird bug when using atom state in ColorValueInputs to conditionaly set disabled state on inputs. In short, if hte input was selected, making it disabled with the attribute will make it selected again after render, so we will have the content of the input selected while being grayed out. The fix here is to use this class with tabIndex changes, see in ColorValueInputs(). */
+input.disabled {
   pointer-events: none;
   opacity: 0.5;
 }

@@ -1,6 +1,6 @@
 import { converter } from './culori.mjs'
 import type { Rgb, Okhsl, Okhsv, Oklch } from './culori.mjs'
-import { ColorHxy, ColorModelList, ColorRgb } from '../../../types'
+import { ColorHxy, ColorModelList, ColorRgb, FileColorProfile } from '../../../types'
 import clampNumber from '../numbers/clampNumber'
 
 const convertToRgb = converter('rgb')
@@ -9,7 +9,7 @@ const convertToP3 = converter('p3')
 type Props = {
   colorHxy: ColorHxy // x should always be between 0 and 100.
   originColorModel: keyof typeof ColorModelList
-  colorSpace: string
+  colorSpace: FileColorProfile
 }
 
 export default function convertHxyToRgb(props: Props): ColorRgb {
