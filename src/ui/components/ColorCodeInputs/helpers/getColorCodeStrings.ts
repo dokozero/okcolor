@@ -40,7 +40,7 @@ export default function getColorCodeStrings(): NewColorStrings {
         y: clamped.l * 100
       },
       originColorModel: $currentColorModel.get(),
-      fileColorProfile: 'rgb'
+      colorSpace: 'rgb'
     })
     rgbP3 = convertHxyToRgb({
       colorHxy: {
@@ -49,7 +49,7 @@ export default function getColorCodeStrings(): NewColorStrings {
         y: $colorHxya.get().y
       },
       originColorModel: $currentColorModel.get(),
-      fileColorProfile: 'p3'
+      colorSpace: 'p3'
     })
   } else {
     rgbSrgb = convertHxyToRgb({
@@ -59,7 +59,7 @@ export default function getColorCodeStrings(): NewColorStrings {
         y: $colorHxya.get().y
       },
       originColorModel: $currentColorModel.get(),
-      fileColorProfile: 'rgb'
+      colorSpace: 'rgb'
     })
   }
 

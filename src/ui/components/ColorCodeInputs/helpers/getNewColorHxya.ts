@@ -173,7 +173,7 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         b: parseFloat(matches![2]) * 255
       },
       targetColorModel: $currentColorModel.get(),
-      fileColorProfile: ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? 'p3' : 'rgb'
+      colorSpace: ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? 'p3' : 'rgb'
     })
   } else if (eventTargetId === 'rgba') {
     regex = /(\d+(\.\d+)?)/g
@@ -186,7 +186,7 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         b: parseFloat(matches![2])
       },
       targetColorModel: $currentColorModel.get(),
-      fileColorProfile: 'rgb'
+      colorSpace: 'rgb'
     })
   } else if (eventTargetId === 'hex') {
     const newColorRgb = convertToRgb(eventTargetValue)
@@ -199,7 +199,7 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         b: newColorRgb.b * 255
       },
       targetColorModel: $currentColorModel.get(),
-      fileColorProfile: 'rgb'
+      colorSpace: 'rgb'
     })
     if (newColorRgb.alpha && $currentBgOrFg.get() === 'fg') newColorA = Math.round(newColorRgb.alpha * 100)
   }

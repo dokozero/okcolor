@@ -51,7 +51,7 @@ export const setCurrentFillOrStrokeWithSideEffects = action(
           b: newColorRgba.b
         },
         targetColorModel: $currentColorModel.get(),
-        fileColorProfile: $fileColorProfile.get()
+        colorSpace: $fileColorProfile.get()
       })
 
       setColorHxya({ ...newColorHxy, a: newColorRgba.a })

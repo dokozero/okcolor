@@ -11,12 +11,12 @@ const convertToOklch = converter('oklch')
 type Props = {
   colorRgb: ColorRgb
   targetColorModel: keyof typeof ColorModelList
-  fileColorProfile: FileColorProfile
+  colorSpace: FileColorProfile
   keepOklchDoubleDigit?: boolean
 }
 
 export default function convertRgbToHxy(props: Props): ColorHxy {
-  const { colorRgb, targetColorModel, fileColorProfile, keepOklchDoubleDigit = false } = props
+  const { colorRgb, targetColorModel, colorSpace, keepOklchDoubleDigit = false } = props
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch
   let newColorHxy: ColorHxy
@@ -46,7 +46,7 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
   // color() function in CSS use different names for the color profile than the one used in this plugin.
   let colorFunctionSpace: string
 
-  if (fileColorProfile === 'p3') {
+  if (colorSpace === 'p3') {
     colorFunctionSpace = 'display-p3'
   } else {
     colorFunctionSpace = 'srgb'

@@ -88,7 +88,7 @@ export default function convertContrastToLightness(currentColorHxya: ColorHxya, 
         y: newY
       },
       originColorModel: $currentColorModel.get(),
-      fileColorProfile: $fileColorProfile.get()
+      colorSpace: $fileColorProfile.get()
     })
 
     if ($currentBgOrFg.get() === 'bg') {

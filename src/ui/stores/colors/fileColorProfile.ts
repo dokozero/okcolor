@@ -42,7 +42,7 @@ export const setFileColorProfileWithSideEffects = action(
           b: currentColorRgba!.b
         },
         targetColorModel: $currentColorModel.get(),
-        fileColorProfile: newFileColorProfile
+        colorSpace: newFileColorProfile
       })
 
       setColorHxyaWithSideEffects({

@@ -78,7 +78,7 @@ export const setCurrentColorModelWithSideEffects = action(
           b: currentColorRgba!.b
         },
         targetColorModel: newCurrentColorModel,
-        fileColorProfile: $fileColorProfile.get()
+        colorSpace: $fileColorProfile.get()
       })
 
       setColorHxya({ ...newColorHxy, a: $colorHxya.get().a })

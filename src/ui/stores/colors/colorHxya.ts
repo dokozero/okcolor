@@ -80,7 +80,7 @@ export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithS
       y: colorHxya.get().y
     },
     originColorModel: $currentColorModel.get(),
-    fileColorProfile: $fileColorProfile.get()
+    colorSpace: $fileColorProfile.get()
   })
 
   if (syncColorsRgba) {

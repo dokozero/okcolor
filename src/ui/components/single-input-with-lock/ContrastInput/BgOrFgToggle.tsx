@@ -50,7 +50,7 @@ export default function BgOrFgToggle() {
         b: newColorRgba.b
       },
       targetColorModel: $currentColorModel.get(),
-      fileColorProfile: $fileColorProfile.get()
+      colorSpace: $fileColorProfile.get()
     })
 
     setColorHxyaWithSideEffects({
@@ -105,7 +105,7 @@ export default function BgOrFgToggle() {
         y: outlineLightness
       },
       originColorModel: $currentColorModel.get(),
-      fileColorProfile: $fileColorProfile.get()
+      colorSpace: $fileColorProfile.get()
     })
 
     if (currentBgOrFg === 'bg') {

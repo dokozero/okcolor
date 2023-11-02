@@ -9,12 +9,11 @@ const convertToP3 = converter('p3')
 type Props = {
   colorHxy: ColorHxy // x should always be between 0 and 100.
   originColorModel: keyof typeof ColorModelList
-  fileColorProfile: string
+  colorSpace: string
 }
 
-// TODO - format x value here
 export default function convertHxyToRgb(props: Props): ColorRgb {
-  const { colorHxy, originColorModel, fileColorProfile } = props
+  const { colorHxy, originColorModel, colorSpace } = props
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch
   let newColorRgb: ColorRgb
@@ -38,9 +37,9 @@ export default function convertHxyToRgb(props: Props): ColorRgb {
       break
   }
 
-  if (fileColorProfile === 'rgb') {
+  if (colorSpace === 'rgb') {
     culoriResult = convertToRgb(colorObject)
-  } else if (fileColorProfile === 'p3') {
+  } else if (colorSpace === 'p3') {
     culoriResult = convertToP3(colorObject)
   }
 

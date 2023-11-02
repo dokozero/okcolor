@@ -58,7 +58,7 @@ export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWi
       b: newColorRgba!.b
     },
     targetColorModel: $currentColorModel.get(),
-    fileColorProfile: $fileColorProfile.get(),
+    colorSpace: $fileColorProfile.get(),
     keepOklchDoubleDigit: keepOklchDoubleDigit
   })
 
