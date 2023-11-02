@@ -26,7 +26,7 @@ export const $colorHxya = map<ColorHxya>({
   a: 0
 })
 
-export const setColorHxya = action($colorHxya, 'setColorHxya', (colorHxya, newColorHxya: ColorHxya) => {
+export const setColorHxya = action($colorHxya, 'setColorHxya', (colorHxya, newColorHxya: Partial<ColorHxya>) => {
   const { h, x, y, a } = filterNewColorHxya(newColorHxya, false, false)
 
   colorHxya.set({
