@@ -116,6 +116,11 @@ export enum ColorCodesInputValues {
   'hex' = 'hex'
 }
 
+export type UiMessage = {
+  show: boolean
+  message: string
+}
+
 // Message for UI types
 
 export type MessageForUiTypes = 'syncLocalStorageValues' | 'syncNewShape' | 'displayUiMessage'

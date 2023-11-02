@@ -11,14 +11,14 @@ import getContrastFromBgandFgRgba from './getContrastFromBgandFgRgba'
 
 /**
  * Find the lightness for the given contrast on the current hue and chroma.
+ * @returns ColorHxy object and not only the new lightness because the chroma can be modified too if we are out of gamut.
  */
-// TODO - should return Y not colorHxy
 export default function convertContrastToLightness(currentColorHxya: ColorHxya, targetContrast: ApcaContrast | WcagContrast): ColorHxy {
   let newY: Lightness | undefined
   let newX = currentColorHxya.x
   let newRgb: ColorRgb
   let tempNewContrast: ApcaContrast | WcagContrast = 0
-  let count = 0
+  let loopCountLimit = 0 // In caes of to avoid infinite loop
 
   let bottomTrigger = true
   let topTrigger = false
@@ -37,9 +37,9 @@ export default function convertContrastToLightness(currentColorHxya: ColorHxya, 
   // of scanning from top-bottom to bottom-up while making the step smaller (newY += newYStep[currentStepIndex] where currentStepIndex is incremented),
   // then, if again we go to far on this new direction, we reverse order with a smaller newYStep, until we find the goo lightness.
   do {
-    // TODO - remove count, or not
-    count++
+    loopCountLimit++
 
+    // TODO - delete
     // if ($currentBgOrFg.get() === 'bg') {
     //   if ($currentContrastMethod.get() === 'apca') {
     //     newYUpdateCondition = tempNewContrast > targetContrast
@@ -96,7 +96,7 @@ export default function convertContrastToLightness(currentColorHxya: ColorHxya, 
     } else {
       tempNewContrast = getContrastFromBgandFgRgba({ ...newRgb, a: $colorsRgba.get().fill!.a }, $colorsRgba.get().parentFill!)
     }
-  } while (tempNewContrast !== targetContrast && count < 100)
+  } while (tempNewContrast !== targetContrast && loopCountLimit < 100)
 
   newY = clampNumber(newY, 0, 100)
 

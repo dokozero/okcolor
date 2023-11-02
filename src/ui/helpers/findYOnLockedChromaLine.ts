@@ -1,5 +1,5 @@
 import { AbsoluteChroma, Lightness } from '../../types'
-import roundWithDecimal from './roundWithDecimal'
+import roundWithDecimal from './numbers/roundWithDecimal'
 
 // TODO - delete
 export default function findYOnLockedChromaLine(

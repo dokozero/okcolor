@@ -14,9 +14,7 @@ import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 
 import { consoleLogInfos } from '../constants'
 
-import { uiMessageTexts } from './ui-messages'
 import { DisplayUiMessageData, MessageForUi, SyncNewShapeData, SyncLocalStorageValuesData } from '../types'
-import setValuesForUiMessage from './helpers/setValuesForUiMessage'
 import sendMessageToBackend from './helpers/sendMessageToBackend'
 import { setFigmaEditorType } from './stores/figmaEditorType'
 import { $currentColorModel, setCurrentColorModel } from './stores/colors/currentColorModel'
@@ -31,7 +29,7 @@ import { $currentKeysPressed, setCurrentKeysPressed } from './stores/currentKeys
 import { setIsColorCodeInputsOpen } from './stores/isColorCodeInputsOpen'
 import { setIsMouseInsideDocument } from './stores/isMouseInsideDocument'
 import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventCallback'
-import { $uiMessage, setUiMessage } from './stores/uiMessage'
+import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage'
 import { setColorsRgbaWithSideEffects } from './stores/colors/colorsRgba'
 
 let isMouseDown = false
@@ -70,10 +68,8 @@ function App() {
     if (pluginMessage.type === 'syncNewShape') {
       const data = pluginMessage.data as SyncNewShapeData
 
-      if (document.body.classList.contains('deactivated')) document.body.classList.remove('deactivated')
-
       if ($uiMessage.get().show) {
-        setUiMessage({ ...$uiMessage.get(), show: false })
+        hideUiMessageWithSideEffects()
       }
 
       if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
@@ -109,15 +105,7 @@ function App() {
     else if (pluginMessage.type === 'displayUiMessage') {
       const data = pluginMessage.data as DisplayUiMessageData
 
-      // setUiMessage({ ...$uiMessage.get(), show: true })
-      document.body.classList.add('deactivated')
-      let message = uiMessageTexts[`${data.uiMessageCode}`]
-      if (data.nodeType) {
-        message = message.replace('$SHAPE', data.nodeType.toLowerCase())
-      }
-      setUiMessage({ show: true, message: message })
-
-      setValuesForUiMessage()
+      showUiMessageWithSideEffects({ messageCode: data.uiMessageCode, nodeType: data.nodeType })
 
       // This says "when all the store value are filled, show the UI components".
       if (!areStoreValuesReady) setAreStoreValuesReady(true)
