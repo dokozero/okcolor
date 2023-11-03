@@ -8,7 +8,6 @@ import {
   RES_PICKER_SIZE_OKLCH,
   RES_PICKER_FACTOR_OKHSLV,
   RES_PICKER_FACTOR_OKLCH,
-  OKLCH_RGB_BOUNDARY_COLOR,
   OKLCH_CHROMA_SCALE
 } from '../../../constants'
 
@@ -326,7 +325,7 @@ export default function ColorPicker() {
 
       <canvas ref={colorPickerCanvas} className="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
       <svg className="c-color-picker__srgb-boundary" width={PICKER_SIZE} height={PICKER_SIZE}>
-        <path ref={srgbBoundary} fill="none" stroke={OKLCH_RGB_BOUNDARY_COLOR} />
+        <path ref={srgbBoundary} fill="none" stroke="#FFFFFF" />
       </svg>
 
       <svg className="c-color-picker__relative-chroma-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>

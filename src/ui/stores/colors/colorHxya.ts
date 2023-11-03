@@ -12,7 +12,7 @@ import { $colorsRgba, setColorsRgbaWithSideEffects } from './colorsRgba'
 import { $currentColorModel } from './currentColorModel'
 import { $fileColorProfile } from './fileColorProfile'
 import { $lockRelativeChroma } from './lockRelativeChroma'
-import { $relativeChroma, setRelativeChroma } from './relativeChroma'
+import { setRelativeChroma } from './relativeChroma'
 import { consoleLogInfos } from '../../../constants'
 import convertAbsoluteChromaToRelative from '../../helpers/colors/convertAbsoluteChromaToRelative'
 import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb'
@@ -50,7 +50,7 @@ type Props = {
 /**
  * Side effects (true by default): syncColorsRgba, syncColorRgbWithBackend, syncRelativeChroma, syncContrast.
  * @param bypassLockRelativeChromaFilter False by default, this value says: "update the chroma even if lockRelativeChroma is true". This is useful for example if the user update the relative chroma value from the input while lockRelativeChroma is true, without this bypass value, it wouldn't be possible as relativeChroma and contrast value are updated after colorHxya is updated, so in filterNewColorHxya(), we would still get the old values.
- * @param bypassLockContrastFilter Same reason than bypassLockRelativeChromaFilter, this value says: "update the contrast even if lockChroma is true".
+ * @param bypassLockContrastFilter False by default, same reason than bypassLockRelativeChromaFilter, this value says: "update the contrast even if lockChroma is true".
  */
 export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithSideEffects', (colorHxya, props: Props) => {
   const {
@@ -108,7 +108,7 @@ export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithS
 
     // We don't want to get a new relative chroma value if the lock is on, but we also check if relativeChroma value is not undefined, if that the case we first need to set it.
     // And if lightness is 0 or 100, there is no need to continue either.
-    if ($lockRelativeChroma.get() && $relativeChroma.get() && (newColorHxya.y === 0 || newColorHxya.y === 100)) return
+    if ($lockRelativeChroma.get() || newColorHxya.y === 0 || newColorHxya.y === 100) return
 
     setRelativeChroma(convertAbsoluteChromaToRelative({ h: colorHxya.get().h, x: colorHxya.get().x, y: colorHxya.get().y }))
   }

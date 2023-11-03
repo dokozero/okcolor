@@ -41,7 +41,7 @@ export default function WCAGcontrast(fg: RgbaArray, bg: RgbArray): WcagContrast 
   const bgLuminance = getLuminanceOfRgbArray(bg)
 
   let contrast: WcagContrast
-  if (fgLuminance > bgLuminance) {
+  if (fgLuminance > bgLuminance || (fgLuminance === 0 && bgLuminance === 0)) {
     // We for the value to be negative to have the same behavior as in APCA, see comment in types.ts for "WcagContrast".
     contrast = -roundWithDecimal((fgLuminance + 0.05) / (bgLuminance + 0.05), 1)
   } else {

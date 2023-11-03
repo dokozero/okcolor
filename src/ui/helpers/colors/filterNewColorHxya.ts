@@ -4,7 +4,7 @@ import { $currentColorModel } from '../../stores/colors/currentColorModel'
 import { $lockRelativeChroma } from '../../stores/colors/lockRelativeChroma'
 import { $contrast } from '../../stores/contrasts/contrast'
 import { $lockContrast } from '../../stores/contrasts/lockContrast'
-import convertContrastToLightness from '../contrasts/convertContrastToLightness'
+import getNewXandYFromContrast from '../contrasts/getNewXandYFromContrast'
 import convertRelativeChromaToAbsolute from './convertRelativeChromaToAbsolute'
 import getClampedChroma from './getClampedChroma'
 
@@ -34,20 +34,18 @@ export default function filterNewColorHxya(
     filteredColorHxya.x = getClampedChroma({ h: filteredColorHxya.h, x: filteredColorHxya.x, y: filteredColorHxya.y })
   }
 
-  if (!$lockContrast.get() || $contrast.get() === 0 || bypassLockContrastFilter) return filteredColorHxya
+  // if (!$lockContrast.get() || $contrast.get() === 0 || bypassLockContrastFilter) return filteredColorHxya
+  if (!$lockContrast.get() || bypassLockContrastFilter) return filteredColorHxya
   // if ($lockContrastStartY.get() === null || $lockContrastEndY.get() === null) return filteredColorHxya
   // if (newColorHxya.x === undefined && newColorHxya.y === undefined && newColorHxya.a === undefined) return filteredColorHxya
 
-  const newHxy = convertContrastToLightness(
-    {
-      h: filteredColorHxya.h,
-      x: filteredColorHxya.x,
-      y: filteredColorHxya.y,
-      a: filteredColorHxya.a
-    },
-    $contrast.get()!
-  )
-  filteredColorHxya.y = newHxy.y
+  const newXy = getNewXandYFromContrast({
+    currentH: filteredColorHxya.h,
+    currentX: filteredColorHxya.x,
+    targetContrast: $contrast.get()
+  })
+
+  filteredColorHxya.y = newXy.y
 
   // const clampedChroma = getClampedChroma({
   //   h: filteredColorHxya.h,

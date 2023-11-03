@@ -14,7 +14,7 @@ import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 
 import { consoleLogInfos } from '../constants'
 
-import { DisplayUiMessageData, MessageForUi, SyncNewShapeData, SyncLocalStorageValuesData } from '../types'
+import { DisplayUiMessageData, MessageForUi, SyncNewShapeData, SyncLocalStorageValuesData, ApcaContrast, WcagContrast } from '../types'
 import sendMessageToBackend from './helpers/sendMessageToBackend'
 import { setFigmaEditorType } from './stores/figmaEditorType'
 import { $currentColorModel, setCurrentColorModel } from './stores/colors/currentColorModel'
@@ -30,7 +30,13 @@ import { setIsColorCodeInputsOpen } from './stores/isColorCodeInputsOpen'
 import { setIsMouseInsideDocument } from './stores/isMouseInsideDocument'
 import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventCallback'
 import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage'
-import { setColorsRgbaWithSideEffects } from './stores/colors/colorsRgba'
+import { $colorsRgba, setColorsRgbaWithSideEffects } from './stores/colors/colorsRgba'
+import WCAGcontrast from './helpers/contrasts/WCAGcontrast'
+import convertAbsoluteChromaToRelative from './helpers/colors/convertAbsoluteChromaToRelative'
+import getContrastFromBgandFgRgba from './helpers/contrasts/getContrastFromBgandFgRgba'
+import { $colorHxya } from './stores/colors/colorHxya'
+import { setRelativeChroma } from './stores/colors/relativeChroma'
+import { setContrast } from './stores/contrasts/contrast'
 
 let isMouseDown = false
 
@@ -97,6 +103,14 @@ function App() {
         bypassLockRelativeChromaFilter: true,
         bypassLockContrastFilter: true
       })
+
+      if ($lockRelativeChroma.get()) {
+        setRelativeChroma(convertAbsoluteChromaToRelative({ h: $colorHxya.get().h, x: $colorHxya.get().x, y: $colorHxya.get().y }))
+      }
+
+      if ($lockContrast.get()) {
+        setContrast(getContrastFromBgandFgRgba($colorsRgba.get().fill!, $colorsRgba.get().parentFill!))
+      }
 
       // This says "when all the store value are filled, show the UI components".
       if (!areStoreValuesReady) setAreStoreValuesReady(true)

@@ -10,7 +10,7 @@ export type Lightness = number // 0 - 100
 export type Opacity = number // 0 - 100
 
 export type ApcaContrast = number // -108 - 106
-export type WcagContrast = number // -21 - 21, normally WCAG contrast is between 0 and 21 but because APCA one can be negative, we also use a negative value here as it easier to work with, for example in convertContrastToLightness().
+export type WcagContrast = number // -21 - 21, normally WCAG contrast is between 0 and 21 but because APCA one can be negative, we also use a negative value here as it easier to work with, for example in getNewXandYFromContrast().
 
 export type SvgPath = string
 

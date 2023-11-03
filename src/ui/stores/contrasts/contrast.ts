@@ -4,8 +4,8 @@ import { ApcaContrast, WcagContrast } from '../../../types'
 import { consoleLogInfos } from '../../../constants'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../colors/colorHxya'
 import { $colorsRgba } from '../colors/colorsRgba'
-import convertContrastToLightness from '../../helpers/contrasts/convertContrastToLightness'
 import getContrastFromBgandFgRgba from '../../helpers/contrasts/getContrastFromBgandFgRgba'
+import getNewXandYFromContrast from '../../helpers/contrasts/getNewXandYFromContrast'
 
 export const $contrast = atom<ApcaContrast | WcagContrast>(0)
 
@@ -27,8 +27,12 @@ export const setContrastWithSideEffects = action($contrast, 'setContrastWithSide
   contrast.set(newContrast)
 
   if (syncColorHxya) {
-    const newHxy = convertContrastToLightness($colorHxya.get(), newContrast)
-    setColorHxyaWithSideEffects({ newColorHxya: newHxy, bypassLockContrastFilter: true, syncContrast: false })
+    const newXy = getNewXandYFromContrast({
+      currentH: $colorHxya.get().h,
+      currentX: $colorHxya.get().x,
+      targetContrast: newContrast
+    })
+    setColorHxyaWithSideEffects({ newColorHxya: newXy, bypassLockContrastFilter: true, syncContrast: false })
   }
 
   // In case we get a value that is bigger than what is possible, for example if user wants a contrast of 40 but with the current bg abd fg color the maximum is 30, we need to do this test, otherwize the value 40 will be kept in the contrast input.

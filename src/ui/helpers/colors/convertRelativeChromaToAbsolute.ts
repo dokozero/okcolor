@@ -1,5 +1,5 @@
 import { MAX_CHROMA_P3 } from '../../../constants'
-import { ColorHxya, RelativeChroma } from '../../../types'
+import { ColorHxy, ColorHxya, RelativeChroma } from '../../../types'
 import { getColorValueDecimals } from '../../stores/colors/colorHxya'
 import { $fileColorProfile } from '../../stores/colors/fileColorProfile'
 import { $relativeChroma } from '../../stores/colors/relativeChroma'
@@ -7,10 +7,11 @@ import roundWithDecimal from '../numbers/roundWithDecimal'
 import { clampChromaInGamut } from './culori.mjs'
 
 type Props = {
-  colorHxya: ColorHxya
+  colorHxya: ColorHxya | ColorHxy
   relativeChroma?: RelativeChroma
 }
 
+// TODO - optimized param, only give H and Y?
 export default function convertRelativeChromaToAbsolute(props: Props): RelativeChroma {
   const { colorHxya: colorHxy, relativeChroma = $relativeChroma.get() } = props
 

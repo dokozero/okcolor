@@ -9,6 +9,7 @@ import { consoleLogInfos } from '../../../constants'
 import convertRgbToHxy from '../../helpers/colors/convertRgbToHxy'
 import getContrastFromBgandFgRgba from '../../helpers/contrasts/getContrastFromBgandFgRgba'
 import { setContrast } from '../contrasts/contrast'
+import { $lockContrast } from '../contrasts/lockContrast'
 
 export const $colorsRgba = deepMap<ColorsRgba>({
   parentFill: null,
@@ -25,6 +26,7 @@ export const setColorsRgba = action($colorsRgba, 'setColorsRgba', (colorsRgba, n
   colorsRgba.set(newColorsRgba)
 })
 
+// TODO - add parent object "syncColorHxyaOptions" for bypassLockContrastFilter. Same with others store actions.
 type Props = {
   newColorsRgba: ColorsRgba
   syncColorHxya?: boolean
@@ -79,8 +81,7 @@ export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWi
 
   if (syncContrast) {
     if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
-    // if (!newColorsRgba.parentFill || !newColorsRgba.fill || ($lockContrast.get() && $contrast.get() !== null)) return
-    if (!newColorsRgba.parentFill || !newColorsRgba.fill) return
+    if (!newColorsRgba.parentFill || !newColorsRgba.fill || $lockContrast.get()) return
 
     const newContrast: ApcaContrast | WcagContrast = getContrastFromBgandFgRgba(newColorsRgba.fill!, newColorsRgba.parentFill!)
     setContrast(newContrast)
