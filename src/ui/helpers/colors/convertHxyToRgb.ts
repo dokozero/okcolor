@@ -7,11 +7,15 @@ const convertToRgb = converter('rgb')
 const convertToP3 = converter('p3')
 
 type Props = {
-  colorHxy: ColorHxy // x should always be between 0 and 100.
+  colorHxy: ColorHxy
   originColorModel: keyof typeof ColorModelList
   colorSpace: FileColorProfile
 }
 
+/**
+ *
+ * @param {colorHxy} ColorHxy x should always be between 0 and 100.
+ */
 export default function convertHxyToRgb(props: Props): ColorRgb {
   const { colorHxy, originColorModel, colorSpace } = props
 
