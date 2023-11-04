@@ -1,16 +1,15 @@
 import { useRef, useEffect } from 'react'
-import { ApcaContrast, ColorRgb, ColorRgba, Lightness, Opacity, WcagContrast } from '../../../../types'
+import { ApcaContrast, Lightness, WcagContrast } from '../../../../types'
 import { useStore } from '@nanostores/react'
 import { consoleLogInfos } from '../../../../constants'
-import { $colorHxya, setColorHxyaWithSideEffects } from '../../../stores/colors/colorHxya'
+import { $colorHxya } from '../../../stores/colors/colorHxya'
 import { $colorsRgba } from '../../../stores/colors/colorsRgba'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel'
 import { $fileColorProfile } from '../../../stores/colors/fileColorProfile'
-import { $currentBgOrFg, setCurrentBgOrFg } from '../../../stores/contrasts/currentBgOrFg'
+import { $currentBgOrFg, setCurrentBgOrFgWithSideEffects } from '../../../stores/contrasts/currentBgOrFg'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke'
 import { $uiMessage } from '../../../stores/uiMessage'
 import convertHxyToRgb from '../../../helpers/colors/convertHxyToRgb'
-import convertRgbToHxy from '../../../helpers/colors/convertRgbToHxy'
 import getContrastFromBgandFgRgba from '../../../helpers/contrasts/getContrastFromBgandFgRgba'
 
 export default function BgOrFgToggle() {
@@ -30,36 +29,8 @@ export default function BgOrFgToggle() {
   const currentBgOrFg = useStore($currentBgOrFg)
 
   const handleBgOrFgToggle = () => {
-    if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
-    else setCurrentBgOrFg('bg')
-
-    let newColorRgba: ColorRgb | ColorRgba
-    let opacity: Opacity = 100
-
-    if ($currentBgOrFg.get() === 'bg') {
-      newColorRgba = $colorsRgba.get().parentFill!
-    } else {
-      newColorRgba = $colorsRgba.get().fill!
-      opacity = $colorsRgba.get().fill!.a
-    }
-
-    const newColorHxy = convertRgbToHxy({
-      colorRgb: {
-        r: newColorRgba.r,
-        g: newColorRgba.g,
-        b: newColorRgba.b
-      },
-      targetColorModel: $currentColorModel.get(),
-      colorSpace: $fileColorProfile.get()
-    })
-
-    setColorHxyaWithSideEffects({
-      newColorHxya: { ...newColorHxy, a: opacity },
-      syncColorsRgba: false,
-      syncColorRgbWithBackend: false,
-      bypassLockRelativeChromaFilter: true,
-      bypassLockContrastFilter: true
-    })
+    if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFgWithSideEffects({ newCurrentBgOrFg: 'fg' })
+    else setCurrentBgOrFgWithSideEffects({ newCurrentBgOrFg: 'bg' })
   }
 
   useEffect(() => {
