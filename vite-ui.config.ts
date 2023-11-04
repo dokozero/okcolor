@@ -12,10 +12,10 @@ export default defineConfig({
     {
       name: 'watch-external', // https://stackoverflow.com/questions/63373804/rollup-watch-include-directory/63548394#63548394
       async buildStart() {
-        this.addWatchFile('src/ui/shaders/utils.glsl')
-        this.addWatchFile('src/ui/shaders/library.glsl')
-        this.addWatchFile('src/ui/shaders/v_shader.glsl')
-        this.addWatchFile('src/ui/shaders/f_shader.glsl')
+        this.addWatchFile('./src/ui/shaders/utils.glsl')
+        this.addWatchFile('./src/ui/shaders/library.glsl')
+        this.addWatchFile('./src/ui/shaders/v_shader.glsl')
+        this.addWatchFile('./src/ui/shaders/f_shader.glsl')
       }
     },
     viteSingleFile()
