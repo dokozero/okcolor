@@ -35,12 +35,12 @@ export const setLockContrastWithSideEffects = action($lockContrast, 'setLockCont
     })
   }
 
-  // if lockConstrat is true, and the contrast is equal to 0 (in APCA it can be 0 but not -1 or 1) or -1 or 1 in WCAG, we run this code to adjust the Y (and X). That's because, for example in APCA, we frequently have multiple Y values for a contrast of 0, so without this correction, when setting lockChroma to true, the manipulator in the color picker could be out of the lockContrast line.
-  if (newLockContrast && $contrast.get() >= -1 && $contrast.get() <= 1) {
+  // if lockConstrat is true, we need to adjust x and Y value as for example we can multiple Y values for the same contrast, without this, when setting lockContrast to true, we can have the manipulator on the color picker slightly of the lock line.
+  if (newLockContrast) {
     const newXy = getNewXandYFromContrast({
       currentH: $colorHxya.get().h,
       currentX: $colorHxya.get().x,
-      targetContrast: 0,
+      targetContrast: $contrast.get(),
       lockRelativeChroma: $lockRelativeChroma.get()
     })
 

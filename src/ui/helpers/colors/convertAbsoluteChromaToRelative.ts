@@ -8,7 +8,6 @@ export default function convertAbsoluteChromaToRelative(colorHxy: ColorHxy): Rel
   // We do this test because with a lightness of 0, we get an undefined value for currentMaxChroma.c
   if (colorHxy.y === 0) return 0
 
-  // 0 - MAX_CHROMA_P3
   const currentMaxChroma: AbsoluteChroma = clampChromaInGamut(
     { mode: 'oklch', l: colorHxy.y / 100, c: MAX_CHROMA_P3, h: colorHxy.h },
     'oklch',

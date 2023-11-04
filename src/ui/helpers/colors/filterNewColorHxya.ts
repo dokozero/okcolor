@@ -34,10 +34,7 @@ export default function filterNewColorHxya(
     filteredColorHxya.x = getClampedChroma({ h: filteredColorHxya.h, x: filteredColorHxya.x, y: filteredColorHxya.y })
   }
 
-  // if (!$lockContrast.get() || $contrast.get() === 0 || bypassLockContrastFilter) return filteredColorHxya
   if (!$lockContrast.get() || bypassLockContrastFilter) return filteredColorHxya
-  // if ($lockContrastStartY.get() === null || $lockContrastEndY.get() === null) return filteredColorHxya
-  // if (newColorHxya.x === undefined && newColorHxya.y === undefined && newColorHxya.a === undefined) return filteredColorHxya
 
   const newXy = getNewXandYFromContrast({
     currentH: filteredColorHxya.h,
@@ -46,14 +43,6 @@ export default function filterNewColorHxya(
   })
 
   filteredColorHxya.y = newXy.y
-
-  // const clampedChroma = getClampedChroma({
-  //   h: filteredColorHxya.h,
-  //   x: 0.37,
-  //   y: $lockContrastEndY.get()!
-  // })
-
-  // filteredColorHxya.y = findYOnLockedChromaLine(filteredColorHxya.x, [0, $lockContrastStartY.get()!], [clampedChroma, $lockContrastEndY.get()!])
 
   return filteredColorHxya
 }

@@ -29,16 +29,16 @@ type Props = {
 // then, if again we go to far on this new direction, we reverse order with a smaller newYStep, until we find the goo lightness.
 // Finally, because we often have a range of Y values available for the same chroma, we then look for the miny and maxY values (from the first value found) and return the average of it. We do this because the first loop will find a Y value taht can be close to the min or the max or around the middle but for consistency, we want to always return the average.
 export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChroma; y: Lightness } {
-  const { currentH, currentX, targetContrast, lockRelativeChroma = $lockRelativeChroma.get() } = props
-
   const debugInfos = false
+
+  const { currentH, currentX, targetContrast, lockRelativeChroma = $lockRelativeChroma.get() } = props
 
   let newX = currentX
   let newRgb: ColorRgb
   let tempNewContrast: ApcaContrast | WcagContrast = 0
   let loopCountLimit = 0 // In caes of to avoid infinite loop
 
-  let totalLoops = 0
+  let totalLoops = 0 // For debugInfos.
 
   let yBetweenMinYAndMaxY: Lightness | undefined
 

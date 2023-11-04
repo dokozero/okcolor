@@ -11,7 +11,6 @@ type Props = {
   relativeChroma?: RelativeChroma
 }
 
-// TODO - optimized param, only give H and Y?
 export default function convertRelativeChromaToAbsolute(props: Props): RelativeChroma {
   const { colorHxya: colorHxy, relativeChroma = $relativeChroma.get() } = props
 

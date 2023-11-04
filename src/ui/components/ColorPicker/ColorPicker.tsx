@@ -251,16 +251,6 @@ export default function ColorPicker() {
     if (!isMounted.current) return
 
     renderContrastStroke()
-
-    // if (lockContrast) {
-    //   const clampedChroma = getClampedChroma({
-    //     h: $colorHxya.get().h,
-    //     x: 0.37,
-    //     y: $lockContrastEndY.get()!
-    //   })
-    //   const newY = findYOnLockedChromaLine($colorHxya.get().x, [0, $lockContrastStartY.get()!], [clampedChroma, $lockContrastEndY.get()!])
-    //   setColorHxya({ newColorHxya: { y: newY } })
-    // }
   }, [contrast, lockContrast, currentBgOrFg])
 
   useEffect(() => {

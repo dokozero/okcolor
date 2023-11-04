@@ -11,10 +11,8 @@ import ColorValueInputs from './components/ColorValueInputs/ColorValueInputs'
 import RelativeChromaInput from './components/single-input-with-lock/RelativeChromaInput/RelativeChromaInput'
 import ContrastInput from './components/single-input-with-lock/ContrastInput/ContrastInput'
 import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
-
 import { consoleLogInfos } from '../constants'
-
-import { DisplayUiMessageData, MessageForUi, SyncNewShapeData, SyncLocalStorageValuesData, ApcaContrast, WcagContrast } from '../types'
+import { DisplayUiMessageData, MessageForUi, SyncNewShapeData, SyncLocalStorageValuesData } from '../types'
 import sendMessageToBackend from './helpers/sendMessageToBackend'
 import { setFigmaEditorType } from './stores/figmaEditorType'
 import { $currentColorModel, setCurrentColorModel } from './stores/colors/currentColorModel'
@@ -31,7 +29,6 @@ import { setIsMouseInsideDocument } from './stores/isMouseInsideDocument'
 import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventCallback'
 import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage'
 import { $colorsRgba, setColorsRgbaWithSideEffects } from './stores/colors/colorsRgba'
-import WCAGcontrast from './helpers/contrasts/WCAGcontrast'
 import convertAbsoluteChromaToRelative from './helpers/colors/convertAbsoluteChromaToRelative'
 import getContrastFromBgandFgRgba from './helpers/contrasts/getContrastFromBgandFgRgba'
 import { $colorHxya } from './stores/colors/colorHxya'
@@ -112,7 +109,7 @@ function App() {
         setContrast(getContrastFromBgandFgRgba($colorsRgba.get().fill!, $colorsRgba.get().parentFill!))
       }
 
-      // This says "when all the store value are filled, show the UI components".
+      // This says "when all the store values are filled, show the UI components if there were not mounted".
       if (!areStoreValuesReady) setAreStoreValuesReady(true)
     }
     // Set the UI in a disabled mode and update the UI message.
@@ -121,7 +118,7 @@ function App() {
 
       showUiMessageWithSideEffects({ messageCode: data.uiMessageCode, nodeType: data.nodeType })
 
-      // This says "when all the store value are filled, show the UI components".
+      // This says "when all the store values are filled, show the UI components if there were not mounted".
       if (!areStoreValuesReady) setAreStoreValuesReady(true)
     }
   }

@@ -30,11 +30,6 @@ export const setRelativeChromaWithSideEffects = action($relativeChroma, 'setRela
       relativeChroma: newRelativeChroma
     })
 
-    // TODO - remove?
-    // This condition could be true if for example user is updating relative chroma near white of black, in this case we'll have multiple absolute chroma values for the same relative chroma one.
-    // In that case we want to update directly the $relativeChroma value or the input would not be updated.
-    if (newColorX === $colorHxya.get().x) return
-
     setColorHxyaWithSideEffects({ newColorHxya: { x: newColorX }, bypassLockRelativeChromaFilter: true, syncRelativeChroma: false })
   }
 })

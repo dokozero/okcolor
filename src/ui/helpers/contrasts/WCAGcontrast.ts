@@ -3,7 +3,6 @@ import roundWithDecimal from '../numbers/roundWithDecimal'
 
 // Formulas for contrast from https://www.w3.org/WAI/WCAG22/Techniques/general/G145#tests
 // For alphaCompositing, thanks to GPT-4
-
 const alphaCompositing = (fg: RgbaArray, bg: RgbArray): RgbArray => {
   const resultRgbColor: RgbArray = [0, 0, 0]
 
@@ -42,7 +41,7 @@ export default function WCAGcontrast(fg: RgbaArray, bg: RgbArray): WcagContrast 
 
   let contrast: WcagContrast
   if (fgLuminance > bgLuminance || (fgLuminance === 0 && bgLuminance === 0)) {
-    // We for the value to be negative to have the same behavior as in APCA, see comment in types.ts for "WcagContrast".
+    // We force the value to be negative to have the same behavior as in APCA, see comment in types.ts for "WcagContrast".
     contrast = -roundWithDecimal((fgLuminance + 0.05) / (bgLuminance + 0.05), 1)
   } else {
     contrast = roundWithDecimal((bgLuminance + 0.05) / (fgLuminance + 0.05), 1)
