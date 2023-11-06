@@ -173,7 +173,8 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         g: parseFloat(matches![1]),
         b: parseFloat(matches![2])
       },
-      colorSpace: ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? 'p3' : 'rgb'
+      colorSpace: ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? 'p3' : 'rgb',
+      keepOklchDoubleDigit: true
     })
   } else if (eventTargetId === 'rgba') {
     regex = /(\d+(\.\d+)?)/g

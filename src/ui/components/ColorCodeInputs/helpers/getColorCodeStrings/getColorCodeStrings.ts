@@ -46,11 +46,7 @@ export default function getColorCodeStrings(): NewColorStrings {
     })
   } else {
     rgbSrgb = convertHxyToRgb({
-      colorHxy: {
-        h: $colorHxya.get().h,
-        x: $colorHxya.get().x,
-        y: $colorHxya.get().y
-      },
+      colorHxy: $colorHxya.get(),
       colorSpace: 'rgb'
     })
   }

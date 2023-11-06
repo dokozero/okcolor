@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
-import { ColorCodesInputValues, ColorHxya } from '../../../types'
+import { ColorCodesInputValues } from '../../../types'
 import copyToClipboard from '../../helpers/copyToClipboard/copyToClipboard'
 import selectInputContent from '../../helpers/selectInputContent/selectInputContent'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
@@ -86,7 +86,7 @@ export default function ColorCodeInputs() {
 
     if (newColorHxya) {
       setColorHxyaWithSideEffects({
-        newColorHxya: newColorHxya as Partial<ColorHxya>,
+        newColorHxya: newColorHxya,
         bypassLockRelativeChromaFilter: true,
         bypassLockContrastFilter: true
       })
