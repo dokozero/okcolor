@@ -19,25 +19,25 @@ import vShader from '@virtual:shaders/src/ui/shaders/v_shader.glsl'
 import * as twgl from 'twgl.js'
 
 import { inGamut } from '../../helpers/colors/culori.mjs'
-import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit'
-import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit'
-import { AbsoluteChroma, ColorModelList, Saturation } from '../../../types'
-import convertAbsoluteChromaToRelative from '../../helpers/colors/convertAbsoluteChromaToRelative'
-import getContrastStrokeLimit from './helpers/getContrastStrokeLimit'
-import { $colorHxya, getColorValueDecimals, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya'
-import { $colorsRgba } from '../../stores/colors/colorsRgba'
-import { $currentColorModel } from '../../stores/colors/currentColorModel'
-import { $fileColorProfile } from '../../stores/colors/fileColorProfile'
-import { $lockRelativeChroma } from '../../stores/colors/lockRelativeChroma'
-import { $relativeChroma } from '../../stores/colors/relativeChroma'
-import { $contrast } from '../../stores/contrasts/contrast'
-import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg'
-import { $lockContrast } from '../../stores/contrasts/lockContrast'
-import { $currentKeysPressed } from '../../stores/currentKeysPressed'
-import { setMouseEventCallback } from '../../stores/mouseEventCallback'
-import { $uiMessage } from '../../stores/uiMessage'
-import limitMouseManipulatorPosition from '../../helpers/limitMouseManipulatorPosition'
-import roundWithDecimal from '../../helpers/numbers/roundWithDecimal'
+import { AbsoluteChroma, Saturation, ColorModelList } from '../../../types'
+import convertAbsoluteChromaToRelative from '../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
+import limitMouseManipulatorPosition from '../../helpers/limitMouseManipulatorPosition/limitMouseManipulatorPosition'
+import roundWithDecimal from '../../helpers/numbers/roundWithDecimal/roundWithDecimal'
+import { $colorHxya, getColorValueDecimals, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
+import { $colorsRgba } from '../../stores/colors/colorsRgba/colorsRgba'
+import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
+import { $fileColorProfile } from '../../stores/colors/fileColorProfile/fileColorProfile'
+import { $lockRelativeChroma } from '../../stores/colors/lockRelativeChroma/lockRelativeChroma'
+import { $relativeChroma } from '../../stores/colors/relativeChroma/relativeChroma'
+import { $contrast } from '../../stores/contrasts/contrast/contrast'
+import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg/currentBgOrFg'
+import { $lockContrast } from '../../stores/contrasts/lockContrast/lockContrast'
+import { $currentKeysPressed } from '../../stores/currentKeysPressed/currentKeysPressed'
+import { setMouseEventCallback } from '../../stores/mouseEventCallback/mouseEventCallback'
+import { $uiMessage } from '../../stores/uiMessage/uiMessage'
+import getContrastStrokeLimit from './helpers/getContrastStrokeLimit/getContrastStrokeLimit'
+import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit/getRelativeChromaStrokeLimit'
+import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit/getSrgbStrokeLimit'
 
 let colorPickerGlContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
@@ -131,7 +131,13 @@ export default function ColorPicker() {
         let valueToTest = newColorHxya.x
 
         if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
-          valueToTest = convertAbsoluteChromaToRelative({ h: $colorHxya.get().h, x: newColorHxya.x, y: newColorHxya.y })
+          valueToTest = convertAbsoluteChromaToRelative({
+            colorHxy: {
+              h: $colorHxya.get().h,
+              x: newColorHxya.x,
+              y: newColorHxya.y
+            }
+          })
         }
 
         if (valueToTest % 5 === 0) {

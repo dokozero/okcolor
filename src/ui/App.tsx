@@ -10,30 +10,30 @@ import ColorModelSelect from './components/ColorModelSelect/ColorModelSelect'
 import ColorValueInputs from './components/ColorValueInputs/ColorValueInputs'
 import RelativeChromaInput from './components/single-input-with-lock/RelativeChromaInput/RelativeChromaInput'
 import ContrastInput from './components/single-input-with-lock/ContrastInput/ContrastInput'
-import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 import { consoleLogInfos } from '../constants'
 import { DisplayUiMessageData, MessageForUi, SyncNewShapeData, SyncLocalStorageValuesData } from '../types'
-import sendMessageToBackend from './helpers/sendMessageToBackend'
-import { setFigmaEditorType } from './stores/figmaEditorType'
-import { $currentColorModel, setCurrentColorModel } from './stores/colors/currentColorModel'
-import { setFileColorProfile } from './stores/colors/fileColorProfile'
-import { $lockRelativeChroma, setLockRelativeChroma } from './stores/colors/lockRelativeChroma'
-import { $currentBgOrFg, setCurrentBgOrFg } from './stores/contrasts/currentBgOrFg'
-import { setCurrentContrastMethod } from './stores/contrasts/currentContrastMethod'
-import { setIsContrastInputOpen } from './stores/contrasts/isContrastInputOpen'
-import { $lockContrast, setLockContrast } from './stores/contrasts/lockContrast'
-import { setCurrentFillOrStroke } from './stores/currentFillOrStroke'
-import { $currentKeysPressed, setCurrentKeysPressed } from './stores/currentKeysPressed'
-import { setIsColorCodeInputsOpen } from './stores/isColorCodeInputsOpen'
-import { setIsMouseInsideDocument } from './stores/isMouseInsideDocument'
-import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventCallback'
-import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage'
-import { $colorsRgba, setColorsRgbaWithSideEffects } from './stores/colors/colorsRgba'
-import convertAbsoluteChromaToRelative from './helpers/colors/convertAbsoluteChromaToRelative'
-import getContrastFromBgandFgRgba from './helpers/contrasts/getContrastFromBgandFgRgba'
-import { $colorHxya } from './stores/colors/colorHxya'
-import { setRelativeChroma } from './stores/colors/relativeChroma'
-import { setContrast } from './stores/contrasts/contrast'
+import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
+import convertAbsoluteChromaToRelative from './helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
+import getContrastFromBgandFgRgba from './helpers/contrasts/getContrastFromBgandFgRgba/getContrastFromBgandFgRgba'
+import sendMessageToBackend from './helpers/sendMessageToBackend/sendMessageToBackend'
+import { $colorHxya } from './stores/colors/colorHxya/colorHxya'
+import { setColorsRgbaWithSideEffects, $colorsRgba } from './stores/colors/colorsRgba/colorsRgba'
+import { setCurrentColorModel, $currentColorModel } from './stores/colors/currentColorModel/currentColorModel'
+import { setFileColorProfile } from './stores/colors/fileColorProfile/fileColorProfile'
+import { setLockRelativeChroma, $lockRelativeChroma } from './stores/colors/lockRelativeChroma/lockRelativeChroma'
+import { setRelativeChroma } from './stores/colors/relativeChroma/relativeChroma'
+import { setContrast } from './stores/contrasts/contrast/contrast'
+import { $currentBgOrFg, setCurrentBgOrFg } from './stores/contrasts/currentBgOrFg/currentBgOrFg'
+import { setCurrentContrastMethod } from './stores/contrasts/currentContrastMethod/currentContrastMethod'
+import { setIsContrastInputOpen } from './stores/contrasts/isContrastInputOpen/isContrastInputOpen'
+import { setLockContrast, $lockContrast } from './stores/contrasts/lockContrast/lockContrast'
+import { setCurrentFillOrStroke } from './stores/currentFillOrStroke/currentFillOrStroke'
+import { $currentKeysPressed, setCurrentKeysPressed } from './stores/currentKeysPressed/currentKeysPressed'
+import { setFigmaEditorType } from './stores/figmaEditorType/figmaEditorType'
+import { setIsColorCodeInputsOpen } from './stores/isColorCodeInputsOpen/isColorCodeInputsOpen'
+import { setIsMouseInsideDocument } from './stores/isMouseInsideDocument/isMouseInsideDocument'
+import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventCallback/mouseEventCallback'
+import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage/uiMessage'
 
 let isMouseDown = false
 
@@ -102,7 +102,15 @@ function App() {
       })
 
       if ($lockRelativeChroma.get()) {
-        setRelativeChroma(convertAbsoluteChromaToRelative({ h: $colorHxya.get().h, x: $colorHxya.get().x, y: $colorHxya.get().y }))
+        setRelativeChroma(
+          convertAbsoluteChromaToRelative({
+            colorHxy: {
+              h: $colorHxya.get().h,
+              x: $colorHxya.get().x,
+              y: $colorHxya.get().y
+            }
+          })
+        )
       }
 
       if ($lockContrast.get()) {

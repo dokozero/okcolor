@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
 import { CurrentColorModel } from '../../../types'
-import { $currentColorModel, setCurrentColorModelWithSideEffects } from '../../stores/colors/currentColorModel'
+import { $currentColorModel, setCurrentColorModelWithSideEffects } from '../../stores/colors/currentColorModel/currentColorModel'
 
 export default function ColorModelSelect() {
   if (consoleLogInfos.includes('Component renders')) {

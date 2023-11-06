@@ -1,9 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
-import { $colorsRgba } from '../../stores/colors/colorsRgba'
-import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg'
-import { $currentFillOrStroke, setCurrentFillOrStroke, setCurrentFillOrStrokeWithSideEffects } from '../../stores/currentFillOrStroke'
+import { $colorsRgba } from '../../stores/colors/colorsRgba/colorsRgba'
+import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg/currentBgOrFg'
+import {
+  $currentFillOrStroke,
+  setCurrentFillOrStrokeWithSideEffects,
+  setCurrentFillOrStroke
+} from '../../stores/currentFillOrStroke/currentFillOrStroke'
 
 export default function FillOrStrokeToggle() {
   if (consoleLogInfos.includes('Component renders')) {

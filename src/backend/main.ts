@@ -22,10 +22,10 @@ import type {
   CurrentContrastMethod,
   SyncCurrentContrastMethodData
 } from '../types'
-import getNewColorsRgba from './helpers/getNewColorsRgba'
-import getWindowHeigh from './helpers/getWindowHeigh'
-import sendMessageToUi from './helpers/sendMessageToUi'
-import updateShapeColor from './helpers/updateShapeColor'
+import getNewColorsRgba from './helpers/getNewColorsRgba/getNewColorsRgba'
+import getWindowHeigh from './helpers/getWindowHeigh/getWindowHeigh'
+import sendMessageToUi from './helpers/sendMessageToUi/sendMessageToUi'
+import updateShapeColor from './helpers/updateShapeColor/updateShapeColor'
 
 let currentFillOrStroke: CurrentFillOrStroke = 'fill'
 let fileColorProfile: FileColorProfile

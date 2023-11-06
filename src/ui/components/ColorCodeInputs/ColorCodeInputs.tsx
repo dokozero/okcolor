@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
-import getColorCodeStrings from './helpers/getColorCodeStrings'
-import getNewColorHxya from './helpers/getNewColorHxya'
 import { ColorCodesInputValues, ColorHxya } from '../../../types'
-import copyToClipboard from '../../helpers/copyToClipboard'
-import { $isColorCodeInputsOpen, setIsColorCodeInputsOpenWithSideEffects } from '../../stores/isColorCodeInputsOpen'
-import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya'
-import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument'
-import selectInputContent from '../../helpers/selectInputContent'
+import copyToClipboard from '../../helpers/copyToClipboard/copyToClipboard'
+import selectInputContent from '../../helpers/selectInputContent/selectInputContent'
+import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
+import { $isColorCodeInputsOpen, setIsColorCodeInputsOpenWithSideEffects } from '../../stores/isColorCodeInputsOpen/isColorCodeInputsOpen'
+import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument/isMouseInsideDocument'
+import getColorCodeStrings from './helpers/getColorCodeStrings/getColorCodeStrings'
+import getNewColorHxya from './helpers/getNewColorHxya/getNewColorHxya'
 
 // We only need this object to check if the value of an input has been changed on blur.
 const colorCodesInputValues: { [key in ColorCodesInputValues]: string } = {

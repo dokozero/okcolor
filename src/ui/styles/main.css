@@ -5,7 +5,7 @@
 @import '../components/FileColorProfileSelect/FileColorProfileSelect.css';
 @import '../components/FileColorProfileSelect/FileColorProfileSelect.css';
 @import '../components/FillOrStrokeToggle/FillOrStrokeToggle.css';
-@import '../components/single-input-with-lock/ContrastInput/BgOrFgToggle.css';
+@import '../components/single-input-with-lock/BgOrFgToggle/BgOrFgToggle.css';
 
 /* These are a bit different than the previous styles, they are still for components but not for a specific one.
 For example, c-dropdown.css has shared styles used in ContrastInput.tsx and ColorCodeInputs.tsx,
