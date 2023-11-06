@@ -72,15 +72,8 @@ export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithS
     a: a !== undefined ? a : colorHxya.get().a
   })
 
-  const chroma = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? colorHxya.get().x * 100 : colorHxya.get().x
   const newColorRgb = convertHxyToRgb({
-    colorHxy: {
-      h: colorHxya.get().h,
-      x: chroma,
-      y: colorHxya.get().y
-    },
-    originColorModel: $currentColorModel.get(),
-    colorSpace: $fileColorProfile.get()
+    colorHxy: colorHxya.get()
   })
 
   if (syncColorsRgba) {

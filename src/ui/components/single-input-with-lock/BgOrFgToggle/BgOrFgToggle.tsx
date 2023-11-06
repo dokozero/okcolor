@@ -74,11 +74,9 @@ export default function BgOrFgToggle() {
     const toggleOutlineColor = convertHxyToRgb({
       colorHxy: {
         h: $colorHxya.get().h,
-        x: $colorHxya.get().x * 100,
+        x: $colorHxya.get().x,
         y: outlineLightness
-      },
-      originColorModel: $currentColorModel.get(),
-      colorSpace: $fileColorProfile.get()
+      }
     })
 
     if (currentBgOrFg === 'bg') {

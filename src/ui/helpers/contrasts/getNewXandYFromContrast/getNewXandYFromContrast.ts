@@ -92,11 +92,9 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     newRgb = convertHxyToRgb({
       colorHxy: {
         h: h,
-        x: newX * 100,
+        x: newX,
         y: yBetweenMinYAndMaxY
-      },
-      originColorModel: $currentColorModel.get(),
-      colorSpace: $fileColorProfile.get()
+      }
     })
 
     if ($currentBgOrFg.get() === 'bg') {
@@ -160,11 +158,9 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     newRgb = convertHxyToRgb({
       colorHxy: {
         h: h,
-        x: newX * 100,
+        x: newX,
         y: !minYFound ? minY : maxY
-      },
-      originColorModel: $currentColorModel.get(),
-      colorSpace: $fileColorProfile.get()
+      }
     })
 
     if ($currentBgOrFg.get() === 'bg') {

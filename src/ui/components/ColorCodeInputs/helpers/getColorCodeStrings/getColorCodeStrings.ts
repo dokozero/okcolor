@@ -35,19 +35,13 @@ export default function getColorCodeStrings(): NewColorStrings {
     rgbSrgb = convertHxyToRgb({
       colorHxy: {
         h: clamped.h,
-        x: clamped.c * 100,
+        x: clamped.c,
         y: clamped.l * 100
       },
-      originColorModel: $currentColorModel.get(),
       colorSpace: 'rgb'
     })
     rgbP3 = convertHxyToRgb({
-      colorHxy: {
-        h: $colorHxya.get().h,
-        x: $colorHxya.get().x * 100,
-        y: $colorHxya.get().y
-      },
-      originColorModel: $currentColorModel.get(),
+      colorHxy: $colorHxya.get(),
       colorSpace: 'p3'
     })
   } else {
@@ -57,7 +51,6 @@ export default function getColorCodeStrings(): NewColorStrings {
         x: $colorHxya.get().x,
         y: $colorHxya.get().y
       },
-      originColorModel: $currentColorModel.get(),
       colorSpace: 'rgb'
     })
   }

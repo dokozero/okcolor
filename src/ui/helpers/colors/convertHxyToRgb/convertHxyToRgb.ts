@@ -1,4 +1,6 @@
 import { ColorHxy, ColorModelList, FileColorProfile, ColorRgb } from '../../../../types'
+import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
+import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
 import clampNumber from '../../numbers/clampNumber/clampNumber'
 import { converter } from '../culori.mjs'
 import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
@@ -8,36 +10,28 @@ const convertToP3 = converter('p3')
 
 type Props = {
   colorHxy: ColorHxy
-  originColorModel: keyof typeof ColorModelList
-  colorSpace: FileColorProfile
+  originColorModel?: keyof typeof ColorModelList
+  colorSpace?: FileColorProfile
 }
 
-// TODO - x should be allowed 0-100 and 0-0.37.
-/**
- * @param {colorHxy} ColorHxy x should always be between 0 and 100.
- */
 export default function convertHxyToRgb(props: Props): ColorRgb {
-  const { colorHxy, originColorModel, colorSpace } = props
+  const { colorHxy, originColorModel = $currentColorModel.get(), colorSpace = $fileColorProfile.get() } = props
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch
   let newColorRgb: ColorRgb
-
-  // convertToRgb() and convertToP3() needs these values between 0 and 1.
-  colorHxy.x = colorHxy.x / 100
-  colorHxy.y = colorHxy.y / 100
 
   let colorObject
 
   switch (originColorModel) {
     case 'okhsv':
-      colorObject = { mode: 'okhsv', h: colorHxy.h, s: colorHxy.x, v: colorHxy.y }
+      colorObject = { mode: 'okhsv', h: colorHxy.h, s: colorHxy.x / 100, v: colorHxy.y / 100 }
       break
     case 'okhsl':
-      colorObject = { mode: 'okhsl', h: colorHxy.h, s: colorHxy.x, l: colorHxy.y }
+      colorObject = { mode: 'okhsl', h: colorHxy.h, s: colorHxy.x / 100, l: colorHxy.y / 100 }
       break
     case 'oklch':
     case 'oklchCss':
-      colorObject = { mode: 'oklch', h: colorHxy.h, c: colorHxy.x, l: colorHxy.y }
+      colorObject = { mode: 'oklch', h: colorHxy.h, c: colorHxy.x, l: colorHxy.y / 100 }
       break
   }
 
