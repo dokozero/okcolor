@@ -5,7 +5,7 @@
 import { map, action } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../../constants'
-import { ColorHxya, UpdateShapeColorData, ColorValueDecimals } from '../../../../types'
+import { ColorHxya, UpdateShapeColorData } from '../../../../types'
 import convertAbsoluteChromaToRelative from '../../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
 import convertHxyToRgb from '../../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
 import filterNewColorHxya from '../../../helpers/colors/filterNewColorHxya/filterNewColorHxya'
@@ -121,19 +121,6 @@ export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithS
     )
   }
 })
-
-export const getColorValueDecimals = (): ColorValueDecimals => {
-  switch ($currentColorModel.get()) {
-    case 'okhsl':
-    case 'okhsv':
-      return { h: 0, x: 0, y: 0 }
-    case 'oklch':
-    case 'oklchCss':
-      return { h: 1, x: $lockRelativeChroma.get() ? 6 : 3, y: 1 }
-    default:
-      return { h: 0, x: 0, y: 0 }
-  }
-}
 
 if (consoleLogInfos.includes('Store updates')) {
   logger({

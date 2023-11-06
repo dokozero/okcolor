@@ -103,11 +103,22 @@ type KeysPressed = 'shift' | 'ctrl' | ''
 
 export type CurrentKeysPressed = KeysPressed[]
 
-export type ColorValueDecimals = {
+export type ColorHxyDecimals = {
   [key: string]: number
-  h: 0 | 1
-  x: 0 | 1 | 3 | 4 | 6
-  y: 0 | 1
+  h: number
+  x: number
+  y: number
+}
+
+export type ContrastRange = {
+  negative: {
+    min: ApcaContrast | WcagContrast
+    max: ApcaContrast | WcagContrast
+  }
+  positive: {
+    min: ApcaContrast | WcagContrast
+    max: ApcaContrast | WcagContrast
+  }
 }
 
 export enum ColorCodesInputValues {

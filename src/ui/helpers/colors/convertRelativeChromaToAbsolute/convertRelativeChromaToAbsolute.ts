@@ -1,10 +1,10 @@
 import { MAX_CHROMA_P3 } from '../../../../constants'
 import { RelativeChroma, FileColorProfile, Lightness, Hue } from '../../../../types'
-import { getColorValueDecimals } from '../../../stores/colors/colorHxya/colorHxya'
 import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
 import { $relativeChroma } from '../../../stores/colors/relativeChroma/relativeChroma'
 import roundWithDecimal from '../../numbers/roundWithDecimal/roundWithDecimal'
 import { clampChromaInGamut } from '../culori.mjs'
+import getColorHxyDecimals from '../getColorHxyDecimals/getColorHxyDecimals'
 
 type Props = {
   h: Hue
@@ -23,5 +23,5 @@ export default function convertRelativeChromaToAbsolute(props: Props): RelativeC
 
   const returnValue = (relativeChroma * currentMaxChroma) / 100
 
-  return roundWithDecimal(returnValue, getColorValueDecimals().x)
+  return roundWithDecimal(returnValue, getColorHxyDecimals().x)
 }

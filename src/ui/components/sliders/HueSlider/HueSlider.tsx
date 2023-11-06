@@ -3,8 +3,9 @@ import { consoleLogInfos, SLIDER_SIZE } from '../../../../constants'
 import { useStore } from '@nanostores/react'
 import limitMouseManipulatorPosition from '../../../helpers/limitMouseManipulatorPosition/limitMouseManipulatorPosition'
 import roundWithDecimal from '../../../helpers/numbers/roundWithDecimal/roundWithDecimal'
-import { $colorHxya, setColorHxyaWithSideEffects, getColorValueDecimals } from '../../../stores/colors/colorHxya/colorHxya'
+import { $colorHxya, setColorHxyaWithSideEffects } from '../../../stores/colors/colorHxya/colorHxya'
 import { setMouseEventCallback } from '../../../stores/mouseEventCallback/mouseEventCallback'
+import getColorHxyDecimals from '../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 
 export default function HueSlider() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -22,7 +23,7 @@ export default function HueSlider() {
 
     setColorHxyaWithSideEffects({
       newColorHxya: {
-        h: roundWithDecimal(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorValueDecimals().h)
+        h: roundWithDecimal(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorHxyDecimals().h)
       }
     })
   }

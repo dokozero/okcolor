@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { MAX_APCA_CONTRAST, MAX_WCAG_CONTRAST, MIN_APCA_CONTRAST, MIN_WCAG_CONTRAST, consoleLogInfos } from '../../../../constants'
 import { useStore } from '@nanostores/react'
 import { ApcaContrast, CurrentContrastMethod, WcagContrast } from '../../../../types'
 import getContrastFromBgandFgRgba from '../../../helpers/contrasts/getContrastFromBgandFgRgba/getContrastFromBgandFgRgba'
@@ -21,23 +20,16 @@ import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
 import BgOrFgToggle from '../BgOrFgToggle/BgOrFgToggle'
 import ClosedLockIcon from '../ClosedLockIcon/ClosedLockIcon'
 import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
+import { consoleLogInfos } from '../../../../constants'
+import getContrastRange from '../../../helpers/contrasts/getContrastRange/getContrastRange'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
 
 const updateContrastOrSetBackPreviousValue = (eventTarget: HTMLInputElement, newContrast: ApcaContrast | WcagContrast) => {
-  let minContrast: ApcaContrast | WcagContrast
-  let maxContrast: ApcaContrast | WcagContrast
+  const contrastRange = getContrastRange()
 
-  if ($currentContrastMethod.get() === 'apca') {
-    minContrast = MIN_APCA_CONTRAST
-    maxContrast = MAX_APCA_CONTRAST
-  } else {
-    minContrast = MIN_WCAG_CONTRAST
-    maxContrast = MAX_WCAG_CONTRAST
-  }
-
-  if (newContrast < minContrast || newContrast > maxContrast || newContrast === $contrast.get()) {
+  if (newContrast < contrastRange.negative.max || newContrast > contrastRange.positive.max || newContrast === $contrast.get()) {
     eventTarget.value = String($contrast.get())
     return
   }
@@ -51,30 +43,21 @@ const getNewContrastValueFromArrowKey = (
 ): ApcaContrast | WcagContrast => {
   let newValue: ApcaContrast | WcagContrast
 
+  const isShiftPressed = $currentKeysPressed.get().includes('shift')
+  const currentContrastMethod = $currentContrastMethod.get()
+
   let stepUpdateValue: number
+  if (currentContrastMethod === 'apca') stepUpdateValue = isShiftPressed ? 10 : 1
+  else stepUpdateValue = isShiftPressed ? 1 : 0.1
 
-  if ($currentContrastMethod.get() === 'apca') {
-    stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 10 : 1
+  const contrastRange = getContrastRange()
 
-    if (eventKey === 'ArrowUp') {
-      if (currentValue === 0) newValue = 7
-      else newValue = currentValue + stepUpdateValue
-    } else if (eventKey === 'ArrowDown') {
-      if (currentValue === 0) newValue = -7
-      else newValue = currentValue - stepUpdateValue
-    }
-
-    if (newValue! > -7 && newValue! < 7) newValue = 0
-  } else {
-    stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 1 : 0.1
-
-    if (eventKey === 'ArrowUp') {
-      if (currentValue === -1) newValue = 1
-      else newValue = currentValue + stepUpdateValue
-    } else if (eventKey === 'ArrowDown') {
-      if (currentValue === 1) newValue = -1
-      else newValue = currentValue - stepUpdateValue
-    }
+  if (eventKey === 'ArrowUp') {
+    if (currentValue === contrastRange.negative.min) newValue = currentContrastMethod === 'apca' ? 0 : 1
+    else newValue = currentValue + stepUpdateValue
+  } else if (eventKey === 'ArrowDown') {
+    if (currentValue === contrastRange.positive.min) newValue = currentContrastMethod === 'apca' ? 0 : -1
+    else newValue = currentValue - stepUpdateValue
   }
 
   // We need to this because in some cases we can have values like 1.2999999999999998.
@@ -120,7 +103,7 @@ export default function ContrastInput() {
     const eventTarget = event.target
 
     if (lastKeyPressed === 'Escape' || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
-      eventTarget.value = String(contrast)
+      eventTarget.value = String($contrast.get())
       return
     } else {
       lastKeyPressed = ''
@@ -169,7 +152,7 @@ export default function ContrastInput() {
     if (!colorsRgba.parentFill || !colorsRgba.fill) {
       input.current!.value = '-'
     } else {
-      input.current!.value = String(contrast)
+      input.current!.value = String($contrast.get())
     }
   }, [colorsRgba])
 

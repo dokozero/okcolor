@@ -12,11 +12,6 @@ export const OKLCH_CHROMA_SCALE = 2.7
 
 export const MAX_CHROMA_P3 = 0.37
 
-export const MIN_APCA_CONTRAST = -108
-export const MAX_APCA_CONTRAST = 106
-export const MIN_WCAG_CONTRAST = -21
-export const MAX_WCAG_CONTRAST = 21
-
 // prettier-ignore
 // Comment the line you don't want.
 export const consoleLogInfos = [

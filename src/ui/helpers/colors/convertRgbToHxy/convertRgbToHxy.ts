@@ -1,8 +1,8 @@
 import { ColorRgb, ColorModelList, FileColorProfile, ColorHxy } from '../../../../types'
-import { getColorValueDecimals } from '../../../stores/colors/colorHxya/colorHxya'
 import roundWithDecimal from '../../numbers/roundWithDecimal/roundWithDecimal'
 import { converter } from '../culori.mjs'
 import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
+import getColorHxyDecimals from '../getColorHxyDecimals/getColorHxyDecimals'
 
 const convertToOkhsl = converter('okhsl')
 const convertToOkhsv = converter('okhsv')
@@ -78,9 +78,9 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
     case 'oklchCss':
       if (!keepOklchDoubleDigit) {
         newColorHxy = {
-          h: roundWithDecimal(culoriResult.h, getColorValueDecimals().h),
-          x: roundWithDecimal(culoriResult.c, getColorValueDecimals().x),
-          y: roundWithDecimal(culoriResult.l * 100, getColorValueDecimals().y)
+          h: roundWithDecimal(culoriResult.h, getColorHxyDecimals().h),
+          x: roundWithDecimal(culoriResult.c, getColorHxyDecimals().x),
+          y: roundWithDecimal(culoriResult.l * 100, getColorHxyDecimals().y)
         }
       } else {
         newColorHxy = {
