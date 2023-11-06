@@ -1,21 +1,21 @@
 import { uiMessageTexts } from './ui/ui-messages'
 
-export type RgbElement = number // 0 - 255
+export type RgbElement = number // 0 - 1 with no limitation on the number of decimals.
 
 export type Hue = number // 0 - 360
 export type AbsoluteChroma = number // 0 - MAX_CHROMA_P3
 export type RelativeChroma = number // 0 - 100
 export type Saturation = number // 0 - 100
 export type Lightness = number // 0 - 100
-export type Opacity = number // 0 - 100
+export type Opacity = number // 0 - 1 with 2 decimal precision (eg. 0.75).
 
 export type ApcaContrast = number // -108 - 106
-export type WcagContrast = number // -21 - 21, normally WCAG contrast is between 0 and 21 but because APCA one can be negative, we also use a negative value here as it easier to work with, for example in getNewXandYFromContrast().
+export type WcagContrast = number // -21 - 21, normally WCAG contrast is between 0 and 21 but because APCA one can be negative, we also use a negative value here as it is easier to work with, for example in getNewXandYFromContrast() and also forthe user when he enter a value in the contrast input as without this distinction, if he enter a value like "14", in many cases, this can mean two colors (two different lightness with a given hue and chroma).
 
 export type SvgPath = string
 
 export type RgbArray = [RgbElement, RgbElement, RgbElement]
-export type RgbaArray = [RgbElement, RgbElement, RgbElement, RgbElement]
+export type RgbaArray = [RgbElement, RgbElement, RgbElement, Opacity]
 
 // We use enums to get the value when hovering variable that use these types like FigmaEditorType
 enum FigmaEditorTypeList {
@@ -75,9 +75,10 @@ export type ColorRgba = {
   r: RgbElement
   g: RgbElement
   b: RgbElement
-  a: RgbElement
+  a: Opacity
 }
 
+// We use "Hxy" and not "Lch" as this value can hold okhsv, okhsl and oklch values, between these three models, only the "h" is shared, for the two other we use these more generic "xy" letters.
 export type ColorHxy = {
   h: Hue
   x: AbsoluteChroma | Saturation

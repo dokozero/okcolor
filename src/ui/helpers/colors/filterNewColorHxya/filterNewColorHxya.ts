@@ -5,6 +5,7 @@ import { $lockRelativeChroma } from '../../../stores/colors/lockRelativeChroma/l
 import { $contrast } from '../../../stores/contrasts/contrast/contrast'
 import { $lockContrast } from '../../../stores/contrasts/lockContrast/lockContrast'
 import getNewXandYFromContrast from '../../contrasts/getNewXandYFromContrast/getNewXandYFromContrast'
+import roundWithDecimal from '../../numbers/roundWithDecimal/roundWithDecimal'
 import convertRelativeChromaToAbsolute from '../convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import getClampedChroma from '../getClampedChroma/getClampedChroma'
 
@@ -22,6 +23,8 @@ export default function filterNewColorHxya(
     y: newColorHxya.y !== undefined ? newColorHxya.y : $colorHxya.get().y,
     a: newColorHxya.a !== undefined ? newColorHxya.a : $colorHxya.get().a
   }
+
+  filteredColorHxya.a = roundWithDecimal(filteredColorHxya.a, 2)
 
   if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return filteredColorHxya
 

@@ -24,8 +24,6 @@ type Props = {
 export const setContrastWithSideEffects = action($contrast, 'setContrastWithSideEffects', (contrast, props: Props) => {
   const { newContrast, syncColorHxya = true } = props
 
-  contrast.set(newContrast)
-
   if (syncColorHxya) {
     const newXy = getNewXandYFromContrast({
       h: $colorHxya.get().h,
@@ -37,7 +35,8 @@ export const setContrastWithSideEffects = action($contrast, 'setContrastWithSide
 
   // In case we get a value that is bigger than what is possible, for example if user wants a contrast of 40 but with the current bg abd fg color the maximum is 30, we need to do this test, otherwize the value 40 will be kept in the contrast input.
   const newContrastClamped: ApcaContrast | WcagContrast = getContrastFromBgandFgRgba($colorsRgba.get().fill!, $colorsRgba.get().parentFill!)
-  if (newContrast !== newContrastClamped) setContrast(newContrastClamped)
+  if (newContrastClamped !== 0 && Math.abs(newContrast) > Math.abs(newContrastClamped)) setContrast(newContrastClamped)
+  else contrast.set(newContrast)
 })
 
 if (consoleLogInfos.includes('Store updates')) {

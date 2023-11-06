@@ -129,7 +129,7 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
     x: 0,
     y: 0
   }
-  let newColorA: Opacity = 100
+  let newColorA: Opacity = 1
 
   if (eventTargetId === 'currentColorModel') {
     if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
@@ -168,9 +168,9 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
 
     newColorHxy = convertRgbToHxy({
       colorRgb: {
-        r: parseFloat(matches![0]) * 255,
-        g: parseFloat(matches![1]) * 255,
-        b: parseFloat(matches![2]) * 255
+        r: parseFloat(matches![0]),
+        g: parseFloat(matches![1]),
+        b: parseFloat(matches![2])
       },
       targetColorModel: $currentColorModel.get(),
       colorSpace: ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? 'p3' : 'rgb'
@@ -181,9 +181,9 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
 
     newColorHxy = convertRgbToHxy({
       colorRgb: {
-        r: parseFloat(matches![0]),
-        g: parseFloat(matches![1]),
-        b: parseFloat(matches![2])
+        r: parseFloat(matches![0]) / 255,
+        g: parseFloat(matches![1]) / 255,
+        b: parseFloat(matches![2]) / 255
       },
       targetColorModel: $currentColorModel.get(),
       colorSpace: 'rgb'
@@ -194,19 +194,18 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
 
     newColorHxy = convertRgbToHxy({
       colorRgb: {
-        r: newColorRgb.r * 255,
-        g: newColorRgb.g * 255,
-        b: newColorRgb.b * 255
+        r: newColorRgb.r,
+        g: newColorRgb.g,
+        b: newColorRgb.b
       },
       targetColorModel: $currentColorModel.get(),
       colorSpace: 'rgb'
     })
-    if (newColorRgb.alpha && $currentBgOrFg.get() === 'fg') newColorA = Math.round(newColorRgb.alpha * 100)
+    if (newColorRgb.alpha && $currentBgOrFg.get() === 'fg') newColorA = newColorRgb.alpha
   }
 
   if (matches[3]?.valueOf() && $currentBgOrFg.get() === 'fg') {
-    // We need to use Math.round here otherwise, parseFloat(0.55) * 100 will give 55.00...01 among other values like 0.56.
-    newColorA = Math.round(parseFloat(matches![3]) * 100)
+    newColorA = parseFloat(matches![3])
   }
 
   return { ...newColorHxy, a: newColorA }

@@ -23,7 +23,7 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
 
   // No need to go all through color conversion if we have a white of black color, we can manually find the corresponding values.
   // Also this is useful because if the color is white and we don't do this, we'll get a value with a hue of 90 and a saturation of 56 in OkHSL.
-  if (colorRgb.r > 254 && colorRgb.g > 254 && colorRgb.b > 254) {
+  if (colorRgb.r > 0.99 && colorRgb.g > 0.99 && colorRgb.b > 0.99) {
     return {
       h: 0,
       x: 0,
@@ -36,11 +36,6 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
       y: 0
     }
   }
-
-  // We need the RGB values between 0 and 1.
-  colorRgb.r = colorRgb.r / 255
-  colorRgb.g = colorRgb.g / 255
-  colorRgb.b = colorRgb.b / 255
 
   // color() function in CSS use different names for the color profile than the one used in this plugin.
   let colorFunctionSpace: string

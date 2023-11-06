@@ -28,9 +28,9 @@ export default function FillOrStrokeToggle() {
     if (!currentColorRgb) return
 
     if ($currentFillOrStroke.get() === 'fill') {
-      fillSvg.current!.setAttribute('fill', `rgb(${currentColorRgb.r}, ${currentColorRgb.g}, ${currentColorRgb.b})`)
+      fillSvg.current!.setAttribute('fill', `rgb(${currentColorRgb.r * 255}, ${currentColorRgb.g * 255}, ${currentColorRgb.b * 255})`)
     } else {
-      strokeSvg.current!.setAttribute('fill', `rgb(${currentColorRgb.r}, ${currentColorRgb.g}, ${currentColorRgb.b})`)
+      strokeSvg.current!.setAttribute('fill', `rgb(${currentColorRgb.r * 255}, ${currentColorRgb.g * 255}, ${currentColorRgb.b * 255})`)
     }
   }
 
@@ -67,13 +67,19 @@ export default function FillOrStrokeToggle() {
     }
 
     if (currentBgOrFg === 'bg') {
-      fillSvg.current!.setAttribute('fill', `rgb(${colorsRgba.parentFill!.r}, ${colorsRgba.parentFill!.g}, ${colorsRgba.parentFill!.b})`)
+      fillSvg.current!.setAttribute(
+        'fill',
+        `rgb(${colorsRgba.parentFill!.r * 255}, ${colorsRgba.parentFill!.g * 255}, ${colorsRgba.parentFill!.b * 255})`
+      )
       strokeSvg.current!.setAttribute('fill', 'none')
     } else {
-      fillSvg.current!.setAttribute('fill', colorsRgba.fill ? `rgb(${colorsRgba.fill.r}, ${colorsRgba.fill.g}, ${colorsRgba.fill.b})` : 'none')
+      fillSvg.current!.setAttribute(
+        'fill',
+        colorsRgba.fill ? `rgb(${colorsRgba.fill.r * 255}, ${colorsRgba.fill.g * 255}, ${colorsRgba.fill.b * 255})` : 'none'
+      )
       strokeSvg.current!.setAttribute(
         'fill',
-        colorsRgba.stroke ? `rgb(${colorsRgba.stroke.r}, ${colorsRgba.stroke.g}, ${colorsRgba.stroke.b})` : 'none'
+        colorsRgba.stroke ? `rgb(${colorsRgba.stroke.r * 255}, ${colorsRgba.stroke.g * 255}, ${colorsRgba.stroke.b * 255})` : 'none'
       )
     }
   }, [colorsRgba, currentBgOrFg])

@@ -41,22 +41,22 @@ export default function BgOrFgToggle() {
       return
     }
 
-    bgToggle.current!.style.background = `rgb(${colorsRgba.parentFill.r}, ${colorsRgba.parentFill.g}, ${colorsRgba.parentFill.b})`
-    fgToggle.current!.style.background = `rgb(${colorsRgba.fill.r}, ${colorsRgba.fill.g}, ${colorsRgba.fill.b})`
+    bgToggle.current!.style.background = `rgb(${colorsRgba.parentFill.r * 255}, ${colorsRgba.parentFill.g * 255}, ${colorsRgba.parentFill.b * 255})`
+    fgToggle.current!.style.background = `rgb(${colorsRgba.fill.r * 255}, ${colorsRgba.fill.g * 255}, ${colorsRgba.fill.b * 255})`
 
     let whiteTextContrast: ApcaContrast | WcagContrast
     let blackTextContrast: ApcaContrast | WcagContrast
 
     // Define color of Bg toggle label
-    whiteTextContrast = getContrastFromBgandFgRgba({ r: 255, g: 255, b: 255, a: 100 }, colorsRgba.parentFill)
-    blackTextContrast = getContrastFromBgandFgRgba({ r: 0, g: 0, b: 0, a: 100 }, colorsRgba.parentFill)
+    whiteTextContrast = getContrastFromBgandFgRgba({ r: 1, g: 1, b: 1, a: 1 }, colorsRgba.parentFill)
+    blackTextContrast = getContrastFromBgandFgRgba({ r: 0, g: 0, b: 0, a: 1 }, colorsRgba.parentFill)
 
     if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) bgToggleText.current!.style.color = '#FFFFFF'
     else bgToggleText.current!.style.color = '#000000'
 
     // Define color of Fg toggle label
-    whiteTextContrast = getContrastFromBgandFgRgba({ r: 255, g: 255, b: 255, a: 100 }, colorsRgba.fill)
-    blackTextContrast = getContrastFromBgandFgRgba({ r: 0, g: 0, b: 0, a: 100 }, colorsRgba.fill)
+    whiteTextContrast = getContrastFromBgandFgRgba({ r: 1, g: 1, b: 1, a: 1 }, colorsRgba.fill)
+    blackTextContrast = getContrastFromBgandFgRgba({ r: 0, g: 0, b: 0, a: 1 }, colorsRgba.fill)
 
     if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) fgToggleText.current!.style.color = '#FFFFFF'
     else fgToggleText.current!.style.color = '#000000'
@@ -83,10 +83,10 @@ export default function BgOrFgToggle() {
 
     if (currentBgOrFg === 'bg') {
       fgToggle.current!.style.outlineColor = 'transparent'
-      bgToggle.current!.style.outlineColor = `rgb(${toggleOutlineColor.r}, ${toggleOutlineColor.g}, ${toggleOutlineColor.b})`
+      bgToggle.current!.style.outlineColor = `rgb(${toggleOutlineColor.r * 255}, ${toggleOutlineColor.g * 255}, ${toggleOutlineColor.b * 255})`
     } else {
       bgToggle.current!.style.outlineColor = 'transparent'
-      fgToggle.current!.style.outlineColor = `rgb(${toggleOutlineColor.r}, ${toggleOutlineColor.g}, ${toggleOutlineColor.b})`
+      fgToggle.current!.style.outlineColor = `rgb(${toggleOutlineColor.r * 255}, ${toggleOutlineColor.g * 255}, ${toggleOutlineColor.b * 255})`
     }
   }, [currentBgOrFg, colorHxya])
 

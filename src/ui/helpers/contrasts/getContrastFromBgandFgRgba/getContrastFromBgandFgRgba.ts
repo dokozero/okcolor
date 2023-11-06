@@ -10,22 +10,21 @@ export default function getContrastFromBgandFgRgba(
   currentContrastMethod: CurrentContrastMethod = $currentContrastMethod.get()
 ): ApcaContrast | WcagContrast {
   let bgRgb: RgbArray = [bg.r, bg.g, bg.b]
-  let fgRgb: RgbaArray = [fg.r, fg.g, fg.b, fg.a / 100]
+  let fgRgb: RgbaArray = [fg.r, fg.g, fg.b, fg.a]
   let APCAContrastResult: ApcaContrast | string
   let newContrast: ApcaContrast | WcagContrast = 0
 
   switch (currentContrastMethod) {
     case 'apca':
       if ($fileColorProfile.get() === 'rgb') {
+        // sRGBtoY need these value between 0 and 255.
+        bgRgb = [bg.r * 255, bg.g * 255, bg.b * 255]
+        fgRgb = [fg.r * 255, fg.g * 255, fg.b * 255, fg.a]
+
         APCAContrastResult = APCAcontrast(sRGBtoY(alphaBlend(fgRgb, bgRgb)), sRGBtoY(bgRgb))
       } else {
-        // displayP3toY need these value between 0 and 1.
-        bgRgb = [bg.r / 255, bg.g / 255, bg.b / 255]
-        fgRgb = [fg.r / 255, fg.g / 255, fg.b / 255, fg.a / 100]
-
         APCAContrastResult = APCAcontrast(displayP3toY(alphaBlend(fgRgb, bgRgb, false)), displayP3toY(bgRgb))
       }
-
       // From some reason, APCAcontrast() can return a string. so we need to convert it to number if that the case.
       if (typeof APCAContrastResult === 'string') newContrast = parseInt(APCAContrastResult)
       else newContrast = APCAContrastResult

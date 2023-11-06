@@ -27,8 +27,7 @@ export default function OpacitySlider() {
   const manipulatorOpacitySlider = useRef<SVGSVGElement>(null)
 
   const updateManipulatorPosition = () => {
-    const opacity = $colorHxya.get().a / 100
-    manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate(SLIDER_SIZE * opacity - 1, -1)
+    manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate(SLIDER_SIZE * $colorHxya.get().a - 1, -1)
   }
 
   const handleNewManipulatorPosition = (event: MouseEvent) => {
@@ -37,7 +36,7 @@ export default function OpacitySlider() {
 
     setColorHxyaWithSideEffects({
       newColorHxya: {
-        a: Math.round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 100)
+        a: limitMouseManipulatorPosition(canvasY / SLIDER_SIZE)
       }
     })
   }
@@ -51,9 +50,9 @@ export default function OpacitySlider() {
       opacitySliderWrapper.current!.style.backgroundImage = `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(0, 0, 0, 1) 90%), url(${opacitysliderBackgroundImg})`
     } else {
       opacitySliderWrapper.current!.style.backgroundImage = `linear-gradient(to right, rgba(255, 255, 255, 0), rgba(${
-        colorsRgba[`${$currentFillOrStroke.get()}`]!.r
-      }, ${colorsRgba[`${$currentFillOrStroke.get()}`]!.g}, ${
-        colorsRgba[`${$currentFillOrStroke.get()}`]!.b
+        colorsRgba[`${$currentFillOrStroke.get()}`]!.r * 255
+      }, ${colorsRgba[`${$currentFillOrStroke.get()}`]!.g * 255}, ${
+        colorsRgba[`${$currentFillOrStroke.get()}`]!.b * 255
       }, 1) 90%), url(${opacitysliderBackgroundImg})`
     }
   }, [colorsRgba, currentBgOrFg, lockContrast])

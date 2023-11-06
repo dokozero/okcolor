@@ -16,8 +16,8 @@ export default function setValuesForUiMessage() {
     setColorsRgbaWithSideEffects({
       newColorsRgba: {
         parentFill: null,
-        fill: { r: 255, g: 255, b: 255, a: 100 },
-        stroke: { r: 255, g: 255, b: 255, a: 100 }
+        fill: { r: 1, g: 1, b: 1, a: 1 },
+        stroke: { r: 1, g: 1, b: 1, a: 1 }
       },
       syncColorHxya: false,
       syncContrast: false
@@ -26,8 +26,8 @@ export default function setValuesForUiMessage() {
     setColorsRgbaWithSideEffects({
       newColorsRgba: {
         parentFill: null,
-        fill: { r: 44, g: 44, b: 44, a: 100 },
-        stroke: { r: 44, g: 44, b: 44, a: 100 }
+        fill: { r: 0.173, g: 0.173, b: 0.173, a: 1 },
+        stroke: { r: 0.173, g: 0.173, b: 0.173, a: 1 }
       },
       syncColorHxya: false,
       syncContrast: false

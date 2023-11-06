@@ -56,9 +56,9 @@ export default function convertHxyToRgb(props: Props): ColorRgb {
     }
   } else {
     newColorRgb = {
-      r: clampNumber(culoriResult.r * 255, 0, 255),
-      g: clampNumber(culoriResult.g * 255, 0, 255),
-      b: clampNumber(culoriResult.b * 255, 0, 255)
+      r: clampNumber(culoriResult.r, 0, 1),
+      g: clampNumber(culoriResult.g, 0, 1),
+      b: clampNumber(culoriResult.b, 0, 1)
     }
   }
 

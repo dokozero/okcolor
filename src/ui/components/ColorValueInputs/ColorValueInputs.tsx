@@ -26,6 +26,20 @@ const getOldValue = (eventId: string): Hue | AbsoluteChroma | Saturation | Light
   return 0
 }
 
+const setOldValue = (
+  eventTarget: HTMLInputElement,
+  eventId: keyof typeof HxyaLabels,
+  oldValue: Hue | AbsoluteChroma | Saturation | Lightness | Opacity
+) => {
+  if (eventId === 'x' && $currentColorModel.get() === 'oklch') {
+    eventTarget.value = (oldValue * 100).toString()
+  } else if (eventId === 'a') {
+    eventTarget.value = roundWithDecimal(oldValue * 100, 0).toString() + '%'
+  } else {
+    eventTarget.value = oldValue.toString()
+  }
+}
+
 function getStepUpdateValue(eventId: string): number {
   const shiftPressed = $currentKeysPressed.get().includes('shift')
 
@@ -53,10 +67,11 @@ const updateColorHxyaOrSetBackPreviousValue = (eventTarget: HTMLInputElement, ev
 
   if (newValue >= 0 && newValue <= (eventId === 'h' ? 360 : 100) && newValue !== oldValue) {
     if ($currentColorModel.get() === 'oklch' && newColorHxya.x) newColorHxya.x /= 100
+    else if (newColorHxya.a) newColorHxya.a /= 100
 
     setColorHxyaWithSideEffects({ newColorHxya: newColorHxya })
   } else {
-    eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
+    setOldValue(eventTarget, eventId, oldValue)
   }
 }
 
@@ -110,15 +125,11 @@ export default function ColorValueInputs() {
 
     const eventId = eventTarget.id as HxyaLabels
 
-    let oldValue = getOldValue(eventId)
+    const oldValue = getOldValue(eventId)
     const newValue = parseFloat(eventTarget.value)
 
-    if ($currentColorModel.get() === 'oklch' && eventId === 'x') {
-      oldValue = roundWithDecimal(oldValue * 100, 1)
-    }
-
     if (lastKeyPressed === 'Escape' || isNaN(newValue) || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
-      eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
+      setOldValue(eventTarget, eventId, oldValue)
       return
     } else {
       lastKeyPressed = ''
@@ -193,7 +204,7 @@ export default function ColorValueInputs() {
   useEffect(() => {
     inputH.current!.value = colorHxya.h.toString()
     inputY.current!.value = colorHxya.y.toString()
-    inputA.current!.value = colorHxya.a.toString() + '%'
+    inputA.current!.value = roundWithDecimal(colorHxya.a * 100, 0).toString() + '%'
 
     if ($currentColorModel.get() === 'oklch') {
       const newX = roundWithDecimal(colorHxya.x * 100, 1)

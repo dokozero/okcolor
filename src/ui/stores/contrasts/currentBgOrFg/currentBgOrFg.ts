@@ -33,7 +33,7 @@ export const setCurrentBgOrFgWithSideEffects = action($currentBgOrFg, 'setCurren
 
   if (syncColorHxya) {
     let newColorRgba: ColorRgb | ColorRgba
-    let opacity: Opacity = 100
+    let opacity: Opacity = 1
 
     if ($currentBgOrFg.get() === 'bg') {
       newColorRgba = $colorsRgba.get().parentFill!

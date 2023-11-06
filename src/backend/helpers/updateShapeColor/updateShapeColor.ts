@@ -3,12 +3,6 @@
 import { ColorRgba, CurrentBgOrFg, CurrentFillOrStroke } from '../../../types'
 
 export default function updateShapeColor(newColorRgba: ColorRgba, currentFillOrStroke: CurrentFillOrStroke, currentBgOrFg: CurrentBgOrFg) {
-  const newColorRgbaFormated = {
-    r: newColorRgba.r / 255,
-    g: newColorRgba.g / 255,
-    b: newColorRgba.b / 255,
-    a: newColorRgba.a / 100
-  }
   let copyNode
   const type = currentFillOrStroke + 's'
 
@@ -35,10 +29,10 @@ export default function updateShapeColor(newColorRgba: ColorRgba, currentFillOrS
       copyNode = JSON.parse(JSON.stringify(node[type]))
     }
 
-    copyNode[0].color.r = newColorRgbaFormated.r
-    copyNode[0].color.g = newColorRgbaFormated.g
-    copyNode[0].color.b = newColorRgbaFormated.b
-    copyNode[0].opacity = newColorRgbaFormated.a
+    copyNode[0].color.r = newColorRgba.r
+    copyNode[0].color.g = newColorRgba.g
+    copyNode[0].color.b = newColorRgba.b
+    copyNode[0].opacity = newColorRgba.a
 
     if (currentBgOrFg === 'bg') {
       // @ts-ignore

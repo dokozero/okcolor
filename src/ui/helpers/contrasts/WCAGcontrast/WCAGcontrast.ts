@@ -10,24 +10,22 @@ const alphaCompositing = (fg: RgbaArray, bg: RgbArray): RgbArray => {
   const opacity = fg[3] < 0.2 ? 0.2 : fg[3]
 
   for (let i = 0; i < 3; i++) {
-    resultRgbColor[i] = Math.floor(opacity * fg[i] + (1 - opacity) * bg[i])
+    resultRgbColor[i] = opacity * fg[i] + (1 - opacity) * bg[i]
   }
 
   return resultRgbColor
 }
 
 const getLuminanceOfRgbArray = (rgbArray: RgbaArray | RgbArray) => {
-  const formatedRgbArray = [rgbArray[0] / 255, rgbArray[1] / 255, rgbArray[2] / 255]
-
-  for (let i = 0; i < formatedRgbArray.length; i++) {
-    if (formatedRgbArray[i] < 0.04045) {
-      formatedRgbArray[i] = formatedRgbArray[i] / 12.92
+  for (let i = 0; i < rgbArray.length; i++) {
+    if (rgbArray[i] < 0.04045) {
+      rgbArray[i] = rgbArray[i] / 12.92
     } else {
-      formatedRgbArray[i] = Math.pow((formatedRgbArray[i] + 0.055) / 1.055, 2.4)
+      rgbArray[i] = Math.pow((rgbArray[i] + 0.055) / 1.055, 2.4)
     }
   }
 
-  return formatedRgbArray[0] * 0.2126 + formatedRgbArray[1] * 0.7152 + formatedRgbArray[2] * 0.0722
+  return rgbArray[0] * 0.2126 + rgbArray[1] * 0.7152 + rgbArray[2] * 0.0722
 }
 
 export default function WCAGcontrast(fg: RgbaArray, bg: RgbArray): WcagContrast {

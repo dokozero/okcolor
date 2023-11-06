@@ -76,9 +76,9 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     while (currentObject) {
       if (currentObject.fills && currentObject?.fills?.length !== 0) {
         returnObject.newColorsRgba.parentFill = {
-          r: currentObject.fills[0].color.r * 255,
-          g: currentObject.fills[0].color.g * 255,
-          b: currentObject.fills[0].color.b * 255
+          r: currentObject.fills[0].color.r,
+          g: currentObject.fills[0].color.g,
+          b: currentObject.fills[0].color.b
         }
         break
       } else if (currentObject.parent) {
@@ -119,19 +119,19 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
 
   if (selectionFill?.type === 'SOLID' && doesAllShapesHaveAFill) {
     returnObject.newColorsRgba.fill = {
-      r: selectionFill.color.r * 255,
-      g: selectionFill.color.g * 255,
-      b: selectionFill.color.b * 255,
-      a: Math.round(selectionFill.opacity * 100)
+      r: selectionFill.color.r,
+      g: selectionFill.color.g,
+      b: selectionFill.color.b,
+      a: selectionFill.opacity
     }
   }
 
   if (selectionStroke?.type === 'SOLID' && doesAllShapesHaveAStroke) {
     returnObject.newColorsRgba.stroke = {
-      r: selectionStroke.color.r * 255,
-      g: selectionStroke.color.g * 255,
-      b: selectionStroke.color.b * 255,
-      a: Math.round(selectionStroke.opacity * 100)
+      r: selectionStroke.color.r,
+      g: selectionStroke.color.g,
+      b: selectionStroke.color.b,
+      a: selectionStroke.opacity
     }
   }
 
