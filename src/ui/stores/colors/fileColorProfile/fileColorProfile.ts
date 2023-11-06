@@ -7,7 +7,6 @@ import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMess
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
 import { setColorHxyaWithSideEffects, $colorHxya } from '../colorHxya/colorHxya'
 import { $colorsRgba } from '../colorsRgba/colorsRgba'
-import { $currentColorModel } from '../currentColorModel/currentColorModel'
 
 export const $fileColorProfile = atom<FileColorProfile>('rgb')
 
@@ -36,12 +35,7 @@ export const setFileColorProfileWithSideEffects = action(
 
     if (syncColorHxya) {
       const newColorHxy = convertRgbToHxy({
-        colorRgb: {
-          r: currentColorRgba!.r,
-          g: currentColorRgba!.g,
-          b: currentColorRgba!.b
-        },
-        targetColorModel: $currentColorModel.get(),
+        colorRgb: currentColorRgba!,
         colorSpace: newFileColorProfile
       })
 

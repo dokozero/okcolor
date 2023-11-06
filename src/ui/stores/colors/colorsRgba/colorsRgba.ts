@@ -9,7 +9,6 @@ import { $lockContrast } from '../../contrasts/lockContrast/lockContrast'
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
 import { setColorHxyaWithSideEffects } from '../colorHxya/colorHxya'
 import { $currentColorModel } from '../currentColorModel/currentColorModel'
-import { $fileColorProfile } from '../fileColorProfile/fileColorProfile'
 
 export const $colorsRgba = deepMap<ColorsRgba>({
   parentFill: null,
@@ -54,13 +53,7 @@ export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWi
   const newColorRgba = newColorsRgba[`${$currentFillOrStroke.get()}`]
 
   const newColorHxy = convertRgbToHxy({
-    colorRgb: {
-      r: newColorRgba!.r,
-      g: newColorRgba!.g,
-      b: newColorRgba!.b
-    },
-    targetColorModel: $currentColorModel.get(),
-    colorSpace: $fileColorProfile.get(),
+    colorRgb: newColorRgba!,
     keepOklchDoubleDigit: keepOklchDoubleDigit
   })
 

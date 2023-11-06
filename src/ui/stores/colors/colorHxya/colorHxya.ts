@@ -14,7 +14,6 @@ import { $currentBgOrFg } from '../../contrasts/currentBgOrFg/currentBgOrFg'
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
 import { setColorsRgbaWithSideEffects, $colorsRgba } from '../colorsRgba/colorsRgba'
 import { $currentColorModel } from '../currentColorModel/currentColorModel'
-import { $fileColorProfile } from '../fileColorProfile/fileColorProfile'
 import { $lockRelativeChroma } from '../lockRelativeChroma/lockRelativeChroma'
 import { setRelativeChroma } from '../relativeChroma/relativeChroma'
 

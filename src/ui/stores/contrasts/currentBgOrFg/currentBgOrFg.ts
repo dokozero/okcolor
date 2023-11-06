@@ -6,8 +6,6 @@ import convertAbsoluteChromaToRelative from '../../../helpers/colors/convertAbso
 import convertRgbToHxy from '../../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
 import { setColorHxyaWithSideEffects, $colorHxya } from '../../colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../colors/colorsRgba/colorsRgba'
-import { $currentColorModel } from '../../colors/currentColorModel/currentColorModel'
-import { $fileColorProfile } from '../../colors/fileColorProfile/fileColorProfile'
 import { $lockRelativeChroma } from '../../colors/lockRelativeChroma/lockRelativeChroma'
 import { setRelativeChroma } from '../../colors/relativeChroma/relativeChroma'
 
@@ -42,15 +40,7 @@ export const setCurrentBgOrFgWithSideEffects = action($currentBgOrFg, 'setCurren
       opacity = $colorsRgba.get().fill!.a
     }
 
-    const newColorHxy = convertRgbToHxy({
-      colorRgb: {
-        r: newColorRgba.r,
-        g: newColorRgba.g,
-        b: newColorRgba.b
-      },
-      targetColorModel: $currentColorModel.get(),
-      colorSpace: $fileColorProfile.get()
-    })
+    const newColorHxy = convertRgbToHxy({ colorRgb: newColorRgba })
 
     setColorHxyaWithSideEffects({
       newColorHxya: { ...newColorHxy, a: opacity },

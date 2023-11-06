@@ -173,7 +173,6 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         g: parseFloat(matches![1]),
         b: parseFloat(matches![2])
       },
-      targetColorModel: $currentColorModel.get(),
       colorSpace: ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? 'p3' : 'rgb'
     })
   } else if (eventTargetId === 'rgba') {
@@ -186,7 +185,6 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
         g: parseFloat(matches![1]) / 255,
         b: parseFloat(matches![2]) / 255
       },
-      targetColorModel: $currentColorModel.get(),
       colorSpace: 'rgb'
     })
   } else if (eventTargetId === 'hex') {
@@ -194,12 +192,7 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
     if (newColorRgb === undefined) return undefined
 
     newColorHxy = convertRgbToHxy({
-      colorRgb: {
-        r: newColorRgb.r,
-        g: newColorRgb.g,
-        b: newColorRgb.b
-      },
-      targetColorModel: $currentColorModel.get(),
+      colorRgb: newColorRgb,
       colorSpace: 'rgb'
     })
     if (newColorRgb.alpha && $currentBgOrFg.get() === 'fg') newColorA = newColorRgb.alpha

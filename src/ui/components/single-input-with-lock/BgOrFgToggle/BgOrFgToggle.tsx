@@ -7,7 +7,6 @@ import getContrastFromBgandFgRgba from '../../../helpers/contrasts/getContrastFr
 import { $colorHxya } from '../../../stores/colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../../stores/colors/colorsRgba/colorsRgba'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
-import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
 import { $currentBgOrFg, setCurrentBgOrFgWithSideEffects } from '../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke/currentFillOrStroke'
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'

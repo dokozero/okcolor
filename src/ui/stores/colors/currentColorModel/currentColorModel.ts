@@ -11,7 +11,7 @@ import { $lockContrast, setLockContrastWithSideEffects } from '../../contrasts/l
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
 import { setColorHxya, $colorHxya } from '../colorHxya/colorHxya'
 import { $colorsRgba } from '../colorsRgba/colorsRgba'
-import { $fileColorProfile, setFileColorProfileWithSideEffects } from '../fileColorProfile/fileColorProfile'
+import { setFileColorProfileWithSideEffects } from '../fileColorProfile/fileColorProfile'
 import { $lockRelativeChroma, setLockRelativeChromaWithSideEffects } from '../lockRelativeChroma/lockRelativeChroma'
 
 export const $currentColorModel = atom<CurrentColorModel>('oklchCss')
@@ -72,13 +72,8 @@ export const setCurrentColorModelWithSideEffects = action(
       const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
 
       const newColorHxy = convertRgbToHxy({
-        colorRgb: {
-          r: currentColorRgba!.r,
-          g: currentColorRgba!.g,
-          b: currentColorRgba!.b
-        },
-        targetColorModel: newCurrentColorModel,
-        colorSpace: $fileColorProfile.get()
+        colorRgb: currentColorRgba!,
+        targetColorModel: newCurrentColorModel
       })
 
       setColorHxya({ ...newColorHxy, a: $colorHxya.get().a })

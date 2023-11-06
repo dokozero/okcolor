@@ -1,7 +1,5 @@
 import { Hue, AbsoluteChroma, ApcaContrast, WcagContrast, Lightness, ColorRgb } from '../../../../types'
 import { $colorsRgba } from '../../../stores/colors/colorsRgba/colorsRgba'
-import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
-import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
 import { $lockRelativeChroma } from '../../../stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $currentBgOrFg } from '../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import convertHxyToRgb from '../../colors/convertHxyToRgb/convertHxyToRgb'

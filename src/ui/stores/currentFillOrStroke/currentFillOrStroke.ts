@@ -6,8 +6,6 @@ import convertRgbToHxy from '../../helpers/colors/convertRgbToHxy/convertRgbToHx
 import sendMessageToBackend from '../../helpers/sendMessageToBackend/sendMessageToBackend'
 import { setColorHxya } from '../colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../colors/colorsRgba/colorsRgba'
-import { $currentColorModel } from '../colors/currentColorModel/currentColorModel'
-import { $fileColorProfile } from '../colors/fileColorProfile/fileColorProfile'
 import { $lockContrast, setLockContrast } from '../contrasts/lockContrast/lockContrast'
 
 export const $currentFillOrStroke = atom<CurrentFillOrStroke>('fill')
@@ -44,15 +42,7 @@ export const setCurrentFillOrStrokeWithSideEffects = action(
     if (!newColorRgba) return
 
     if (syncColorHxya) {
-      const newColorHxy = convertRgbToHxy({
-        colorRgb: {
-          r: newColorRgba.r,
-          g: newColorRgba.g,
-          b: newColorRgba.b
-        },
-        targetColorModel: $currentColorModel.get(),
-        colorSpace: $fileColorProfile.get()
-      })
+      const newColorHxy = convertRgbToHxy({ colorRgb: newColorRgba })
 
       setColorHxya({ ...newColorHxy, a: newColorRgba.a })
     }
