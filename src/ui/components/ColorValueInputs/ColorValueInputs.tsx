@@ -197,13 +197,13 @@ export default function ColorValueInputs() {
   }, [colorHxya.h])
 
   useEffect(() => {
-    if ($currentColorModel.get() === 'oklch') {
+    if (currentColorModel === 'oklch') {
       const newX = roundWithDecimal(colorHxya.x * 100, 1)
       inputX.current!.value = newX.toString()
     } else {
       inputX.current!.value = colorHxya.x.toString()
     }
-  }, [colorHxya.x])
+  }, [colorHxya.x, currentColorModel])
 
   useEffect(() => {
     inputY.current!.value = colorHxya.y.toString()
