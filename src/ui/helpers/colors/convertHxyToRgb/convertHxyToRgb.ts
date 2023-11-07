@@ -1,9 +1,9 @@
 import { ColorHxy, ColorModelList, FileColorProfile, ColorRgb } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
-import clampNumber from '../../numbers/clampNumber/clampNumber'
 import { converter } from '../culori.mjs'
 import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
+import clamp from 'lodash/clamp'
 
 const convertToRgb = converter('rgb')
 const convertToP3 = converter('p3')
@@ -50,9 +50,9 @@ export default function convertHxyToRgb(props: Props): ColorRgb {
     }
   } else {
     newColorRgb = {
-      r: clampNumber(culoriResult.r, 0, 1),
-      g: clampNumber(culoriResult.g, 0, 1),
-      b: clampNumber(culoriResult.b, 0, 1)
+      r: clamp(culoriResult.r, 0, 1),
+      g: clamp(culoriResult.g, 0, 1),
+      b: clamp(culoriResult.b, 0, 1)
     }
   }
 

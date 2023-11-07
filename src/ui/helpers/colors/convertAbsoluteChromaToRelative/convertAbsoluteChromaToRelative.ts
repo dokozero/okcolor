@@ -1,8 +1,8 @@
 import { MAX_CHROMA_P3 } from '../../../../constants'
 import { ColorHxy, RelativeChroma, AbsoluteChroma, FileColorProfile } from '../../../../types'
 import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
-import clampNumber from '../../numbers/clampNumber/clampNumber'
 import { clampChromaInGamut } from '../culori.mjs'
+import clamp from 'lodash/clamp'
 
 type Props = {
   colorHxy: ColorHxy
@@ -21,6 +21,6 @@ export default function convertAbsoluteChromaToRelative(props: Props): RelativeC
     fileColorProfile
   ).c
 
-  // Some times we can get 101%, like with #FFFF00, so we use clampNumber().
-  return clampNumber(Math.round((colorHxy.x * 100) / currentMaxChroma), 0, 100)
+  // Sometimes we can get 101%, like with #FFFF00, so we use clamp().
+  return clamp(Math.round((colorHxy.x * 100) / currentMaxChroma), 0, 100)
 }

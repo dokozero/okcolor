@@ -12,8 +12,8 @@ import { $lockContrast } from '../../stores/contrasts/lockContrast/lockContrast'
 import { $currentKeysPressed } from '../../stores/currentKeysPressed/currentKeysPressed'
 import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument/isMouseInsideDocument'
 import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
-import clampNumber from '../../helpers/numbers/clampNumber/clampNumber'
 import getHxyaInputRange from '../../helpers/colors/getHxyaInputRange/getHxyaInputRange'
+import clamp from 'lodash/clamp'
 
 let lastKeyPressed: string = ''
 const keepInputSelected = {
@@ -104,7 +104,7 @@ export default function ColorValueInputs() {
     const oldValue = getColorHxyaValueFormatedForInput(eventId)
     const newValue = roundWithDecimal(parseFloat(eventTarget.value), getColorHxyDecimals({ forInputs: true })[`${eventId}`])
 
-    const clampedNewValue = clampNumber(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
+    const clampedNewValue = clamp(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
 
     if (
       clampedNewValue === oldValue ||
@@ -145,7 +145,7 @@ export default function ColorValueInputs() {
         // We need to round the value because sometimes we can get results like 55.8999999.
         newValue = roundWithDecimal(newValue, getColorHxyDecimals({ forInputs: true })[`${eventId}`])
 
-        const clampedNewValue = clampNumber(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
+        const clampedNewValue = clamp(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
         formatAndSendNewValueToStore(eventId, clampedNewValue)
       }
     }

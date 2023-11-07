@@ -5,9 +5,9 @@ import { $currentBgOrFg } from '../../../stores/contrasts/currentBgOrFg/currentB
 import convertHxyToRgb from '../../colors/convertHxyToRgb/convertHxyToRgb'
 import convertRelativeChromaToAbsolute from '../../colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import getClampedChroma from '../../colors/getClampedChroma/getClampedChroma'
-import clampNumber from '../../numbers/clampNumber/clampNumber'
 import roundWithDecimal from '../../numbers/roundWithDecimal/roundWithDecimal'
 import getContrastFromBgandFgRgba from '../getContrastFromBgandFgRgba/getContrastFromBgandFgRgba'
+import clamp from 'lodash/clamp'
 
 type Props = {
   h: Hue
@@ -73,7 +73,7 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     }
     yBetweenMinYAndMaxY = roundWithDecimal(yBetweenMinYAndMaxY, 1)
     if (yBetweenMinYAndMaxY < 0 || yBetweenMinYAndMaxY > 100) {
-      yBetweenMinYAndMaxY = clampNumber(yBetweenMinYAndMaxY, 0, 100)
+      yBetweenMinYAndMaxY = clamp(yBetweenMinYAndMaxY, 0, 100)
       break
     }
 
@@ -132,13 +132,13 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     if (!minYFound) {
       minY = roundWithDecimal((minY -= 0.1), 1)
       if (minY < 0 || minY > 100) {
-        minY = clampNumber(minY, 0, 100)
+        minY = clamp(minY, 0, 100)
         minYFound = true
       }
     } else {
       maxY = roundWithDecimal((maxY += 0.1), 1)
       if (maxY < 0 || maxY > 100) {
-        maxY = clampNumber(maxY, 0, 100)
+        maxY = clamp(maxY, 0, 100)
         maxYFound = true
       }
     }

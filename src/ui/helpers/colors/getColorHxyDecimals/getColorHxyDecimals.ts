@@ -18,7 +18,7 @@ export default function getColorHxyDecimals(props: Props = {}): ColorHxyDecimals
 
     case 'oklch':
     case 'oklchCss':
-      if (!forInputs) return { h: 1, x: lockRelativeChroma ? 6 : 3, y: 1 }
-      else return { h: 1, x: 1, y: 1 }
+      if (forInputs && currentColorModel === 'oklch') return { h: 1, x: 1, y: 1 }
+      else return { h: 1, x: lockRelativeChroma ? 6 : 3, y: 1 }
   }
 }

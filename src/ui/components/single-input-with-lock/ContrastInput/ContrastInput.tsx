@@ -22,7 +22,7 @@ import ClosedLockIcon from '../ClosedLockIcon/ClosedLockIcon'
 import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
 import { consoleLogInfos } from '../../../../constants'
 import getContrastRange from '../../../helpers/contrasts/getContrastRange/getContrastRange'
-import clampNumber from '../../../helpers/numbers/clampNumber/clampNumber'
+import clamp from 'lodash/clamp'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
@@ -95,7 +95,7 @@ export default function ContrastInput() {
     const newValue: ApcaContrast | WcagContrast =
       $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
 
-    const clampedNewContrast = clampNumber(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
+    const clampedNewContrast = clamp(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
 
     if (
       clampedNewContrast === $contrast.get() ||
@@ -127,7 +127,7 @@ export default function ContrastInput() {
       keepInputSelected = true
 
       const newValue = getNewContrastValueFromArrowKey(eventKey as 'ArrowDown' | 'ArrowUp', currentValue)
-      const clampedNewContrast = clampNumber(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
+      const clampedNewContrast = clamp(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
       setContrastWithSideEffects({ newContrast: clampedNewContrast })
     }
   }

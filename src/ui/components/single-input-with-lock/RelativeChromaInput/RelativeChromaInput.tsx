@@ -10,7 +10,7 @@ import { $isMouseInsideDocument } from '../../../stores/isMouseInsideDocument/is
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
 import ClosedLockIcon from '../ClosedLockIcon/ClosedLockIcon'
 import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
-import clampNumber from '../../../helpers/numbers/clampNumber/clampNumber'
+import clamp from 'lodash/clamp'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
@@ -36,7 +36,7 @@ export default function RelativeChromaInput() {
     const eventTarget = event.target
     const newValue = parseInt(eventTarget.value)
 
-    const clampedNewRelativeChroma = clampNumber(newValue, 0, 100)
+    const clampedNewRelativeChroma = clamp(newValue, 0, 100)
 
     if (
       clampedNewRelativeChroma === $relativeChroma.get() ||
@@ -71,7 +71,7 @@ export default function RelativeChromaInput() {
       if (eventKey === 'ArrowUp') newValue += stepUpdateValue
       else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
 
-      const clampedNewRelativeChroma = clampNumber(newValue, 0, 100)
+      const clampedNewRelativeChroma = clamp(newValue, 0, 100)
       setRelativeChromaWithSideEffects({ newRelativeChroma: clampedNewRelativeChroma })
     }
   }
