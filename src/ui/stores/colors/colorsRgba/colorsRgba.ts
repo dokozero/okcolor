@@ -1,14 +1,18 @@
 import { deepMap, action } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../../constants'
-import { ColorsRgba, ApcaContrast, WcagContrast } from '../../../../types'
+import { ColorsRgba, ApcaContrast, WcagContrast, UpdateShapeColorData } from '../../../../types'
 import convertRgbToHxy from '../../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
 import getContrastFromBgandFgRgba from '../../../helpers/contrasts/getContrastFromBgandFgRgba/getContrastFromBgandFgRgba'
 import { setContrast } from '../../contrasts/contrast/contrast'
 import { $lockContrast } from '../../contrasts/lockContrast/lockContrast'
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
-import { setColorHxyaWithSideEffects } from '../colorHxya/colorHxya'
+import { $colorHxya, setColorHxyaWithSideEffects } from '../colorHxya/colorHxya'
 import { $currentColorModel } from '../currentColorModel/currentColorModel'
+import { $lockRelativeChroma } from '../lockRelativeChroma/lockRelativeChroma'
+import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMessageToBackend'
+import { $currentBgOrFg } from '../../contrasts/currentBgOrFg/currentBgOrFg'
+import merge from 'lodash/merge'
 
 export const $colorsRgba = deepMap<ColorsRgba>({
   parentFill: null,
@@ -25,56 +29,76 @@ export const setColorsRgba = action($colorsRgba, 'setColorsRgba', (colorsRgba, n
   colorsRgba.set(newColorsRgba)
 })
 
-// TODO - add parent object "syncColorHxyaOptions" for bypassLockContrastFilter. Same with others store actions.
-type Props = {
-  newColorsRgba: ColorsRgba
-  syncColorHxya?: boolean
-  syncContrast?: boolean
-  keepOklchDoubleDigit?: boolean
-  bypassLockContrastFilter?: boolean
-  bypassLockRelativeChromaFilter?: boolean
+type SideEffects = {
+  syncColorRgbWithBackend: boolean
+  colorHxya: Partial<{
+    syncColorHxya: boolean
+    syncRelativeChroma: boolean
+    lockRelativeChroma: boolean
+  }>
+  syncContrast: boolean
+  lockContrast: boolean
 }
 
-/**
- * Side effects (true by default): syncColorHxya, syncContrast.
- */
+type Props = {
+  newColorsRgba: ColorsRgba
+  keepOklchDoubleDigit?: boolean
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncColorRgbWithBackend: true,
+  colorHxya: {
+    syncColorHxya: true,
+    syncRelativeChroma: true,
+    lockRelativeChroma: $lockRelativeChroma.get()
+  },
+  syncContrast: true,
+  lockContrast: $lockContrast.get()
+}
+
 export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWithSideEffects', (colorsRgba, props: Props) => {
-  const {
-    newColorsRgba,
-    syncColorHxya = true,
-    syncContrast = true,
-    keepOklchDoubleDigit = false,
-    bypassLockContrastFilter = false,
-    bypassLockRelativeChromaFilter = false
-  } = props
+  const { newColorsRgba, keepOklchDoubleDigit = false, sideEffects: partialSideEffects } = props
+
+  const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+  merge(sideEffects, partialSideEffects)
 
   colorsRgba.set(newColorsRgba)
 
-  const newColorRgba = newColorsRgba[`${$currentFillOrStroke.get()}`]
-
-  const newColorHxy = convertRgbToHxy({
-    colorRgb: newColorRgba!,
-    keepOklchDoubleDigit: keepOklchDoubleDigit
-  })
-
-  if (syncColorHxya) {
-    setColorHxyaWithSideEffects({
-      newColorHxya: {
-        h: newColorHxy.h,
-        x: newColorHxy.x,
-        y: newColorHxy.y,
-        a: newColorRgba!.a
-      },
-      syncColorsRgba: false,
-      syncColorRgbWithBackend: false,
-      bypassLockContrastFilter: bypassLockContrastFilter,
-      bypassLockRelativeChromaFilter: bypassLockRelativeChromaFilter
+  if (sideEffects.syncColorRgbWithBackend) {
+    sendMessageToBackend<UpdateShapeColorData>({
+      type: 'updateShapeColor',
+      data: {
+        newColorRgba: $currentBgOrFg.get() === 'bg' ? { ...newColorsRgba.parentFill!, a: $colorHxya.get().a } : newColorsRgba.fill!,
+        currentBgOrFg: $currentBgOrFg.get()
+      }
     })
   }
 
-  if (syncContrast) {
+  const newColorRgbaCurrentFillOrStroke = newColorsRgba[`${$currentFillOrStroke.get()}`]
+
+  if (sideEffects.colorHxya.syncColorHxya) {
+    const newColorHxy = convertRgbToHxy({
+      colorRgb: newColorRgbaCurrentFillOrStroke!,
+      keepOklchDoubleDigit: keepOklchDoubleDigit
+    })
+
+    setColorHxyaWithSideEffects({
+      newColorHxya: { ...newColorHxy, a: newColorRgbaCurrentFillOrStroke!.a },
+      sideEffects: {
+        colorsRgba: {
+          syncColorsRgba: false
+        },
+        syncRelativeChroma: sideEffects.colorHxya.syncRelativeChroma,
+        lockRelativeChroma: sideEffects.colorHxya.lockRelativeChroma,
+        lockContrast: sideEffects.lockContrast
+      }
+    })
+  }
+
+  if (sideEffects.syncContrast) {
     if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
-    if (!newColorsRgba.parentFill || !newColorsRgba.fill || $lockContrast.get()) return
+    if (sideEffects.lockContrast || !newColorsRgba.parentFill || !newColorsRgba.fill) return
 
     const newContrast: ApcaContrast | WcagContrast = getContrastFromBgandFgRgba(newColorsRgba.fill!, newColorsRgba.parentFill!)
     setContrast(newContrast)

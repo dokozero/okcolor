@@ -19,8 +19,12 @@ export default function setValuesForUiMessage() {
         fill: { r: 1, g: 1, b: 1, a: 1 },
         stroke: { r: 1, g: 1, b: 1, a: 1 }
       },
-      syncColorHxya: false,
-      syncContrast: false
+      sideEffects: {
+        colorHxya: {
+          syncColorHxya: false
+        },
+        syncContrast: false
+      }
     })
   } else if (document.documentElement.classList.contains('figma-dark')) {
     setColorsRgbaWithSideEffects({
@@ -29,17 +33,26 @@ export default function setValuesForUiMessage() {
         fill: { r: 0.173, g: 0.173, b: 0.173, a: 1 },
         stroke: { r: 0.173, g: 0.173, b: 0.173, a: 1 }
       },
-      syncColorHxya: false,
-      syncContrast: false
+      sideEffects: {
+        colorHxya: {
+          syncColorHxya: false
+        },
+        syncContrast: false
+      }
     })
   }
+
   setCurrentFillOrStroke('fill')
+
   if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
 
   // We send this color to get '0' on all values of the UI.
   setColorHxyaWithSideEffects({
     newColorHxya: { h: 0, x: 0, y: 0, a: 0 },
-    syncColorsRgba: false,
-    syncColorRgbWithBackend: false
+    sideEffects: {
+      colorsRgba: {
+        syncColorsRgba: false
+      }
+    }
   })
 }

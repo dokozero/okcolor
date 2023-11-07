@@ -33,7 +33,15 @@ export const setContrastWithSideEffects = action($contrast, 'setContrastWithSide
       x: $colorHxya.get().x,
       targetContrast: filteredNewContrast
     })
-    setColorHxyaWithSideEffects({ newColorHxya: newXy, bypassLockContrastFilter: true, syncContrast: false })
+    setColorHxyaWithSideEffects({
+      newColorHxya: newXy,
+      sideEffects: {
+        lockContrast: false,
+        colorsRgba: {
+          syncContrast: false
+        }
+      }
+    })
   }
 
   // In case we get a value that is bigger than what is possible, for example if user wants a contrast of 40 but with the current bg abd fg color the maximum is 30, we need to do this test, otherwize the value 40 will be kept in the contrast input.

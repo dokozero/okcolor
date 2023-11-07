@@ -87,8 +87,10 @@ export default function ColorCodeInputs() {
     if (newColorHxya) {
       setColorHxyaWithSideEffects({
         newColorHxya: newColorHxya,
-        bypassLockRelativeChromaFilter: true,
-        bypassLockContrastFilter: true
+        sideEffects: {
+          lockRelativeChroma: false,
+          lockContrast: false
+        }
       })
     } else eventTarget.value = colorCodesInputValues[eventTargetId]
   }

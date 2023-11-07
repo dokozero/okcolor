@@ -31,7 +31,13 @@ export const setRelativeChromaWithSideEffects = action($relativeChroma, 'setRela
       relativeChroma: newRelativeChroma
     })
 
-    setColorHxyaWithSideEffects({ newColorHxya: { x: newColorX }, bypassLockRelativeChromaFilter: true, syncRelativeChroma: false })
+    setColorHxyaWithSideEffects({
+      newColorHxya: { x: newColorX },
+      sideEffects: {
+        lockRelativeChroma: false,
+        syncRelativeChroma: false
+      }
+    })
   }
 })
 

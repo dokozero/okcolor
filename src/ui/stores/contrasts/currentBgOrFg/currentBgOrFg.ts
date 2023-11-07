@@ -2,12 +2,9 @@ import { action, atom } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../../constants'
 import { CurrentBgOrFg, ColorRgb, ColorRgba, Opacity } from '../../../../types'
-import convertAbsoluteChromaToRelative from '../../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
 import convertRgbToHxy from '../../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
-import { setColorHxyaWithSideEffects, $colorHxya } from '../../colors/colorHxya/colorHxya'
+import { setColorHxyaWithSideEffects } from '../../colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../colors/colorsRgba/colorsRgba'
-import { $lockRelativeChroma } from '../../colors/lockRelativeChroma/lockRelativeChroma'
-import { setRelativeChroma } from '../../colors/relativeChroma/relativeChroma'
 
 export const $currentBgOrFg = atom<CurrentBgOrFg>('fg')
 
@@ -18,14 +15,13 @@ export const setCurrentBgOrFg = action($currentBgOrFg, 'setCurrentBgOrFg', (curr
 type Props = {
   newCurrentBgOrFg: CurrentBgOrFg
   syncColorHxya?: boolean
-  syncRelativeChroma?: boolean
 }
 
 /**
  * Side effects (default to true): syncColorHxya, syncRelativeChroma.
  */
 export const setCurrentBgOrFgWithSideEffects = action($currentBgOrFg, 'setCurrentBgOrFgWithSideEffects', (currentBgOrFg, props: Props) => {
-  const { newCurrentBgOrFg, syncColorHxya = true, syncRelativeChroma = true } = props
+  const { newCurrentBgOrFg, syncColorHxya = true } = props
 
   currentBgOrFg.set(newCurrentBgOrFg)
 
@@ -44,26 +40,14 @@ export const setCurrentBgOrFgWithSideEffects = action($currentBgOrFg, 'setCurren
 
     setColorHxyaWithSideEffects({
       newColorHxya: { ...newColorHxy, a: opacity },
-      syncColorsRgba: false,
-      syncColorRgbWithBackend: false,
-      bypassLockRelativeChromaFilter: true,
-      bypassLockContrastFilter: true
+      sideEffects: {
+        lockRelativeChroma: false,
+        lockContrast: false,
+        colorsRgba: {
+          syncColorsRgba: false
+        }
+      }
     })
-  }
-
-  if (syncRelativeChroma) {
-    // If the relative chroma is locked, we need to update it as the Bg can have a different one.
-    if ($lockRelativeChroma.get()) {
-      setRelativeChroma(
-        convertAbsoluteChromaToRelative({
-          colorHxy: {
-            h: $colorHxya.get().h,
-            x: $colorHxya.get().x,
-            y: $colorHxya.get().y
-          }
-        })
-      )
-    }
   }
 })
 

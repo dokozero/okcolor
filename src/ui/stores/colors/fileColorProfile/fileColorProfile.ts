@@ -41,8 +41,11 @@ export const setFileColorProfileWithSideEffects = action(
 
       setColorHxyaWithSideEffects({
         newColorHxya: { ...newColorHxy, a: $colorHxya.get().a },
-        syncColorsRgba: false,
-        syncColorRgbWithBackend: false
+        sideEffects: {
+          colorsRgba: {
+            syncColorsRgba: false
+          }
+        }
       })
     }
 

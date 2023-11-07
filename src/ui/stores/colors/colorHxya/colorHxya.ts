@@ -5,17 +5,18 @@
 import { map, action } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../../constants'
-import { ColorHxya, UpdateShapeColorData } from '../../../../types'
+import { ColorHxya } from '../../../../types'
 import convertAbsoluteChromaToRelative from '../../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
 import convertHxyToRgb from '../../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
 import filterNewColorHxya from '../../../helpers/colors/filterNewColorHxya/filterNewColorHxya'
-import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMessageToBackend'
 import { $currentBgOrFg } from '../../contrasts/currentBgOrFg/currentBgOrFg'
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
 import { setColorsRgbaWithSideEffects, $colorsRgba } from '../colorsRgba/colorsRgba'
 import { $currentColorModel } from '../currentColorModel/currentColorModel'
 import { $lockRelativeChroma } from '../lockRelativeChroma/lockRelativeChroma'
 import { setRelativeChroma } from '../relativeChroma/relativeChroma'
+import { $lockContrast } from '../../contrasts/lockContrast/lockContrast'
+import merge from 'lodash/merge'
 
 // This map contain the current color being used in the UI, it can be the fill or the stroke of the foreground but also the background (colorsRgba.parentFill) of the current selected object.
 export const $colorHxya = map<ColorHxya>({
@@ -26,7 +27,11 @@ export const $colorHxya = map<ColorHxya>({
 })
 
 export const setColorHxya = action($colorHxya, 'setColorHxya', (colorHxya, newColorHxya: Partial<ColorHxya>) => {
-  const { h, x, y, a } = filterNewColorHxya(newColorHxya, false, false)
+  const { h, x, y, a } = filterNewColorHxya({
+    newColorHxya: newColorHxya,
+    lockRelativeChroma: false,
+    lockContrast: false
+  })
 
   colorHxya.set({
     h: h !== undefined ? h : colorHxya.get().h,
@@ -36,79 +41,72 @@ export const setColorHxya = action($colorHxya, 'setColorHxya', (colorHxya, newCo
   })
 })
 
-type Props = {
-  newColorHxya: Partial<ColorHxya>
-  syncColorsRgba?: boolean
-  syncColorRgbWithBackend?: boolean
-  syncRelativeChroma?: boolean
-  syncContrast?: boolean
-  bypassLockRelativeChromaFilter?: boolean
-  bypassLockContrastFilter?: boolean
+export type SideEffects = {
+  lockRelativeChroma: boolean
+  lockContrast: boolean
+  colorsRgba: Partial<{
+    syncColorsRgba: boolean
+    syncContrast: boolean
+  }>
+  syncRelativeChroma: boolean
 }
 
-/**
- * Side effects (true by default): syncColorsRgba, syncColorRgbWithBackend, syncRelativeChroma, syncContrast.
- * @param bypassLockRelativeChromaFilter False by default, this value says: "update the chroma even if lockRelativeChroma is true". This is useful for example if the user update the relative chroma value from the input while lockRelativeChroma is true, without this bypass value, it wouldn't be possible as relativeChroma and contrast value are updated after colorHxya is updated, so in filterNewColorHxya(), we would still get the old values.
- * @param bypassLockContrastFilter False by default, same reason than bypassLockRelativeChromaFilter, this value says: "update the contrast even if lockChroma is true".
- */
+type Props = {
+  newColorHxya: Partial<ColorHxya>
+  sideEffects?: Partial<SideEffects>
+}
+
+export const defaultSideEffects: SideEffects = {
+  lockRelativeChroma: $lockRelativeChroma.get(),
+  lockContrast: $lockContrast.get(),
+  colorsRgba: {
+    syncColorsRgba: true,
+    syncContrast: true
+  },
+  syncRelativeChroma: true
+}
+
 export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithSideEffects', (colorHxya, props: Props) => {
-  const {
-    newColorHxya,
-    syncColorsRgba = true,
-    syncColorRgbWithBackend = true,
-    syncRelativeChroma = true,
-    syncContrast = true,
-    bypassLockRelativeChromaFilter = false,
-    bypassLockContrastFilter = false
-  } = props
+  const { newColorHxya, sideEffects: partialSideEffects } = props
 
-  const { h, x, y, a } = filterNewColorHxya(newColorHxya, bypassLockRelativeChromaFilter, bypassLockContrastFilter)
+  const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+  merge(sideEffects, partialSideEffects)
 
-  colorHxya.set({
-    h: h !== undefined ? h : colorHxya.get().h,
-    x: x !== undefined ? x : colorHxya.get().x,
-    y: y !== undefined ? y : colorHxya.get().y,
-    a: a !== undefined ? a : colorHxya.get().a
+  const filteredNewColorHxya = filterNewColorHxya({
+    newColorHxya: newColorHxya,
+    lockRelativeChroma: sideEffects.lockRelativeChroma,
+    lockContrast: sideEffects.lockContrast
   })
 
-  const newColorRgb = convertHxyToRgb({
-    colorHxy: colorHxya.get()
-  })
+  colorHxya.set(filteredNewColorHxya)
 
-  if (syncColorsRgba) {
+  const newColorRgb = convertHxyToRgb({ colorHxy: filteredNewColorHxya })
+
+  if (sideEffects.colorsRgba.syncColorsRgba) {
     const key = $currentBgOrFg.get() === 'bg' ? 'parentFill' : `${$currentFillOrStroke.get()}`
 
     setColorsRgbaWithSideEffects({
       newColorsRgba: { ...$colorsRgba.get(), [key]: { ...newColorRgb, a: colorHxya.get().a } },
-      syncColorHxya: false,
-      syncContrast: syncContrast
-    })
-  }
-
-  if (syncColorRgbWithBackend) {
-    sendMessageToBackend<UpdateShapeColorData>({
-      type: 'updateShapeColor',
-      data: {
-        newColorRgba: { ...newColorRgb, a: colorHxya.get().a },
-        currentBgOrFg: $currentBgOrFg.get()
+      sideEffects: {
+        colorHxya: {
+          syncColorHxya: false
+        },
+        syncContrast: sideEffects.colorsRgba.syncContrast,
+        lockContrast: sideEffects.lockContrast
       }
     })
   }
 
-  if (syncRelativeChroma) {
+  if (sideEffects.syncRelativeChroma) {
     if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
 
     // We don't want to get a new relative chroma value if the lock is on, but we also check if relativeChroma value is not undefined, if that the case we first need to set it.
     // And if lightness is 0 or 100, there is no need to continue either.
-    if ($lockRelativeChroma.get() || newColorHxya.y === 0 || newColorHxya.y === 100) return
+    if (sideEffects.lockRelativeChroma || newColorHxya.y === 0 || newColorHxya.y === 100) return
 
     setRelativeChroma(
       convertAbsoluteChromaToRelative({
-        colorHxy: {
-          h: colorHxya.get().h,
-          x: colorHxya.get().x,
-          y: colorHxya.get().y
-        }
+        colorHxy: colorHxya.get()
       })
     )
   }
