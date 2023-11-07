@@ -34,31 +34,35 @@ type SideEffects = {
   colorHxya: Partial<{
     syncColorHxya: boolean
     syncRelativeChroma: boolean
-    lockRelativeChroma: boolean
   }>
   syncContrast: boolean
-  lockContrast: boolean
 }
 
 type Props = {
   newColorsRgba: ColorsRgba
   keepOklchDoubleDigit?: boolean
   sideEffects?: Partial<SideEffects>
+  lockRelativeChroma?: boolean
+  lockContrast?: boolean
 }
 
 const defaultSideEffects: SideEffects = {
   syncColorRgbWithBackend: true,
   colorHxya: {
     syncColorHxya: true,
-    syncRelativeChroma: true,
-    lockRelativeChroma: $lockRelativeChroma.get()
+    syncRelativeChroma: true
   },
-  syncContrast: true,
-  lockContrast: $lockContrast.get()
+  syncContrast: true
 }
 
 export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWithSideEffects', (colorsRgba, props: Props) => {
-  const { newColorsRgba, keepOklchDoubleDigit = false, sideEffects: partialSideEffects } = props
+  const {
+    newColorsRgba,
+    keepOklchDoubleDigit = false,
+    sideEffects: partialSideEffects,
+    lockRelativeChroma = $lockRelativeChroma.get(),
+    lockContrast = $lockContrast.get()
+  } = props
 
   const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
   merge(sideEffects, partialSideEffects)
@@ -89,16 +93,16 @@ export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWi
         colorsRgba: {
           syncColorsRgba: false
         },
-        syncRelativeChroma: sideEffects.colorHxya.syncRelativeChroma,
-        lockRelativeChroma: sideEffects.colorHxya.lockRelativeChroma,
-        lockContrast: sideEffects.lockContrast
-      }
+        syncRelativeChroma: sideEffects.colorHxya.syncRelativeChroma
+      },
+      lockRelativeChroma: lockRelativeChroma,
+      lockContrast: lockContrast
     })
   }
 
   if (sideEffects.syncContrast) {
     if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
-    if (sideEffects.lockContrast || !newColorsRgba.parentFill || !newColorsRgba.fill) return
+    if (lockContrast || !newColorsRgba.parentFill || !newColorsRgba.fill) return
 
     const newContrast: ApcaContrast | WcagContrast = getContrastFromBgandFgRgba(newColorsRgba.fill!, newColorsRgba.parentFill!)
     setContrast(newContrast)

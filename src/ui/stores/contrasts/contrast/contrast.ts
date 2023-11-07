@@ -36,11 +36,11 @@ export const setContrastWithSideEffects = action($contrast, 'setContrastWithSide
     setColorHxyaWithSideEffects({
       newColorHxya: newXy,
       sideEffects: {
-        lockContrast: false,
         colorsRgba: {
           syncContrast: false
         }
-      }
+      },
+      lockContrast: false
     })
   }
 

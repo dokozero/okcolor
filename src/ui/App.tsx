@@ -93,12 +93,10 @@ function App() {
         newColorsRgba: data.colorsRgba,
         keepOklchDoubleDigit: true,
         sideEffects: {
-          syncColorRgbWithBackend: false,
-          colorHxya: {
-            lockRelativeChroma: false
-          },
-          lockContrast: false
-        }
+          syncColorRgbWithBackend: false
+        },
+        lockRelativeChroma: false,
+        lockContrast: false
       })
 
       // This says "when all the store values are filled, show the UI components if there were not mounted".

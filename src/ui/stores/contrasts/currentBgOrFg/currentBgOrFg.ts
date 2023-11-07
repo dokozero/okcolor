@@ -41,12 +41,12 @@ export const setCurrentBgOrFgWithSideEffects = action($currentBgOrFg, 'setCurren
     setColorHxyaWithSideEffects({
       newColorHxya: { ...newColorHxy, a: opacity },
       sideEffects: {
-        lockRelativeChroma: false,
-        lockContrast: false,
         colorsRgba: {
           syncColorsRgba: false
         }
-      }
+      },
+      lockRelativeChroma: false,
+      lockContrast: false
     })
   }
 })

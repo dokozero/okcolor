@@ -87,10 +87,8 @@ export default function ColorCodeInputs() {
     if (newColorHxya) {
       setColorHxyaWithSideEffects({
         newColorHxya: newColorHxya,
-        sideEffects: {
-          lockRelativeChroma: false,
-          lockContrast: false
-        }
+        lockRelativeChroma: false,
+        lockContrast: false
       })
     } else eventTarget.value = colorCodesInputValues[eventTargetId]
   }

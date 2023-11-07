@@ -42,8 +42,6 @@ export const setColorHxya = action($colorHxya, 'setColorHxya', (colorHxya, newCo
 })
 
 export type SideEffects = {
-  lockRelativeChroma: boolean
-  lockContrast: boolean
   colorsRgba: Partial<{
     syncColorsRgba: boolean
     syncContrast: boolean
@@ -54,11 +52,11 @@ export type SideEffects = {
 type Props = {
   newColorHxya: Partial<ColorHxya>
   sideEffects?: Partial<SideEffects>
+  lockRelativeChroma?: boolean
+  lockContrast?: boolean
 }
 
 export const defaultSideEffects: SideEffects = {
-  lockRelativeChroma: $lockRelativeChroma.get(),
-  lockContrast: $lockContrast.get(),
   colorsRgba: {
     syncColorsRgba: true,
     syncContrast: true
@@ -67,15 +65,15 @@ export const defaultSideEffects: SideEffects = {
 }
 
 export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithSideEffects', (colorHxya, props: Props) => {
-  const { newColorHxya, sideEffects: partialSideEffects } = props
+  const { newColorHxya, sideEffects: partialSideEffects, lockRelativeChroma = $lockRelativeChroma.get(), lockContrast = $lockContrast.get() } = props
 
   const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
   merge(sideEffects, partialSideEffects)
 
   const filteredNewColorHxya = filterNewColorHxya({
     newColorHxya: newColorHxya,
-    lockRelativeChroma: sideEffects.lockRelativeChroma,
-    lockContrast: sideEffects.lockContrast
+    lockRelativeChroma: lockRelativeChroma,
+    lockContrast: lockContrast
   })
 
   colorHxya.set(filteredNewColorHxya)
@@ -91,9 +89,9 @@ export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithS
         colorHxya: {
           syncColorHxya: false
         },
-        syncContrast: sideEffects.colorsRgba.syncContrast,
-        lockContrast: sideEffects.lockContrast
-      }
+        syncContrast: sideEffects.colorsRgba.syncContrast
+      },
+      lockContrast: lockContrast
     })
   }
 
@@ -102,7 +100,7 @@ export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithS
 
     // We don't want to get a new relative chroma value if the lock is on, but we also check if relativeChroma value is not undefined, if that the case we first need to set it.
     // And if lightness is 0 or 100, there is no need to continue either.
-    if (sideEffects.lockRelativeChroma || newColorHxya.y === 0 || newColorHxya.y === 100) return
+    if (lockRelativeChroma || newColorHxya.y === 0 || newColorHxya.y === 100) return
 
     setRelativeChroma(
       convertAbsoluteChromaToRelative({
