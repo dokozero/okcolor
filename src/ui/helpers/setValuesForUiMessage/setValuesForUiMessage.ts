@@ -20,6 +20,7 @@ export default function setValuesForUiMessage() {
         stroke: { r: 1, g: 1, b: 1, a: 1 }
       },
       sideEffects: {
+        syncColorRgbWithBackend: false,
         colorHxya: {
           syncColorHxya: false
         },
@@ -34,6 +35,7 @@ export default function setValuesForUiMessage() {
         stroke: { r: 0.173, g: 0.173, b: 0.173, a: 1 }
       },
       sideEffects: {
+        syncColorRgbWithBackend: false,
         colorHxya: {
           syncColorHxya: false
         },
