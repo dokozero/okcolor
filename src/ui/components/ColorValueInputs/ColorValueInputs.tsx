@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
-import { HxyaLabels, AbsoluteChroma, Saturation, Lightness, Opacity, Hue, ColorHxya } from '../../../types'
+import { HxyaLabels, AbsoluteChroma, Saturation, Lightness, Opacity, Hue } from '../../../types'
 import roundWithDecimal from '../../helpers/numbers/roundWithDecimal/roundWithDecimal'
 import selectInputContent from '../../helpers/selectInputContent/selectInputContent'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
@@ -12,6 +12,8 @@ import { $lockContrast } from '../../stores/contrasts/lockContrast/lockContrast'
 import { $currentKeysPressed } from '../../stores/currentKeysPressed/currentKeysPressed'
 import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument/isMouseInsideDocument'
 import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
+import clampNumber from '../../helpers/numbers/clampNumber/clampNumber'
+import getHxyaInputRange from '../../helpers/colors/getHxyaInputRange/getHxyaInputRange'
 
 let lastKeyPressed: string = ''
 const keepInputSelected = {
@@ -19,15 +21,16 @@ const keepInputSelected = {
   inputId: ''
 }
 
-const setOldValueInEventTargetValue = (eventTarget: HTMLInputElement, oldValue: Hue | AbsoluteChroma | Saturation | Lightness | Opacity) => {
-  const eventId = eventTarget.id as HxyaLabels
-
-  if (eventId === 'x' && $currentColorModel.get() === 'oklch') {
-    eventTarget.value = (oldValue * 100).toString()
-  } else if (eventId === 'a') {
-    eventTarget.value = roundWithDecimal(oldValue * 100, 0).toString() + '%'
-  } else {
-    eventTarget.value = oldValue.toString()
+const getColorHxyaValueFormatedForInput = (value: keyof typeof HxyaLabels): Hue | AbsoluteChroma | Saturation | Lightness | Opacity => {
+  switch (value) {
+    case 'h':
+      return $colorHxya.get().h
+    case 'x':
+      return $currentColorModel.get() === 'oklch' ? roundWithDecimal($colorHxya.get().x * 100, 1) : $colorHxya.get().x
+    case 'y':
+      return $colorHxya.get().y
+    case 'a':
+      return roundWithDecimal($colorHxya.get().a * 100, 0)
   }
 }
 
@@ -41,29 +44,11 @@ function getStepUpdateValue(eventId: string): number {
   return shiftPressed ? 10 : 1
 }
 
-const updateColorHxyaOrSetBackPreviousValue = (eventTarget: HTMLInputElement, eventId: keyof typeof HxyaLabels, newValue: number) => {
-  if ($lockRelativeChroma.get() && eventId === 'x') return
-  if ($lockContrast.get() && eventId === 'y') return
+const formatAndSendNewValueToStore = (eventId: keyof typeof HxyaLabels, newValue: number) => {
+  let newValueFormated = newValue
+  if (($currentColorModel.get() === 'oklch' && eventId === 'x') || eventId === 'a') newValueFormated /= 100
 
-  const oldValue = $colorHxya.get()[eventId]
-
-  const newColorHxya: Partial<ColorHxya> = { h: undefined, x: undefined, y: undefined, a: undefined }
-
-  if (['okhsv', 'okhsl'].includes($currentColorModel.get())) {
-    // In case the user entered a value with a decimal in OkHSV or OkHSL mode.
-    newColorHxya[`${eventId}`] = Math.round(newValue)
-  } else {
-    newColorHxya[`${eventId}`] = newValue
-  }
-
-  if (newValue >= 0 && newValue <= (eventId === 'h' ? 360 : 100) && newValue !== oldValue) {
-    if ($currentColorModel.get() === 'oklch' && newColorHxya.x) newColorHxya.x /= 100
-    else if (newColorHxya.a) newColorHxya.a /= 100
-
-    setColorHxyaWithSideEffects({ newColorHxya: newColorHxya })
-  } else {
-    setOldValueInEventTargetValue(eventTarget, oldValue)
-  }
+  setColorHxyaWithSideEffects({ newColorHxya: { [eventId]: newValueFormated } })
 }
 
 export default function ColorValueInputs() {
@@ -116,17 +101,24 @@ export default function ColorValueInputs() {
 
     const eventId = eventTarget.id as HxyaLabels
 
-    const oldValue = $colorHxya.get()[eventId]
-    const newValue = parseFloat(eventTarget.value)
+    const oldValue = getColorHxyaValueFormatedForInput(eventId)
+    const newValue = roundWithDecimal(parseFloat(eventTarget.value), getColorHxyDecimals({ forInputs: true })[`${eventId}`])
 
-    if (lastKeyPressed === 'Escape' || isNaN(newValue) || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
-      setOldValueInEventTargetValue(eventTarget, oldValue)
+    const clampedNewValue = clampNumber(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
+
+    if (
+      clampedNewValue === oldValue ||
+      lastKeyPressed === 'Escape' ||
+      isNaN(newValue) ||
+      (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))
+    ) {
+      eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
       return
     } else {
       lastKeyPressed = ''
     }
 
-    updateColorHxyaOrSetBackPreviousValue(eventTarget, eventId, newValue)
+    formatAndSendNewValueToStore(eventId, clampedNewValue)
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -151,9 +143,10 @@ export default function ColorValueInputs() {
         else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
 
         // We need to round the value because sometimes we can get results like 55.8999999.
-        newValue = roundWithDecimal(newValue, getColorHxyDecimals()[`${eventId}`])
+        newValue = roundWithDecimal(newValue, getColorHxyDecimals({ forInputs: true })[`${eventId}`])
 
-        updateColorHxyaOrSetBackPreviousValue(eventTarget, eventId, newValue)
+        const clampedNewValue = clampNumber(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
+        formatAndSendNewValueToStore(eventId, clampedNewValue)
       }
     }
   }
@@ -197,12 +190,7 @@ export default function ColorValueInputs() {
   }, [colorHxya.h])
 
   useEffect(() => {
-    if (currentColorModel === 'oklch') {
-      const newX = roundWithDecimal(colorHxya.x * 100, 1)
-      inputX.current!.value = newX.toString()
-    } else {
-      inputX.current!.value = colorHxya.x.toString()
-    }
+    inputX.current!.value = getColorHxyaValueFormatedForInput('x').toString()
   }, [colorHxya.x, currentColorModel])
 
   useEffect(() => {
@@ -210,7 +198,7 @@ export default function ColorValueInputs() {
   }, [colorHxya.y])
 
   useEffect(() => {
-    inputA.current!.value = roundWithDecimal(colorHxya.a * 100, 0).toString() + '%'
+    inputA.current!.value = getColorHxyaValueFormatedForInput('a').toString() + '%'
   }, [colorHxya.a])
 
   useEffect(() => {

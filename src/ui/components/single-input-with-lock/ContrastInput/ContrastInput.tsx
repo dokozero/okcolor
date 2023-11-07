@@ -22,20 +22,10 @@ import ClosedLockIcon from '../ClosedLockIcon/ClosedLockIcon'
 import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
 import { consoleLogInfos } from '../../../../constants'
 import getContrastRange from '../../../helpers/contrasts/getContrastRange/getContrastRange'
+import clampNumber from '../../../helpers/numbers/clampNumber/clampNumber'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
-
-const updateContrastOrSetBackPreviousValue = (eventTarget: HTMLInputElement, newContrast: ApcaContrast | WcagContrast) => {
-  const contrastRange = getContrastRange()
-
-  if (newContrast < contrastRange.negative.max || newContrast > contrastRange.positive.max || newContrast === $contrast.get()) {
-    eventTarget.value = String($contrast.get())
-    return
-  }
-
-  setContrastWithSideEffects({ newContrast: newContrast })
-}
 
 const getNewContrastValueFromArrowKey = (
   eventKey: 'ArrowDown' | 'ArrowUp',
@@ -102,17 +92,24 @@ export default function ContrastInput() {
   const handleInputOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const eventTarget = event.target
 
-    if (lastKeyPressed === 'Escape' || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
+    const newValue: ApcaContrast | WcagContrast =
+      $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
+
+    const clampedNewContrast = clampNumber(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
+
+    if (
+      clampedNewContrast === $contrast.get() ||
+      lastKeyPressed === 'Escape' ||
+      isNaN(newValue) ||
+      (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))
+    ) {
       eventTarget.value = String($contrast.get())
       return
     } else {
       lastKeyPressed = ''
     }
 
-    const newValue: ApcaContrast | WcagContrast =
-      $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
-
-    updateContrastOrSetBackPreviousValue(eventTarget, newValue)
+    setContrastWithSideEffects({ newContrast: clampedNewContrast })
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -130,7 +127,8 @@ export default function ContrastInput() {
       keepInputSelected = true
 
       const newValue = getNewContrastValueFromArrowKey(eventKey as 'ArrowDown' | 'ArrowUp', currentValue)
-      updateContrastOrSetBackPreviousValue(eventTarget, newValue)
+      const clampedNewContrast = clampNumber(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
+      setContrastWithSideEffects({ newContrast: clampedNewContrast })
     }
   }
 

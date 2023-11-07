@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { consoleLogInfos } from '../../../../constants'
 import { useStore } from '@nanostores/react'
-import { RelativeChroma } from '../../../../types'
 import selectInputContent from '../../../helpers/selectInputContent/selectInputContent'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { setLockRelativeChromaWithSideEffects, $lockRelativeChroma } from '../../../stores/colors/lockRelativeChroma/lockRelativeChroma'
@@ -11,18 +10,10 @@ import { $isMouseInsideDocument } from '../../../stores/isMouseInsideDocument/is
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
 import ClosedLockIcon from '../ClosedLockIcon/ClosedLockIcon'
 import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
+import clampNumber from '../../../helpers/numbers/clampNumber/clampNumber'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
-
-const updateRelativeChromaOrSetBackPreviousValue = (eventTarget: HTMLInputElement, newRelativeChroma: RelativeChroma) => {
-  if (newRelativeChroma < 0 || newRelativeChroma > 100 || newRelativeChroma === $relativeChroma.get()) {
-    eventTarget.value = $relativeChroma.get() + '%'
-    return
-  }
-
-  setRelativeChromaWithSideEffects({ newRelativeChroma: newRelativeChroma })
-}
 
 const handleLockRelativeChroma = () => {
   setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: !$lockRelativeChroma.get() })
@@ -43,15 +34,23 @@ export default function RelativeChromaInput() {
 
   const handleInputOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const eventTarget = event.target
+    const newValue = parseInt(eventTarget.value)
 
-    if (lastKeyPressed === 'Escape' || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
+    const clampedNewRelativeChroma = clampNumber(newValue, 0, 100)
+
+    if (
+      clampedNewRelativeChroma === $relativeChroma.get() ||
+      lastKeyPressed === 'Escape' ||
+      isNaN(newValue) ||
+      (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))
+    ) {
       eventTarget.value = $relativeChroma.get() + '%'
       return
     } else {
       lastKeyPressed = ''
     }
 
-    updateRelativeChromaOrSetBackPreviousValue(eventTarget, parseInt(eventTarget.value))
+    setRelativeChromaWithSideEffects({ newRelativeChroma: clampedNewRelativeChroma })
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -72,7 +71,8 @@ export default function RelativeChromaInput() {
       if (eventKey === 'ArrowUp') newValue += stepUpdateValue
       else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
 
-      updateRelativeChromaOrSetBackPreviousValue(eventTarget, newValue)
+      const clampedNewRelativeChroma = clampNumber(newValue, 0, 100)
+      setRelativeChromaWithSideEffects({ newRelativeChroma: clampedNewRelativeChroma })
     }
   }
 
