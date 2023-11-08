@@ -1,10 +1,10 @@
 import { ColorRgb, ColorModelList, FileColorProfile, ColorHxy } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
-import roundWithDecimal from '../../numbers/roundWithDecimal/roundWithDecimal'
 import { converter } from '../culori.mjs'
 import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
 import getColorHxyDecimals from '../getColorHxyDecimals/getColorHxyDecimals'
+import round from 'lodash/round'
 
 const convertToOkhsl = converter('okhsl')
 const convertToOkhsv = converter('okhsv')
@@ -80,26 +80,26 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
     case 'oklchCss':
       if (!keepOklchDoubleDigit) {
         newColorHxy = {
-          h: roundWithDecimal(culoriResult.h, getColorHxyDecimals().h),
-          x: roundWithDecimal(culoriResult.c, getColorHxyDecimals().x),
-          y: roundWithDecimal(culoriResult.l * 100, getColorHxyDecimals().y)
+          h: round(culoriResult.h, getColorHxyDecimals().h),
+          x: round(culoriResult.c, getColorHxyDecimals().x),
+          y: round(culoriResult.l * 100, getColorHxyDecimals().y)
         }
       } else {
         newColorHxy = {
-          h: roundWithDecimal(culoriResult.h, 2),
-          x: roundWithDecimal(culoriResult.c, 6),
-          y: roundWithDecimal(culoriResult.l * 100, 2)
+          h: round(culoriResult.h, 2),
+          x: round(culoriResult.c, 6),
+          y: round(culoriResult.l * 100, 2)
         }
       }
       break
   }
 
   // We need to do this because if for example we get a color like #888888, we will get Nan for newColorHxy.h, also, with others gray values we'll sometimes get a hue of 90 or 0.
-  // The reason we use roundWithDecimal() is because without it we can have for example param1 = 123.99995 and param2 = 123.99994.
+  // The reason we use round() is because without it we can have for example param1 = 123.99995 and param2 = 123.99994.
   if (
-    roundWithDecimal(colorRgb.r, 3) === roundWithDecimal(colorRgb.g, 3) &&
-    roundWithDecimal(colorRgb.r, 3) === roundWithDecimal(colorRgb.b, 3) &&
-    roundWithDecimal(colorRgb.g, 3) === roundWithDecimal(colorRgb.b, 3)
+    round(colorRgb.r, 3) === round(colorRgb.g, 3) &&
+    round(colorRgb.r, 3) === round(colorRgb.b, 3) &&
+    round(colorRgb.g, 3) === round(colorRgb.b, 3)
   ) {
     newColorHxy.h = 0
   }

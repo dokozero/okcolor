@@ -1,5 +1,5 @@
 import { RgbaArray, RgbArray, WcagContrast } from '../../../../types'
-import roundWithDecimal from '../../numbers/roundWithDecimal/roundWithDecimal'
+import round from 'lodash/round'
 
 // Formulas for contrast from https://www.w3.org/WAI/WCAG22/Techniques/general/G145#tests
 
@@ -41,9 +41,9 @@ export default function WCAGcontrast(fg: RgbaArray, bg: RgbArray): WcagContrast 
   let contrast: WcagContrast
   if (fgLuminance > bgLuminance || (fgLuminance === 0 && bgLuminance === 0)) {
     // We force the value to be negative to have the same behavior as in APCA, see comment in types.ts for "WcagContrast".
-    contrast = -roundWithDecimal((fgLuminance + 0.05) / (bgLuminance + 0.05), 1)
+    contrast = -round((fgLuminance + 0.05) / (bgLuminance + 0.05), 1)
   } else {
-    contrast = roundWithDecimal((bgLuminance + 0.05) / (fgLuminance + 0.05), 1)
+    contrast = round((bgLuminance + 0.05) / (fgLuminance + 0.05), 1)
   }
 
   return contrast

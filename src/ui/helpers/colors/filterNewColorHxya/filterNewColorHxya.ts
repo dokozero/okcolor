@@ -3,9 +3,9 @@ import { $colorHxya } from '../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $contrast } from '../../../stores/contrasts/contrast/contrast'
 import getNewXandYFromContrast from '../../contrasts/getNewXandYFromContrast/getNewXandYFromContrast'
-import roundWithDecimal from '../../numbers/roundWithDecimal/roundWithDecimal'
 import convertRelativeChromaToAbsolute from '../convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import getClampedChroma from '../getClampedChroma/getClampedChroma'
+import round from 'lodash/round'
 
 type Props = {
   newColorHxya: Partial<ColorHxya>
@@ -26,7 +26,7 @@ export default function filterNewColorHxya(props: Props): ColorHxya {
     a: newColorHxya.a !== undefined ? newColorHxya.a : $colorHxya.get().a
   }
 
-  filteredColorHxya.a = roundWithDecimal(filteredColorHxya.a, 2)
+  filteredColorHxya.a = round(filteredColorHxya.a, 2)
 
   // In these two color models, we don't have realtive chroma or contrast activated.
   if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return filteredColorHxya

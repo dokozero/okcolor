@@ -2,11 +2,11 @@ import { ColorCodesInputValues, ColorHxya, ColorModelList, ColorHxy, Opacity } f
 import { converter } from '../../../../helpers/colors/culori.mjs'
 import convertRgbToHxy from '../../../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
 import getClampedChroma from '../../../../helpers/colors/getClampedChroma/getClampedChroma'
-import roundWithDecimal from '../../../../helpers/numbers/roundWithDecimal/roundWithDecimal'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentBgOrFg } from '../../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import getColorHxyDecimals from '../../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
+import round from 'lodash/round'
 
 const convertToRgb = converter('rgb')
 
@@ -144,9 +144,9 @@ export default function getNewColorHxya(eventTargetId: keyof typeof ColorCodesIn
       }
       if ($currentColorModel.get() === 'oklch') {
         newColorHxy = {
-          h: roundWithDecimal(newColorHxy.h, getColorHxyDecimals().h),
-          x: roundWithDecimal(newColorHxy.x * 100, getColorHxyDecimals().x),
-          y: roundWithDecimal(newColorHxy.y, getColorHxyDecimals().y)
+          h: round(newColorHxy.h, getColorHxyDecimals().h),
+          x: round(newColorHxy.x * 100, getColorHxyDecimals().x),
+          y: round(newColorHxy.y, getColorHxyDecimals().y)
         }
       }
 

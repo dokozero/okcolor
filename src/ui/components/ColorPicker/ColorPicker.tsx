@@ -22,7 +22,6 @@ import { inGamut } from '../../helpers/colors/culori.mjs'
 import { AbsoluteChroma, Saturation, ColorModelList } from '../../../types'
 import convertAbsoluteChromaToRelative from '../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
 import limitMouseManipulatorPosition from '../../helpers/limitMouseManipulatorPosition/limitMouseManipulatorPosition'
-import roundWithDecimal from '../../helpers/numbers/roundWithDecimal/roundWithDecimal'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../stores/colors/colorsRgba/colorsRgba'
 import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
@@ -39,6 +38,7 @@ import getContrastStrokeLimit from './helpers/getContrastStrokeLimit/getContrast
 import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit/getRelativeChromaStrokeLimit'
 import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit/getSrgbStrokeLimit'
 import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
+import round from 'lodash/round'
 
 let colorPickerGlContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
@@ -111,17 +111,17 @@ export default function ColorPicker() {
     if (($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) || $lockContrast.get()) {
       currentContrainedMove = true
     } else {
-      newColorHxya.y = roundWithDecimal(limitMouseManipulatorPosition(1 - canvasY / PICKER_SIZE) * 100, getColorHxyDecimals().y)
+      newColorHxya.y = round(limitMouseManipulatorPosition(1 - canvasY / PICKER_SIZE) * 100, getColorHxyDecimals().y)
     }
 
     // Get the new X value.
     if ($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'vertical' && !$lockRelativeChroma.get()) {
       currentContrainedMove = true
     } else {
-      newColorHxya.x = roundWithDecimal(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, getColorHxyDecimals().x)
+      newColorHxya.x = round(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, getColorHxyDecimals().x)
 
       if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
-        newColorHxya.x = roundWithDecimal(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, getColorHxyDecimals().x)
+        newColorHxya.x = round(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, getColorHxyDecimals().x)
       }
     }
 

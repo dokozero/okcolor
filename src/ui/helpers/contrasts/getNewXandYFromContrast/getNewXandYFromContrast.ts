@@ -5,9 +5,9 @@ import { $currentBgOrFg } from '../../../stores/contrasts/currentBgOrFg/currentB
 import convertHxyToRgb from '../../colors/convertHxyToRgb/convertHxyToRgb'
 import convertRelativeChromaToAbsolute from '../../colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import getClampedChroma from '../../colors/getClampedChroma/getClampedChroma'
-import roundWithDecimal from '../../numbers/roundWithDecimal/roundWithDecimal'
 import getContrastFromBgandFgRgba from '../getContrastFromBgandFgRgba/getContrastFromBgandFgRgba'
 import clamp from 'lodash/clamp'
+import round from 'lodash/round'
 
 type Props = {
   h: Hue
@@ -71,7 +71,7 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
       }
       yBetweenMinYAndMaxY += ySteps[currentStepIndex]
     }
-    yBetweenMinYAndMaxY = roundWithDecimal(yBetweenMinYAndMaxY, 1)
+    yBetweenMinYAndMaxY = round(yBetweenMinYAndMaxY, 1)
     if (yBetweenMinYAndMaxY < 0 || yBetweenMinYAndMaxY > 100) {
       yBetweenMinYAndMaxY = clamp(yBetweenMinYAndMaxY, 0, 100)
       break
@@ -130,13 +130,13 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     loopCountLimit++
 
     if (!minYFound) {
-      minY = roundWithDecimal((minY -= 0.1), 1)
+      minY = round((minY -= 0.1), 1)
       if (minY < 0 || minY > 100) {
         minY = clamp(minY, 0, 100)
         minYFound = true
       }
     } else {
-      maxY = roundWithDecimal((maxY += 0.1), 1)
+      maxY = round((maxY += 0.1), 1)
       if (maxY < 0 || maxY > 100) {
         maxY = clamp(maxY, 0, 100)
         maxYFound = true
@@ -168,10 +168,10 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     }
 
     if (tempNewContrast !== targetContrast && !minYFound) {
-      minY = roundWithDecimal((minY += 0.1), 1)
+      minY = round((minY += 0.1), 1)
       minYFound = true
     } else if (tempNewContrast !== targetContrast && !maxYFound) {
-      maxY = roundWithDecimal((maxY -= 0.1), 1)
+      maxY = round((maxY -= 0.1), 1)
       maxYFound = true
     }
   }
@@ -185,11 +185,11 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     console.log('yBetweenMinYAndMaxY', yBetweenMinYAndMaxY)
     console.log('minY', minY)
     console.log('-')
-    console.log('Average Y', roundWithDecimal((minY + maxY) / 2, 1))
+    console.log('Average Y', round((minY + maxY) / 2, 1))
   }
 
   // Get the average of minY and maxY to get newY.
-  const newY = roundWithDecimal((minY + maxY) / 2, 1)
+  const newY = round((minY + maxY) / 2, 1)
 
   return {
     x: newX,

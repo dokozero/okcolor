@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
 import { HxyaLabels, AbsoluteChroma, Saturation, Lightness, Opacity, Hue } from '../../../types'
-import roundWithDecimal from '../../helpers/numbers/roundWithDecimal/roundWithDecimal'
 import selectInputContent from '../../helpers/selectInputContent/selectInputContent'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
@@ -13,6 +12,7 @@ import { $currentKeysPressed } from '../../stores/currentKeysPressed/currentKeys
 import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument/isMouseInsideDocument'
 import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import getHxyaInputRange from '../../helpers/colors/getHxyaInputRange/getHxyaInputRange'
+import round from 'lodash/round'
 import clamp from 'lodash/clamp'
 
 let lastKeyPressed: string = ''
@@ -26,11 +26,11 @@ const getColorHxyaValueFormatedForInput = (value: keyof typeof HxyaLabels): Hue 
     case 'h':
       return $colorHxya.get().h
     case 'x':
-      return $currentColorModel.get() === 'oklch' ? roundWithDecimal($colorHxya.get().x * 100, 1) : $colorHxya.get().x
+      return $currentColorModel.get() === 'oklch' ? round($colorHxya.get().x * 100, 1) : $colorHxya.get().x
     case 'y':
       return $colorHxya.get().y
     case 'a':
-      return roundWithDecimal($colorHxya.get().a * 100, 0)
+      return round($colorHxya.get().a * 100, 0)
   }
 }
 
@@ -102,7 +102,7 @@ export default function ColorValueInputs() {
     const eventId = eventTarget.id as HxyaLabels
 
     const oldValue = getColorHxyaValueFormatedForInput(eventId)
-    const newValue = roundWithDecimal(parseFloat(eventTarget.value), getColorHxyDecimals({ forInputs: true })[`${eventId}`])
+    const newValue = round(parseFloat(eventTarget.value), getColorHxyDecimals({ forInputs: true })[`${eventId}`])
 
     const clampedNewValue = clamp(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
 
@@ -143,7 +143,7 @@ export default function ColorValueInputs() {
         else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
 
         // We need to round the value because sometimes we can get results like 55.8999999.
-        newValue = roundWithDecimal(newValue, getColorHxyDecimals({ forInputs: true })[`${eventId}`])
+        newValue = round(newValue, getColorHxyDecimals({ forInputs: true })[`${eventId}`])
 
         const clampedNewValue = clamp(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
         formatAndSendNewValueToStore(eventId, clampedNewValue)

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import { ApcaContrast, CurrentContrastMethod, WcagContrast } from '../../../../types'
 import getContrastFromBgandFgRgba from '../../../helpers/contrasts/getContrastFromBgandFgRgba/getContrastFromBgandFgRgba'
-import roundWithDecimal from '../../../helpers/numbers/roundWithDecimal/roundWithDecimal'
 import selectInputContent from '../../../helpers/selectInputContent/selectInputContent'
 import { $colorsRgba } from '../../../stores/colors/colorsRgba/colorsRgba'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
@@ -23,6 +22,7 @@ import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
 import { consoleLogInfos } from '../../../../constants'
 import getContrastRange from '../../../helpers/contrasts/getContrastRange/getContrastRange'
 import clamp from 'lodash/clamp'
+import round from 'lodash/round'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
@@ -51,7 +51,7 @@ const getNewContrastValueFromArrowKey = (
   }
 
   // We need to this because in some cases we can have values like 1.2999999999999998.
-  return roundWithDecimal(newValue!, 1)
+  return round(newValue!, 1)
 }
 
 const handleLockContrast = () => {
