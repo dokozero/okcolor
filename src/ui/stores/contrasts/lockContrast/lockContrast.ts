@@ -7,6 +7,7 @@ import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMess
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../colors/colorHxya/colorHxya'
 import { $lockRelativeChroma } from '../../colors/lockRelativeChroma/lockRelativeChroma'
 import { $contrast } from '../contrast/contrast'
+import merge from 'lodash/merge'
 
 export const $lockContrast = atom(false)
 
@@ -14,19 +15,28 @@ export const setLockContrast = action($lockContrast, 'setLockContrast', (lockCon
   lockContrast.set(newLockContrast)
 })
 
-type Props = {
-  newLockContrast: boolean
-  syncLockContrastWithBackend?: boolean
+type SideEffects = {
+  syncLockContrastWithBackend: boolean
 }
 
-/**
- * Side effects (true by default): syncLockContrastWithBackend.
- */
+type Props = {
+  newLockContrast: boolean
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncLockContrastWithBackend: true
+}
+
 export const setLockContrastWithSideEffects = action($lockContrast, 'setLockContrastWithSideEffects', (lockContrast, props: Props) => {
-  const { newLockContrast, syncLockContrastWithBackend = true } = props
+  const { newLockContrast, sideEffects: partialSideEffects } = props
+
+  const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+  merge(sideEffects, partialSideEffects)
+
   lockContrast.set(newLockContrast)
 
-  if (syncLockContrastWithBackend) {
+  if (sideEffects.syncLockContrastWithBackend) {
     sendMessageToBackend<SyncLockContrastData>({
       type: 'syncLockContrast',
       data: {
@@ -35,7 +45,7 @@ export const setLockContrastWithSideEffects = action($lockContrast, 'setLockCont
     })
   }
 
-  // if lockConstrat is true, we need to adjust x and Y value as for example we can multiple Y values for the same contrast, without this, when setting lockContrast to true, we can have the manipulator on the color picker slightly of the lock line.
+  // if lockConstrat is true, we need to adjust x and y value as for example we can have multiple Y values for the same contrast, without this, when setting lockContrast to true, we can have the manipulator on the color picker slightly off the lock line.
   if (newLockContrast) {
     const newXy = getNewXandYFromContrast({
       h: $colorHxya.get().h,

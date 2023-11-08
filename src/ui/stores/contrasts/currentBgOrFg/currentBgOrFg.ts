@@ -5,6 +5,7 @@ import { CurrentBgOrFg, ColorRgb, ColorRgba, Opacity } from '../../../../types'
 import convertRgbToHxy from '../../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
 import { setColorHxyaWithSideEffects } from '../../colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../colors/colorsRgba/colorsRgba'
+import merge from 'lodash/merge'
 
 export const $currentBgOrFg = atom<CurrentBgOrFg>('fg')
 
@@ -12,20 +13,28 @@ export const setCurrentBgOrFg = action($currentBgOrFg, 'setCurrentBgOrFg', (curr
   currentBgOrFg.set(newCurrentBgOrFg)
 })
 
-type Props = {
-  newCurrentBgOrFg: CurrentBgOrFg
-  syncColorHxya?: boolean
+type SideEffects = {
+  syncColorHxya: boolean
 }
 
-/**
- * Side effects (default to true): syncColorHxya, syncRelativeChroma.
- */
+type Props = {
+  newCurrentBgOrFg: CurrentBgOrFg
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncColorHxya: true
+}
+
 export const setCurrentBgOrFgWithSideEffects = action($currentBgOrFg, 'setCurrentBgOrFgWithSideEffects', (currentBgOrFg, props: Props) => {
-  const { newCurrentBgOrFg, syncColorHxya = true } = props
+  const { newCurrentBgOrFg, sideEffects: partialSideEffects } = props
+
+  const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+  merge(sideEffects, partialSideEffects)
 
   currentBgOrFg.set(newCurrentBgOrFg)
 
-  if (syncColorHxya) {
+  if (sideEffects.syncColorHxya) {
     let newColorRgba: ColorRgb | ColorRgba
     let opacity: Opacity = 1
 

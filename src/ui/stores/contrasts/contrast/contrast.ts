@@ -9,6 +9,7 @@ import getNewXandYFromContrast from '../../../helpers/contrasts/getNewXandYFromC
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../colors/colorsRgba/colorsRgba'
 import filterNewContrast from '../../../helpers/contrasts/filterNewContrast/filterNewContrast'
+import merge from 'lodash/merge'
 
 export const $contrast = atom<ApcaContrast | WcagContrast>(0)
 
@@ -16,20 +17,28 @@ export const setContrast = action($contrast, 'setContrast', (contrast, newContra
   contrast.set(newContrast)
 })
 
-type Props = {
-  newContrast: ApcaContrast | WcagContrast
-  syncColorHxya?: boolean
+type SideEffects = {
+  syncColorHxya: boolean
 }
 
-/**
- * Side effects (default to true): syncColorHxya
- */
+type Props = {
+  newContrast: ApcaContrast | WcagContrast
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncColorHxya: true
+}
+
 export const setContrastWithSideEffects = action($contrast, 'setContrastWithSideEffects', (contrast, props: Props) => {
-  const { newContrast, syncColorHxya = true } = props
+  const { newContrast, sideEffects: partialSideEffects } = props
+
+  const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+  merge(sideEffects, partialSideEffects)
 
   const filteredNewContrast = filterNewContrast(newContrast)
 
-  if (syncColorHxya) {
+  if (sideEffects.syncColorHxya) {
     const newXy = getNewXandYFromContrast({
       h: $colorHxya.get().h,
       x: $colorHxya.get().x,

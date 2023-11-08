@@ -3,6 +3,7 @@ import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../../constants'
 import { SyncLockRelativeChromaData } from '../../../../types'
 import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMessageToBackend'
+import merge from 'lodash/merge'
 
 export const $lockRelativeChroma = atom(false)
 
@@ -10,22 +11,31 @@ export const setLockRelativeChroma = action($lockRelativeChroma, 'setLockRelativ
   lockRelativeChroma.set(newLockRelativeChroma)
 })
 
-type Props = {
-  newLockRelativeChroma: boolean
-  syncLockRelativeChromaWithBackend?: boolean
+type SideEffects = {
+  syncLockRelativeChromaWithBackend: boolean
 }
 
-/**
- * Side effects (true by default): syncLockRelativeChromaWithBackend.
- */
+type Props = {
+  newLockRelativeChroma: boolean
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncLockRelativeChromaWithBackend: true
+}
+
 export const setLockRelativeChromaWithSideEffects = action(
   $lockRelativeChroma,
   'setLockRelativeChromaWithSideEffects',
   (lockRelativeChroma, props: Props) => {
-    const { newLockRelativeChroma, syncLockRelativeChromaWithBackend = true } = props
+    const { newLockRelativeChroma, sideEffects: partialSideEffects } = props
+
+    const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+    merge(sideEffects, partialSideEffects)
+
     lockRelativeChroma.set(newLockRelativeChroma)
 
-    if (syncLockRelativeChromaWithBackend) {
+    if (sideEffects.syncLockRelativeChromaWithBackend) {
       sendMessageToBackend<SyncLockRelativeChromaData>({
         type: 'syncLockRelativeChroma',
         data: {

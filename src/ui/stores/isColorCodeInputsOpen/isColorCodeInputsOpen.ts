@@ -3,6 +3,7 @@ import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../constants'
 import { SyncIsColorCodeInputsOpenData } from '../../../types'
 import sendMessageToBackend from '../../helpers/sendMessageToBackend/sendMessageToBackend'
+import merge from 'lodash/merge'
 
 export const $isColorCodeInputsOpen = atom(false)
 
@@ -14,23 +15,31 @@ export const setIsColorCodeInputsOpen = action(
   }
 )
 
-type Props = {
-  newIsColorCodeInputsOpen: boolean
-  syncIsColorCodeInputsOpenWithBackend?: boolean
+type SideEffects = {
+  syncIsColorCodeInputsOpenWithBackend: boolean
 }
 
-/**
- * Side effects (default to true): syncIsColorCodeInputsOpenWithBackend
- */
+type Props = {
+  newIsColorCodeInputsOpen: boolean
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncIsColorCodeInputsOpenWithBackend: true
+}
+
 export const setIsColorCodeInputsOpenWithSideEffects = action(
   $isColorCodeInputsOpen,
   'setIsColorCodeInputsOpenWithSideEffects',
   (isColorCodeInputsOpen, props: Props) => {
-    const { newIsColorCodeInputsOpen, syncIsColorCodeInputsOpenWithBackend = true } = props
+    const { newIsColorCodeInputsOpen, sideEffects: partialSideEffects } = props
+
+    const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+    merge(sideEffects, partialSideEffects)
 
     isColorCodeInputsOpen.set(newIsColorCodeInputsOpen)
 
-    if (syncIsColorCodeInputsOpenWithBackend) {
+    if (sideEffects.syncIsColorCodeInputsOpenWithBackend) {
       sendMessageToBackend<SyncIsColorCodeInputsOpenData>({
         type: 'syncIsColorCodeInputsOpen',
         data: {

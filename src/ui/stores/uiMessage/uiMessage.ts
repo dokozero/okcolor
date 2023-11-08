@@ -4,6 +4,7 @@ import { consoleLogInfos } from '../../../constants'
 import { UiMessage } from '../../../types'
 import setValuesForUiMessage from '../../helpers/setValuesForUiMessage/setValuesForUiMessage'
 import { uiMessageTexts } from '../../ui-messages'
+import merge from 'lodash/merge'
 
 export const $uiMessage = map<UiMessage>({
   show: false,
@@ -14,18 +15,27 @@ export const setUiMessage = action($uiMessage, 'setUiMessage', (uiMessage, newUi
   uiMessage.set(newUiMessage)
 })
 
+type SideEffects = {
+  syncBodyElement: boolean
+  useValuesForUiMessageFunction: boolean
+}
+
 type Props = {
   messageCode: keyof typeof uiMessageTexts
   nodeType: string | null
-  syncBodyElement?: boolean
-  useValuesForUiMessageFunction?: boolean
+  sideEffects?: Partial<SideEffects>
 }
 
-/**
- * Side effects (default to true): syncBodyElement, useValuesForUiMessageFunction.
- */
+const defaultSideEffects: SideEffects = {
+  syncBodyElement: true,
+  useValuesForUiMessageFunction: true
+}
+
 export const showUiMessageWithSideEffects = action($uiMessage, 'showUiMessageWithSideEffects', (uiMessage, props: Props) => {
-  const { messageCode, nodeType, syncBodyElement = true, useValuesForUiMessageFunction = true } = props
+  const { messageCode, nodeType, sideEffects: partialSideEffects } = props
+
+  const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+  merge(sideEffects, partialSideEffects)
 
   let message = uiMessageTexts[`${messageCode}`]
   if (nodeType) {
@@ -34,16 +44,13 @@ export const showUiMessageWithSideEffects = action($uiMessage, 'showUiMessageWit
 
   uiMessage.set({ show: true, message: message })
 
-  if (syncBodyElement) {
+  if (sideEffects.syncBodyElement) {
     document.body.classList.add('deactivated')
   }
 
-  if (useValuesForUiMessageFunction) setValuesForUiMessage()
+  if (sideEffects.useValuesForUiMessageFunction) setValuesForUiMessage()
 })
 
-/**
- * Side effects (default to true): syncBodyElement.
- */
 export const hideUiMessageWithSideEffects = action($uiMessage, 'hideUiMessageWithSideEffects', (uiMessage, syncBodyElement = true) => {
   uiMessage.set({ show: false, message: '' })
 

@@ -3,6 +3,7 @@ import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../../constants'
 import { CurrentContrastMethod, SyncCurrentContrastMethodData } from '../../../../types'
 import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMessageToBackend'
+import merge from 'lodash/merge'
 
 export const $currentContrastMethod = atom<CurrentContrastMethod>('apca')
 
@@ -14,22 +15,31 @@ export const setCurrentContrastMethod = action(
   }
 )
 
-type Props = {
-  newCurrentContrastMethod: CurrentContrastMethod
-  syncCurrentContrastMethodWithBackend?: boolean
+type SideEffects = {
+  syncCurrentContrastMethodWithBackend: boolean
 }
 
-/**
- * Side effects (default to true): syncCurrentContrastMethodWithBackend
- */
+type Props = {
+  newCurrentContrastMethod: CurrentContrastMethod
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncCurrentContrastMethodWithBackend: true
+}
+
 export const setCurrentContrastMethodWithSideEffects = action(
   $currentContrastMethod,
   'setCurrentContrastMethodWithSideEffects',
   (currentContrastMethod, props: Props) => {
-    const { newCurrentContrastMethod, syncCurrentContrastMethodWithBackend = true } = props
+    const { newCurrentContrastMethod, sideEffects: partialSideEffects } = props
+
+    const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+    merge(sideEffects, partialSideEffects)
+
     currentContrastMethod.set(newCurrentContrastMethod)
 
-    if (syncCurrentContrastMethodWithBackend) {
+    if (sideEffects.syncCurrentContrastMethodWithBackend) {
       sendMessageToBackend<SyncCurrentContrastMethodData>({
         type: 'syncCurrentContrastMethod',
         data: {

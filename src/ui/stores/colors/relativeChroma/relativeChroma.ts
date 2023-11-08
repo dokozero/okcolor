@@ -4,6 +4,7 @@ import { consoleLogInfos } from '../../../../constants'
 import { RelativeChroma } from '../../../../types'
 import convertRelativeChromaToAbsolute from '../../../helpers/colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../colorHxya/colorHxya'
+import merge from 'lodash/merge'
 
 export const $relativeChroma = atom<RelativeChroma>(0)
 
@@ -11,20 +12,28 @@ export const setRelativeChroma = action($relativeChroma, 'setRelativeChroma', (r
   relativeChroma.set(newRelativeChroma)
 })
 
-type Props = {
-  newRelativeChroma: RelativeChroma
-  syncColorHxya?: boolean
+type SideEffects = {
+  syncColorHxya: boolean
 }
 
-/**
- * Side effects (default to true): syncColorHxya
- */
+type Props = {
+  newRelativeChroma: RelativeChroma
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncColorHxya: true
+}
+
 export const setRelativeChromaWithSideEffects = action($relativeChroma, 'setRelativeChromaWithSideEffects', (relativeChroma, props: Props) => {
-  const { newRelativeChroma, syncColorHxya = true } = props
+  const { newRelativeChroma, sideEffects: partialSideEffects } = props
+
+  const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+  merge(sideEffects, partialSideEffects)
 
   relativeChroma.set(newRelativeChroma)
 
-  if (syncColorHxya) {
+  if (sideEffects.syncColorHxya) {
     const newColorX = convertRelativeChromaToAbsolute({
       h: $colorHxya.get().h,
       y: $colorHxya.get().y,

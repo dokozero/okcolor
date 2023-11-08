@@ -7,6 +7,7 @@ import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMess
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
 import { setColorHxyaWithSideEffects, $colorHxya } from '../colorHxya/colorHxya'
 import { $colorsRgba } from '../colorsRgba/colorsRgba'
+import merge from 'lodash/merge'
 
 export const $fileColorProfile = atom<FileColorProfile>('rgb')
 
@@ -14,26 +15,35 @@ export const setFileColorProfile = action($fileColorProfile, 'setFileColorProfil
   fileColorProfile.set(newFileColorProfile)
 })
 
-type Props = {
-  newFileColorProfile: FileColorProfile
-  syncColorHxya?: boolean
-  syncFileColorProfileWithBackend?: boolean
+type SideEffects = {
+  syncColorHxya: boolean
+  syncFileColorProfileWithBackend: boolean
 }
 
-/**
- * Side effects (true by default): syncColorHxya, syncFileColorProfileWithBackend.
- */
+type Props = {
+  newFileColorProfile: FileColorProfile
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncColorHxya: true,
+  syncFileColorProfileWithBackend: true
+}
+
 export const setFileColorProfileWithSideEffects = action(
   $fileColorProfile,
   'setFileColorProfileWithSideEffects',
   (fileColorProfile, props: Props) => {
-    const { newFileColorProfile, syncColorHxya = true, syncFileColorProfileWithBackend = true } = props
+    const { newFileColorProfile, sideEffects: partialSideEffects } = props
+
+    const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+    merge(sideEffects, partialSideEffects)
 
     fileColorProfile.set(newFileColorProfile)
 
     const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
 
-    if (syncColorHxya) {
+    if (sideEffects.syncColorHxya) {
       const newColorHxy = convertRgbToHxy({
         colorRgb: currentColorRgba!,
         colorSpace: newFileColorProfile
@@ -49,7 +59,7 @@ export const setFileColorProfileWithSideEffects = action(
       })
     }
 
-    if (syncFileColorProfileWithBackend) {
+    if (sideEffects.syncFileColorProfileWithBackend) {
       sendMessageToBackend<SyncFileColorProfileData>({
         type: 'syncFileColorProfile',
         data: {

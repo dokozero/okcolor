@@ -7,6 +7,7 @@ import sendMessageToBackend from '../../helpers/sendMessageToBackend/sendMessage
 import { setColorHxya } from '../colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../colors/colorsRgba/colorsRgba'
 import { $lockContrast, setLockContrast } from '../contrasts/lockContrast/lockContrast'
+import merge from 'lodash/merge'
 
 export const $currentFillOrStroke = atom<CurrentFillOrStroke>('fill')
 
@@ -18,36 +19,42 @@ export const setCurrentFillOrStroke = action(
   }
 )
 
-type Props = {
-  newCurrentFillOrStroke: CurrentFillOrStroke
-  syncColorHxya?: boolean
-  syncCurrentFillOrStrokeWithBackend?: boolean
+type SideEffects = {
+  syncColorHxya: boolean
+  syncCurrentFillOrStrokeWithBackend: boolean
 }
 
-/**
- * Side effects (true by default): syncColorHxya, syncCurrentFillOrStrokeWithBackend.
- */
+type Props = {
+  newCurrentFillOrStroke: CurrentFillOrStroke
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncColorHxya: true,
+  syncCurrentFillOrStrokeWithBackend: true
+}
+
 export const setCurrentFillOrStrokeWithSideEffects = action(
   $currentFillOrStroke,
   'setCurrentFillOrStrokeWithSideEffects',
   (currentFillOrStroke, props: Props) => {
-    const { newCurrentFillOrStroke, syncColorHxya = true, syncCurrentFillOrStrokeWithBackend = true } = props
+    const { newCurrentFillOrStroke, sideEffects: partialSideEffects } = props
+
+    const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+    merge(sideEffects, partialSideEffects)
 
     currentFillOrStroke.set(newCurrentFillOrStroke)
 
     if (newCurrentFillOrStroke === 'stroke' && $lockContrast.get()) setLockContrast(false)
 
-    const newColorRgba = $colorsRgba.get()[newCurrentFillOrStroke]
+    if (sideEffects.syncColorHxya) {
+      const newColorRgba = $colorsRgba.get()[newCurrentFillOrStroke]
+      const newColorHxy = convertRgbToHxy({ colorRgb: newColorRgba! })
 
-    if (!newColorRgba) return
-
-    if (syncColorHxya) {
-      const newColorHxy = convertRgbToHxy({ colorRgb: newColorRgba })
-
-      setColorHxya({ ...newColorHxy, a: newColorRgba.a })
+      setColorHxya({ ...newColorHxy, a: newColorRgba!.a })
     }
 
-    if (syncCurrentFillOrStrokeWithBackend) {
+    if (sideEffects.syncCurrentFillOrStrokeWithBackend) {
       sendMessageToBackend<SyncCurrentFillOrStrokeData>({
         type: 'syncCurrentFillOrStroke',
         data: {

@@ -13,6 +13,7 @@ import { setColorHxya, $colorHxya } from '../colorHxya/colorHxya'
 import { $colorsRgba } from '../colorsRgba/colorsRgba'
 import { setFileColorProfileWithSideEffects } from '../fileColorProfile/fileColorProfile'
 import { $lockRelativeChroma, setLockRelativeChromaWithSideEffects } from '../lockRelativeChroma/lockRelativeChroma'
+import merge from 'lodash/merge'
 
 export const $currentColorModel = atom<CurrentColorModel>('oklchCss')
 
@@ -24,42 +25,47 @@ export const setCurrentColorModel = action(
   }
 )
 
-type Props = {
-  newCurrentColorModel: CurrentColorModel
-  syncCurrentBgOrFg?: boolean
-  syncCurrentColorModelWithBackend?: boolean
-  syncColorHxya?: boolean
-  syncLockRelativeChroma?: boolean
-  syncLockContrast?: boolean
-  syncFileColorProfileWithSideEffects?: boolean
-  syncContrast?: boolean
+type SideEffects = {
+  syncCurrentBgOrFg: boolean
+  syncCurrentColorModelWithBackend: boolean
+  syncColorHxya: boolean
+  syncLockRelativeChroma: boolean
+  syncLockContrast: boolean
+  syncFileColorProfile: boolean
+  syncContrast: boolean
 }
 
-/**
- * Side effect: syncCurrentBgOrFg, syncCurrentColorModelWithBackend, syncColorHxya, syncLockRelativeChroma, syncLockContrast, syncFileColorProfileWithSideEffects, syncContrast
- */
+type Props = {
+  newCurrentColorModel: CurrentColorModel
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncCurrentBgOrFg: true,
+  syncCurrentColorModelWithBackend: true,
+  syncColorHxya: true,
+  syncLockRelativeChroma: true,
+  syncLockContrast: true,
+  syncFileColorProfile: true,
+  syncContrast: true
+}
+
 export const setCurrentColorModelWithSideEffects = action(
   $currentColorModel,
   'setCurrentColorModelWithSideEffects',
   (currentColorModel, props: Props) => {
-    const {
-      newCurrentColorModel,
-      syncCurrentBgOrFg = true,
-      syncCurrentColorModelWithBackend = true,
-      syncColorHxya = true,
-      syncLockRelativeChroma = true,
-      syncLockContrast = true,
-      syncFileColorProfileWithSideEffects = true,
-      syncContrast = true
-    } = props
+    const { newCurrentColorModel, sideEffects: partialSideEffects } = props
+
+    const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+    merge(sideEffects, partialSideEffects)
 
     currentColorModel.set(newCurrentColorModel)
 
-    if (syncCurrentBgOrFg) {
+    if (sideEffects.syncCurrentBgOrFg) {
       if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
     }
 
-    if (syncCurrentColorModelWithBackend) {
+    if (sideEffects.syncCurrentColorModelWithBackend) {
       sendMessageToBackend<SyncCurrentColorModelData>({
         type: 'syncCurrentColorModel',
         data: {
@@ -68,7 +74,7 @@ export const setCurrentColorModelWithSideEffects = action(
       })
     }
 
-    if (syncColorHxya) {
+    if (sideEffects.syncColorHxya) {
       const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
 
       const newColorHxy = convertRgbToHxy({
@@ -81,15 +87,20 @@ export const setCurrentColorModelWithSideEffects = action(
 
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {
       // If one of these values are true, we need to set them to false as relativeChroma and contrast are hidden in OkHSV or OkHSL
-      if (syncLockRelativeChroma && $lockRelativeChroma.get()) setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: false })
-      if (syncLockContrast && $lockContrast.get()) setLockContrastWithSideEffects({ newLockContrast: false })
+      if (sideEffects.syncLockRelativeChroma && $lockRelativeChroma.get()) setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: false })
+      if (sideEffects.syncLockContrast && $lockContrast.get()) setLockContrastWithSideEffects({ newLockContrast: false })
 
-      if (syncFileColorProfileWithSideEffects) {
+      if (sideEffects.syncFileColorProfile) {
         // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3's space.
-        setFileColorProfileWithSideEffects({ newFileColorProfile: 'rgb', syncColorHxya: false })
+        setFileColorProfileWithSideEffects({
+          newFileColorProfile: 'rgb',
+          sideEffects: {
+            syncColorHxya: false
+          }
+        })
       }
     } else {
-      if (syncContrast) {
+      if (sideEffects.syncContrast) {
         const newContrast = getContrastFromBgandFgRgba($colorsRgba.get().fill!, $colorsRgba.get().parentFill!)
         setContrast(newContrast)
       }

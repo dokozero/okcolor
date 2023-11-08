@@ -3,6 +3,7 @@ import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../../constants'
 import { SyncIsContrastInputOpenData } from '../../../../types'
 import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMessageToBackend'
+import merge from 'lodash/merge'
 
 export const $isContrastInputOpen = atom(false)
 
@@ -14,23 +15,31 @@ export const setIsContrastInputOpen = action(
   }
 )
 
-type Props = {
-  newIsContrastInputOpen: boolean
-  syncIsContrastInputOpenWithBackend?: boolean
+type SideEffects = {
+  syncIsContrastInputOpenWithBackend: boolean
 }
 
-/**
- * Side effects (default to true): syncIsContrastInputOpenWithBackend
- */
+type Props = {
+  newIsContrastInputOpen: boolean
+  sideEffects?: Partial<SideEffects>
+}
+
+const defaultSideEffects: SideEffects = {
+  syncIsContrastInputOpenWithBackend: true
+}
+
 export const setIsContrastInputOpenWithSideEffects = action(
   $isContrastInputOpen,
   'setIsContrastInputOpenWithSideEffects',
   (isContrastInputOpen, props: Props) => {
-    const { newIsContrastInputOpen, syncIsContrastInputOpenWithBackend = true } = props
+    const { newIsContrastInputOpen, sideEffects: partialSideEffects } = props
+
+    const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
+    merge(sideEffects, partialSideEffects)
 
     isContrastInputOpen.set(newIsContrastInputOpen)
 
-    if (syncIsContrastInputOpenWithBackend) {
+    if (sideEffects.syncIsContrastInputOpenWithBackend) {
       sendMessageToBackend<SyncIsContrastInputOpenData>({
         type: 'syncIsContrastInputOpen',
         data: {
