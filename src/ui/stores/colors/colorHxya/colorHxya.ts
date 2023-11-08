@@ -26,19 +26,22 @@ export const $colorHxya = map<ColorHxya>({
   a: 0
 })
 
-export const setColorHxya = action($colorHxya, 'setColorHxya', (colorHxya, newColorHxya: Partial<ColorHxya>) => {
-  const { h, x, y, a } = filterNewColorHxya({
-    newColorHxya: newColorHxya,
-    lockRelativeChroma: false,
-    lockContrast: false
-  })
+type SetColorHxyaProps = {
+  newColorHxya: Partial<ColorHxya>
+  lockRelativeChroma?: boolean
+  lockContrast?: boolean
+}
 
-  colorHxya.set({
-    h: h !== undefined ? h : colorHxya.get().h,
-    x: x !== undefined ? x : colorHxya.get().x,
-    y: y !== undefined ? y : colorHxya.get().y,
-    a: a !== undefined ? a : colorHxya.get().a
-  })
+export const setColorHxya = action($colorHxya, 'setColorHxya', (colorHxya, props: SetColorHxyaProps) => {
+  const { newColorHxya, lockRelativeChroma = $lockRelativeChroma.get(), lockContrast = $lockContrast.get() } = props
+
+  colorHxya.set(
+    filterNewColorHxya({
+      newColorHxya: newColorHxya,
+      lockRelativeChroma: lockRelativeChroma,
+      lockContrast: lockContrast
+    })
+  )
 })
 
 export type SideEffects = {
@@ -49,7 +52,7 @@ export type SideEffects = {
   syncRelativeChroma: boolean
 }
 
-type Props = {
+type SetColorHxyaWithSideEffectsProps = {
   newColorHxya: Partial<ColorHxya>
   sideEffects?: Partial<SideEffects>
   lockRelativeChroma?: boolean
@@ -64,7 +67,7 @@ export const defaultSideEffects: SideEffects = {
   syncRelativeChroma: true
 }
 
-export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithSideEffects', (colorHxya, props: Props) => {
+export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithSideEffects', (colorHxya, props: SetColorHxyaWithSideEffectsProps) => {
   const { newColorHxya, sideEffects: partialSideEffects, lockRelativeChroma = $lockRelativeChroma.get(), lockContrast = $lockContrast.get() } = props
 
   const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))

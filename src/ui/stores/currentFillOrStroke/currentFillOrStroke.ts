@@ -51,7 +51,11 @@ export const setCurrentFillOrStrokeWithSideEffects = action(
       const newColorRgba = $colorsRgba.get()[newCurrentFillOrStroke]
       const newColorHxy = convertRgbToHxy({ colorRgb: newColorRgba! })
 
-      setColorHxya({ ...newColorHxy, a: newColorRgba!.a })
+      setColorHxya({
+        newColorHxya: { ...newColorHxy, a: newColorRgba!.a },
+        lockRelativeChroma: false,
+        lockContrast: false
+      })
     }
 
     if (sideEffects.syncCurrentFillOrStrokeWithBackend) {

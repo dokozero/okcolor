@@ -1,7 +1,9 @@
 import { ApcaContrast, ColorHxya, WcagContrast } from '../../../../types'
 import { $colorHxya } from '../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
+import { $lockRelativeChroma } from '../../../stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $contrast } from '../../../stores/contrasts/contrast/contrast'
+import { $lockContrast } from '../../../stores/contrasts/lockContrast/lockContrast'
 import getNewXandYFromContrast from '../../contrasts/getNewXandYFromContrast/getNewXandYFromContrast'
 import convertRelativeChromaToAbsolute from '../convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import getClampedChroma from '../getClampedChroma/getClampedChroma'
@@ -9,8 +11,8 @@ import round from 'lodash/round'
 
 type Props = {
   newColorHxya: Partial<ColorHxya>
-  lockRelativeChroma: boolean
-  lockContrast: boolean
+  lockRelativeChroma?: boolean
+  lockContrast?: boolean
   contrast?: ApcaContrast | WcagContrast
 }
 
@@ -18,7 +20,7 @@ type Props = {
  * This function is to filter the hxy values because when we are in oklch, we can receive values that are out of gamut or we might need to constrain them relative chroma or contrast are locked.
  */
 export default function filterNewColorHxya(props: Props): ColorHxya {
-  const { newColorHxya, lockRelativeChroma, lockContrast, contrast = $contrast.get() } = props
+  const { newColorHxya, lockRelativeChroma = $lockRelativeChroma.get(), lockContrast = $lockContrast.get(), contrast = $contrast.get() } = props
 
   const filteredColorHxya: ColorHxya = {
     h: newColorHxya.h !== undefined ? newColorHxya.h : $colorHxya.get().h,

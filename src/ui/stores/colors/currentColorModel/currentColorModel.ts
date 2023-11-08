@@ -75,14 +75,14 @@ export const setCurrentColorModelWithSideEffects = action(
     }
 
     if (sideEffects.syncColorHxya) {
-      const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
-
       const newColorHxy = convertRgbToHxy({
-        colorRgb: currentColorRgba!,
+        colorRgb: $colorsRgba.get()[`${$currentFillOrStroke.get()}`]!,
         targetColorModel: newCurrentColorModel
       })
 
-      setColorHxya({ ...newColorHxy, a: $colorHxya.get().a })
+      setColorHxya({
+        newColorHxya: { ...newColorHxy, a: $colorHxya.get().a }
+      })
     }
 
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {
