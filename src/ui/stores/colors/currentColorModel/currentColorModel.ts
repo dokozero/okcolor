@@ -14,6 +14,8 @@ import { $colorsRgba } from '../colorsRgba/colorsRgba'
 import { setCurrentFileColorProfileWithSideEffects } from '../currentFileColorProfile/currentFileColorProfile'
 import { $lockRelativeChroma, setLockRelativeChromaWithSideEffects } from '../lockRelativeChroma/lockRelativeChroma'
 import merge from 'lodash/merge'
+import convertAbsoluteChromaToRelative from '../../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
+import { setRelativeChroma } from '../relativeChroma/relativeChroma'
 
 export const $currentColorModel = atom<CurrentColorModel>('oklchCss')
 
@@ -32,6 +34,7 @@ type SideEffects = {
   syncLockRelativeChroma: boolean
   syncLockContrast: boolean
   syncCurrentFileColorProfile: boolean
+  syncRelativeChroma: boolean
   syncContrast: boolean
 }
 
@@ -47,6 +50,7 @@ const defaultSideEffects: SideEffects = {
   syncLockRelativeChroma: true,
   syncLockContrast: true,
   syncCurrentFileColorProfile: true,
+  syncRelativeChroma: true,
   syncContrast: true
 }
 
@@ -100,7 +104,12 @@ export const setCurrentColorModelWithSideEffects = action(
         })
       }
     } else {
-      if (sideEffects.syncContrast) {
+      // In case of the user launched the plugin in OkHSV or OkHSL mode then change to OkLCH, as we don't update the relativeChroma and contrast values in these models, we need to set them to avoid empty values.
+      if (sideEffects.syncRelativeChroma) {
+        setRelativeChroma(convertAbsoluteChromaToRelative({ colorHxy: $colorHxya.get() }))
+      }
+
+      if (sideEffects.syncContrast && $colorsRgba.get().parentFill) {
         const newContrast = getContrastFromBgandFgRgba({
           fg: $colorsRgba.get().fill!,
           bg: $colorsRgba.get().parentFill!
