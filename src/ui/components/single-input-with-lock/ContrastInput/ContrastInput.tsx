@@ -85,7 +85,10 @@ export default function ContrastInput() {
 
     setCurrentContrastMethodWithSideEffects({ newCurrentContrastMethod: newCurrentContrastMethod })
 
-    const newContrast = getContrastFromBgandFgRgba($colorsRgba.get().fill!, $colorsRgba.get().parentFill!)
+    const newContrast = getContrastFromBgandFgRgba({
+      fg: $colorsRgba.get().fill!,
+      bg: $colorsRgba.get().parentFill!
+    })
     setContrast(newContrast)
   }
 

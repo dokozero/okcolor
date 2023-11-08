@@ -1,5 +1,5 @@
 import { formatHex8, formatHex, clampChromaInGamut } from '../../../../helpers/colors/culori.mjs'
-import { ColorCodesInputValues, ColorRgb } from '../../../../../types'
+import { ColorCodesInputValues, ColorHxya, ColorRgb, CurrentColorModel } from '../../../../../types'
 import convertHxyToRgb from '../../../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'
@@ -9,7 +9,14 @@ type NewColorStrings = {
   [key in ColorCodesInputValues]: string
 }
 
-export default function getColorCodeStrings(): NewColorStrings {
+type Props = {
+  colorHxya?: ColorHxya
+  currentColorModel?: CurrentColorModel
+}
+
+export default function getColorCodeStrings(props: Props = {}): NewColorStrings {
+  const { colorHxya = $colorHxya.get(), currentColorModel = $currentColorModel.get() } = props
+
   const newColorStrings: NewColorStrings = {
     currentColorModel: '',
     color: '',
@@ -30,8 +37,8 @@ export default function getColorCodeStrings(): NewColorStrings {
   }
 
   // We don't clamp chroma with the models that don't use it because they already work in sRGB.
-  if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
-    clamped = clampChromaInGamut({ mode: 'oklch', l: $colorHxya.get().y / 100, c: $colorHxya.get().x, h: $colorHxya.get().h }, 'oklch', 'rgb')
+  if (['oklch', 'oklchCss'].includes(currentColorModel)) {
+    clamped = clampChromaInGamut({ mode: 'oklch', l: colorHxya.y / 100, c: colorHxya.x, h: colorHxya.h }, 'oklch', 'rgb')
     rgbSrgb = convertHxyToRgb({
       colorHxy: {
         h: clamped.h,
@@ -41,41 +48,38 @@ export default function getColorCodeStrings(): NewColorStrings {
       colorSpace: 'rgb'
     })
     rgbP3 = convertHxyToRgb({
-      colorHxy: $colorHxya.get(),
+      colorHxy: colorHxya,
       colorSpace: 'p3'
     })
   } else {
     rgbSrgb = convertHxyToRgb({
-      colorHxy: $colorHxya.get(),
+      colorHxy: colorHxya,
       colorSpace: 'rgb'
     })
   }
 
-  if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+  if (['oklch', 'oklchCss'].includes(currentColorModel)) {
     newColorStrings.currentColorModel =
-      `oklch(${$colorHxya.get().y}% ${round($colorHxya.get().x, 6)} ${$colorHxya.get().h}` +
-      ($colorHxya.get().a !== 1 ? ` / ${$colorHxya.get().a})` : ')')
-  } else if ($currentColorModel.get() === 'okhsl') {
-    newColorStrings.currentColorModel = `{mode: "okhsl", h: ${$colorHxya.get().h}, s: ${$colorHxya.get().x}, l: ${$colorHxya.get().y}}`
-  } else if ($currentColorModel.get() === 'okhsv') {
-    newColorStrings.currentColorModel = `{mode: "okhsv", h: ${$colorHxya.get().h}, s: ${$colorHxya.get().x}, v: ${$colorHxya.get().y}}`
+      `oklch(${colorHxya.y}% ${round(colorHxya.x, 6)} ${colorHxya.h}` + (colorHxya.a !== 1 ? ` / ${colorHxya.a})` : ')')
+  } else if (currentColorModel === 'okhsl') {
+    newColorStrings.currentColorModel = `{mode: "okhsl", h: ${colorHxya.h}, s: ${colorHxya.x}, l: ${colorHxya.y}}`
+  } else if (currentColorModel === 'okhsv') {
+    newColorStrings.currentColorModel = `{mode: "okhsv", h: ${colorHxya.h}, s: ${colorHxya.x}, v: ${colorHxya.y}}`
   }
 
-  if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+  if (['oklch', 'oklchCss'].includes(currentColorModel)) {
     newColorStrings.color =
-      `color(display-p3 ${round(rgbP3.r, 4)} ${round(rgbP3.g, 4)} ${round(rgbP3.b, 4)}` +
-      ($colorHxya.get().a !== 1 ? ` / ${$colorHxya.get().a})` : ')')
+      `color(display-p3 ${round(rgbP3.r, 4)} ${round(rgbP3.g, 4)} ${round(rgbP3.b, 4)}` + (colorHxya.a !== 1 ? ` / ${colorHxya.a})` : ')')
   } else {
     newColorStrings.color =
-      `color(srgb ${round(rgbSrgb.r, 4)} ${round(rgbSrgb.g, 4)} ${round(rgbSrgb.b, 4)}` +
-      ($colorHxya.get().a !== 1 ? ` / ${$colorHxya.get().a})` : ')')
+      `color(srgb ${round(rgbSrgb.r, 4)} ${round(rgbSrgb.g, 4)} ${round(rgbSrgb.b, 4)}` + (colorHxya.a !== 1 ? ` / ${colorHxya.a})` : ')')
   }
 
-  newColorStrings.rgba = `rgba(${round(rgbSrgb.r * 255, 0)}, ${round(rgbSrgb.g * 255, 0)}, ${round(rgbSrgb.b * 255, 0)}, ${$colorHxya.get().a})`
+  newColorStrings.rgba = `rgba(${round(rgbSrgb.r * 255, 0)}, ${round(rgbSrgb.g * 255, 0)}, ${round(rgbSrgb.b * 255, 0)}, ${colorHxya.a})`
 
-  if ($colorHxya.get().a !== 1) {
+  if (colorHxya.a !== 1) {
     newColorStrings.hex = formatHex8(
-      `rgba(${round(rgbSrgb.r * 255, 0)}, ${round(rgbSrgb.g * 255, 0)}, ${round(rgbSrgb.b * 255, 0)}, ${$colorHxya.get().a})`
+      `rgba(${round(rgbSrgb.r * 255, 0)}, ${round(rgbSrgb.g * 255, 0)}, ${round(rgbSrgb.b * 255, 0)}, ${colorHxya.a})`
     )!.toUpperCase()
   } else {
     newColorStrings.hex = formatHex(`rgb(${round(rgbSrgb.r * 255, 0)}, ${round(rgbSrgb.g * 255, 0)}, ${round(rgbSrgb.b * 255, 0)})`)!.toUpperCase()

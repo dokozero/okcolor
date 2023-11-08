@@ -104,7 +104,10 @@ export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWi
     if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
     if (lockContrast || !newColorsRgba.parentFill || !newColorsRgba.fill) return
 
-    const newContrast: ApcaContrast | WcagContrast = getContrastFromBgandFgRgba(newColorsRgba.fill!, newColorsRgba.parentFill!)
+    const newContrast: ApcaContrast | WcagContrast = getContrastFromBgandFgRgba({
+      fg: newColorsRgba.fill!,
+      bg: newColorsRgba.parentFill!
+    })
     setContrast(newContrast)
   }
 })

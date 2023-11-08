@@ -47,15 +47,27 @@ export default function BgOrFgToggle() {
     let blackTextContrast: ApcaContrast | WcagContrast
 
     // Define color of Bg toggle label
-    whiteTextContrast = getContrastFromBgandFgRgba({ r: 1, g: 1, b: 1, a: 1 }, colorsRgba.parentFill)
-    blackTextContrast = getContrastFromBgandFgRgba({ r: 0, g: 0, b: 0, a: 1 }, colorsRgba.parentFill)
+    whiteTextContrast = getContrastFromBgandFgRgba({
+      fg: { r: 1, g: 1, b: 1, a: 1 },
+      bg: colorsRgba.parentFill
+    })
+    blackTextContrast = getContrastFromBgandFgRgba({
+      fg: { r: 0, g: 0, b: 0, a: 1 },
+      bg: colorsRgba.parentFill
+    })
 
     if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) bgToggleText.current!.style.color = '#FFFFFF'
     else bgToggleText.current!.style.color = '#000000'
 
     // Define color of Fg toggle label
-    whiteTextContrast = getContrastFromBgandFgRgba({ r: 1, g: 1, b: 1, a: 1 }, colorsRgba.fill)
-    blackTextContrast = getContrastFromBgandFgRgba({ r: 0, g: 0, b: 0, a: 1 }, colorsRgba.fill)
+    whiteTextContrast = getContrastFromBgandFgRgba({
+      fg: { r: 1, g: 1, b: 1, a: 1 },
+      bg: colorsRgba.fill
+    })
+    blackTextContrast = getContrastFromBgandFgRgba({
+      fg: { r: 0, g: 0, b: 0, a: 1 },
+      bg: colorsRgba.fill
+    })
 
     if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) fgToggleText.current!.style.color = '#FFFFFF'
     else fgToggleText.current!.style.color = '#000000'

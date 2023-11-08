@@ -82,7 +82,10 @@ export default function ColorCodeInputs() {
       }
     }
 
-    const newColorHxya = getNewColorHxya(eventTargetId, eventTarget.value)
+    const newColorHxya = getNewColorHxya({
+      eventTargetId: eventTargetId,
+      eventTargetValue: eventTarget.value
+    })
 
     if (newColorHxya) {
       setColorHxyaWithSideEffects({

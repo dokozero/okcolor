@@ -1,4 +1,4 @@
-import { Hue, AbsoluteChroma, ApcaContrast, WcagContrast, Lightness, ColorRgb } from '../../../../types'
+import { Hue, AbsoluteChroma, ApcaContrast, WcagContrast, Lightness, ColorRgb, CurrentBgOrFg, ColorsRgba } from '../../../../types'
 import { $colorsRgba } from '../../../stores/colors/colorsRgba/colorsRgba'
 import { $lockRelativeChroma } from '../../../stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $currentBgOrFg } from '../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
@@ -14,6 +14,8 @@ type Props = {
   x: AbsoluteChroma
   targetContrast: ApcaContrast | WcagContrast
   lockRelativeChroma?: boolean
+  currentBgOrFg?: CurrentBgOrFg
+  colorsRgba?: ColorsRgba
 }
 
 /**
@@ -29,7 +31,14 @@ type Props = {
 export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChroma; y: Lightness } {
   const debugInfos = false
 
-  const { h, x, targetContrast, lockRelativeChroma = $lockRelativeChroma.get() } = props
+  const {
+    h,
+    x,
+    targetContrast,
+    lockRelativeChroma = $lockRelativeChroma.get(),
+    currentBgOrFg = $currentBgOrFg.get(),
+    colorsRgba = JSON.parse(JSON.stringify($colorsRgba.get()))
+  } = props
 
   let newX = x
   let newRgb: ColorRgb
@@ -45,14 +54,14 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
 
   const ySteps = [50, 25, 10, 5, 1, 0.1]
   let currentStepIndex = 0
-  // We need this because based on $currentBgOrFg, the condition will not be the same
+  // We need this because based on currentBgOrFg, the condition will not be the same
   let newYUpdateCondition: boolean
 
   // First loop, find a Y value that yield the targetContrast.
   do {
     loopCountLimit++
 
-    newYUpdateCondition = $currentBgOrFg.get() === 'bg' ? tempNewContrast > targetContrast : tempNewContrast < targetContrast
+    newYUpdateCondition = currentBgOrFg === 'bg' ? tempNewContrast > targetContrast : tempNewContrast < targetContrast
 
     if (yBetweenMinYAndMaxY === undefined) {
       yBetweenMinYAndMaxY = 100
@@ -95,10 +104,10 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
       }
     })
 
-    if ($currentBgOrFg.get() === 'bg') {
-      tempNewContrast = getContrastFromBgandFgRgba($colorsRgba.get().fill!, newRgb)
+    if (currentBgOrFg === 'bg') {
+      tempNewContrast = getContrastFromBgandFgRgba({ fg: colorsRgba.fill!, bg: newRgb })
     } else {
-      tempNewContrast = getContrastFromBgandFgRgba({ ...newRgb, a: $colorsRgba.get().fill!.a }, $colorsRgba.get().parentFill!)
+      tempNewContrast = getContrastFromBgandFgRgba({ fg: { ...newRgb, a: colorsRgba.fill!.a }, bg: colorsRgba.parentFill! })
     }
   } while (tempNewContrast !== targetContrast && loopCountLimit < 100)
 
@@ -161,10 +170,16 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
       }
     })
 
-    if ($currentBgOrFg.get() === 'bg') {
-      tempNewContrast = getContrastFromBgandFgRgba($colorsRgba.get().fill!, newRgb)
+    if (currentBgOrFg === 'bg') {
+      tempNewContrast = getContrastFromBgandFgRgba({
+        fg: colorsRgba.fill!,
+        bg: newRgb
+      })
     } else {
-      tempNewContrast = getContrastFromBgandFgRgba({ ...newRgb, a: $colorsRgba.get().fill!.a }, $colorsRgba.get().parentFill!)
+      tempNewContrast = getContrastFromBgandFgRgba({
+        fg: { ...newRgb, a: colorsRgba.fill!.a },
+        bg: colorsRgba.parentFill!
+      })
     }
 
     if (tempNewContrast !== targetContrast && !minYFound) {

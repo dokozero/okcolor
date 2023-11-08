@@ -1,34 +1,41 @@
 import { PICKER_SIZE, OKLCH_CHROMA_SCALE } from '../../../../../constants'
-import { SvgPath } from '../../../../../types'
+import { ApcaContrast, ColorHxya, SvgPath, WcagContrast } from '../../../../../types'
 import getClampedChroma from '../../../../helpers/colors/getClampedChroma/getClampedChroma'
 import getNewXandYFromContrast from '../../../../helpers/contrasts/getNewXandYFromContrast/getNewXandYFromContrast'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $contrast } from '../../../../stores/contrasts/contrast/contrast'
 
-export default function getContrastStrokeLimit(): SvgPath {
+type Props = {
+  colorHxya?: ColorHxya
+  contrast?: ApcaContrast | WcagContrast
+}
+
+export default function getContrastStrokeLimit(props: Props = {}): SvgPath {
+  const { colorHxya = $colorHxya.get(), contrast = $contrast.get() } = props
+
   let clampedChroma = getClampedChroma({
-    h: $colorHxya.get().h,
+    h: colorHxya.h,
     x: 0.37,
-    y: $colorHxya.get().y
+    y: colorHxya.y
   })
 
   let path = ''
 
   const startXy = getNewXandYFromContrast({
-    h: $colorHxya.get().h,
+    h: colorHxya.h,
     x: 0,
-    targetContrast: $contrast.get(),
+    targetContrast: contrast,
     lockRelativeChroma: false
   })
   const endXy = getNewXandYFromContrast({
-    h: $colorHxya.get().h,
+    h: colorHxya.h,
     x: clampedChroma,
-    targetContrast: $contrast.get(),
+    targetContrast: contrast,
     lockRelativeChroma: false
   })
 
   clampedChroma = getClampedChroma({
-    h: $colorHxya.get().h,
+    h: colorHxya.h,
     x: 0.37,
     y: endXy.y
   })
@@ -46,9 +53,9 @@ export default function getContrastStrokeLimit(): SvgPath {
     loopCountLimit++
 
     const { y } = getNewXandYFromContrast({
-      h: $colorHxya.get().h,
+      h: colorHxya.h,
       x: i,
-      targetContrast: $contrast.get(),
+      targetContrast: contrast,
       lockRelativeChroma: false
     })
 

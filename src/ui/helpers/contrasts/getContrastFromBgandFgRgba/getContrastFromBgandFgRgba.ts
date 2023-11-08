@@ -1,14 +1,19 @@
 import { APCAcontrast, sRGBtoY, alphaBlend, displayP3toY } from 'apca-w3'
-import { ColorRgba, ColorRgb, CurrentContrastMethod, ApcaContrast, WcagContrast, RgbArray, RgbaArray } from '../../../../types'
+import { ColorRgba, ColorRgb, CurrentContrastMethod, ApcaContrast, WcagContrast, RgbArray, RgbaArray, FileColorProfile } from '../../../../types'
 import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
 import { $currentContrastMethod } from '../../../stores/contrasts/currentContrastMethod/currentContrastMethod'
 import WCAGcontrast from '../WCAGcontrast/WCAGcontrast'
 
-export default function getContrastFromBgandFgRgba(
-  fg: ColorRgba,
-  bg: ColorRgb,
-  currentContrastMethod: CurrentContrastMethod = $currentContrastMethod.get()
-): ApcaContrast | WcagContrast {
+type Props = {
+  fg: ColorRgba
+  bg: ColorRgb
+  currentContrastMethod?: CurrentContrastMethod
+  fileColorProfile?: FileColorProfile
+}
+
+export default function getContrastFromBgandFgRgba(props: Props): ApcaContrast | WcagContrast {
+  const { fg, bg, currentContrastMethod = $currentContrastMethod.get(), fileColorProfile = $fileColorProfile.get() } = props
+
   let bgRgb: RgbArray = [bg.r, bg.g, bg.b]
   let fgRgb: RgbaArray = [fg.r, fg.g, fg.b, fg.a]
   let APCAContrastResult: ApcaContrast | string
@@ -16,7 +21,7 @@ export default function getContrastFromBgandFgRgba(
 
   switch (currentContrastMethod) {
     case 'apca':
-      if ($fileColorProfile.get() === 'rgb') {
+      if (fileColorProfile === 'rgb') {
         // sRGBtoY need these value between 0 and 255.
         bgRgb = [bg.r * 255, bg.g * 255, bg.b * 255]
         fgRgb = [fg.r * 255, fg.g * 255, fg.b * 255, fg.a]
