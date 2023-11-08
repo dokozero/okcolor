@@ -70,7 +70,9 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     return returnObject
   }
 
-  if (firstSelection.parent?.type !== 'GROUP' || firstSelection.parent?.type !== 'PAGE') {
+  // Get the parent fill if possible.
+  // We test is selection.length is 1 because we don't want to display the contrast of multiple selected shapes as it would show one contrast value and that wouldn't be clear of which one of the selected shape it would be.
+  if (firstSelection.parent?.type !== 'PAGE' && selection.length === 1) {
     let currentObject = firstSelection.parent
 
     while (currentObject) {
@@ -92,14 +94,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     }
   }
 
-  // If user select multiple shape and not all of them have a stroke of a fill, or if it is the case but one of them is a gradient, we disable the UI.
   if (selection.length > 1) {
-    // If the first selected shape has a prent fill, we set it back to null as we don't want to display the contrast because
-    // it would show one value although and that wouldn't be clear of which one it would be.
-    if (returnObject.newColorsRgba.parentFill) {
-      returnObject.newColorsRgba.parentFill = null
-    }
-
     let fillsCount = 0
     let strokesCount = 0
 
@@ -108,6 +103,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
       if (node.strokes[0]?.type === 'SOLID') strokesCount++
     }
 
+    // If user select multiple shape and not all of them have a stroke of a fill, or if it is the case but one of them is a gradient, we disable the UI.
     if (selection.length !== fillsCount && selection.length !== strokesCount) {
       returnObject.uiMessageCode = 'not_all_shapes_have_fill_or_stroke'
       return returnObject
