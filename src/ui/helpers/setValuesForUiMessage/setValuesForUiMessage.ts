@@ -1,6 +1,7 @@
 import { setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
 import { setColorsRgbaWithSideEffects } from '../../stores/colors/colorsRgba/colorsRgba'
 import { setLockRelativeChroma } from '../../stores/colors/lockRelativeChroma/lockRelativeChroma'
+import { setRelativeChroma } from '../../stores/colors/relativeChroma/relativeChroma'
 import { $currentBgOrFg, setCurrentBgOrFg } from '../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { setLockContrast } from '../../stores/contrasts/lockContrast/lockContrast'
 import { setCurrentFillOrStroke } from '../../stores/currentFillOrStroke/currentFillOrStroke'
@@ -57,4 +58,6 @@ export default function setValuesForUiMessage() {
       }
     }
   })
+
+  setRelativeChroma(0)
 }
