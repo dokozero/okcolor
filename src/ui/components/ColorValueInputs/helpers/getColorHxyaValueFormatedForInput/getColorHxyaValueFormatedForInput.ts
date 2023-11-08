@@ -1,4 +1,4 @@
-import { round } from 'lodash'
+import round from 'lodash/round'
 import { HxyaLabels, HxyaInputTypes } from '../../../../../types'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'

@@ -1,4 +1,4 @@
-import { clamp } from 'lodash'
+import clamp from 'lodash/clamp'
 import { HxyaLabels, HxyaInputTypes, AbsoluteChroma } from '../../../../../types'
 import getClampedChroma from '../../../../helpers/colors/getClampedChroma/getClampedChroma'
 import getHxyaInputRange from '../../../../helpers/colors/getHxyaInputRange/getHxyaInputRange'
