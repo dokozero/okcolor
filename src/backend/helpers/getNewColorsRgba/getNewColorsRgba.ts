@@ -70,15 +70,18 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
     return returnObject
   }
 
-  if (firstSelection.parent?.fills) {
+  if (firstSelection.parent?.type !== 'GROUP' || firstSelection.parent?.type !== 'PAGE') {
     let currentObject = firstSelection.parent
 
     while (currentObject) {
-      if (currentObject.fills && currentObject?.fills?.length !== 0) {
-        returnObject.newColorsRgba.parentFill = {
-          r: currentObject.fills[0].color.r,
-          g: currentObject.fills[0].color.g,
-          b: currentObject.fills[0].color.b
+      if (currentObject.fills && currentObject.fills?.length !== 0) {
+        // We do this test on a new if and not on the one above, because for example if we have a label with a parent frame which has a gradient and who also have a parent frame with a solid fill, the above condition would be true and we would update parentFill, however if the fill type is not solid we run the "break".
+        if (currentObject.fills[0].type === 'SOLID') {
+          returnObject.newColorsRgba.parentFill = {
+            r: currentObject.fills[0].color.r,
+            g: currentObject.fills[0].color.g,
+            b: currentObject.fills[0].color.b
+          }
         }
         break
       } else if (currentObject.parent) {

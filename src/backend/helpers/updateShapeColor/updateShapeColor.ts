@@ -14,7 +14,7 @@ export default function updateShapeColor(newColorRgba: ColorRgba, currentFillOrS
     if (currentBgOrFg === 'bg') {
       parentObject = node.parent as any // We know that node.parent will have the properties if currentBgOrFg === 'bg'.
       while (parentObject) {
-        if (parentObject.fills?.length !== 0) {
+        if (parentObject.type !== 'GROUP' && parentObject.fills?.length !== 0) {
           break
         } else if (parentObject.parent) {
           parentObject = parentObject.parent
