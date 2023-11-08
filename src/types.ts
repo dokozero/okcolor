@@ -9,6 +9,12 @@ export type Saturation = number // 0 - 100
 export type Lightness = number // 0 - 100
 export type Opacity = number // 0 - 1 with 2 decimal precision (eg. 0.75).
 
+export type AbsoluteChromaOklchInput = number // 0 - MAX_CHROMA_P3 * 100
+export type OpacityInput = number // 0 - 100
+
+export type HxyaTypes = Hue | AbsoluteChroma | Saturation | Lightness | Opacity
+export type HxyaInputTypes = Hue | AbsoluteChroma | AbsoluteChromaOklchInput | Saturation | Lightness | OpacityInput
+
 export type ApcaContrast = number // -108 - 106
 export type WcagContrast = number // -21 - 21, normally WCAG contrast is between 0 and 21 but because APCA one can be negative, we also use a negative value here as it is easier to work with, for example in getNewXandYFromContrast() and also forthe user when he enter a value in the contrast input as without this distinction, if he enter a value like "14", in many cases, this can mean two colors (two different lightness with a given hue and chroma).
 

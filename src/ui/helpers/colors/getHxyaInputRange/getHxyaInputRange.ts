@@ -1,10 +1,10 @@
 import { MAX_CHROMA_P3 } from '../../../../constants'
-import { AbsoluteChroma, Hue, HxyaLabels, Lightness, Opacity, Saturation } from '../../../../types'
+import { HxyaLabels, HxyaTypes } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 
 type ReturnObject = {
-  min: Hue | AbsoluteChroma | Saturation | Lightness | Opacity
-  max: Hue | AbsoluteChroma | Saturation | Lightness | Opacity
+  min: HxyaTypes
+  max: HxyaTypes
 }
 
 export default function getHxyaInputRange(property: keyof typeof HxyaLabels, currentColorModel = $currentColorModel.get()): ReturnObject {

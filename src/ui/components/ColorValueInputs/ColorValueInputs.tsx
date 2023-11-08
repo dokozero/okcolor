@@ -1,54 +1,27 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
-import { HxyaLabels, AbsoluteChroma, Saturation, Lightness, Opacity, Hue } from '../../../types'
+import { HxyaLabels } from '../../../types'
 import selectInputContent from '../../helpers/selectInputContent/selectInputContent'
-import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
+import { $colorHxya } from '../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
 import { $lockRelativeChroma } from '../../stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { $lockContrast } from '../../stores/contrasts/lockContrast/lockContrast'
-import { $currentKeysPressed } from '../../stores/currentKeysPressed/currentKeysPressed'
 import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument/isMouseInsideDocument'
 import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import getHxyaInputRange from '../../helpers/colors/getHxyaInputRange/getHxyaInputRange'
 import round from 'lodash/round'
 import clamp from 'lodash/clamp'
+import getColorHxyaValueFormatedForInput from './helpers/getColorHxyaValueFormatedForInput/getColorHxyaValueFormatedForInput'
+import clampColorHxyaValueInInputFormat from './helpers/clampColorHxyaValueInInputFormat/clampColorHxyaValueInInputFormat'
+import getStepUpdateValue from './helpers/getStepUpdateValue/getStepUpdateValue'
+import formatAndSendNewValueToStore from './helpers/formatAndSendNewValueToStore/formatAndSendNewValueToStore'
 
 let lastKeyPressed: string = ''
 const keepInputSelected = {
   state: false,
   inputId: ''
-}
-
-const getColorHxyaValueFormatedForInput = (value: keyof typeof HxyaLabels): Hue | AbsoluteChroma | Saturation | Lightness | Opacity => {
-  switch (value) {
-    case 'h':
-      return $colorHxya.get().h
-    case 'x':
-      return $currentColorModel.get() === 'oklch' ? round($colorHxya.get().x * 100, 1) : $colorHxya.get().x
-    case 'y':
-      return $colorHxya.get().y
-    case 'a':
-      return round($colorHxya.get().a * 100, 0)
-  }
-}
-
-function getStepUpdateValue(eventId: string): number {
-  const shiftPressed = $currentKeysPressed.get().includes('shift')
-
-  if (eventId === 'x') {
-    if ($currentColorModel.get() === 'oklchCss') return shiftPressed ? 0.01 : 0.001
-    if ($currentColorModel.get() === 'oklch') return shiftPressed ? 1 : 0.1
-  }
-  return shiftPressed ? 10 : 1
-}
-
-const formatAndSendNewValueToStore = (eventId: keyof typeof HxyaLabels, newValue: number) => {
-  let newValueFormated = newValue
-  if (($currentColorModel.get() === 'oklch' && eventId === 'x') || eventId === 'a') newValueFormated /= 100
-
-  setColorHxyaWithSideEffects({ newColorHxya: { [eventId]: newValueFormated } })
 }
 
 export default function ColorValueInputs() {
@@ -104,12 +77,16 @@ export default function ColorValueInputs() {
     const oldValue = getColorHxyaValueFormatedForInput(eventId)
     const newValue = round(parseFloat(eventTarget.value), getColorHxyDecimals({ forInputs: true })[`${eventId}`])
 
-    const clampedNewValue = clamp(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
+    if (isNaN(newValue)) {
+      eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
+      return
+    }
+
+    const clampedNewValue = clampColorHxyaValueInInputFormat(eventId, newValue)
 
     if (
       clampedNewValue === oldValue ||
       lastKeyPressed === 'Escape' ||
-      isNaN(newValue) ||
       (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))
     ) {
       eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')

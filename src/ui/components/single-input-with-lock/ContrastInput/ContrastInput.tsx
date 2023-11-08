@@ -13,7 +13,6 @@ import {
 import { $isContrastInputOpen, setIsContrastInputOpenWithSideEffects } from '../../../stores/contrasts/isContrastInputOpen/isContrastInputOpen'
 import { setLockContrastWithSideEffects, $lockContrast } from '../../../stores/contrasts/lockContrast/lockContrast'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke/currentFillOrStroke'
-import { $currentKeysPressed } from '../../../stores/currentKeysPressed/currentKeysPressed'
 import { $isMouseInsideDocument } from '../../../stores/isMouseInsideDocument/isMouseInsideDocument'
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
 import BgOrFgToggle from '../BgOrFgToggle/BgOrFgToggle'
@@ -22,37 +21,10 @@ import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
 import { consoleLogInfos } from '../../../../constants'
 import getContrastRange from '../../../helpers/contrasts/getContrastRange/getContrastRange'
 import clamp from 'lodash/clamp'
-import round from 'lodash/round'
+import getNewContrastValueFromArrowKey from './helpers/getNewContrastValueFromArrowKey/getNewContrastValueFromArrowKey'
 
 let lastKeyPressed: string = ''
 let keepInputSelected = false
-
-const getNewContrastValueFromArrowKey = (
-  eventKey: 'ArrowDown' | 'ArrowUp',
-  currentValue: ApcaContrast | WcagContrast
-): ApcaContrast | WcagContrast => {
-  let newValue: ApcaContrast | WcagContrast
-
-  const isShiftPressed = $currentKeysPressed.get().includes('shift')
-  const currentContrastMethod = $currentContrastMethod.get()
-
-  let stepUpdateValue: number
-  if (currentContrastMethod === 'apca') stepUpdateValue = isShiftPressed ? 10 : 1
-  else stepUpdateValue = isShiftPressed ? 1 : 0.1
-
-  const contrastRange = getContrastRange()
-
-  if (eventKey === 'ArrowUp') {
-    if (currentValue === contrastRange.negative.min) newValue = currentContrastMethod === 'apca' ? 0 : 1
-    else newValue = currentValue + stepUpdateValue
-  } else if (eventKey === 'ArrowDown') {
-    if (currentValue === contrastRange.positive.min) newValue = currentContrastMethod === 'apca' ? 0 : -1
-    else newValue = currentValue - stepUpdateValue
-  }
-
-  // We need to this because in some cases we can have values like 1.2999999999999998.
-  return round(newValue!, 1)
-}
 
 const handleLockContrast = () => {
   setLockContrastWithSideEffects({ newLockContrast: !$lockContrast.get() })
@@ -98,12 +70,16 @@ export default function ContrastInput() {
     const newValue: ApcaContrast | WcagContrast =
       $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
 
+    if (isNaN(newValue)) {
+      eventTarget.value = String($contrast.get())
+      return
+    }
+
     const clampedNewContrast = clamp(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
 
     if (
       clampedNewContrast === $contrast.get() ||
       lastKeyPressed === 'Escape' ||
-      isNaN(newValue) ||
       (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))
     ) {
       eventTarget.value = String($contrast.get())

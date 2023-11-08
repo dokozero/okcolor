@@ -36,12 +36,16 @@ export default function RelativeChromaInput() {
     const eventTarget = event.target
     const newValue = parseInt(eventTarget.value)
 
+    if (isNaN(newValue)) {
+      eventTarget.value = $relativeChroma.get() + '%'
+      return
+    }
+
     const clampedNewRelativeChroma = clamp(newValue, 0, 100)
 
     if (
       clampedNewRelativeChroma === $relativeChroma.get() ||
       lastKeyPressed === 'Escape' ||
-      isNaN(newValue) ||
       (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))
     ) {
       eventTarget.value = $relativeChroma.get() + '%'
