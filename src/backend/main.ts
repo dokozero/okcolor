@@ -6,13 +6,12 @@ import type {
   CurrentColorModel,
   CurrentFillOrStroke,
   DisplayUiMessageData,
-  FileColorProfile,
+  CurrentFileColorProfile,
   MessageForBackend,
   MessageForBackendData,
   SyncCurrentColorModelData,
   SyncNewShapeData,
   SyncCurrentFillOrStrokeData,
-  SyncFileColorProfileData,
   SyncLocalStorageValuesData,
   SyncLockContrastData,
   SyncLockRelativeChromaData,
@@ -20,7 +19,8 @@ import type {
   UpdateShapeColorData,
   SyncIsContrastInputOpenData,
   CurrentContrastMethod,
-  SyncCurrentContrastMethodData
+  SyncCurrentContrastMethodData,
+  SyncCurrentFileColorProfileData
 } from '../types'
 import getNewColorsRgba from './helpers/getNewColorsRgba/getNewColorsRgba'
 import getWindowHeigh from './helpers/getWindowHeigh/getWindowHeigh'
@@ -28,7 +28,7 @@ import sendMessageToUi from './helpers/sendMessageToUi/sendMessageToUi'
 import updateShapeColor from './helpers/updateShapeColor/updateShapeColor'
 
 let currentFillOrStroke: CurrentFillOrStroke = 'fill'
-let fileColorProfile: FileColorProfile
+let currentFileColorProfile: CurrentFileColorProfile
 let currentColorModel: CurrentColorModel
 let isContrastInputOpen: boolean
 let lockRelativeChroma: boolean
@@ -84,9 +84,9 @@ const updateColorsRgbaOrSendUiMessageCodeToUi = (): string => {
  */
 
 const getLocalStorageValueAndCreateUiWindow = async () => {
-  // We force the fileColorProfile value to sRGB in FigJam because they don't suport P3 yet (https://help.figma.com/hc/en-us/articles/360039825114).
-  if (figma.editorType === 'figma') fileColorProfile = (await figma.clientStorage.getAsync('fileColorProfile')) || 'rgb'
-  else if (figma.editorType === 'figjam') fileColorProfile = 'rgb'
+  // We force the currentFileColorProfile value to sRGB in FigJam because they don't suport P3 yet (https://help.figma.com/hc/en-us/articles/360039825114).
+  if (figma.editorType === 'figma') currentFileColorProfile = (await figma.clientStorage.getAsync('currentFileColorProfile')) || 'rgb'
+  else if (figma.editorType === 'figjam') currentFileColorProfile = 'rgb'
 
   isContrastInputOpen = (await figma.clientStorage.getAsync('isContrastInputOpen')) || false
   isColorCodeInputsOpen = (await figma.clientStorage.getAsync('isColorCodeInputsOpen')) || false
@@ -118,7 +118,7 @@ const init = async () => {
     type: 'syncLocalStorageValues',
     data: {
       figmaEditorType: figma.editorType,
-      fileColorProfile: fileColorProfile,
+      currentFileColorProfile: currentFileColorProfile,
       isContrastInputOpen: isContrastInputOpen,
       lockRelativeChroma: lockRelativeChroma,
       currentContrastMethod: currentContrastMethod,
@@ -237,10 +237,10 @@ figma.ui.onmessage = (event: MessageForBackend) => {
       }, 500)
       break
 
-    case 'syncFileColorProfile':
-      data = event.data as SyncFileColorProfileData
-      fileColorProfile = data.fileColorProfile
-      figma.clientStorage.setAsync('fileColorProfile', data.fileColorProfile)
+    case 'syncCurrentFileColorProfile':
+      data = event.data as SyncCurrentFileColorProfileData
+      currentFileColorProfile = data.currentFileColorProfile
+      figma.clientStorage.setAsync('currentFileColorProfile', data.currentFileColorProfile)
       break
 
     case 'syncCurrentFillOrStroke':

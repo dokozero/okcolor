@@ -1,7 +1,7 @@
 import { action, atom } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../../constants'
-import { FileColorProfile, SyncFileColorProfileData } from '../../../../types'
+import { CurrentFileColorProfile, SyncCurrentFileColorProfileData } from '../../../../types'
 import convertRgbToHxy from '../../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
 import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMessageToBackend'
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
@@ -9,44 +9,48 @@ import { setColorHxyaWithSideEffects, $colorHxya } from '../colorHxya/colorHxya'
 import { $colorsRgba } from '../colorsRgba/colorsRgba'
 import merge from 'lodash/merge'
 
-export const $fileColorProfile = atom<FileColorProfile>('rgb')
+export const $currentFileColorProfile = atom<CurrentFileColorProfile>('rgb')
 
-export const setFileColorProfile = action($fileColorProfile, 'setFileColorProfile', (fileColorProfile, newFileColorProfile: FileColorProfile) => {
-  fileColorProfile.set(newFileColorProfile)
-})
+export const setCurrentFileColorProfile = action(
+  $currentFileColorProfile,
+  'setCurrentFileColorProfile',
+  (currentFileColorProfile, newCurrentFileColorProfile: CurrentFileColorProfile) => {
+    currentFileColorProfile.set(newCurrentFileColorProfile)
+  }
+)
 
 type SideEffects = {
   syncColorHxya: boolean
-  syncFileColorProfileWithBackend: boolean
+  syncCurrentFileColorProfileWithBackend: boolean
 }
 
 type Props = {
-  newFileColorProfile: FileColorProfile
+  newCurrentFileColorProfile: CurrentFileColorProfile
   sideEffects?: Partial<SideEffects>
 }
 
 const defaultSideEffects: SideEffects = {
   syncColorHxya: true,
-  syncFileColorProfileWithBackend: true
+  syncCurrentFileColorProfileWithBackend: true
 }
 
-export const setFileColorProfileWithSideEffects = action(
-  $fileColorProfile,
-  'setFileColorProfileWithSideEffects',
-  (fileColorProfile, props: Props) => {
-    const { newFileColorProfile, sideEffects: partialSideEffects } = props
+export const setCurrentFileColorProfileWithSideEffects = action(
+  $currentFileColorProfile,
+  'setCurrentFileColorProfileWithSideEffects',
+  (currentFileColorProfile, props: Props) => {
+    const { newCurrentFileColorProfile, sideEffects: partialSideEffects } = props
 
     const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
     merge(sideEffects, partialSideEffects)
 
-    fileColorProfile.set(newFileColorProfile)
+    currentFileColorProfile.set(newCurrentFileColorProfile)
 
     const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
 
     if (sideEffects.syncColorHxya) {
       const newColorHxy = convertRgbToHxy({
         colorRgb: currentColorRgba!,
-        colorSpace: newFileColorProfile
+        colorSpace: newCurrentFileColorProfile
       })
 
       setColorHxyaWithSideEffects({
@@ -59,11 +63,11 @@ export const setFileColorProfileWithSideEffects = action(
       })
     }
 
-    if (sideEffects.syncFileColorProfileWithBackend) {
-      sendMessageToBackend<SyncFileColorProfileData>({
-        type: 'syncFileColorProfile',
+    if (sideEffects.syncCurrentFileColorProfileWithBackend) {
+      sendMessageToBackend<SyncCurrentFileColorProfileData>({
+        type: 'syncCurrentFileColorProfile',
         data: {
-          fileColorProfile: newFileColorProfile
+          currentFileColorProfile: newCurrentFileColorProfile
         }
       })
     }
@@ -72,6 +76,6 @@ export const setFileColorProfileWithSideEffects = action(
 
 if (consoleLogInfos.includes('Store updates')) {
   logger({
-    fileColorProfile: $fileColorProfile
+    currentFileColorProfile: $currentFileColorProfile
   })
 }

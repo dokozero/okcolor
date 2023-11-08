@@ -11,7 +11,7 @@ import { $lockContrast, setLockContrastWithSideEffects } from '../../contrasts/l
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
 import { setColorHxya, $colorHxya } from '../colorHxya/colorHxya'
 import { $colorsRgba } from '../colorsRgba/colorsRgba'
-import { setFileColorProfileWithSideEffects } from '../fileColorProfile/fileColorProfile'
+import { setCurrentFileColorProfileWithSideEffects } from '../currentFileColorProfile/currentFileColorProfile'
 import { $lockRelativeChroma, setLockRelativeChromaWithSideEffects } from '../lockRelativeChroma/lockRelativeChroma'
 import merge from 'lodash/merge'
 
@@ -31,7 +31,7 @@ type SideEffects = {
   syncColorHxya: boolean
   syncLockRelativeChroma: boolean
   syncLockContrast: boolean
-  syncFileColorProfile: boolean
+  syncCurrentFileColorProfile: boolean
   syncContrast: boolean
 }
 
@@ -46,7 +46,7 @@ const defaultSideEffects: SideEffects = {
   syncColorHxya: true,
   syncLockRelativeChroma: true,
   syncLockContrast: true,
-  syncFileColorProfile: true,
+  syncCurrentFileColorProfile: true,
   syncContrast: true
 }
 
@@ -90,10 +90,10 @@ export const setCurrentColorModelWithSideEffects = action(
       if (sideEffects.syncLockRelativeChroma && $lockRelativeChroma.get()) setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: false })
       if (sideEffects.syncLockContrast && $lockContrast.get()) setLockContrastWithSideEffects({ newLockContrast: false })
 
-      if (sideEffects.syncFileColorProfile) {
+      if (sideEffects.syncCurrentFileColorProfile) {
         // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3's space.
-        setFileColorProfileWithSideEffects({
-          newFileColorProfile: 'rgb',
+        setCurrentFileColorProfileWithSideEffects({
+          newCurrentFileColorProfile: 'rgb',
           sideEffects: {
             syncColorHxya: false
           }

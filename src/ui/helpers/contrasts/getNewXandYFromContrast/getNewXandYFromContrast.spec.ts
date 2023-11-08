@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest'
 import getNewXandYFromContrast from './getNewXandYFromContrast'
 import { setCurrentContrastMethod } from '../../../stores/contrasts/currentContrastMethod/currentContrastMethod'
-import { setFileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
+import { setCurrentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 
 describe('getNewXandYFromContrast()', () => {
   test('{x: 0.2, y: 57.4}', () => {
     setCurrentContrastMethod('apca')
-    setFileColorProfile('p3')
+    setCurrentFileColorProfile('p3')
     expect(
       getNewXandYFromContrast({
         h: 270,

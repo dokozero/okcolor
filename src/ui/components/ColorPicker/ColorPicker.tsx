@@ -25,7 +25,7 @@ import limitMouseManipulatorPosition from '../../helpers/limitMouseManipulatorPo
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../stores/colors/colorsRgba/colorsRgba'
 import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
-import { $fileColorProfile } from '../../stores/colors/fileColorProfile/fileColorProfile'
+import { $currentFileColorProfile } from '../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import { $lockRelativeChroma } from '../../stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $relativeChroma } from '../../stores/colors/relativeChroma/relativeChroma'
 import { $contrast } from '../../stores/contrasts/contrast/contrast'
@@ -153,7 +153,7 @@ export default function ColorPicker() {
   }
 
   const renderSrgbBoundary = () => {
-    if ($fileColorProfile.get() === 'p3') {
+    if ($currentFileColorProfile.get() === 'p3') {
       srgbBoundary.current!.setAttribute('d', getSrgbStrokeLimit())
     } else {
       srgbBoundary.current!.setAttribute('d', '')
@@ -187,14 +187,14 @@ export default function ColorPicker() {
     const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
 
     gl.viewport(0, 0, size, size)
-    gl.drawingBufferColorSpace = $fileColorProfile.get() === 'p3' ? 'display-p3' : 'srgb'
+    gl.drawingBufferColorSpace = $currentFileColorProfile.get() === 'p3' ? 'display-p3' : 'srgb'
     gl.clearColor(0, 0, 0, 1)
     gl.clear(gl.COLOR_BUFFER_BIT)
     twgl.setUniforms(programInfo, {
       resolution: [size, size],
       dark: document.documentElement.classList.contains('figma-dark'),
       chroma_scale: OKLCH_CHROMA_SCALE,
-      showP3: $fileColorProfile.get() === 'p3',
+      showP3: $currentFileColorProfile.get() === 'p3',
       mode: ColorModelList[$currentColorModel.get()],
       hue_rad: ($colorHxya.get().h * Math.PI) / 180
     })

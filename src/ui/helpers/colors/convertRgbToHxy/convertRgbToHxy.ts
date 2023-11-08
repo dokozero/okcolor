@@ -1,6 +1,6 @@
-import { ColorRgb, ColorModelList, FileColorProfile, ColorHxy } from '../../../../types'
+import { ColorRgb, ColorModelList, CurrentFileColorProfile, ColorHxy } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
-import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
+import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import { converter } from '../culori.mjs'
 import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
 import getColorHxyDecimals from '../getColorHxyDecimals/getColorHxyDecimals'
@@ -13,12 +13,12 @@ const convertToOklch = converter('oklch')
 type Props = {
   colorRgb: ColorRgb
   targetColorModel?: keyof typeof ColorModelList
-  colorSpace?: FileColorProfile
+  colorSpace?: CurrentFileColorProfile
   keepOklchDoubleDigit?: boolean
 }
 
 export default function convertRgbToHxy(props: Props): ColorHxy {
-  const { colorRgb, targetColorModel = $currentColorModel.get(), colorSpace = $fileColorProfile.get(), keepOklchDoubleDigit = false } = props
+  const { colorRgb, targetColorModel = $currentColorModel.get(), colorSpace = $currentFileColorProfile.get(), keepOklchDoubleDigit = false } = props
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch
   let newColorHxy: ColorHxy

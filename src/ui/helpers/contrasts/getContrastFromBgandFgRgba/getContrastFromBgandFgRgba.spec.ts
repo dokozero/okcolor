@@ -17,7 +17,7 @@ describe('getContrastFromBgandFgRgba()', () => {
           b: 0
         },
         currentContrastMethod: 'apca',
-        fileColorProfile: 'p3'
+        currentFileColorProfile: 'p3'
       })
     ).toStrictEqual(-33)
   })
@@ -37,7 +37,7 @@ describe('getContrastFromBgandFgRgba()', () => {
           b: 0
         },
         currentContrastMethod: 'wcag',
-        fileColorProfile: 'p3'
+        currentFileColorProfile: 'p3'
       })
     ).toStrictEqual(-5)
   })

@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest'
 import filterNewColorHxya from './filterNewColorHxya'
-import { setFileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
+import { setCurrentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 
 describe('filterNewColorHxya()', () => {
   test('{ h: 270, x: 0.3, y: 50, a: 0.97 }', () => {
-    setFileColorProfile('p3')
+    setCurrentFileColorProfile('p3')
     expect(
       filterNewColorHxya({
         newColorHxya: {

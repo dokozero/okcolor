@@ -1,6 +1,6 @@
 import { MAX_CHROMA_P3 } from '../../../../constants'
-import { RelativeChroma, FileColorProfile, Lightness, Hue } from '../../../../types'
-import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
+import { RelativeChroma, CurrentFileColorProfile, Lightness, Hue } from '../../../../types'
+import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import { $relativeChroma } from '../../../stores/colors/relativeChroma/relativeChroma'
 import { clampChromaInGamut } from '../culori.mjs'
 import getColorHxyDecimals from '../getColorHxyDecimals/getColorHxyDecimals'
@@ -10,16 +10,16 @@ type Props = {
   h: Hue
   y: Lightness
   relativeChroma?: RelativeChroma
-  fileColorProfile?: FileColorProfile
+  currentFileColorProfile?: CurrentFileColorProfile
 }
 
 export default function convertRelativeChromaToAbsolute(props: Props): RelativeChroma {
-  const { h, y, relativeChroma = $relativeChroma.get(), fileColorProfile = $fileColorProfile.get() } = props
+  const { h, y, relativeChroma = $relativeChroma.get(), currentFileColorProfile = $currentFileColorProfile.get() } = props
 
   // We do this test because with a lightness of 0, we get an undefined value for currentMaxChroma.c.
   if (y === 0) return 0
 
-  const currentMaxChroma = clampChromaInGamut({ mode: 'oklch', l: y / 100, c: MAX_CHROMA_P3, h: h }, 'oklch', fileColorProfile).c
+  const currentMaxChroma = clampChromaInGamut({ mode: 'oklch', l: y / 100, c: MAX_CHROMA_P3, h: h }, 'oklch', currentFileColorProfile).c
 
   const returnValue = (relativeChroma * currentMaxChroma) / 100
 

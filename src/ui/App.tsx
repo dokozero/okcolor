@@ -16,7 +16,7 @@ import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 import sendMessageToBackend from './helpers/sendMessageToBackend/sendMessageToBackend'
 import { setColorsRgbaWithSideEffects } from './stores/colors/colorsRgba/colorsRgba'
 import { setCurrentColorModel, $currentColorModel } from './stores/colors/currentColorModel/currentColorModel'
-import { setFileColorProfile } from './stores/colors/fileColorProfile/fileColorProfile'
+import { setCurrentFileColorProfile } from './stores/colors/currentFileColorProfile/currentFileColorProfile'
 import { setLockRelativeChroma, $lockRelativeChroma } from './stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $currentBgOrFg, setCurrentBgOrFg } from './stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { setCurrentContrastMethod } from './stores/contrasts/currentContrastMethod/currentContrastMethod'
@@ -52,7 +52,7 @@ function App() {
       const data = pluginMessage.data as SyncLocalStorageValuesData
 
       setFigmaEditorType(data.figmaEditorType)
-      setFileColorProfile(data.fileColorProfile)
+      setCurrentFileColorProfile(data.currentFileColorProfile)
       setIsContrastInputOpen(data.isContrastInputOpen)
       setLockRelativeChroma(data.lockRelativeChroma)
       setCurrentContrastMethod(data.currentContrastMethod)

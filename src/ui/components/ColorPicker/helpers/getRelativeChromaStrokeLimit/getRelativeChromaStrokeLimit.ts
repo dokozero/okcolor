@@ -1,18 +1,18 @@
 import { clampChromaInGamut } from '../../../../helpers/colors/culori.mjs'
 import { PICKER_SIZE, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../../constants'
-import { ColorHxya, FileColorProfile, RelativeChroma, SvgPath } from '../../../../../types'
+import { ColorHxya, CurrentFileColorProfile, RelativeChroma, SvgPath } from '../../../../../types'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
-import { $fileColorProfile } from '../../../../stores/colors/fileColorProfile/fileColorProfile'
+import { $currentFileColorProfile } from '../../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import { $relativeChroma } from '../../../../stores/colors/relativeChroma/relativeChroma'
 
 type Props = {
   colorHxya?: ColorHxya
-  fileColorProfile?: FileColorProfile
+  currentFileColorProfile?: CurrentFileColorProfile
   relativeChroma?: RelativeChroma
 }
 
 export default function getRelativeChromaStrokeLimit(props: Props = {}): SvgPath {
-  const { colorHxya = $colorHxya.get(), fileColorProfile = $fileColorProfile.get(), relativeChroma = $relativeChroma.get() } = props
+  const { colorHxya = $colorHxya.get(), currentFileColorProfile = $currentFileColorProfile.get(), relativeChroma = $relativeChroma.get() } = props
 
   let d = 'M0 0 '
 
@@ -27,7 +27,7 @@ export default function getRelativeChromaStrokeLimit(props: Props = {}): SvgPath
         h: colorHxya.h
       },
       'oklch',
-      fileColorProfile
+      currentFileColorProfile
     )
     d += `L${(maxChromaCurrentProfil.c * (relativeChroma / 100) * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `
   }

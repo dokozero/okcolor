@@ -1,8 +1,11 @@
 import { useStore } from '@nanostores/react'
 import { consoleLogInfos } from '../../../constants'
-import { FileColorProfile } from '../../../types'
+import { CurrentFileColorProfile } from '../../../types'
 import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
-import { $fileColorProfile, setFileColorProfileWithSideEffects } from '../../stores/colors/fileColorProfile/fileColorProfile'
+import {
+  $currentFileColorProfile,
+  setCurrentFileColorProfileWithSideEffects
+} from '../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import { $figmaEditorType } from '../../stores/figmaEditorType/figmaEditorType'
 
 export default function FileColorProfileSelect() {
@@ -12,10 +15,10 @@ export default function FileColorProfileSelect() {
 
   const figmaEditorType = useStore($figmaEditorType)
   const currentColorModel = useStore($currentColorModel)
-  const fileColorProfile = useStore($fileColorProfile)
+  const currentFileColorProfile = useStore($currentFileColorProfile)
 
   const handleFileColorProfile = (event: { target: HTMLSelectElement }) => {
-    setFileColorProfileWithSideEffects({ newFileColorProfile: event.target.value as FileColorProfile })
+    setCurrentFileColorProfileWithSideEffects({ newCurrentFileColorProfile: event.target.value as CurrentFileColorProfile })
   }
 
   return (
@@ -31,10 +34,10 @@ export default function FileColorProfileSelect() {
 
       <div className="select-wrapper">
         <select onChange={handleFileColorProfile} name="file_color_profile" id="file_color_profile">
-          <option value="rgb" selected={fileColorProfile === 'rgb' ? true : false}>
+          <option value="rgb" selected={currentFileColorProfile === 'rgb' ? true : false}>
             sRGB
           </option>
-          <option value="p3" selected={fileColorProfile === 'p3' ? true : false}>
+          <option value="p3" selected={currentFileColorProfile === 'p3' ? true : false}>
             Display P3
           </option>
         </select>

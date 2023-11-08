@@ -1,6 +1,6 @@
-import { ColorHxy, ColorModelList, FileColorProfile, ColorRgb } from '../../../../types'
+import { ColorHxy, ColorModelList, CurrentFileColorProfile, ColorRgb } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
-import { $fileColorProfile } from '../../../stores/colors/fileColorProfile/fileColorProfile'
+import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import { converter } from '../culori.mjs'
 import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
 import clamp from 'lodash/clamp'
@@ -11,11 +11,11 @@ const convertToP3 = converter('p3')
 type Props = {
   colorHxy: ColorHxy
   originColorModel?: keyof typeof ColorModelList
-  colorSpace?: FileColorProfile
+  colorSpace?: CurrentFileColorProfile
 }
 
 export default function convertHxyToRgb(props: Props): ColorRgb {
-  const { colorHxy, originColorModel = $currentColorModel.get(), colorSpace = $fileColorProfile.get() } = props
+  const { colorHxy, originColorModel = $currentColorModel.get(), colorSpace = $currentFileColorProfile.get() } = props
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch
   let newColorRgb: ColorRgb
