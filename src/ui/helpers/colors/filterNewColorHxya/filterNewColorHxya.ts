@@ -1,4 +1,4 @@
-import { ColorHxya } from '../../../../types'
+import { ApcaContrast, ColorHxya, WcagContrast } from '../../../../types'
 import { $colorHxya } from '../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $contrast } from '../../../stores/contrasts/contrast/contrast'
@@ -11,13 +11,14 @@ type Props = {
   newColorHxya: Partial<ColorHxya>
   lockRelativeChroma: boolean
   lockContrast: boolean
+  contrast?: ApcaContrast | WcagContrast
 }
 
 /**
  * This function is to filter the hxy values because when we are in oklch, we can receive values that are out of gamut or we might need to constrain them relative chroma or contrast are locked.
  */
 export default function filterNewColorHxya(props: Props): ColorHxya {
-  const { newColorHxya, lockRelativeChroma, lockContrast } = props
+  const { newColorHxya, lockRelativeChroma, lockContrast, contrast = $contrast.get() } = props
 
   const filteredColorHxya: ColorHxya = {
     h: newColorHxya.h !== undefined ? newColorHxya.h : $colorHxya.get().h,
@@ -45,7 +46,7 @@ export default function filterNewColorHxya(props: Props): ColorHxya {
     const newXy = getNewXandYFromContrast({
       h: filteredColorHxya.h,
       x: filteredColorHxya.x,
-      targetContrast: $contrast.get()
+      targetContrast: contrast
     })
     filteredColorHxya.y = newXy.y
   }

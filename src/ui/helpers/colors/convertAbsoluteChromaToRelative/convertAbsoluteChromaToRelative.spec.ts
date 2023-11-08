@@ -12,6 +12,6 @@ describe('convertAbsoluteChromaToRelative()', () => {
         },
         fileColorProfile: 'p3'
       })
-    ).toBe(75)
+    ).toStrictEqual(75)
   })
 })
