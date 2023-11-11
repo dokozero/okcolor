@@ -15,8 +15,8 @@ export const OKLCH_CHROMA_SCALE = 2.7
 
 export const MAX_CHROMA_P3 = 0.37
 
-// Set to true to be able to run the index.html from dist/ in the browser (usefull for debugging, especially the rendering of color picker).
-export const dontUseBackend = false
+// Set to false to be able to run the index.html from dist/ in the browser (usefull for debugging, especially the rendering of color picker).
+export const useBackend = true
 
 // prettier-ignore
 // Comment the line you don't want.

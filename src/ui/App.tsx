@@ -10,7 +10,7 @@ import ColorModelSelect from './components/ColorModelSelect/ColorModelSelect'
 import ColorValueInputs from './components/ColorValueInputs/ColorValueInputs'
 import RelativeChromaInput from './components/single-input-with-lock/RelativeChromaInput/RelativeChromaInput'
 import ContrastInput from './components/single-input-with-lock/ContrastInput/ContrastInput'
-import { consoleLogInfos, dontUseBackend } from '../constants'
+import { consoleLogInfos, useBackend } from '../constants'
 import { DisplayUiMessageData, MessageForUi, SyncNewShapeData, SyncLocalStorageValuesData } from '../types'
 import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 import sendMessageToBackend from './helpers/sendMessageToBackend/sendMessageToBackend'
@@ -43,7 +43,7 @@ function App() {
   // We use this var to avoid loading the components before we have all te values from the backend, see comment on the top of the file fore more infos.
   const [areStoreValuesReady, setAreStoreValuesReady] = useState(false)
 
-  if (!dontUseBackend) {
+  if (useBackend) {
     // Updates from the backend.
     onmessage = (event) => {
       const pluginMessage = event.data.pluginMessage as MessageForUi
@@ -170,7 +170,7 @@ function App() {
       }
     })
 
-    if (!dontUseBackend) {
+    if (useBackend) {
       // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
       sendMessageToBackend({ type: 'triggerInit' })
     } else {
