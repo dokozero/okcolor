@@ -39,6 +39,7 @@ import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit
 import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit/getSrgbStrokeLimit'
 import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
+import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
 
 let colorPickerGlContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
@@ -70,6 +71,7 @@ export default function ColorPicker() {
   const colorHxya = useStore($colorHxya)
 
   const currentColorModel = useStore($currentColorModel)
+  const currentFileColorProfile = useStore($currentFileColorProfile)
   const lockRelativeChroma = useStore($lockRelativeChroma)
   const lockContrast = useStore($lockContrast)
   const relativeChroma = useStore($relativeChroma)
@@ -181,27 +183,34 @@ export default function ColorPicker() {
     renderRelativeChromaStroke()
     renderContrastStroke()
 
-    const gl = colorPickerGlContext
-    if (!gl) return
+    if (gl === null) return
 
     const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
 
-    gl.viewport(0, 0, size, size)
     gl.drawingBufferColorSpace = $currentFileColorProfile.get() === 'p3' ? 'display-p3' : 'srgb'
-    gl.clearColor(0, 0, 0, 1)
-    gl.clear(gl.COLOR_BUFFER_BIT)
-    twgl.setUniforms(programInfo, {
-      resolution: [size, size],
-      dark: document.documentElement.classList.contains('figma-dark'),
-      chroma_scale: OKLCH_CHROMA_SCALE,
-      showP3: $currentFileColorProfile.get() === 'p3',
-      mode: ColorModelList[$currentColorModel.get()],
-      hue_rad: ($colorHxya.get().h * Math.PI) / 180
+
+    const clearColorRgb = convertHxyToRgb({
+      colorHxy: {
+        h: $colorHxya.get().h,
+        x: 0.004,
+        y: document.documentElement.classList.contains('figma-dark') ? 43 : 95
+      }
     })
+    gl.clearColor(clearColorRgb.r, clearColorRgb.g, clearColorRgb.b, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    const uniforms = {
+      resolution: [size, size],
+      isDarkModeEnabled: document.documentElement.classList.contains('figma-dark'),
+      chromaScale: OKLCH_CHROMA_SCALE,
+      isSpaceP3: $currentFileColorProfile.get() === 'p3',
+      colorModel: ColorModelList[$currentColorModel.get()],
+      hueRad: ($colorHxya.get().h * Math.PI) / 180
+    }
+    twgl.setUniforms(programInfo, uniforms)
     twgl.drawBufferInfo(gl, bufferInfo)
   }
 
-  const scaleColorPickerCanvas = () => {
+  const scaleColorPickerCanvasAndGlViewport = () => {
     if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
       colorPickerCanvas.current!.style.transform = `scale(${RES_PICKER_FACTOR_OKLCH})`
       colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKLCH
@@ -211,6 +220,10 @@ export default function ColorPicker() {
       colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKHSLV
       colorPickerCanvas.current!.height = RES_PICKER_SIZE_OKHSLV
     }
+
+    if (gl === null) return
+    const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
+    gl.viewport(0, 0, size, size)
   }
 
   const updateColorSpaceLabelInColorPicker = () => {
@@ -232,7 +245,8 @@ export default function ColorPicker() {
   useEffect(() => {
     if (!isMounted.current) return
 
-    scaleColorPickerCanvas()
+    scaleColorPickerCanvasAndGlViewport()
+    renderColorPickerCanvas()
   }, [currentColorModel])
 
   useEffect(() => {
@@ -269,20 +283,19 @@ export default function ColorPicker() {
   }, [uiMessage])
 
   useEffect(() => {
-    scaleColorPickerCanvas()
+    gl = colorPickerCanvas.current!.getContext('webgl2')
+    if (gl === null) return
 
-    colorPickerGlContext = colorPickerCanvas.current!.getContext('webgl2')
-    const gl = colorPickerGlContext!
     const arrays = {
       position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]
     }
-
     bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays)
     programInfo = twgl.createProgramInfo(gl, [vShader, libraryGlsl + utilsGlsl + fShader])
 
     gl.useProgram(programInfo.program)
     twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo)
 
+    scaleColorPickerCanvasAndGlViewport()
     renderColorPickerCanvas()
     updateManipulatorPosition()
     updateColorSpaceLabelInColorPicker()

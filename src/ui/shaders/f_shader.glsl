@@ -1,52 +1,45 @@
 precision mediump float;
 uniform vec2 resolution;
-uniform bool dark;
-uniform float mode;
-uniform float hue_rad;
-uniform float chroma_scale;
-uniform bool showP3;
+uniform bool isDarkModeEnabled;
+uniform float chromaScale;
+uniform bool isSpaceP3;
+uniform int colorModel;
+uniform float hueRad;
 
+void main() {
+  vec2 uv = gl_FragCoord.xy / resolution;
 
-void main()
-{
-    vec2 uv = gl_FragCoord.xy / resolution;
-
+  // If colorModel is oklchCss or oklch (see "ColorModelList" types.ts for the list).
+  if (colorModel == 0 || colorModel == 1) {
     float l = uv.y;
-    float h = hue_rad;
-    float c = uv.x / chroma_scale;
+    float c = uv.x / chromaScale;
+    float h = hueRad;
 
-    vec3 bg_color = oklch2srgb(vec3(dark ? .60 : .95, .004, h));
+    vec3 oklch = vec3(l, c, h);
+    vec3 col = oklchToRgb(oklch, isSpaceP3);
 
-    // fn inRange return 1.0 if float in range
-    if (inRange(mode, 0.0, 2.0) == 1.0) {
-        vec3 oklch = vec3(l, c, h);
-        vec3 oklabRGB = oklch2srgb(oklch);
-        vec3 col = oklabRGB;
-
-        if (showP3) {
-            col = oklch2p3(oklch);
-        } else {
-            // sRGB gamma correction
-            col = exp(log(col) * (1./2.2));
-            // col = pow(col,vec3(1./2.2)); // We used this approach on previous version but with Chrome and Safari, pow() seems to not handle negative numbers the same way as in Firefox/Figma desktop and it broke isInBounds().
-        }
-
-        bool inBounds = isInBounds(col);
-        if (inBounds) {
-            gl_FragColor = vec4(col, 1.0);
-        }
-        else {
-            gl_FragColor = vec4(pow(bg_color,vec3(1./1.4)), 1.0);
-        }
+    if (isInBounds(col)) {
+      gl_FragColor = vec4(col, 1.0);
     } else {
-        // clamp radian to [0,1]
-        vec3 hsl = vec3(clampRadian(h), uv.x, uv.y);
-        vec3 hsvRGB = okhsv_to_srgb(hsl);
-        vec3 hslRGB = okhsl_to_srgb(hsl);
-        if (mode == 2.0) {
-            gl_FragColor = vec4(hslRGB, 1.0);
-        } else {
-            gl_FragColor = vec4(hsvRGB, 1.0);
-        }
+      vec3 bg_color = oklchToRgb(vec3(isDarkModeEnabled ? .43 : .95, .004, h), false);
+      gl_FragColor = vec4(bg_color, 1.0);
     }
+  }
+  // Else if colorModel is okhsv ok okhsl. 
+  else {
+    // clamp radian to [0,1]
+    float h = clampRadian(hueRad);
+    float s = uv.x;
+    float vl = uv.y;
+
+    vec3 hsvl = vec3(h, s, vl);
+
+    if (colorModel == 2) {
+      vec3 hslRgbSrgb = okhsl_to_srgb(hsvl);
+      gl_FragColor = vec4(hslRgbSrgb, 1.0);
+    } else {
+      vec3 hsvRgbSrgb = okhsv_to_srgb(hsvl);
+      gl_FragColor = vec4(hsvRgbSrgb, 1.0);
+    }
+  }
 }
