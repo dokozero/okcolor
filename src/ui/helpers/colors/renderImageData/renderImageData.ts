@@ -7,7 +7,10 @@ import { $currentFileColorProfile } from '../../../stores/colors/currentFileColo
 import convertHxyToRgb from '../convertHxyToRgb/convertHxyToRgb'
 import { clampChromaInGamut } from '../culori.mjs'
 
-const localDebugInfos = false
+const localDebugInfos = {
+  all: false,
+  totalPixelNbOnly: false
+}
 const showPreciseRenderedPixels = false
 
 type Props = {
@@ -64,7 +67,7 @@ export const renderImageData = (props: Props): ImageData => {
     let imageDataPixelRgb: ColorRgb = { r: 0, g: 0, b: 0 }
 
     for (let y = 0; y < RES_PICKER_SIZE_OKLCH; y++) {
-      if (localDebugInfos) {
+      if (localDebugInfos.all) {
         console.log('-')
         console.log('Luminosity = ' + (RES_PICKER_SIZE_OKLCH - y) / RES_PICKER_SIZE_OKLCH)
         numberOfRenderedPixelsForCurrentLine = 0
@@ -96,8 +99,10 @@ export const renderImageData = (props: Props): ImageData => {
               colorSpace: 'rgb'
             })
             imageDataPixelRgb = rgbColor!
-            if (localDebugInfos) {
+            if (localDebugInfos.all) {
               numberOfRenderedPixelsForCurrentLine++
+              numberOfTotalRenderedPixels++
+            } else if (localDebugInfos.totalPixelNbOnly) {
               numberOfTotalRenderedPixels++
             }
             currentPixelLineIndex = -1
@@ -111,14 +116,16 @@ export const renderImageData = (props: Props): ImageData => {
         imageData.data[pixelIndex + 3] = currentX > maxChromaCurrentLine ? 0 : 255
       }
 
-      if (localDebugInfos) {
+      if (localDebugInfos.all) {
         console.log('Number of rendered pixels for current line = ' + numberOfRenderedPixelsForCurrentLine)
       }
     }
 
-    if (localDebugInfos) {
-      console.log('---')
-      console.log('Done')
+    if (localDebugInfos.all || localDebugInfos.totalPixelNbOnly) {
+      if (localDebugInfos.all) {
+        console.log('---')
+        console.log('Done')
+      }
       console.log('Number of total rendered pixels = ' + numberOfTotalRenderedPixels)
     }
   }

@@ -39,6 +39,12 @@ import round from 'lodash/round'
 import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
 import { renderImageData } from '../../helpers/colors/renderImageData/renderImageData'
 
+// We use these var to measure speeds of color picker rendering (see in constants file to activate it).
+let colorPickerStrokesRenderingStart: number
+let colorPickerStrokesRenderingEnd: number
+let colorPickerCanvasRenderingStart: number
+let colorPickerCanvasRenderingEnd: number
+
 const inGamutSrgb = inGamut('rgb')
 
 let canvas2dContext: CanvasRenderingContext2D | null = null
@@ -80,7 +86,7 @@ export default function ColorPicker() {
   const colorPicker = useRef<HTMLDivElement>(null)
   const colorPickerCanvas = useRef<HTMLCanvasElement>(null)
   const manipulatorColorPicker = useRef<SVGGElement>(null)
-  const srgbBoundary = useRef<SVGPathElement>(null)
+  const srgbLimitStroke = useRef<SVGPathElement>(null)
   const relativeChromaStroke = useRef<SVGPathElement>(null)
   const contrastStroke = useRef<SVGPathElement>(null)
 
@@ -153,11 +159,11 @@ export default function ColorPicker() {
     updateManipulatorPosition()
   }
 
-  const renderSrgbBoundary = () => {
+  const renderSrgbLimitStroke = () => {
     if ($currentFileColorProfile.get() === 'p3') {
-      srgbBoundary.current!.setAttribute('d', getSrgbStrokeLimit())
+      srgbLimitStroke.current!.setAttribute('d', getSrgbStrokeLimit())
     } else {
-      srgbBoundary.current!.setAttribute('d', '')
+      srgbLimitStroke.current!.setAttribute('d', '')
     }
   }
 
@@ -178,9 +184,22 @@ export default function ColorPicker() {
   }
 
   const renderColorPickerCanvas = () => {
-    renderSrgbBoundary()
+    if (consoleLogInfos.includes('Color picker rendering speed')) {
+      colorPickerStrokesRenderingStart = performance.now()
+    }
+    renderSrgbLimitStroke()
     renderRelativeChromaStroke()
     renderContrastStroke()
+
+    if (consoleLogInfos.includes('Color picker rendering speed')) {
+      colorPickerStrokesRenderingEnd = performance.now()
+      console.log('---')
+      console.log(`(Hardware acceleration ${useHardwareAcceleration ? 'on' : 'off'})`)
+      console.log('Color picker render durations:')
+      console.log(` Strokes: ${round(colorPickerStrokesRenderingEnd - colorPickerStrokesRenderingStart, 4)} ms.`)
+
+      colorPickerCanvasRenderingStart = performance.now()
+    }
 
     const bgColor = convertHxyToRgb({
       colorHxy: { h: $colorHxya.get().h, x: 0.006, y: document.documentElement.classList.contains('figma-dark') ? 36 : 95 }
@@ -206,6 +225,16 @@ export default function ColorPicker() {
       twgl.setUniforms(programInfo, uniforms)
 
       twgl.drawBufferInfo(canvasWebglContext!, bufferInfo)
+    }
+    if (consoleLogInfos.includes('Color picker rendering speed')) {
+      colorPickerCanvasRenderingEnd = performance.now()
+      console.log(` Canvas: ${round(colorPickerCanvasRenderingEnd - colorPickerCanvasRenderingStart, 4)} ms.`)
+      console.log(
+        ` Total: ${round(
+          colorPickerStrokesRenderingEnd + colorPickerCanvasRenderingEnd - (colorPickerStrokesRenderingStart + colorPickerCanvasRenderingStart),
+          4
+        )} ms.`
+      )
     }
   }
 
@@ -351,8 +380,8 @@ export default function ColorPicker() {
       <div className="c-color-picker__color-space">{colorSpaceOfCurrentColor}</div>
 
       <canvas ref={colorPickerCanvas} className="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
-      <svg className="c-color-picker__srgb-boundary" width={PICKER_SIZE} height={PICKER_SIZE}>
-        <path ref={srgbBoundary} fill="none" stroke="#FFFFFF" />
+      <svg className="c-color-picker__srgb-limit-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
+        <path ref={srgbLimitStroke} fill="none" stroke="#FFFFFF" />
       </svg>
 
       <svg className="c-color-picker__relative-chroma-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>

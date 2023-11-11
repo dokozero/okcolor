@@ -29,6 +29,11 @@ import { setIsColorCodeInputsOpen } from './stores/isColorCodeInputsOpen/isColor
 import { setIsMouseInsideDocument } from './stores/isMouseInsideDocument/isMouseInsideDocument'
 import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventCallback/mouseEventCallback'
 import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage/uiMessage'
+import round from 'lodash/round'
+
+// We use these var to measure speeds of app loading time (see in constants file to activate it).
+let appLoadingStart: number
+let appLoadingEnd: number
 
 let isMouseDown = false
 
@@ -112,10 +117,20 @@ function App() {
         // This says "when all the store values are filled, show the UI components if there were not mounted".
         if (!areStoreValuesReady) setAreStoreValuesReady(true)
       }
+
+      if (consoleLogInfos.includes('App loading speed') && appLoadingEnd === undefined) {
+        appLoadingEnd = performance.now()
+        console.clear()
+        console.log(`App loaded in ${round(appLoadingEnd - appLoadingStart, 6)} ms.`)
+      }
     }
   }
 
   useEffect(() => {
+    if (consoleLogInfos.includes('App loading speed')) {
+      appLoadingStart = performance.now()
+    }
+
     document.addEventListener('mouseenter', () => {
       setIsMouseInsideDocument(true)
 
