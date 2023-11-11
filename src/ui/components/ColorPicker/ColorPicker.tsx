@@ -41,7 +41,7 @@ import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getCol
 import round from 'lodash/round'
 import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
 
-let colorPickerGlContext: WebGL2RenderingContext | null = null
+let gl: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
 let programInfo: twgl.ProgramInfo
 

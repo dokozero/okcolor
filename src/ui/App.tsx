@@ -10,7 +10,7 @@ import ColorModelSelect from './components/ColorModelSelect/ColorModelSelect'
 import ColorValueInputs from './components/ColorValueInputs/ColorValueInputs'
 import RelativeChromaInput from './components/single-input-with-lock/RelativeChromaInput/RelativeChromaInput'
 import ContrastInput from './components/single-input-with-lock/ContrastInput/ContrastInput'
-import { consoleLogInfos } from '../constants'
+import { consoleLogInfos, dontUseBackend } from '../constants'
 import { DisplayUiMessageData, MessageForUi, SyncNewShapeData, SyncLocalStorageValuesData } from '../types'
 import ColorCodeInputs from './components/ColorCodeInputs/ColorCodeInputs'
 import sendMessageToBackend from './helpers/sendMessageToBackend/sendMessageToBackend'
@@ -43,73 +43,75 @@ function App() {
   // We use this var to avoid loading the components before we have all te values from the backend, see comment on the top of the file fore more infos.
   const [areStoreValuesReady, setAreStoreValuesReady] = useState(false)
 
-  // Updates from the backend.
-  onmessage = (event) => {
-    const pluginMessage = event.data.pluginMessage as MessageForUi
+  if (!dontUseBackend) {
+    // Updates from the backend.
+    onmessage = (event) => {
+      const pluginMessage = event.data.pluginMessage as MessageForUi
 
-    // Set variables from local storage that only backend code can get.
-    if (pluginMessage.type === 'syncLocalStorageValues') {
-      const data = pluginMessage.data as SyncLocalStorageValuesData
+      // Set variables from local storage that only backend code can get.
+      if (pluginMessage.type === 'syncLocalStorageValues') {
+        const data = pluginMessage.data as SyncLocalStorageValuesData
 
-      setFigmaEditorType(data.figmaEditorType)
-      setCurrentFileColorProfile(data.currentFileColorProfile)
-      setIsContrastInputOpen(data.isContrastInputOpen)
-      setLockRelativeChroma(data.lockRelativeChroma)
-      setCurrentContrastMethod(data.currentContrastMethod)
-      setLockContrast(data.lockContrast)
-      setIsColorCodeInputsOpen(data.isColorCodeInputsOpen)
-      setCurrentColorModel(data.currentColorModel)
-    }
-    // Update the color based on the selected shape in Figma.
-
-    // synNewShape
-    if (pluginMessage.type === 'syncNewShape') {
-      const data = pluginMessage.data as SyncNewShapeData
-
-      if ($uiMessage.get().show) {
-        hideUiMessageWithSideEffects()
+        setFigmaEditorType(data.figmaEditorType)
+        setCurrentFileColorProfile(data.currentFileColorProfile)
+        setIsContrastInputOpen(data.isContrastInputOpen)
+        setLockRelativeChroma(data.lockRelativeChroma)
+        setCurrentContrastMethod(data.currentContrastMethod)
+        setLockContrast(data.lockContrast)
+        setIsColorCodeInputsOpen(data.isColorCodeInputsOpen)
+        setCurrentColorModel(data.currentColorModel)
       }
+      // Update the color based on the selected shape in Figma.
 
-      if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
-        // We update these two values in the case the user had one or the two set to true with a shape selected then deselected it, without this when he select a shape again, theses values would always be false as we set them to this value in setValuesForUiMessage() called when we show as UI message.
-        if (data.lockRelativeChroma !== $lockRelativeChroma.get()) {
-          setLockRelativeChroma(data.lockRelativeChroma)
+      // synNewShape
+      if (pluginMessage.type === 'syncNewShape') {
+        const data = pluginMessage.data as SyncNewShapeData
+
+        if ($uiMessage.get().show) {
+          hideUiMessageWithSideEffects()
         }
-        //For this value, we have the same same reason but also another one: if the user has the plugin running with a shape that has a parent fill then select another one that doesn't have one, if he select back a shape with a parent fill, we need to check if $lockContrast is not equal to the one from backend and update it in accordance.
-        if (data.lockContrast !== $lockContrast.get() && data.colorsRgba.parentFill) {
-          setLockContrast(data.lockContrast)
-        } else if (!data.colorsRgba.parentFill || !data.colorsRgba.fill) {
-          // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
-          if ($lockContrast.get()) setLockContrast(false)
+
+        if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+          // We update these two values in the case the user had one or the two set to true with a shape selected then deselected it, without this when he select a shape again, theses values would always be false as we set them to this value in setValuesForUiMessage() called when we show as UI message.
+          if (data.lockRelativeChroma !== $lockRelativeChroma.get()) {
+            setLockRelativeChroma(data.lockRelativeChroma)
+          }
+          //For this value, we have the same same reason but also another one: if the user has the plugin running with a shape that has a parent fill then select another one that doesn't have one, if he select back a shape with a parent fill, we need to check if $lockContrast is not equal to the one from backend and update it in accordance.
+          if (data.lockContrast !== $lockContrast.get() && data.colorsRgba.parentFill) {
+            setLockContrast(data.lockContrast)
+          } else if (!data.colorsRgba.parentFill || !data.colorsRgba.fill) {
+            // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
+            if ($lockContrast.get()) setLockContrast(false)
+          }
         }
+
+        // If on previous selected shape we had the parent selected, we set it to false as default.
+        if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
+
+        setCurrentFillOrStroke(data.currentFillOrStroke)
+
+        setColorsRgbaWithSideEffects({
+          newColorsRgba: data.colorsRgba,
+          keepOklchDoubleDigit: true,
+          sideEffects: {
+            syncColorRgbWithBackend: false
+          },
+          lockRelativeChroma: false,
+          lockContrast: false
+        })
+
+        // This says "when all the store values are filled, show the UI components if there were not mounted".
+        if (!areStoreValuesReady) setAreStoreValuesReady(true)
       }
+      // Set the UI in a disabled mode and update the UI message.
+      else if (pluginMessage.type === 'displayUiMessage') {
+        const data = pluginMessage.data as DisplayUiMessageData
 
-      // If on previous selected shape we had the parent selected, we set it to false as default.
-      if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
+        showUiMessageWithSideEffects({ messageCode: data.uiMessageCode, nodeType: data.nodeType })
 
-      setCurrentFillOrStroke(data.currentFillOrStroke)
-
-      setColorsRgbaWithSideEffects({
-        newColorsRgba: data.colorsRgba,
-        keepOklchDoubleDigit: true,
-        sideEffects: {
-          syncColorRgbWithBackend: false
-        },
-        lockRelativeChroma: false,
-        lockContrast: false
-      })
-
-      // This says "when all the store values are filled, show the UI components if there were not mounted".
-      if (!areStoreValuesReady) setAreStoreValuesReady(true)
-    }
-    // Set the UI in a disabled mode and update the UI message.
-    else if (pluginMessage.type === 'displayUiMessage') {
-      const data = pluginMessage.data as DisplayUiMessageData
-
-      showUiMessageWithSideEffects({ messageCode: data.uiMessageCode, nodeType: data.nodeType })
-
-      // This says "when all the store values are filled, show the UI components if there were not mounted".
-      if (!areStoreValuesReady) setAreStoreValuesReady(true)
+        // This says "when all the store values are filled, show the UI components if there were not mounted".
+        if (!areStoreValuesReady) setAreStoreValuesReady(true)
+      }
     }
   }
 
@@ -168,8 +170,12 @@ function App() {
       }
     })
 
-    // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
-    sendMessageToBackend({ type: 'triggerInit' })
+    if (!dontUseBackend) {
+      // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
+      sendMessageToBackend({ type: 'triggerInit' })
+    } else {
+      setAreStoreValuesReady(true)
+    }
   }, [])
 
   if (!areStoreValuesReady) {
