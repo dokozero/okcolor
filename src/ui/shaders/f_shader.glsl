@@ -1,6 +1,5 @@
 precision mediump float;
 uniform vec2 resolution;
-uniform bool isDarkModeEnabled;
 uniform float chromaScale;
 uniform bool isSpaceP3;
 uniform int colorModel;
@@ -21,8 +20,8 @@ void main() {
     if (isInBounds(col)) {
       gl_FragColor = vec4(col, 1.0);
     } else {
-      vec3 bg_color = oklchToRgb(vec3(isDarkModeEnabled ? .43 : .95, .004, h), false);
-      gl_FragColor = vec4(bg_color, 1.0);
+      // We use a transparency color for the pixels outsides of gamut, for the bg color, we use CSS on the canvas, see renderColorPickerCanvas() in ColorPicker.
+      gl_FragColor = vec4(0.0);
     }
   }
   // Else if colorModel is okhsv ok okhsl. 

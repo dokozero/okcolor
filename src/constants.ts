@@ -2,8 +2,11 @@ export const PICKER_SIZE = 240
 // We use a different value for the slider as they take less room.
 export const SLIDER_SIZE = 148
 
-export const RES_PICKER_FACTOR_OKHSLV = 0.5
-export const RES_PICKER_FACTOR_OKLCH = 0.25
+// For future settings screen, to delete when it's implemented (will use store).
+export const useHardwareAcceleration = true
+
+export const RES_PICKER_FACTOR_OKHSLV = useHardwareAcceleration ? 0.5 : 2.5
+export const RES_PICKER_FACTOR_OKLCH = useHardwareAcceleration ? 0.25 : 0.8
 
 export const RES_PICKER_SIZE_OKHSLV = PICKER_SIZE / RES_PICKER_FACTOR_OKHSLV
 export const RES_PICKER_SIZE_OKLCH = PICKER_SIZE / RES_PICKER_FACTOR_OKLCH

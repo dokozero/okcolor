@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
-
 import {
   consoleLogInfos,
   PICKER_SIZE,
@@ -8,16 +7,14 @@ import {
   RES_PICKER_SIZE_OKLCH,
   RES_PICKER_FACTOR_OKHSLV,
   RES_PICKER_FACTOR_OKLCH,
-  OKLCH_CHROMA_SCALE
+  OKLCH_CHROMA_SCALE,
+  useHardwareAcceleration
 } from '../../../constants'
-
 import utilsGlsl from '@virtual:shaders/src/ui/shaders/utils.glsl'
 import libraryGlsl from '@virtual:shaders/src/ui/shaders/library.glsl'
 import fShader from '@virtual:shaders/src/ui/shaders/f_shader.glsl'
 import vShader from '@virtual:shaders/src/ui/shaders/v_shader.glsl'
-
 import * as twgl from 'twgl.js'
-
 import { inGamut } from '../../helpers/colors/culori.mjs'
 import { AbsoluteChroma, Saturation, ColorModelList } from '../../../types'
 import convertAbsoluteChromaToRelative from '../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
@@ -40,12 +37,14 @@ import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit/getSrgbStrokeLimit'
 import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
 import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
-
-let gl: WebGL2RenderingContext | null = null
-let bufferInfo: twgl.BufferInfo
-let programInfo: twgl.ProgramInfo
+import { renderImageData } from '../../helpers/colors/renderImageData/renderImageData'
 
 const inGamutSrgb = inGamut('rgb')
+
+let canvas2dContext: CanvasRenderingContext2D | null = null
+let canvasWebglContext: WebGL2RenderingContext | null = null
+let bufferInfo: twgl.BufferInfo
+let programInfo: twgl.ProgramInfo
 
 let lastMouseX: number
 let lastMouseY: number
@@ -183,47 +182,67 @@ export default function ColorPicker() {
     renderRelativeChromaStroke()
     renderContrastStroke()
 
-    if (gl === null) return
-
-    const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
-
-    gl.drawingBufferColorSpace = $currentFileColorProfile.get() === 'p3' ? 'display-p3' : 'srgb'
-
-    const clearColorRgb = convertHxyToRgb({
-      colorHxy: {
-        h: $colorHxya.get().h,
-        x: 0.004,
-        y: document.documentElement.classList.contains('figma-dark') ? 43 : 95
-      }
+    const bgColor = convertHxyToRgb({
+      colorHxy: { h: $colorHxya.get().h, x: 0.006, y: document.documentElement.classList.contains('figma-dark') ? 36 : 95 }
     })
-    gl.clearColor(clearColorRgb.r, clearColorRgb.g, clearColorRgb.b, 1)
-    gl.clear(gl.COLOR_BUFFER_BIT)
-    const uniforms = {
-      resolution: [size, size],
-      isDarkModeEnabled: document.documentElement.classList.contains('figma-dark'),
-      chromaScale: OKLCH_CHROMA_SCALE,
-      isSpaceP3: $currentFileColorProfile.get() === 'p3',
-      colorModel: ColorModelList[$currentColorModel.get()],
-      hueRad: ($colorHxya.get().h * Math.PI) / 180
+    colorPicker.current!.style.background = `rgb(${bgColor.r * 255}, ${bgColor.g * 255}, ${bgColor.b * 255})`
+
+    if (!useHardwareAcceleration) {
+      canvas2dContext!.putImageData(renderImageData({ h: $colorHxya.get().h }), 0, 0)
+    } else {
+      const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
+
+      // We use the bgColor for the clearColor in case of the render of the shader has some broken part that shows it. It shouldn't be the case but in case of.
+      canvasWebglContext!.clearColor(bgColor.r, bgColor.g, bgColor.b, 1)
+      canvasWebglContext!.clear(canvasWebglContext!.COLOR_BUFFER_BIT)
+
+      const uniforms = {
+        resolution: [size, size],
+        chromaScale: OKLCH_CHROMA_SCALE,
+        isSpaceP3: $currentFileColorProfile.get() === 'p3',
+        colorModel: ColorModelList[$currentColorModel.get()],
+        hueRad: ($colorHxya.get().h * Math.PI) / 180
+      }
+      twgl.setUniforms(programInfo, uniforms)
+
+      twgl.drawBufferInfo(canvasWebglContext!, bufferInfo)
     }
-    twgl.setUniforms(programInfo, uniforms)
-    twgl.drawBufferInfo(gl, bufferInfo)
   }
 
-  const scaleColorPickerCanvasAndGlViewport = () => {
-    if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
-      colorPickerCanvas.current!.style.transform = `scale(${RES_PICKER_FACTOR_OKLCH})`
-      colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKLCH
-      colorPickerCanvas.current!.height = RES_PICKER_SIZE_OKLCH
-    } else {
-      colorPickerCanvas.current!.style.transform = `scale(${RES_PICKER_FACTOR_OKHSLV})`
-      colorPickerCanvas.current!.width = RES_PICKER_SIZE_OKHSLV
-      colorPickerCanvas.current!.height = RES_PICKER_SIZE_OKHSLV
-    }
+  const scaleColorPickerCanvasAndWebglViewport = () => {
+    const resFactor = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_FACTOR_OKLCH : RES_PICKER_FACTOR_OKHSLV
+    const pickerSize = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
 
-    if (gl === null) return
-    const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
-    gl.viewport(0, 0, size, size)
+    colorPickerCanvas.current!.style.transform = `scale(${resFactor})`
+    colorPickerCanvas.current!.width = pickerSize
+    colorPickerCanvas.current!.height = pickerSize
+
+    if (useHardwareAcceleration) {
+      canvasWebglContext!.viewport(0, 0, pickerSize, pickerSize)
+    }
+  }
+
+  const setDrawingBufferColorSpace = () => {
+    canvasWebglContext!.drawingBufferColorSpace = $currentFileColorProfile.get() === 'p3' ? 'display-p3' : 'srgb'
+  }
+
+  const initCanvasContext = () => {
+    if (!useHardwareAcceleration) {
+      canvas2dContext = colorPickerCanvas.current!.getContext('2d')
+    } else {
+      canvasWebglContext = colorPickerCanvas.current!.getContext('webgl2')
+
+      const arrays = { position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0] }
+      bufferInfo = twgl.createBufferInfoFromArrays(canvasWebglContext!, arrays)
+
+      const errorCallback = (errorMessage: any) => {
+        console.error(errorMessage)
+      }
+      programInfo = twgl.createProgramInfo(canvasWebglContext!, [vShader, libraryGlsl + utilsGlsl + fShader], undefined, errorCallback)
+
+      canvasWebglContext!.useProgram(programInfo.program)
+      twgl.setBuffersAndAttributes(canvasWebglContext!, programInfo, bufferInfo)
+    }
   }
 
   const updateColorSpaceLabelInColorPicker = () => {
@@ -244,14 +263,12 @@ export default function ColorPicker() {
 
   useEffect(() => {
     if (!isMounted.current) return
-
-    scaleColorPickerCanvasAndGlViewport()
+    scaleColorPickerCanvasAndWebglViewport()
     renderColorPickerCanvas()
   }, [currentColorModel])
 
   useEffect(() => {
     if (!isMounted.current) return
-
     updateManipulatorPosition()
     updateColorSpaceLabelInColorPicker()
   }, [colorHxya.x, colorHxya.y])
@@ -259,23 +276,29 @@ export default function ColorPicker() {
   useEffect(() => {
     if (!isMounted.current) return
 
+    if (useHardwareAcceleration) setDrawingBufferColorSpace()
+
     renderColorPickerCanvas()
-  }, [colorHxya.h, currentColorModel])
+  }, [currentFileColorProfile])
 
   useEffect(() => {
     if (!isMounted.current) return
+    renderColorPickerCanvas()
+  }, [colorHxya.h])
 
+  useEffect(() => {
+    if (!isMounted.current) return
     renderRelativeChromaStroke()
   }, [relativeChroma, lockRelativeChroma])
 
   useEffect(() => {
     if (!isMounted.current) return
-
     renderContrastStroke()
   }, [contrast, lockContrast, currentBgOrFg])
 
   useEffect(() => {
     if (uiMessage.show) {
+      colorPicker.current!.style.background = ''
       colorPicker.current!.classList.add('c-color-picker--deactivated')
     } else {
       colorPicker.current!.classList.remove('c-color-picker--deactivated')
@@ -283,22 +306,16 @@ export default function ColorPicker() {
   }, [uiMessage])
 
   useEffect(() => {
-    gl = colorPickerCanvas.current!.getContext('webgl2')
-    if (gl === null) return
+    initCanvasContext()
+    scaleColorPickerCanvasAndWebglViewport()
 
-    const arrays = {
-      position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]
+    if (useHardwareAcceleration) setDrawingBufferColorSpace()
+
+    if (!$uiMessage.get().show) {
+      renderColorPickerCanvas()
+      updateManipulatorPosition()
+      updateColorSpaceLabelInColorPicker()
     }
-    bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays)
-    programInfo = twgl.createProgramInfo(gl, [vShader, libraryGlsl + utilsGlsl + fShader])
-
-    gl.useProgram(programInfo.program)
-    twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo)
-
-    scaleColorPickerCanvasAndGlViewport()
-    renderColorPickerCanvas()
-    updateManipulatorPosition()
-    updateColorSpaceLabelInColorPicker()
 
     colorPickerCanvas.current!.addEventListener('mousedown', () => {
       setMouseEventCallback(handleNewManipulatorPosition)
