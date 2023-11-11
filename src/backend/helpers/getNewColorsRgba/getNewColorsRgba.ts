@@ -72,7 +72,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
 
   // Get the parent fill if possible.
   // We test is selection.length is 1 because we don't want to display the contrast of multiple selected shapes as it would show one contrast value and that wouldn't be clear of which one of the selected shape it would be.
-  if (firstSelection.parent?.type !== 'PAGE' && selection.length === 1) {
+  if ((firstSelection.parent?.type === 'GROUP' || firstSelection.parent?.type === 'FRAME') && selection.length === 1) {
     let currentObject = firstSelection.parent
 
     while (currentObject) {

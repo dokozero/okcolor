@@ -1,4 +1,4 @@
-const P = [
+const L = [
   "BOOLEAN_OPERATION",
   "COMPONENT",
   "ELLIPSE",
@@ -13,8 +13,8 @@ const P = [
   "SHAPE_WITH_TEXT",
   "HIGHLIGHT"
 ];
-function L() {
-  var a, M, N, T;
+function F() {
+  var a, M, N, R, T;
   const o = figma.currentPage.selection, e = {
     newColorsRgba: {
       parentFill: null,
@@ -28,17 +28,17 @@ function L() {
   if (!o[0])
     return e.uiMessageCode = "no_selection", e;
   for (const t of o)
-    if (!P.includes(t.type))
+    if (!L.includes(t.type))
       return e.uiMessageCode = "not_supported_type", e.nodeType = t.type, e;
   const f = o[0], s = f.fills[0], r = f.strokes[0];
   if (!s && !r)
     return e.uiMessageCode = "no_color_in_shape", e;
   if ((s == null ? void 0 : s.type) !== "SOLID" && (r == null ? void 0 : r.type) !== "SOLID")
     return e.uiMessageCode = "no_solid_color", e;
-  if (((a = f.parent) == null ? void 0 : a.type) !== "PAGE" && o.length === 1) {
+  if ((((a = f.parent) == null ? void 0 : a.type) === "GROUP" || ((M = f.parent) == null ? void 0 : M.type) === "FRAME") && o.length === 1) {
     let t = f.parent;
     for (; t; )
-      if (t.fills && ((M = t.fills) == null ? void 0 : M.length) !== 0) {
+      if (t.fills && ((N = t.fills) == null ? void 0 : N.length) !== 0) {
         t.fills[0].type === "SOLID" && (e.newColorsRgba.parentFill = {
           r: t.fills[0].color.r,
           g: t.fills[0].color.g,
@@ -52,8 +52,8 @@ function L() {
   }
   if (o.length > 1) {
     let t = 0, S = 0;
-    for (const R of o)
-      ((N = R.fills[0]) == null ? void 0 : N.type) === "SOLID" && t++, ((T = R.strokes[0]) == null ? void 0 : T.type) === "SOLID" && S++;
+    for (const w of o)
+      ((R = w.fills[0]) == null ? void 0 : R.type) === "SOLID" && t++, ((T = w.strokes[0]) == null ? void 0 : T.type) === "SOLID" && S++;
     if (o.length !== t && o.length !== S)
       return e.uiMessageCode = "not_all_shapes_have_fill_or_stroke", e;
     o.length !== t ? l = !1 : o.length !== S && (n = !1);
@@ -82,14 +82,14 @@ const g = {
     noContrastAndNoColorCodes: 517
   }
 };
-function w(o) {
+function _(o) {
   const { currentColorModel: e, isColorCodeInputsOpen: l, isContrastInputOpen: n } = o;
   return ["okhsv", "okhsl"].includes(e) ? l ? g.okhsvl.colorCodes : g.okhsvl.noColorCodes : ["oklch", "oklchCss"].includes(e) ? n ? l ? g.oklch.contrastAndColorCodes : g.oklch.contrastAndNoColorCodes : l ? g.oklch.noContrastAndColorCodes : g.oklch.noContrastAndNoColorCodes : g.oklch.contrastAndColorCodes;
 }
 function y(o) {
   figma.ui.postMessage({ type: o.type, data: o.data });
 }
-function F(o, e, l) {
+function H(o, e, l) {
   var s;
   let n;
   const f = e + "s";
@@ -112,15 +112,15 @@ let i = "fill", k, C, p, d, A, u, h, I = !1, c = {
   fill: null,
   stroke: null
 };
-const H = ["fills", "fillStyleId", "strokes", "strokeStyleId", "strokeWeight", "textStyleId"], m = () => {
-  const o = w({
+const J = ["fills", "fillStyleId", "strokes", "strokeStyleId", "strokeWeight", "textStyleId"], m = () => {
+  const o = _({
     currentColorModel: C,
     isColorCodeInputsOpen: h,
     isContrastInputOpen: p
   });
   figma.ui.resize(240, o);
 }, b = () => {
-  const o = L();
+  const o = F();
   return o.uiMessageCode ? (y({
     type: "displayUiMessage",
     data: {
@@ -128,17 +128,17 @@ const H = ["fills", "fillStyleId", "strokes", "strokeStyleId", "strokeWeight", "
       nodeType: o.nodeType
     }
   }), "uiMessageCode sent") : (c = JSON.parse(JSON.stringify(o.newColorsRgba)), "colorsRgba updated");
-}, J = async () => {
+}, D = async () => {
   figma.editorType === "figma" ? k = await figma.clientStorage.getAsync("currentFileColorProfile") || "rgb" : figma.editorType === "figjam" && (k = "rgb"), p = await figma.clientStorage.getAsync("isContrastInputOpen") || !1, h = await figma.clientStorage.getAsync("isColorCodeInputsOpen") || !1, A = await figma.clientStorage.getAsync("currentContrastMethod") || "apca", C = await figma.clientStorage.getAsync("currentColorModel") || "oklchCss", C === "okhsv" || C === "okhsl" ? (d = !1, u = !1) : (d = await figma.clientStorage.getAsync("lockRelativeChroma") || !1, u = await figma.clientStorage.getAsync("lockContrast") || !1);
-  const o = w({
+  const o = _({
     currentColorModel: C,
     isColorCodeInputsOpen: h,
     isContrastInputOpen: p
   });
   figma.showUI(__html__, { width: 240, height: o, themeColors: !0 });
 };
-J();
-const D = async () => {
+D();
+const U = async () => {
   y({
     type: "syncLocalStorageValues",
     data: {
@@ -160,7 +160,7 @@ const D = async () => {
       lockContrast: u
     }
   }));
-}, _ = () => {
+}, E = () => {
   b() !== "uiMessageCode sent" && (i = c.fill ? "fill" : "stroke", y({
     type: "syncNewShape",
     data: {
@@ -170,10 +170,10 @@ const D = async () => {
       lockContrast: u
     }
   }));
-}, E = (o) => {
+}, P = (o) => {
   if (I || o.documentChanges[0].type !== "PROPERTY_CHANGE")
     return;
-  if (o.documentChanges[0].properties.some((l) => H.includes(l))) {
+  if (o.documentChanges[0].properties.some((l) => J.includes(l))) {
     const l = JSON.parse(JSON.stringify(c));
     if (b() === "uiMessageCode sent")
       return;
@@ -188,20 +188,20 @@ const D = async () => {
     });
   }
 };
-figma.on("selectionchange", _);
-figma.on("documentchange", E);
+figma.on("selectionchange", E);
+figma.on("documentchange", P);
 figma.on("close", () => {
-  figma.off("selectionchange", _), figma.off("documentchange", E);
+  figma.off("selectionchange", E), figma.off("documentchange", P);
 });
 let O;
 figma.ui.onmessage = (o) => {
   let e;
   switch (o.type) {
     case "triggerInit":
-      D();
+      U();
       break;
     case "updateShapeColor":
-      e = o.data, I = !0, F(e.newColorRgba, i, e.currentBgOrFg), O && clearTimeout(O), O = setTimeout(() => {
+      e = o.data, I = !0, H(e.newColorRgba, i, e.currentBgOrFg), O && clearTimeout(O), O = setTimeout(() => {
         I = !1;
       }, 500);
       break;
