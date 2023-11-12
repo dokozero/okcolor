@@ -63,13 +63,6 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
         x: parseFloat(matches[1]),
         y: parseFloat(matches[0])
       }
-      if (currentColorModel === 'oklch') {
-        newColorHxy = {
-          h: round(newColorHxy.h, getColorHxyDecimals().h),
-          x: round(newColorHxy.x * 100, getColorHxyDecimals().x),
-          y: round(newColorHxy.y, getColorHxyDecimals().y)
-        }
-      }
 
       newColorHxy.x = getClampedChroma(newColorHxy)
     } else {
