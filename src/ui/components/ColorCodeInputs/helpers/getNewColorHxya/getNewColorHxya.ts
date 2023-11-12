@@ -5,8 +5,6 @@ import getClampedChroma from '../../../../helpers/colors/getClampedChroma/getCla
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentBgOrFg } from '../../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
-import getColorHxyDecimals from '../../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
-import round from 'lodash/round'
 import isColorCodeInGoodFormat from '../isColorCodeInGoodFormat/isColorCodeInGoodFormat'
 
 const convertToRgb = converter('rgb')
@@ -65,6 +63,10 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
       }
 
       newColorHxy.x = getClampedChroma(newColorHxy)
+
+      if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {
+        newColorA = parseFloat(matches![3])
+      }
     } else {
       if (currentColorModel === 'okhsv') regex = /h:\s*(\d+)\s*,\s*s:\s*(\d+)\s*,\s*v:\s*(\d+)\s*/
       else if (currentColorModel === 'okhsl') regex = /h:\s*(\d+)\s*,\s*s:\s*(\d+)\s*,\s*l:\s*(\d+)\s*/
@@ -90,6 +92,10 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
       colorSpace: ['oklch', 'oklchCss'].includes(currentColorModel) ? 'p3' : 'rgb',
       keepOklchDoubleDigit: true
     })
+
+    if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {
+      newColorA = parseFloat(matches![3])
+    }
   } else if (eventTargetId === 'rgba') {
     regex = /(\d+(\.\d+)?)/g
     matches = eventTargetValue.match(regex)!
@@ -102,6 +108,10 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
       },
       colorSpace: 'rgb'
     })
+
+    if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {
+      newColorA = parseFloat(matches![3])
+    }
   } else if (eventTargetId === 'hex') {
     const newColorRgb = convertToRgb(eventTargetValue)
     if (newColorRgb === undefined) return undefined
@@ -110,11 +120,10 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
       colorRgb: newColorRgb,
       colorSpace: 'rgb'
     })
-    if (newColorRgb.alpha && currentBgOrFg === 'fg') newColorA = newColorRgb.alpha
-  }
 
-  if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {
-    newColorA = parseFloat(matches![3])
+    if (newColorRgb.alpha && currentBgOrFg === 'fg') {
+      newColorA = newColorRgb.alpha
+    }
   }
 
   return { ...newColorHxy, a: newColorA }
