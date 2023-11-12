@@ -20,33 +20,6 @@ vec3 mul3(in mat3 m, in vec3 v) {
   );
 }
 
-// TODO - delte after tests
-// Now we use same steps as P3 (oklchToRgbSrgb) as it seems that with some machine we have a rendering bug.
-// vec3 oklab2srgb(in vec3 lab) {
-//   mat3 m1 = mat3(
-//     1.0000000000,+0.3963377774,+0.2158037573,
-//     1.0000000000,-0.1055613458,-0.0638541728,
-//     1.0000000000,-0.0894841775,-1.2914855480
-//   );
-
-//   vec3 lms = mul3(m1, lab);
-
-//   lms = lms * lms * lms;
-
-//   mat3 m2 = mat3(
-//     +4.0767416621,-3.3077115913,+0.2309699292,
-//     -1.2684380046,+2.6097574011,-0.3413193965,
-//     -0.0041960863,-0.7034186147,+1.7076147010
-//   );
-//   return mul3(m2, lms);
-// }
-
-// vec3 oklch2srgb(in vec3 lch)
-// {
-//   vec3 lab = lchToLab(lch);
-//   return oklab2srgb(lab);
-// }
-
 vec3 lchToLab(in vec3 lch) {
   return vec3(
     lch.x,
@@ -56,14 +29,19 @@ vec3 lchToLab(in vec3 lch) {
 }
 
 // Conversation matrices used from culori.js
-vec3 labToLrgb(in vec3 lab) {
+vec3 oklabToLrgbSrgb(in vec3 lab) {
   mat3 labToLms = mat3(
-    0.99999999845051981432, 0.39633779217376785678, 0.21580375806075880339,
-    1.0000000088817607767, -0.1055613423236563494, -0.063854174771705903402,
-    1.0000000546724109177, -0.089484182094965759684, -1.2914855378640917399
+    0.9999999984505198, 0.39633779217376786, 0.2158037580607588,
+    1.0000000088817609, -0.10556134232365635, -0.06385417477170591,
+    1.0000000546724108, -0.08948418209496575, -1.2914855378640917
   );
 
-  vec3 lms = pow(mul3(labToLms, lab), vec3(3.0));
+  // We first convert the values to absolutes one as with some GPU we have a rendering bug when using pow() with negative values in that case.
+  vec3 absLms = abs(mul3(labToLms, lab));
+  vec3 lms = pow(absLms, vec3(3.0));
+
+  // We restore the original sign back.
+  lms *= sign(mul3(labToLms, lab));
 
   mat3 lmsToLrgb = mat3(
     4.076741661347994, -3.307711590408193, 0.230969928729428,
@@ -94,15 +72,15 @@ vec3 xyzToLrgbP3(in vec3 xyz) {
   return mul3(m1, xyz);
 }
 
-vec3 xyzToLrgbSrgb(in vec3 xyz) {
-  mat3 m1 = mat3(
-    3.2409699419045226, -1.537383177570094, -0.4986107602930034,
-    -0.9692436362808796, 1.8759675015077204, 0.0415550574071756,
-    0.0556300796969936, -0.2039769588889765, 1.0569715142428784
-  );
+// vec3 xyzToLrgbSrgb(in vec3 xyz) {
+//   mat3 m1 = mat3(
+//     3.2409699419045226, -1.537383177570094, -0.4986107602930034,
+//     -0.9692436362808796, 1.8759675015077204, 0.0415550574071756,
+//     0.0556300796969936, -0.2039769588889765, 1.0569715142428784
+//   );
 
-  return mul3(m1, xyz);
-}
+//   return mul3(m1, xyz);
+// }
 
 vec3 lrgbToRgb(in vec3 rgb) {
   float absR = abs(rgb.r);
@@ -114,8 +92,6 @@ vec3 lrgbToRgb(in vec3 rgb) {
   float processedB;
 
   if (absR > 0.0031308) {
-    // If issues in the rendering, we can try this (for the 3 processedX variables):
-    // processedR = sign(rgb.r) * (1.055 * exp(log(absR) * (1.0 / 2.4)) - 0.055);
     processedR = sign(rgb.r) * (1.055 * pow(absR, 1.0 / 2.4) - 0.055);
   } else {
     processedR = rgb.r * 12.92;
@@ -138,14 +114,34 @@ vec3 lrgbToRgb(in vec3 rgb) {
 
 vec3 oklchToRgb(in vec3 lch, in bool isSpaceP3) {
   vec3 lab = lchToLab(lch);
-  vec3 lrgb = labToLrgb(lab);
-  vec3 xyz = lrgbToXyz(lrgb);
-
   vec3 lrgbInSpace;
-  if (isSpaceP3) {
-    lrgbInSpace = xyzToLrgbP3(xyz);
+  
+  if (!isSpaceP3) {
+    lrgbInSpace = oklabToLrgbSrgb(lab);
   } else {
-    lrgbInSpace = xyzToLrgbSrgb(xyz);
+    // Converting to rgb in P3 space needs a few more steps.
+    vec3 lrgb = oklabToLrgbSrgb(lab);
+    vec3 xyz = lrgbToXyz(lrgb);
+    lrgbInSpace = xyzToLrgbP3(xyz);
   }
-  return lrgbToRgb(lrgbInSpace);
+
+  vec3 rgbInSpace = lrgbToRgb(lrgbInSpace);
+  return rgbInSpace;
 }
+
+// This alternative uses the sames step for sRGB than P3, in case for the future if bugs are found with sRGB render.
+// vec3 oklchToRgb(in vec3 lch, in bool isSpaceP3) {
+//   vec3 lab = lchToLab(lch);
+//   vec3 lrgb = oklabToLrgbSrgb(lab);
+//   vec3 xyz = lrgbToXyz(lrgb);
+
+//   vec3 lrgbInSpace;
+//   if (isSpaceP3) {
+//     lrgbInSpace = xyzToLrgbP3(xyz);
+//   } else {
+//     lrgbInSpace = xyzToLrgbSrgb(xyz);
+//   }
+
+//   vec3 rgbInSpace = lrgbToRgb(lrgbInSpace);
+//   return rgbInSpace;
+// }

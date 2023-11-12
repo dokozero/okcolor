@@ -211,8 +211,7 @@ export default function ColorPicker() {
     } else {
       const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
 
-      // We use the bgColor for the clearColor in case of the render of the shader has some broken part that shows it. It shouldn't be the case but in case of.
-      canvasWebglContext!.clearColor(bgColor.r, bgColor.g, bgColor.b, 1)
+      canvasWebglContext!.clearColor(0, 0, 0, 1)
       canvasWebglContext!.clear(canvasWebglContext!.COLOR_BUFFER_BIT)
 
       const uniforms = {
