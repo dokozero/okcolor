@@ -25,7 +25,7 @@ import { setLockContrast, $lockContrast } from './stores/contrasts/lockContrast/
 import { setCurrentFillOrStroke } from './stores/currentFillOrStroke/currentFillOrStroke'
 import { $currentKeysPressed, setCurrentKeysPressed } from './stores/currentKeysPressed/currentKeysPressed'
 import { setFigmaEditorType } from './stores/figmaEditorType/figmaEditorType'
-import { setIsColorCodeInputsOpen } from './stores/isColorCodeInputsOpen/isColorCodeInputsOpen'
+import { setIsColorCodeInputsOpen } from './stores/colors/isColorCodeInputsOpen/isColorCodeInputsOpen'
 import { setIsMouseInsideDocument } from './stores/isMouseInsideDocument/isMouseInsideDocument'
 import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventCallback/mouseEventCallback'
 import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage/uiMessage'

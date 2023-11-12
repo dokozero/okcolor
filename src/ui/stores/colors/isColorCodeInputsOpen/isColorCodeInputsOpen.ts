@@ -1,8 +1,8 @@
 import { action, atom } from 'nanostores'
 import { logger } from '@nanostores/logger'
-import { consoleLogInfos } from '../../../constants'
-import { SyncIsColorCodeInputsOpenData } from '../../../types'
-import sendMessageToBackend from '../../helpers/sendMessageToBackend/sendMessageToBackend'
+import { consoleLogInfos } from '../../../../constants'
+import { SyncIsColorCodeInputsOpenData } from '../../../../types'
+import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMessageToBackend'
 import merge from 'lodash/merge'
 
 export const $isColorCodeInputsOpen = atom(false)
