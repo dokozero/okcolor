@@ -8,20 +8,13 @@ import { $currentColorModel } from '../../stores/colors/currentColorModel/curren
 import { $lockRelativeChroma } from '../../stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { $lockContrast } from '../../stores/contrasts/lockContrast/lockContrast'
-import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument/isMouseInsideDocument'
-import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
-import getHxyaInputRange from '../../helpers/colors/getHxyaInputRange/getHxyaInputRange'
-import round from 'lodash/round'
-import clamp from 'lodash/clamp'
 import getColorHxyaValueFormatedForInput from './helpers/getColorHxyaValueFormatedForInput/getColorHxyaValueFormatedForInput'
-import clampColorHxyaValueInInputFormat from './helpers/clampColorHxyaValueInInputFormat/clampColorHxyaValueInInputFormat'
-import getStepUpdateValue from './helpers/getStepUpdateValue/getStepUpdateValue'
-import formatAndSendNewValueToStore from './helpers/formatAndSendNewValueToStore/formatAndSendNewValueToStore'
+import handleInputOnBlur from './helpers/handleInputOnBlur/handleInputOnBlur'
+import handleInputOnKeyDown from './helpers/handleInputOnKeyDown/handleInputOnKeyDown'
 
-let lastKeyPressed: string = ''
-const keepInputSelected = {
-  state: false,
-  inputId: ''
+export type KeepInputSelected = {
+  state: boolean
+  inputId: keyof typeof HxyaLabels | ''
 }
 
 export default function ColorValueInputs() {
@@ -39,6 +32,12 @@ export default function ColorValueInputs() {
   const inputX = useRef<HTMLInputElement>(null)
   const inputY = useRef<HTMLInputElement>(null)
   const inputA = useRef<HTMLInputElement>(null)
+
+  const lastKeyPressed = useRef('')
+  const keepInputSelected = useRef<KeepInputSelected>({
+    state: false,
+    inputId: ''
+  })
 
   const updateInputPositions = () => {
     if ($currentColorModel.get() === 'oklchCss') {
@@ -67,65 +66,6 @@ export default function ColorValueInputs() {
       inputY.current!.tabIndex = $lockContrast.get() ? -1 : 3
     }
     inputA.current!.tabIndex = $currentBgOrFg.get() === 'bg' || $lockContrast.get() ? -1 : 4
-  }
-
-  const handleInputOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    const eventTarget = event.target as HTMLInputElement
-
-    const eventId = eventTarget.id as HxyaLabels
-
-    const oldValue = getColorHxyaValueFormatedForInput(eventId)
-    const newValue = round(parseFloat(eventTarget.value), getColorHxyDecimals({ forInputs: true })[`${eventId}`])
-
-    if (isNaN(newValue)) {
-      eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
-      return
-    }
-
-    const clampedNewValue = clampColorHxyaValueInInputFormat(eventId, newValue)
-
-    if (
-      clampedNewValue === oldValue ||
-      lastKeyPressed === 'Escape' ||
-      (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))
-    ) {
-      eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
-      return
-    } else {
-      lastKeyPressed = ''
-    }
-
-    formatAndSendNewValueToStore(eventId, clampedNewValue)
-  }
-
-  const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    const eventKey = event.key
-
-    if (['Enter', 'Tab', 'Escape'].includes(eventKey)) {
-      lastKeyPressed = eventKey
-      ;(event.target as HTMLInputElement).blur()
-    } else if (['ArrowUp', 'ArrowDown'].includes(eventKey)) {
-      if (['ArrowUp', 'ArrowDown'].includes(eventKey)) {
-        const eventTarget = event.target as HTMLInputElement
-        const eventId = eventTarget.id as HxyaLabels
-
-        let newValue = parseFloat(eventTarget.value)
-
-        event.preventDefault()
-        keepInputSelected.state = true
-        keepInputSelected.inputId = eventId
-
-        const stepUpdateValue = getStepUpdateValue(eventId)
-        if (eventKey === 'ArrowUp') newValue += stepUpdateValue
-        else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
-
-        // We need to round the value because sometimes we can get results like 55.8999999.
-        newValue = round(newValue, getColorHxyDecimals({ forInputs: true })[`${eventId}`])
-
-        const clampedNewValue = clamp(newValue, getHxyaInputRange(eventId).min, getHxyaInputRange(eventId).max)
-        formatAndSendNewValueToStore(eventId, clampedNewValue)
-      }
-    }
   }
 
   useEffect(() => {
@@ -179,22 +119,62 @@ export default function ColorValueInputs() {
   }, [colorHxya.a])
 
   useEffect(() => {
-    if (keepInputSelected.state) {
-      if (keepInputSelected.inputId == 'h') inputH.current!.select()
-      if (keepInputSelected.inputId == 'x') inputX.current!.select()
-      if (keepInputSelected.inputId == 'y') inputY.current!.select()
-      if (keepInputSelected.inputId == 'a') inputA.current!.select()
-      keepInputSelected.inputId = ''
-      keepInputSelected.state = false
+    if (keepInputSelected.current.state) {
+      if (keepInputSelected.current.inputId == 'h') inputH.current!.select()
+      if (keepInputSelected.current.inputId == 'x') inputX.current!.select()
+      if (keepInputSelected.current.inputId == 'y') inputY.current!.select()
+      if (keepInputSelected.current.inputId == 'a') inputA.current!.select()
+      keepInputSelected.current.inputId = ''
+      keepInputSelected.current.state = false
     }
   }, [colorHxya])
 
   return (
     <div className="input-wrapper c-select-input-controls__input-wrapper">
-      <input id="h" ref={inputH} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
-      <input id="x" ref={inputX} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
-      <input id="y" ref={inputY} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
-      <input id="a" ref={inputA} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
+      <input
+        id="h"
+        ref={inputH}
+        onClick={selectInputContent}
+        onBlur={(e) => {
+          handleInputOnBlur(e, lastKeyPressed)
+        }}
+        onKeyDown={(e) => {
+          handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
+        }}
+      />
+      <input
+        id="x"
+        ref={inputX}
+        onClick={selectInputContent}
+        onBlur={(e) => {
+          handleInputOnBlur(e, lastKeyPressed)
+        }}
+        onKeyDown={(e) => {
+          handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
+        }}
+      />
+      <input
+        id="y"
+        ref={inputY}
+        onClick={selectInputContent}
+        onBlur={(e) => {
+          handleInputOnBlur(e, lastKeyPressed)
+        }}
+        onKeyDown={(e) => {
+          handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
+        }}
+      />
+      <input
+        id="a"
+        ref={inputA}
+        onClick={selectInputContent}
+        onBlur={(e) => {
+          handleInputOnBlur(e, lastKeyPressed)
+        }}
+        onKeyDown={(e) => {
+          handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
+        }}
+      />
     </div>
   )
 }

@@ -4,16 +4,12 @@ import { useStore } from '@nanostores/react'
 import selectInputContent from '../../../helpers/selectInputContent/selectInputContent'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { setLockRelativeChromaWithSideEffects, $lockRelativeChroma } from '../../../stores/colors/lockRelativeChroma/lockRelativeChroma'
-import { $relativeChroma, setRelativeChromaWithSideEffects } from '../../../stores/colors/relativeChroma/relativeChroma'
-import { $currentKeysPressed } from '../../../stores/currentKeysPressed/currentKeysPressed'
-import { $isMouseInsideDocument } from '../../../stores/isMouseInsideDocument/isMouseInsideDocument'
+import { $relativeChroma } from '../../../stores/colors/relativeChroma/relativeChroma'
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
 import ClosedLockIcon from '../ClosedLockIcon/ClosedLockIcon'
 import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
-import clamp from 'lodash/clamp'
-
-let lastKeyPressed: string = ''
-let keepInputSelected = false
+import handleInputOnBlur from './helpers/handleInputOnBlur/handleInputOnBlur'
+import handleInputOnKeyDown from './helpers/handleInputOnKeyDown/handleInputOnKeyDown'
 
 const handleLockRelativeChroma = () => {
   setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: !$lockRelativeChroma.get() })
@@ -24,61 +20,16 @@ export default function RelativeChromaInput() {
     console.log('Component render — RelativeChromaInput')
   }
 
-  const input = useRef<HTMLInputElement>(null)
-
   const relativeChroma = useStore($relativeChroma)
   const currentColorModel = useStore($currentColorModel)
   const lockRelativeChroma = useStore($lockRelativeChroma)
 
   const [showRelativeChroma, setShowRelativeChroma] = useState<boolean | undefined>(undefined)
 
-  const handleInputOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    const eventTarget = event.target
-    const newValue = parseInt(eventTarget.value)
+  const input = useRef<HTMLInputElement>(null)
 
-    if (isNaN(newValue)) {
-      eventTarget.value = $relativeChroma.get() + '%'
-      return
-    }
-
-    const clampedNewRelativeChroma = clamp(newValue, 0, 100)
-
-    if (
-      clampedNewRelativeChroma === $relativeChroma.get() ||
-      lastKeyPressed === 'Escape' ||
-      (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))
-    ) {
-      eventTarget.value = $relativeChroma.get() + '%'
-      return
-    } else {
-      lastKeyPressed = ''
-    }
-
-    setRelativeChromaWithSideEffects({ newRelativeChroma: clampedNewRelativeChroma })
-  }
-
-  const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    const eventKey = event.key
-    const eventTarget = event.target as HTMLInputElement
-
-    if (['Enter', 'Tab', 'Escape'].includes(eventKey)) {
-      lastKeyPressed = eventKey
-      ;(event.target as HTMLInputElement).blur()
-    } else if (['ArrowUp', 'ArrowDown'].includes(eventKey)) {
-      let newValue = parseInt(eventTarget.value)
-
-      event.preventDefault()
-      keepInputSelected = true
-
-      const stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 10 : 1
-
-      if (eventKey === 'ArrowUp') newValue += stepUpdateValue
-      else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
-
-      const clampedNewRelativeChroma = clamp(newValue, 0, 100)
-      setRelativeChromaWithSideEffects({ newRelativeChroma: clampedNewRelativeChroma })
-    }
-  }
+  const lastKeyPressed = useRef('')
+  const keepInputSelected = useRef(false)
 
   useEffect(() => {
     if (['oklch', 'oklchCss'].includes(currentColorModel)) {
@@ -93,9 +44,9 @@ export default function RelativeChromaInput() {
 
     input.current!.value = relativeChroma + '%'
 
-    if (keepInputSelected) {
+    if (keepInputSelected.current) {
       input.current!.select()
-      keepInputSelected = false
+      keepInputSelected.current = false
     }
   }, [relativeChroma])
 
@@ -119,7 +70,16 @@ export default function RelativeChromaInput() {
     >
       <div className="c-single-input-with-lock__label">Relative chroma</div>
       <div className="input-wrapper c-single-input-with-lock__input-wrapper u-ml-auto">
-        <input ref={input} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
+        <input
+          ref={input}
+          onClick={selectInputContent}
+          onBlur={(e) => {
+            handleInputOnBlur(e, lastKeyPressed)
+          }}
+          onKeyDown={(e) => {
+            handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
+          }}
+        />
       </div>
 
       <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockRelativeChroma}>

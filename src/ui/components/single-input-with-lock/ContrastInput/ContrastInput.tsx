@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import { ApcaContrast, CurrentContrastMethod, WcagContrast } from '../../../../types'
+import { CurrentContrastMethod } from '../../../../types'
 import getContrastFromBgandFgRgba from '../../../helpers/contrasts/getContrastFromBgandFgRgba/getContrastFromBgandFgRgba'
 import selectInputContent from '../../../helpers/selectInputContent/selectInputContent'
 import { $colorsRgba } from '../../../stores/colors/colorsRgba/colorsRgba'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
-import { $contrast, setContrastWithSideEffects, setContrast } from '../../../stores/contrasts/contrast/contrast'
+import { $contrast, setContrast } from '../../../stores/contrasts/contrast/contrast'
 import {
   $currentContrastMethod,
   setCurrentContrastMethodWithSideEffects
@@ -13,21 +13,32 @@ import {
 import { $isContrastInputOpen, setIsContrastInputOpenWithSideEffects } from '../../../stores/contrasts/isContrastInputOpen/isContrastInputOpen'
 import { setLockContrastWithSideEffects, $lockContrast } from '../../../stores/contrasts/lockContrast/lockContrast'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke/currentFillOrStroke'
-import { $isMouseInsideDocument } from '../../../stores/isMouseInsideDocument/isMouseInsideDocument'
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
 import BgOrFgToggle from '../BgOrFgToggle/BgOrFgToggle'
 import ClosedLockIcon from '../ClosedLockIcon/ClosedLockIcon'
 import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
 import { consoleLogInfos } from '../../../../constants'
-import getContrastRange from '../../../helpers/contrasts/getContrastRange/getContrastRange'
-import clamp from 'lodash/clamp'
-import getNewContrastValueFromArrowKey from './helpers/getNewContrastValueFromArrowKey/getNewContrastValueFromArrowKey'
-
-let lastKeyPressed: string = ''
-let keepInputSelected = false
+import handleInputOnBlur from './helpers/handleInputOnBlur/handleInputOnBlur'
+import handleInputOnKeyDown from './helpers/handleInputOnKeyDown/handleInputOnKeyDown'
 
 const handleLockContrast = () => {
   setLockContrastWithSideEffects({ newLockContrast: !$lockContrast.get() })
+}
+
+const handleIsContrastInputOpen = () => {
+  setIsContrastInputOpenWithSideEffects({ newIsContrastInputOpen: !$isContrastInputOpen.get() })
+}
+
+const handleContrastMethod = (event: { target: HTMLSelectElement }) => {
+  const newCurrentContrastMethod = event.target.value as CurrentContrastMethod
+
+  setCurrentContrastMethodWithSideEffects({ newCurrentContrastMethod: newCurrentContrastMethod })
+
+  const newContrast = getContrastFromBgandFgRgba({
+    fg: $colorsRgba.get().fill!,
+    bg: $colorsRgba.get().parentFill!
+  })
+  setContrast(newContrast)
 }
 
 export default function ContrastInput() {
@@ -48,68 +59,8 @@ export default function ContrastInput() {
   const contrastMethodSelect = useRef<HTMLSelectElement>(null)
   const input = useRef<HTMLInputElement>(null)
 
-  const handleIsContrastInputOpen = () => {
-    setIsContrastInputOpenWithSideEffects({ newIsContrastInputOpen: !$isContrastInputOpen.get() })
-  }
-
-  const handleContrastMethod = (event: { target: HTMLSelectElement }) => {
-    const newCurrentContrastMethod = event.target.value as CurrentContrastMethod
-
-    setCurrentContrastMethodWithSideEffects({ newCurrentContrastMethod: newCurrentContrastMethod })
-
-    const newContrast = getContrastFromBgandFgRgba({
-      fg: $colorsRgba.get().fill!,
-      bg: $colorsRgba.get().parentFill!
-    })
-    setContrast(newContrast)
-  }
-
-  const handleInputOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    const eventTarget = event.target
-
-    const newValue: ApcaContrast | WcagContrast =
-      $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
-
-    if (isNaN(newValue)) {
-      eventTarget.value = String($contrast.get())
-      return
-    }
-
-    const clampedNewContrast = clamp(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
-
-    if (
-      clampedNewContrast === $contrast.get() ||
-      lastKeyPressed === 'Escape' ||
-      (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))
-    ) {
-      eventTarget.value = String($contrast.get())
-      return
-    } else {
-      lastKeyPressed = ''
-    }
-
-    setContrastWithSideEffects({ newContrast: clampedNewContrast })
-  }
-
-  const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    const eventKey = event.key
-    const eventTarget = event.target as HTMLInputElement
-
-    if (['Enter', 'Tab', 'Escape'].includes(eventKey)) {
-      lastKeyPressed = eventKey
-      ;(event.target as HTMLInputElement).blur()
-    } else if (['ArrowUp', 'ArrowDown'].includes(eventKey)) {
-      const currentValue: ApcaContrast | WcagContrast =
-        $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
-
-      event.preventDefault()
-      keepInputSelected = true
-
-      const newValue = getNewContrastValueFromArrowKey(eventKey as 'ArrowDown' | 'ArrowUp', currentValue)
-      const clampedNewContrast = clamp(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
-      setContrastWithSideEffects({ newContrast: clampedNewContrast })
-    }
-  }
+  const lastKeyPressed = useRef('')
+  const keepInputSelected = useRef(false)
 
   useEffect(() => {
     if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return
@@ -117,9 +68,9 @@ export default function ContrastInput() {
 
     input.current!.value = String(contrast)
 
-    if (keepInputSelected) {
+    if (keepInputSelected.current) {
       input.current!.select()
-      keepInputSelected = false
+      keepInputSelected.current = false
     }
   }, [contrast])
 
@@ -193,7 +144,16 @@ export default function ContrastInput() {
         <BgOrFgToggle />
 
         <div className="input-wrapper c-single-input-with-lock__input-wrapper">
-          <input ref={input} onClick={selectInputContent} onBlur={handleInputOnBlur} onKeyDown={handleInputOnKeyDown} />
+          <input
+            ref={input}
+            onClick={selectInputContent}
+            onBlur={(e) => {
+              handleInputOnBlur(e, lastKeyPressed)
+            }}
+            onKeyDown={(e) => {
+              handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
+            }}
+          />
         </div>
 
         <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockContrast}>
