@@ -12,10 +12,10 @@ const pluginHeights = {
     noColorCodes: 435
   },
   oklch: {
-    contrastAndColorCodes: 680,
-    contrastAndNoColorCodes: 550,
+    contrastAndColorCodes: 681,
+    contrastAndNoColorCodes: 552,
     noContrastAndColorCodes: 647,
-    noContrastAndNoColorCodes: 517
+    noContrastAndNoColorCodes: 516
   }
 }
 
