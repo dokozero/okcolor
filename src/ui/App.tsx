@@ -60,15 +60,15 @@ function App() {
       if (pluginMessage.type === 'syncLocalStorageValues') {
         const data = pluginMessage.data as SyncLocalStorageValuesData
 
-        setFigmaEditorType(data.figmaEditorType)
-        setUserSettings(data.userSettings)
-        setCurrentFileColorProfile(data.currentFileColorProfile)
-        setIsContrastInputOpen(data.isContrastInputOpen)
-        setLockRelativeChroma(data.lockRelativeChroma)
-        setCurrentContrastMethod(data.currentContrastMethod)
-        setLockContrast(data.lockContrast)
-        setIsColorCodeInputsOpen(data.isColorCodeInputsOpen)
-        setCurrentColorModel(data.currentColorModel)
+        setFigmaEditorType(data.newFigmaEditorType)
+        setUserSettings(data.newUserSettings)
+        setCurrentFileColorProfile(data.newCurrentFileColorProfile)
+        setIsContrastInputOpen(data.newIsContrastInputOpen)
+        setLockRelativeChroma(data.newLockRelativeChroma)
+        setCurrentContrastMethod(data.newCurrentContrastMethod)
+        setLockContrast(data.newLockContrast)
+        setIsColorCodeInputsOpen(data.newIsColorCodeInputsOpen)
+        setCurrentColorModel(data.newCurrentColorModel)
       }
       // Update the color based on the selected shape in Figma.
 
@@ -82,13 +82,13 @@ function App() {
 
         if ($currentColorModel.get() === 'oklch') {
           // We update these two values in the case the user had one or the two set to true with a shape selected then deselected it, without this when he select a shape again, theses values would always be false as we set them to this value in setValuesForUiMessage() called when we show as UI message.
-          if (data.lockRelativeChroma !== $lockRelativeChroma.get()) {
-            setLockRelativeChroma(data.lockRelativeChroma)
+          if (data.newLockRelativeChroma !== $lockRelativeChroma.get()) {
+            setLockRelativeChroma(data.newLockRelativeChroma)
           }
           //For this value, we have the same same reason but also another one: if the user has the plugin running with a shape that has a parent fill then select another one that doesn't have one, if he select back a shape with a parent fill, we need to check if $lockContrast is not equal to the one from backend and update it in accordance.
-          if (data.lockContrast !== $lockContrast.get() && data.colorsRgba.parentFill) {
-            setLockContrast(data.lockContrast)
-          } else if (!data.colorsRgba.parentFill || !data.colorsRgba.fill) {
+          if (data.newLockContrast !== $lockContrast.get() && data.newColorsRgba.parentFill) {
+            setLockContrast(data.newLockContrast)
+          } else if (!data.newColorsRgba.parentFill || !data.newColorsRgba.fill) {
             // If the user select a new shape that doesn't have a parent fill and he had the lockContrast on, we need to set it to false to avoid having the lock on when ContrastInput is deactivated.
             if ($lockContrast.get()) setLockContrast(false)
           }
@@ -97,10 +97,10 @@ function App() {
         // If on previous selected shape we had the parent selected, we set it to false as default.
         if ($currentBgOrFg.get() === 'bg') setCurrentBgOrFg('fg')
 
-        setCurrentFillOrStroke(data.currentFillOrStroke)
+        setCurrentFillOrStroke(data.newCurrentFillOrStroke)
 
         setColorsRgbaWithSideEffects({
-          newColorsRgba: data.colorsRgba,
+          newColorsRgba: data.newColorsRgba,
           keepOklchDoubleDigit: true,
           sideEffects: {
             syncColorRgbWithBackend: false

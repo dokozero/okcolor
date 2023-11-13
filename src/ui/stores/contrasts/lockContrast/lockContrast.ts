@@ -40,7 +40,7 @@ export const setLockContrastWithSideEffects = action($lockContrast, 'setLockCont
     sendMessageToBackend<SyncLockContrastData>({
       type: 'syncLockContrast',
       data: {
-        lockContrast: newLockContrast
+        newLockContrast: newLockContrast
       }
     })
   }

@@ -39,7 +39,7 @@ export const setLockRelativeChromaWithSideEffects = action(
       sendMessageToBackend<SyncLockRelativeChromaData>({
         type: 'syncLockRelativeChroma',
         data: {
-          lockRelativeChroma: newLockRelativeChroma
+          newLockRelativeChroma: newLockRelativeChroma
         }
       })
     }

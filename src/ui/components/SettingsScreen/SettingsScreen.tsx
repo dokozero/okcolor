@@ -37,7 +37,7 @@ export default function SettingsScreen() {
     sendMessageToBackend<SyncUserSettingsData>({
       type: 'SyncUserSettings',
       data: {
-        userSettings: { ...$userSettings.get(), useHardwareAcceleration: !localUseHardwareAcceleration }
+        newUserSettings: { ...$userSettings.get(), useHardwareAcceleration: !localUseHardwareAcceleration }
       }
     })
 

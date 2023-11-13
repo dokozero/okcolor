@@ -43,7 +43,7 @@ export const setIsColorCodeInputsOpenWithSideEffects = action(
       sendMessageToBackend<SyncIsColorCodeInputsOpenData>({
         type: 'syncIsColorCodeInputsOpen',
         data: {
-          isColorCodeInputsOpen: newIsColorCodeInputsOpen
+          newIsColorCodeInputsOpen: newIsColorCodeInputsOpen
         }
       })
     }

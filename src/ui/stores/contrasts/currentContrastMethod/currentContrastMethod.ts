@@ -43,7 +43,7 @@ export const setCurrentContrastMethodWithSideEffects = action(
       sendMessageToBackend<SyncCurrentContrastMethodData>({
         type: 'syncCurrentContrastMethod',
         data: {
-          currentContrastMethod: newCurrentContrastMethod
+          newCurrentContrastMethod: newCurrentContrastMethod
         }
       })
     }

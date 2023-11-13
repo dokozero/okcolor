@@ -73,7 +73,7 @@ export const setCurrentColorModelWithSideEffects = action(
       sendMessageToBackend<SyncCurrentColorModelData>({
         type: 'syncCurrentColorModel',
         data: {
-          currentColorModel: newCurrentColorModel
+          newCurrentColorModel: newCurrentColorModel
         }
       })
     }

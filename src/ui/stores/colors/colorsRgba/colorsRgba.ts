@@ -75,7 +75,7 @@ export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWi
       data: {
         newColorRgba:
           $currentBgOrFg.get() === 'bg' ? { ...newColorsRgba.parentFill!, a: $colorHxya.get().a } : newColorsRgba[`${$currentFillOrStroke.get()}`]!,
-        currentBgOrFg: $currentBgOrFg.get()
+        newCurrentBgOrFg: $currentBgOrFg.get()
       }
     })
   }

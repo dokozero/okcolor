@@ -67,7 +67,7 @@ export const setCurrentFileColorProfileWithSideEffects = action(
       sendMessageToBackend<SyncCurrentFileColorProfileData>({
         type: 'syncCurrentFileColorProfile',
         data: {
-          currentFileColorProfile: newCurrentFileColorProfile
+          newCurrentFileColorProfile: newCurrentFileColorProfile
         }
       })
     }

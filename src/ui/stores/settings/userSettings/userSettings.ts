@@ -49,7 +49,7 @@ export const setUserSettingsKeyWithSideEffects = action($userSettings, 'setUserS
     sendMessageToBackend<SyncUserSettingsData>({
       type: 'SyncUserSettings',
       data: {
-        userSettings: { ...$userSettings.get(), [key]: newValue }
+        newUserSettings: { ...$userSettings.get(), [key]: newValue }
       }
     })
   }

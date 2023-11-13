@@ -62,7 +62,7 @@ export const setCurrentFillOrStrokeWithSideEffects = action(
       sendMessageToBackend<SyncCurrentFillOrStrokeData>({
         type: 'syncCurrentFillOrStroke',
         data: {
-          currentFillOrStroke: newCurrentFillOrStroke
+          newCurrentFillOrStroke: newCurrentFillOrStroke
         }
       })
     }

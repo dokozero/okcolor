@@ -130,15 +130,15 @@ const init = async () => {
   sendMessageToUi<SyncLocalStorageValuesData>({
     type: 'syncLocalStorageValues',
     data: {
-      figmaEditorType: figma.editorType,
-      userSettings: userSettings,
-      currentFileColorProfile: currentFileColorProfile,
-      isContrastInputOpen: isContrastInputOpen,
-      lockRelativeChroma: lockRelativeChroma,
-      currentContrastMethod: currentContrastMethod,
-      lockContrast: lockContrast,
-      isColorCodeInputsOpen: isColorCodeInputsOpen,
-      currentColorModel: currentColorModel
+      newFigmaEditorType: figma.editorType,
+      newUserSettings: userSettings,
+      newCurrentFileColorProfile: currentFileColorProfile,
+      newIsContrastInputOpen: isContrastInputOpen,
+      newLockRelativeChroma: lockRelativeChroma,
+      newCurrentContrastMethod: currentContrastMethod,
+      newLockContrast: lockContrast,
+      newIsColorCodeInputsOpen: isColorCodeInputsOpen,
+      newCurrentColorModel: currentColorModel
     }
   })
 
@@ -148,10 +148,10 @@ const init = async () => {
   sendMessageToUi<SyncNewShapeData>({
     type: 'syncNewShape',
     data: {
-      currentFillOrStroke: currentFillOrStroke,
-      colorsRgba: colorsRgba,
-      lockRelativeChroma: lockRelativeChroma,
-      lockContrast: lockContrast
+      newCurrentFillOrStroke: currentFillOrStroke,
+      newColorsRgba: colorsRgba,
+      newLockRelativeChroma: lockRelativeChroma,
+      newLockContrast: lockContrast
     }
   })
 }
@@ -168,10 +168,10 @@ const handleFigmaOnSelectionChange = () => {
   sendMessageToUi<SyncNewShapeData>({
     type: 'syncNewShape',
     data: {
-      currentFillOrStroke: currentFillOrStroke,
-      colorsRgba: colorsRgba,
-      lockRelativeChroma: lockRelativeChroma,
-      lockContrast: lockContrast
+      newCurrentFillOrStroke: currentFillOrStroke,
+      newColorsRgba: colorsRgba,
+      newLockRelativeChroma: lockRelativeChroma,
+      newLockContrast: lockContrast
     }
   })
 }
@@ -202,10 +202,10 @@ const handleFigmaOnDocumentChange = (event: DocumentChangeEvent) => {
     sendMessageToUi<SyncNewShapeData>({
       type: 'syncNewShape',
       data: {
-        currentFillOrStroke: currentFillOrStroke,
-        colorsRgba: colorsRgba,
-        lockRelativeChroma: lockRelativeChroma,
-        lockContrast: lockContrast
+        newCurrentFillOrStroke: currentFillOrStroke,
+        newColorsRgba: colorsRgba,
+        newLockRelativeChroma: lockRelativeChroma,
+        newLockContrast: lockContrast
       }
     })
   }
@@ -253,56 +253,56 @@ figma.ui.onmessage = (event: MessageForBackend) => {
 
     case 'SyncUserSettings':
       data = event.data as SyncUserSettingsData
-      userSettings = data.userSettings
-      figma.clientStorage.setAsync('userSettings', JSON.stringify(data.userSettings))
+      userSettings = data.newUserSettings
+      figma.clientStorage.setAsync('userSettings', JSON.stringify(data.newUserSettings))
       break
 
     case 'syncCurrentFileColorProfile':
       data = event.data as SyncCurrentFileColorProfileData
-      currentFileColorProfile = data.currentFileColorProfile
-      figma.clientStorage.setAsync('currentFileColorProfile', data.currentFileColorProfile)
+      currentFileColorProfile = data.newCurrentFileColorProfile
+      figma.clientStorage.setAsync('currentFileColorProfile', data.newCurrentFileColorProfile)
       break
 
     case 'syncCurrentFillOrStroke':
       data = event.data as SyncCurrentFillOrStrokeData
-      currentFillOrStroke = data.currentFillOrStroke
+      currentFillOrStroke = data.newCurrentFillOrStroke
       break
 
     case 'syncCurrentColorModel':
       data = event.data as SyncCurrentColorModelData
-      currentColorModel = data.currentColorModel
-      figma.clientStorage.setAsync('currentColorModel', data.currentColorModel)
+      currentColorModel = data.newCurrentColorModel
+      figma.clientStorage.setAsync('currentColorModel', data.newCurrentColorModel)
       resizeWindowHeight()
       break
 
     case 'syncIsContrastInputOpen':
       data = event.data as SyncIsContrastInputOpenData
-      isContrastInputOpen = data.isContrastInputOpen
+      isContrastInputOpen = data.newIsContrastInputOpen
       figma.clientStorage.setAsync('isContrastInputOpen', isContrastInputOpen)
       resizeWindowHeight()
       break
 
     case 'syncLockRelativeChroma':
       data = event.data as SyncLockRelativeChromaData
-      lockRelativeChroma = data.lockRelativeChroma
-      figma.clientStorage.setAsync('lockRelativeChroma', data.lockRelativeChroma)
+      lockRelativeChroma = data.newLockRelativeChroma
+      figma.clientStorage.setAsync('lockRelativeChroma', data.newLockRelativeChroma)
       break
 
     case 'syncCurrentContrastMethod':
       data = event.data as SyncCurrentContrastMethodData
-      currentContrastMethod = data.currentContrastMethod
-      figma.clientStorage.setAsync('currentContrastMethod', data.currentContrastMethod)
+      currentContrastMethod = data.newCurrentContrastMethod
+      figma.clientStorage.setAsync('currentContrastMethod', data.newCurrentContrastMethod)
       break
 
     case 'syncLockContrast':
       data = event.data as SyncLockContrastData
-      lockContrast = data.lockContrast
-      figma.clientStorage.setAsync('lockContrast', data.lockContrast)
+      lockContrast = data.newLockContrast
+      figma.clientStorage.setAsync('lockContrast', data.newLockContrast)
       break
 
     case 'syncIsColorCodeInputsOpen':
       data = event.data as SyncIsColorCodeInputsOpenData
-      isColorCodeInputsOpen = data.isColorCodeInputsOpen
+      isColorCodeInputsOpen = data.newIsColorCodeInputsOpen
       figma.clientStorage.setAsync('isColorCodeInputsOpen', isColorCodeInputsOpen)
       resizeWindowHeight()
       break

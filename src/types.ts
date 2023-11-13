@@ -154,22 +154,22 @@ export type UiMessage = {
 export type MessageForUiTypes = 'syncLocalStorageValues' | 'syncNewShape' | 'displayUiMessage'
 
 export type SyncLocalStorageValuesData = {
-  figmaEditorType: FigmaEditorType
-  userSettings: UserSettings
-  currentFileColorProfile: CurrentFileColorProfile
-  isContrastInputOpen: boolean
-  lockRelativeChroma: boolean
-  currentContrastMethod: CurrentContrastMethod
-  lockContrast: boolean
-  isColorCodeInputsOpen: boolean
-  currentColorModel: CurrentColorModel
+  newFigmaEditorType: FigmaEditorType
+  newUserSettings: UserSettings
+  newCurrentFileColorProfile: CurrentFileColorProfile
+  newIsContrastInputOpen: boolean
+  newLockRelativeChroma: boolean
+  newCurrentContrastMethod: CurrentContrastMethod
+  newLockContrast: boolean
+  newIsColorCodeInputsOpen: boolean
+  newCurrentColorModel: CurrentColorModel
 }
 
 export type SyncNewShapeData = {
-  currentFillOrStroke: CurrentFillOrStroke
-  colorsRgba: ColorsRgba
-  lockContrast: boolean
-  lockRelativeChroma: boolean
+  newCurrentFillOrStroke: CurrentFillOrStroke
+  newColorsRgba: ColorsRgba
+  newLockContrast: boolean
+  newLockRelativeChroma: boolean
 }
 
 export type DisplayUiMessageData = {
@@ -201,43 +201,43 @@ export type MessageForBackendTypes =
 
 export type UpdateShapeColorData = {
   newColorRgba: ColorRgba
-  currentBgOrFg: CurrentBgOrFg
+  newCurrentBgOrFg: CurrentBgOrFg
 }
 
 export type SyncUserSettingsData = {
-  userSettings: UserSettings
+  newUserSettings: UserSettings
 }
 
 export type SyncCurrentFileColorProfileData = {
-  currentFileColorProfile: CurrentFileColorProfile
+  newCurrentFileColorProfile: CurrentFileColorProfile
 }
 
 export type SyncCurrentFillOrStrokeData = {
-  currentFillOrStroke: CurrentFillOrStroke
+  newCurrentFillOrStroke: CurrentFillOrStroke
 }
 
 export type SyncCurrentColorModelData = {
-  currentColorModel: CurrentColorModel
+  newCurrentColorModel: CurrentColorModel
 }
 
 export type SyncIsContrastInputOpenData = {
-  isContrastInputOpen: boolean
+  newIsContrastInputOpen: boolean
 }
 
 export type SyncLockRelativeChromaData = {
-  lockRelativeChroma: boolean
+  newLockRelativeChroma: boolean
 }
 
 export type SyncCurrentContrastMethodData = {
-  currentContrastMethod: CurrentContrastMethod
+  newCurrentContrastMethod: CurrentContrastMethod
 }
 
 export type SyncLockContrastData = {
-  lockContrast: boolean
+  newLockContrast: boolean
 }
 
 export type SyncIsColorCodeInputsOpenData = {
-  isColorCodeInputsOpen: boolean
+  newIsColorCodeInputsOpen: boolean
 }
 
 export type MessageForBackendData =

@@ -43,7 +43,7 @@ export const setIsContrastInputOpenWithSideEffects = action(
       sendMessageToBackend<SyncIsContrastInputOpenData>({
         type: 'syncIsContrastInputOpen',
         data: {
-          isContrastInputOpen: newIsContrastInputOpen
+          newIsContrastInputOpen: newIsContrastInputOpen
         }
       })
     }
