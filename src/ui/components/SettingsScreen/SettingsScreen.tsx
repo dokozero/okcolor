@@ -68,7 +68,7 @@ export default function SettingsScreen() {
                 <Toggle value={userSettings.useSimplifiedChroma} />
               </div>
               <div className="c-settings-screen__item">
-                OkLCH input order{' '}
+                OkLCH inputs order{' '}
                 <div className="select-wrapper">
                   <select onChange={handleOklchInputOrder} name="oklch_input_order" id="oklch_input_order">
                     <option value="lch" selected={userSettings.oklchInputOrder === 'lch' ? true : false}>
