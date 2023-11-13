@@ -6,10 +6,10 @@ import { $currentColorModel } from '../../../stores/colors/currentColorModel/cur
 import { setLockRelativeChromaWithSideEffects, $lockRelativeChroma } from '../../../stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $relativeChroma } from '../../../stores/colors/relativeChroma/relativeChroma'
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
-import ClosedLockIcon from '../ClosedLockIcon/ClosedLockIcon'
-import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
 import handleInputOnBlur from './helpers/handleInputOnBlur/handleInputOnBlur'
 import handleInputOnKeyDown from './helpers/handleInputOnKeyDown/handleInputOnKeyDown'
+import ClosedLockIcon from '../../icons/ClosedLockIcon/ClosedLockIcon'
+import OpenLockIcon from '../../icons/OpenLockIcon/OpenLockIcon'
 
 const handleLockRelativeChroma = () => {
   setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: !$lockRelativeChroma.get() })
@@ -82,6 +82,7 @@ export default function RelativeChromaInput() {
         />
       </div>
 
+      {/* TODO - refactor to standalone component. */}
       <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockRelativeChroma}>
         <div className={'c-single-input-with-lock__lock' + (lockRelativeChroma ? ' c-single-input-with-lock__lock--closed' : '')}>
           {!lockRelativeChroma ? <OpenLockIcon /> : <ClosedLockIcon />}

@@ -24,7 +24,19 @@
 .u-justify-between {
   justify-content: space-between;
 }
+.u-flex-no-shrink {
+  flex-shrink: 0;
+}
+.u-flex-basis-55 {
+  flex-basis: 55px;
+}
+.u-flex-basis-60 {
+  flex-basis: 60px;
+}
 
+.u-h-28 {
+  height: 28px;
+}
 .u-w-full {
   width: 100%;
 }
@@ -34,6 +46,9 @@
 
 .u-mt-4 {
   margin-top: 4px;
+}
+.u-mr-4 {
+  margin-right: 4px;
 }
 .u-mt-6 {
   margin-top: 6px;

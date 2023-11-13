@@ -1,12 +1,12 @@
 import { useStore } from '@nanostores/react'
-import { consoleLogInfos } from '../../../constants'
-import { CurrentFileColorProfile } from '../../../types'
-import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
+import { consoleLogInfos } from '../../../../constants'
+import { CurrentFileColorProfile } from '../../../../types'
+import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import {
   $currentFileColorProfile,
   setCurrentFileColorProfileWithSideEffects
-} from '../../stores/colors/currentFileColorProfile/currentFileColorProfile'
-import { $figmaEditorType } from '../../stores/figmaEditorType/figmaEditorType'
+} from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
+import { $figmaEditorType } from '../../../stores/figmaEditorType/figmaEditorType'
 
 export default function FileColorProfileSelect() {
   if (consoleLogInfos.includes('Component renders')) {

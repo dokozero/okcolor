@@ -74,7 +74,6 @@ export default function ColorPicker() {
 
   const uiMessage = useStore($uiMessage)
   const colorHxya = useStore($colorHxya)
-
   const currentColorModel = useStore($currentColorModel)
   const currentFileColorProfile = useStore($currentFileColorProfile)
   const lockRelativeChroma = useStore($lockRelativeChroma)
@@ -204,7 +203,7 @@ export default function ColorPicker() {
     const bgColor = convertHxyToRgb({
       colorHxy: { h: $colorHxya.get().h, x: 0.006, y: document.documentElement.classList.contains('figma-dark') ? 36 : 95 }
     })
-    colorPicker.current!.style.background = `rgb(${bgColor.r * 255}, ${bgColor.g * 255}, ${bgColor.b * 255})`
+    colorPicker.current!.style.backgroundColor = `rgb(${bgColor.r * 255}, ${bgColor.g * 255}, ${bgColor.b * 255})`
 
     if (!useHardwareAcceleration) {
       canvas2dContext!.putImageData(renderImageData({ h: $colorHxya.get().h }), 0, 0)
@@ -326,7 +325,7 @@ export default function ColorPicker() {
 
   useEffect(() => {
     if (uiMessage.show) {
-      colorPicker.current!.style.background = ''
+      colorPicker.current!.style.backgroundColor = ''
       colorPicker.current!.classList.add('c-color-picker--deactivated')
     } else {
       colorPicker.current!.classList.remove('c-color-picker--deactivated')

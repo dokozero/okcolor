@@ -130,7 +130,7 @@ export default function ColorValueInputs() {
   }, [colorHxya])
 
   return (
-    <div className="input-wrapper c-select-input-controls__input-wrapper">
+    <div className="input-wrapper c-color-value-inputs__input-wrapper">
       <input
         id="h"
         ref={inputH}

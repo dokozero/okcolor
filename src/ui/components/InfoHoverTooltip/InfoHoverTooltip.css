@@ -1,0 +1,57 @@
+.c-info-hover-tooltip {
+  position: relative;
+  padding: 4px;
+}
+
+.c-info-hover-tooltip svg {
+  fill: var(--figma-color-text);
+  opacity: 0.9;
+}
+
+.c-info-hover-tooltip__tooltip {
+  z-index: 1;
+  position: absolute;
+  top: 26px;
+  visibility: hidden;
+  padding: 6px 6px;
+  text-align: center;
+  border-radius: var(--base-border-radius);
+  color: #ffffff;
+  line-height: 1.5;
+  background-color: #232323;
+}
+
+.figma-light .c-info-hover-tooltip__tooltip {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+}
+
+.figma-dark .c-info-hover-tooltip__tooltip {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.c-info-hover-tooltip:hover .c-info-hover-tooltip__tooltip {
+  visibility: visible;
+}
+
+.c-info-hover-tooltip__tooltip::after {
+  content: ' ';
+  position: absolute;
+  bottom: 100%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #232323 transparent;
+}
+
+.c-info-hover-tooltip__tooltip--left::after {
+  left: 15%;
+}
+
+.c-info-hover-tooltip__tooltip--center::after {
+  left: 50%;
+}
+
+.c-info-hover-tooltip__tooltip--right::after {
+  left: 85%;
+}

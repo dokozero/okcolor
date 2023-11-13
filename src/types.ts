@@ -1,5 +1,16 @@
 import { uiMessageTexts } from './ui/ui-messages'
 
+export enum OklchInputOrderList {
+  'lch',
+  'hcl'
+}
+
+export type UserSettings = {
+  simplifiedChroma: boolean
+  oklchInputOrder: keyof typeof OklchInputOrderList
+  useHardwareAcceleration: boolean
+}
+
 export type RgbElement = number // 0 - 1 with no limitation on the number of decimals.
 
 export type Hue = number // 0 - 360

@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 6px 6px 14px;
+  padding: 6px 0px 6px 14px;
 }
 .c-file-color-profile-select--deactivated {
   pointer-events: none;
@@ -11,10 +11,10 @@
 .c-file-color-profile-select__label {
   font-size: var(--base-font-size);
   color: var(--figma-color-text);
+  margin-right: 20px;
 }
 .c-file-color-profile-select .select-wrapper {
-  width: 80px;
-  height: 28px;
+  width: 82px;
 }
 .c-file-color-profile-select select {
   padding: 7px;

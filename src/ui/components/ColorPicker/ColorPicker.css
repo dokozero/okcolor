@@ -1,7 +1,7 @@
 .c-color-picker {
   position: relative;
   border-top: 1px solid var(--figma-color-border);
-  background: var(--figma-color-bg-secondary);
+  background-color: var(--figma-color-bg-secondary);
 }
 .c-color-picker__message-wrapper {
   display: none;

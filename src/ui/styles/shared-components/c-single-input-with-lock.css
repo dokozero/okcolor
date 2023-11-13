@@ -43,14 +43,10 @@
   align-items: center;
 }
 .c-single-input-with-lock__lock--closed {
-  background: var(--figma-color-bg-secondary);
+  background-color: var(--figma-color-bg-secondary);
 }
 .c-single-input-with-lock__lock svg {
   fill: var(--figma-color-text);
-  fill-opacity: 0.9;
   position: relative;
   left: 1.5px;
-}
-.c-single-input-with-lock__lock--closed svg {
-  fill-opacity: 0.9;
 }

@@ -36,12 +36,14 @@ export default function BgOrFgToggle() {
     if (['okhsv', 'okhsl'].includes(currentColorModel)) return
 
     if (!colorsRgba.parentFill || !colorsRgba.fill) {
-      bgOrFgToggle.current!.style.background = 'none'
+      bgOrFgToggle.current!.style.backgroundColor = ''
       return
     }
 
-    bgToggle.current!.style.background = `rgb(${colorsRgba.parentFill.r * 255}, ${colorsRgba.parentFill.g * 255}, ${colorsRgba.parentFill.b * 255})`
-    fgToggle.current!.style.background = `rgb(${colorsRgba.fill.r * 255}, ${colorsRgba.fill.g * 255}, ${colorsRgba.fill.b * 255})`
+    bgToggle.current!.style.backgroundColor = `rgb(${colorsRgba.parentFill.r * 255}, ${colorsRgba.parentFill.g * 255}, ${
+      colorsRgba.parentFill.b * 255
+    })`
+    fgToggle.current!.style.backgroundColor = `rgb(${colorsRgba.fill.r * 255}, ${colorsRgba.fill.g * 255}, ${colorsRgba.fill.b * 255})`
 
     let whiteTextContrast: ApcaContrast | WcagContrast
     let blackTextContrast: ApcaContrast | WcagContrast

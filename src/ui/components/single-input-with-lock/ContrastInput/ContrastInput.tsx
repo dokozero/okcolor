@@ -15,11 +15,11 @@ import { setLockContrastWithSideEffects, $lockContrast } from '../../../stores/c
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke/currentFillOrStroke'
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
 import BgOrFgToggle from '../BgOrFgToggle/BgOrFgToggle'
-import ClosedLockIcon from '../ClosedLockIcon/ClosedLockIcon'
-import OpenLockIcon from '../OpenLockIcon/OpenLockIcon'
 import { consoleLogInfos } from '../../../../constants'
 import handleInputOnBlur from './helpers/handleInputOnBlur/handleInputOnBlur'
 import handleInputOnKeyDown from './helpers/handleInputOnKeyDown/handleInputOnKeyDown'
+import ClosedLockIcon from '../../icons/ClosedLockIcon/ClosedLockIcon'
+import OpenLockIcon from '../../icons/OpenLockIcon/OpenLockIcon'
 
 const handleLockContrast = () => {
   setLockContrastWithSideEffects({ newLockContrast: !$lockContrast.get() })
@@ -130,7 +130,7 @@ export default function ContrastInput() {
             : '')
         }
       >
-        <div className="select-wrapper c-select-input-controls__select-wrapper">
+        <div className="select-wrapper u-flex-basis-55">
           <select ref={contrastMethodSelect} onChange={handleContrastMethod} name="contrast_method" id="contrast_method">
             <option value="apca" selected={currentContrastMethod === 'apca' ? true : false}>
               APCA

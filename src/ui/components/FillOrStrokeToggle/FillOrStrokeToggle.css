@@ -6,7 +6,7 @@
   border-radius: 3px;
 }
 .c-fill-or-stroke-toggle:hover {
-  background: var(--figma-color-bg-hover);
+  background-color: var(--figma-color-bg-hover);
 }
 .c-fill-or-stroke-toggle__fill,
 .c-fill-or-stroke-toggle__stroke {

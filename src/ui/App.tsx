@@ -1,7 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
 
-import FileColorProfileSelect from './components/FileColorProfileSelect/FileColorProfileSelect'
 import ColorPicker from './components/ColorPicker/ColorPicker'
 import FillOrStrokeToggle from './components/FillOrStrokeToggle/FillOrStrokeToggle'
 import HueSlider from './components/sliders/HueSlider/HueSlider'
@@ -30,6 +29,9 @@ import { setIsMouseInsideDocument } from './stores/isMouseInsideDocument/isMouse
 import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventCallback/mouseEventCallback'
 import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage/uiMessage'
 import round from 'lodash/round'
+import SettingsScreen from './components/SettingsScreen/SettingsScreen'
+import FileColorProfileSelect from './components/top-bar/FileColorProfileSelect/FileColorProfileSelect'
+import SettingsToggle from './components/top-bar/SettingsToggle/SettingsToggle'
 
 // We use these var to measure speeds of app loading time (see in constants file to activate it).
 let appLoadingStart: number
@@ -198,7 +200,16 @@ function App() {
   } else {
     return (
       <>
-        <FileColorProfileSelect />
+        <SettingsScreen />
+
+        <div className="u-flex u-items-center u-justify-between">
+          <FileColorProfileSelect />
+
+          <div className="u-mr-4">
+            <SettingsToggle />
+          </div>
+        </div>
+
         <ColorPicker />
 
         <div className="o-bottom-controls">
@@ -211,7 +222,7 @@ function App() {
             </div>
           </div>
 
-          <div className="c-select-input-controls u-mt-12">
+          <div className="u-flex u-h-28 u-px-9 u-mt-12">
             <ColorModelSelect />
             <ColorValueInputs />
           </div>

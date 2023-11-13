@@ -1,24 +1,22 @@
-import { useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
 import { CurrentColorModel } from '../../../types'
 import { $currentColorModel, setCurrentColorModelWithSideEffects } from '../../stores/colors/currentColorModel/currentColorModel'
+
+const handleColorModel = (event: { target: HTMLSelectElement }) => {
+  setCurrentColorModelWithSideEffects({ newCurrentColorModel: event.target.value as CurrentColorModel })
+}
 
 export default function ColorModelSelect() {
   if (consoleLogInfos.includes('Component renders')) {
     console.log('Component render — ColorModelSelect')
   }
 
-  const colorModelSelect = useRef<HTMLSelectElement>(null)
   const currentColorModel = useStore($currentColorModel)
 
-  const handleColorModel = (event: { target: HTMLSelectElement }) => {
-    setCurrentColorModelWithSideEffects({ newCurrentColorModel: event.target.value as CurrentColorModel })
-  }
-
   return (
-    <div className="select-wrapper c-select-input-controls__select-wrapper">
-      <select ref={colorModelSelect} onChange={handleColorModel} name="color_model" id="color_model">
+    <div className="select-wrapper u-flex-no-shrink u-flex-basis-60">
+      <select onChange={handleColorModel} name="color_model" id="color_model">
         <option value="okhsv" selected={currentColorModel === 'okhsv' ? true : false}>
           OkHSV
         </option>

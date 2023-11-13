@@ -1,0 +1,48 @@
+.c-settings-screen {
+  z-index: 10;
+  position: fixed;
+  top: 40px;
+  width: 100%;
+  height: 100%;
+}
+
+.figma-light .c-settings-screen {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.figma-dark .c-settings-screen {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+.c-settings-screen__wrapper {
+  background-color: var(--figma-color-bg);
+}
+
+.c-settings-screen__items-group {
+  padding: 7px 0;
+}
+
+.c-settings-screen__items-group {
+  border-top: 1px solid var(--figma-color-border);
+}
+
+.c-settings-screen__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 11px 4px 14px;
+  font-size: var(--base-font-size);
+  color: var(--figma-color-text);
+}
+
+.c-settings-screen__item--with-toggle {
+  padding-right: 8px;
+}
+
+.c-settings-screen__item .select-wrapper {
+  width: 58px;
+}
+
+.c-settings-screen__item select {
+  padding: 7px;
+}
