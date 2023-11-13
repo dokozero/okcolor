@@ -29,11 +29,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
   let colorFormat: keyof typeof ColorCodesInputValues | keyof typeof ColorModelList = eventTargetId
 
   if (eventTargetId === 'currentColorModel') {
-    if (['oklch', 'oklchCss'].includes(currentColorModel)) {
-      colorFormat = 'oklch'
-    } else {
-      colorFormat = currentColorModel
-    }
+    colorFormat = currentColorModel
   }
 
   // For hex, the color eventTargetValue is already checked bellow with convertToRgb().
@@ -52,7 +48,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
   let newColorA: Opacity = 1
 
   if (eventTargetId === 'currentColorModel') {
-    if (['oklch', 'oklchCss'].includes(currentColorModel)) {
+    if (currentColorModel === 'oklch') {
       regex = /(\d+(\.\d+)?)/g
       matches = eventTargetValue.match(regex)!
 
@@ -89,7 +85,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
         g: parseFloat(matches![1]),
         b: parseFloat(matches![2])
       },
-      colorSpace: ['oklch', 'oklchCss'].includes(currentColorModel) ? 'p3' : 'rgb',
+      colorSpace: currentColorModel === 'oklch' ? 'p3' : 'rgb',
       keepOklchDoubleDigit: true
     })
 

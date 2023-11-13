@@ -37,7 +37,7 @@ export default function getColorCodeStrings(props: Props = {}): NewColorStrings 
   }
 
   // We don't clamp chroma with the models that don't use it because they already work in sRGB.
-  if (['oklch', 'oklchCss'].includes(currentColorModel)) {
+  if (currentColorModel === 'oklch') {
     clamped = clampChromaInGamut({ mode: 'oklch', l: colorHxya.y / 100, c: colorHxya.x, h: colorHxya.h }, 'oklch', 'rgb')
     rgbSrgb = convertHxyToRgb({
       colorHxy: {
@@ -58,7 +58,7 @@ export default function getColorCodeStrings(props: Props = {}): NewColorStrings 
     })
   }
 
-  if (['oklch', 'oklchCss'].includes(currentColorModel)) {
+  if (currentColorModel === 'oklch') {
     newColorStrings.currentColorModel =
       `oklch(${colorHxya.y}% ${round(colorHxya.x, 6)} ${colorHxya.h}` + (colorHxya.a !== 1 ? ` / ${colorHxya.a})` : ')')
   } else if (currentColorModel === 'okhsl') {
@@ -67,7 +67,7 @@ export default function getColorCodeStrings(props: Props = {}): NewColorStrings 
     newColorStrings.currentColorModel = `{mode: "okhsv", h: ${colorHxya.h}, s: ${colorHxya.x}, v: ${colorHxya.y}}`
   }
 
-  if (['oklch', 'oklchCss'].includes(currentColorModel)) {
+  if (currentColorModel === 'oklch') {
     newColorStrings.color =
       `color(display-p3 ${round(rgbP3.r, 4)} ${round(rgbP3.g, 4)} ${round(rgbP3.b, 4)}` + (colorHxya.a !== 1 ? ` / ${colorHxya.a})` : ')')
   } else {

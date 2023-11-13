@@ -11,6 +11,7 @@ import { $lockContrast } from '../../stores/contrasts/lockContrast/lockContrast'
 import getColorHxyaValueFormatedForInput from './helpers/getColorHxyaValueFormatedForInput/getColorHxyaValueFormatedForInput'
 import handleInputOnBlur from './helpers/handleInputOnBlur/handleInputOnBlur'
 import handleInputOnKeyDown from './helpers/handleInputOnKeyDown/handleInputOnKeyDown'
+import { $userSettings } from '../../stores/settings/userSettings/userSettings'
 
 export type KeepInputSelected = {
   state: boolean
@@ -22,6 +23,7 @@ export default function ColorValueInputs() {
     console.log('Component render — ColorValueInputs')
   }
 
+  const userSettings = useStore($userSettings)
   const currentColorModel = useStore($currentColorModel)
   const colorHxya = useStore($colorHxya)
   const currentBgOrFg = useStore($currentBgOrFg)
@@ -40,38 +42,45 @@ export default function ColorValueInputs() {
   })
 
   const updateInputPositions = () => {
-    if ($currentColorModel.get() === 'oklchCss') {
-      inputH.current!.classList.add('u-order-2')
-      inputX.current!.classList.add('u-order-1')
-      inputY.current!.classList.add('u-order-0')
-      inputA.current!.classList.add('u-order-3')
-    } else {
+    if (
+      ['okhsv', 'okhsl'].includes($currentColorModel.get()) ||
+      ($currentColorModel.get() === 'oklch' && $userSettings.get().oklchInputOrder === 'hcl')
+    ) {
       inputH.current!.classList.remove('u-order-2')
       inputX.current!.classList.remove('u-order-1')
       inputY.current!.classList.remove('u-order-0')
       inputA.current!.classList.remove('u-order-3')
+    } else if ($userSettings.get().oklchInputOrder === 'lch') {
+      inputH.current!.classList.add('u-order-2')
+      inputX.current!.classList.add('u-order-1')
+      inputY.current!.classList.add('u-order-0')
+      inputA.current!.classList.add('u-order-3')
     }
   }
 
   const updateInputTabIndexes = () => {
     // In this function, we changes the tab indexes to -1 when an input is disabled (with css class), like this the user can't focus the input with tab key. See comment in "bases.css" for "input.disabled" for the reason why.
 
-    if ($currentColorModel.get() === 'oklchCss') {
-      inputH.current!.tabIndex = 3
-      inputX.current!.tabIndex = $lockRelativeChroma.get() ? -1 : 2
-      inputY.current!.tabIndex = $lockContrast.get() ? -1 : 1
-    } else {
+    if (
+      ['okhsv', 'okhsl'].includes($currentColorModel.get()) ||
+      ($currentColorModel.get() === 'oklch' && $userSettings.get().oklchInputOrder === 'hcl')
+    ) {
       inputH.current!.tabIndex = 1
       inputX.current!.tabIndex = $lockRelativeChroma.get() ? -1 : 2
       inputY.current!.tabIndex = $lockContrast.get() ? -1 : 3
+    } else if ($userSettings.get().oklchInputOrder === 'lch') {
+      inputH.current!.tabIndex = 3
+      inputX.current!.tabIndex = $lockRelativeChroma.get() ? -1 : 2
+      inputY.current!.tabIndex = $lockContrast.get() ? -1 : 1
     }
+
     inputA.current!.tabIndex = $currentBgOrFg.get() === 'bg' || $lockContrast.get() ? -1 : 4
   }
 
   useEffect(() => {
     updateInputPositions()
     updateInputTabIndexes()
-  }, [currentColorModel])
+  }, [userSettings.oklchInputOrder, currentColorModel])
 
   useEffect(() => {
     // We use this tricks with disabled classes because of a bug using atoms to conditonaly use disabled attribute on input, see comment in "bases.css" for "input.disabled".
@@ -108,7 +117,7 @@ export default function ColorValueInputs() {
 
   useEffect(() => {
     inputX.current!.value = getColorHxyaValueFormatedForInput('x').toString()
-  }, [colorHxya.x, currentColorModel])
+  }, [colorHxya.x, currentColorModel, userSettings.useSimplifiedChroma])
 
   useEffect(() => {
     inputY.current!.value = colorHxya.y.toString()
@@ -120,10 +129,10 @@ export default function ColorValueInputs() {
 
   useEffect(() => {
     if (keepInputSelected.current.state) {
-      if (keepInputSelected.current.inputId == 'h') inputH.current!.select()
-      if (keepInputSelected.current.inputId == 'x') inputX.current!.select()
-      if (keepInputSelected.current.inputId == 'y') inputY.current!.select()
-      if (keepInputSelected.current.inputId == 'a') inputA.current!.select()
+      if (keepInputSelected.current.inputId === 'h') inputH.current!.select()
+      if (keepInputSelected.current.inputId === 'x') inputX.current!.select()
+      if (keepInputSelected.current.inputId === 'y') inputY.current!.select()
+      if (keepInputSelected.current.inputId === 'a') inputA.current!.select()
       keepInputSelected.current.inputId = ''
       keepInputSelected.current.state = false
     }

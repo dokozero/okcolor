@@ -85,16 +85,13 @@ export default function ContrastInput() {
   }, [colorsRgba])
 
   useEffect(() => {
-    if (['oklch', 'oklchCss'].includes(currentColorModel)) {
-      setShowContrast(true)
-    } else {
-      setShowContrast(false)
-    }
+    setShowContrast(currentColorModel === 'oklch' ? true : false)
   }, [currentColorModel])
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
-      if (!['oklch', 'oklchCss'].includes($currentColorModel.get())) return
+      if ($currentColorModel.get() !== 'oklch') return
+
       // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
       if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
       if (!$colorsRgba.get().parentFill || !$colorsRgba.get().fill || $currentFillOrStroke.get() === 'stroke') return
@@ -123,7 +120,7 @@ export default function ContrastInput() {
 
       <div
         className={
-          'c-single-input-with-lock c-single-input-with-lock--with-select c-dropdown__content-wraper u-mb-10' +
+          'c-single-input-with-lock c-single-input-with-lock--with-select c-dropdown__content-wraper u-mb-12' +
           (isContrastInputOpen ? '' : ' u-display-none') +
           ((!colorsRgba.parentFill || !colorsRgba.fill || currentFillOrStroke === 'stroke') && !$uiMessage.get().show
             ? ' c-single-input-with-lock--deactivated'

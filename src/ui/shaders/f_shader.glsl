@@ -8,8 +8,8 @@ uniform float hueRad;
 void main() {
   vec2 uv = gl_FragCoord.xy / resolution;
 
-  // If colorModel is oklchCss or oklch (see "ColorModelList" types.ts for the list).
-  if (colorModel == 0 || colorModel == 1) {
+  // If colorModel is oklch (see "ColorModelList" types.ts for the list).
+  if (colorModel == 0) {
     float l = uv.y;
     float c = uv.x / chromaScale;
     float h = hueRad;
@@ -33,10 +33,10 @@ void main() {
 
     vec3 hsvl = vec3(h, s, vl);
 
-    if (colorModel == 2) {
+    if (colorModel == 1) {
       vec3 hslRgbSrgb = okhsl_to_srgb(hsvl);
       gl_FragColor = vec4(hslRgbSrgb, 1.0);
-    } else {
+    } else if (colorModel == 2) {
       vec3 hsvRgbSrgb = okhsv_to_srgb(hsvl);
       gl_FragColor = vec4(hsvRgbSrgb, 1.0);
     }

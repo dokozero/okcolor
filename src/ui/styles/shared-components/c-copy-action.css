@@ -13,6 +13,3 @@
 .c-dropdown__content-wraper .input-wrapper:hover .c-copy-action {
   visibility: visible;
 }
-.c-copy-action:hover {
-  cursor: pointer;
-}

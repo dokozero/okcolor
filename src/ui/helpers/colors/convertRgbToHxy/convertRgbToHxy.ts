@@ -6,9 +6,9 @@ import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
 import getColorHxyDecimals from '../getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
 
+const convertToOklch = converter('oklch')
 const convertToOkhsl = converter('okhsl')
 const convertToOkhsv = converter('okhsv')
-const convertToOklch = converter('oklch')
 
 type Props = {
   colorRgb: ColorRgb
@@ -49,35 +49,19 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
   }
 
   switch (targetColorModel) {
-    case 'okhsv':
-      culoriResult = convertToOkhsv(`color(srgb ${colorRgb.r} ${colorRgb.g} ${colorRgb.b})`)
+    case 'oklch':
+      culoriResult = convertToOklch(`color(${colorFunctionSpace} ${colorRgb.r} ${colorRgb.g} ${colorRgb.b})`)
       break
     case 'okhsl':
       culoriResult = convertToOkhsl(`color(srgb ${colorRgb.r} ${colorRgb.g} ${colorRgb.b})`)
       break
-    case 'oklch':
-    case 'oklchCss':
-      culoriResult = convertToOklch(`color(${colorFunctionSpace} ${colorRgb.r} ${colorRgb.g} ${colorRgb.b})`)
+    case 'okhsv':
+      culoriResult = convertToOkhsv(`color(srgb ${colorRgb.r} ${colorRgb.g} ${colorRgb.b})`)
       break
   }
 
   switch (targetColorModel) {
-    case 'okhsv':
-      newColorHxy = {
-        h: Math.round(culoriResult.h),
-        x: Math.round(culoriResult.s * 100),
-        y: Math.round(culoriResult.v * 100)
-      }
-      break
-    case 'okhsl':
-      newColorHxy = {
-        h: Math.round(culoriResult.h),
-        x: Math.round(culoriResult.s * 100),
-        y: Math.round(culoriResult.l * 100)
-      }
-      break
     case 'oklch':
-    case 'oklchCss':
       if (!keepOklchDoubleDigit) {
         newColorHxy = {
           h: round(culoriResult.h, getColorHxyDecimals().h),
@@ -90,6 +74,20 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
           x: round(culoriResult.c, 6),
           y: round(culoriResult.l * 100, 2)
         }
+      }
+      break
+    case 'okhsl':
+      newColorHxy = {
+        h: Math.round(culoriResult.h),
+        x: Math.round(culoriResult.s * 100),
+        y: Math.round(culoriResult.l * 100)
+      }
+      break
+    case 'okhsv':
+      newColorHxy = {
+        h: Math.round(culoriResult.h),
+        x: Math.round(culoriResult.s * 100),
+        y: Math.round(culoriResult.v * 100)
       }
       break
   }

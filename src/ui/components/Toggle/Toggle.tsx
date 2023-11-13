@@ -17,8 +17,8 @@ export default function Toggle(props: Props) {
   }
 
   return (
-    <div className="c-toggle-wrapper" onClick={handleToggle}>
-      <div className={'c-toggle' + (value ? ' c-toggle--active' : '')}></div>
+    <div className="c-toggle" onClick={handleToggle}>
+      <div className={'c-toggle-element' + (value ? ' c-toggle-element--active' : '')}></div>
     </div>
   )
 }

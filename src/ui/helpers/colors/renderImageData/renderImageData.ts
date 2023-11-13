@@ -1,11 +1,12 @@
 // Rendering of the color picker without hardware acceleration (imageData instead of WebGL).
 
-import { RES_PICKER_SIZE_OKHSLV, RES_PICKER_SIZE_OKLCH, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../constants'
+import { OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../constants'
 import { AbsoluteChroma, ColorRgb, CurrentColorModel, CurrentFileColorProfile, Hue } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import convertHxyToRgb from '../convertHxyToRgb/convertHxyToRgb'
 import { clampChromaInGamut } from '../culori.mjs'
+import getColorPickerResolutionInfos from '../getColorPickerResolutionInfos/getColorPickerResolutionInfos'
 
 const localDebugInfos = {
   all: false,
@@ -25,20 +26,22 @@ let pixelIndex: number
 export const renderImageData = (props: Props): ImageData => {
   const { h, currentColorModel = $currentColorModel.get(), currentFileColorProfile = $currentFileColorProfile.get() } = props
 
+  const pickerSize = getColorPickerResolutionInfos().size
+
   let imageData: ImageData
 
   let currentX: number
   let currentY: number
 
-  if (currentColorModel === 'okhsl' || currentColorModel === 'okhsv') {
-    imageData = new ImageData(RES_PICKER_SIZE_OKHSLV, RES_PICKER_SIZE_OKHSLV)
+  if (['okhsv', 'okhsl'].includes(currentColorModel)) {
+    imageData = new ImageData(pickerSize, pickerSize)
 
-    for (let y = 0; y < RES_PICKER_SIZE_OKHSLV; y++) {
-      for (let x = 0; x < RES_PICKER_SIZE_OKHSLV; x++) {
-        pixelIndex = (y * RES_PICKER_SIZE_OKHSLV + x) * 4
+    for (let y = 0; y < pickerSize; y++) {
+      for (let x = 0; x < pickerSize; x++) {
+        pixelIndex = (y * pickerSize + x) * 4
 
-        currentX = x / RES_PICKER_SIZE_OKHSLV
-        currentY = (RES_PICKER_SIZE_OKHSLV - y) / RES_PICKER_SIZE_OKHSLV
+        currentX = x / pickerSize
+        currentY = (pickerSize - y) / pickerSize
 
         rgbColor = convertHxyToRgb({
           colorHxy: { h: h, x: currentX * 100, y: currentY * 100 }
@@ -50,12 +53,12 @@ export const renderImageData = (props: Props): ImageData => {
         imageData.data[pixelIndex + 3] = 255
       }
     }
-  } else if (currentColorModel === 'oklch' || currentColorModel === 'oklchCss') {
+  } else if (['oklch'].includes(currentColorModel)) {
     // For local debug if needed.
     let numberOfRenderedPixelsForCurrentLine = 0
     let numberOfTotalRenderedPixels = 0
 
-    imageData = new ImageData(RES_PICKER_SIZE_OKLCH, RES_PICKER_SIZE_OKLCH)
+    imageData = new ImageData(pickerSize, pickerSize)
 
     // To render this number of pixels with same color to get a faster render.
     const sameColorPixelLineLength = 6
@@ -66,14 +69,14 @@ export const renderImageData = (props: Props): ImageData => {
     let maxChromaCurrentLine: AbsoluteChroma
     let imageDataPixelRgb: ColorRgb = { r: 0, g: 0, b: 0 }
 
-    for (let y = 0; y < RES_PICKER_SIZE_OKLCH; y++) {
+    for (let y = 0; y < pickerSize; y++) {
       if (localDebugInfos.all) {
         console.log('-')
-        console.log('Luminosity = ' + (RES_PICKER_SIZE_OKLCH - y) / RES_PICKER_SIZE_OKLCH)
+        console.log('Luminosity = ' + (pickerSize - y) / pickerSize)
         numberOfRenderedPixelsForCurrentLine = 0
       }
 
-      currentY = (RES_PICKER_SIZE_OKLCH - y) / RES_PICKER_SIZE_OKLCH
+      currentY = (pickerSize - y) / pickerSize
 
       maxChromaCurrentLine = clampChromaInGamut({ mode: 'oklch', l: currentY, c: MAX_CHROMA_P3, h: h }, 'oklch', currentFileColorProfile).c
 
@@ -82,10 +85,10 @@ export const renderImageData = (props: Props): ImageData => {
 
       currentPixelLineIndex = 0
 
-      for (let x = 0; x < RES_PICKER_SIZE_OKLCH; x++) {
-        pixelIndex = (y * RES_PICKER_SIZE_OKLCH + x) * 4
+      for (let x = 0; x < pickerSize; x++) {
+        pixelIndex = (y * pickerSize + x) * 4
 
-        currentX = x / (RES_PICKER_SIZE_OKLCH * OKLCH_CHROMA_SCALE)
+        currentX = x / (pickerSize * OKLCH_CHROMA_SCALE)
 
         if (maxChromaCurrentLine - currentX < 0.01) usePreciseRender = true
         else usePreciseRender = false

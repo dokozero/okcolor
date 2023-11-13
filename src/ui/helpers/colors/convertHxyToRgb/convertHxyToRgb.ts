@@ -23,15 +23,14 @@ export default function convertHxyToRgb(props: Props): ColorRgb {
   let colorObject
 
   switch (originColorModel) {
-    case 'okhsv':
-      colorObject = { mode: 'okhsv', h: colorHxy.h, s: colorHxy.x / 100, v: colorHxy.y / 100 }
+    case 'oklch':
+      colorObject = { mode: 'oklch', h: colorHxy.h, c: colorHxy.x, l: colorHxy.y / 100 }
       break
     case 'okhsl':
       colorObject = { mode: 'okhsl', h: colorHxy.h, s: colorHxy.x / 100, l: colorHxy.y / 100 }
       break
-    case 'oklch':
-    case 'oklchCss':
-      colorObject = { mode: 'oklch', h: colorHxy.h, c: colorHxy.x, l: colorHxy.y / 100 }
+    case 'okhsv':
+      colorObject = { mode: 'okhsv', h: colorHxy.h, s: colorHxy.x / 100, v: colorHxy.y / 100 }
       break
   }
 

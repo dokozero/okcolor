@@ -28,7 +28,7 @@ export default function getWindowHeigh(props: Props): number {
     } else {
       return pluginHeights.okhsvl.noColorCodes
     }
-  } else if (['oklch', 'oklchCss'].includes(currentColorModel)) {
+  } else if (['oklch'].includes(currentColorModel)) {
     if (isContrastInputOpen) {
       if (isColorCodeInputsOpen) {
         return pluginHeights.oklch.contrastAndColorCodes

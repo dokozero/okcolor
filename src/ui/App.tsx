@@ -32,6 +32,7 @@ import round from 'lodash/round'
 import SettingsScreen from './components/SettingsScreen/SettingsScreen'
 import FileColorProfileSelect from './components/top-bar/FileColorProfileSelect/FileColorProfileSelect'
 import SettingsToggle from './components/top-bar/SettingsToggle/SettingsToggle'
+import { setUserSettings } from './stores/settings/userSettings/userSettings'
 
 // We use these var to measure speeds of app loading time (see in constants file to activate it).
 let appLoadingStart: number
@@ -60,6 +61,7 @@ function App() {
         const data = pluginMessage.data as SyncLocalStorageValuesData
 
         setFigmaEditorType(data.figmaEditorType)
+        setUserSettings(data.userSettings)
         setCurrentFileColorProfile(data.currentFileColorProfile)
         setIsContrastInputOpen(data.isContrastInputOpen)
         setLockRelativeChroma(data.lockRelativeChroma)
@@ -78,7 +80,7 @@ function App() {
           hideUiMessageWithSideEffects()
         }
 
-        if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+        if ($currentColorModel.get() === 'oklch') {
           // We update these two values in the case the user had one or the two set to true with a shape selected then deselected it, without this when he select a shape again, theses values would always be false as we set them to this value in setValuesForUiMessage() called when we show as UI message.
           if (data.lockRelativeChroma !== $lockRelativeChroma.get()) {
             setLockRelativeChroma(data.lockRelativeChroma)

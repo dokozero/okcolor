@@ -25,9 +25,7 @@ export default function FileColorProfileSelect() {
     <div
       className={
         'c-file-color-profile-select' +
-        (figmaEditorType === 'figjam' || currentColorModel === 'okhsv' || currentColorModel === 'okhsl'
-          ? ' c-file-color-profile-select--deactivated'
-          : '')
+        (figmaEditorType === 'figjam' || ['okhsv', 'okhsl'].includes(currentColorModel) ? ' c-file-color-profile-select--deactivated' : '')
       }
     >
       <div className="c-file-color-profile-select__label">File color profile</div>

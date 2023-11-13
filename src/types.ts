@@ -6,7 +6,7 @@ export enum OklchInputOrderList {
 }
 
 export type UserSettings = {
-  simplifiedChroma: boolean
+  useSimplifiedChroma: boolean
   oklchInputOrder: keyof typeof OklchInputOrderList
   useHardwareAcceleration: boolean
 }
@@ -50,7 +50,6 @@ enum FileColorProfileList {
 export type CurrentFileColorProfile = keyof typeof FileColorProfileList
 
 export enum ColorModelList {
-  'oklchCss',
   'oklch',
   'okhsl',
   'okhsv'
@@ -156,6 +155,7 @@ export type MessageForUiTypes = 'syncLocalStorageValues' | 'syncNewShape' | 'dis
 
 export type SyncLocalStorageValuesData = {
   figmaEditorType: FigmaEditorType
+  userSettings: UserSettings
   currentFileColorProfile: CurrentFileColorProfile
   isContrastInputOpen: boolean
   lockRelativeChroma: boolean
@@ -189,6 +189,7 @@ export type MessageForUi = {
 export type MessageForBackendTypes =
   | 'triggerInit'
   | 'updateShapeColor'
+  | 'SyncUserSettings'
   | 'syncCurrentFileColorProfile'
   | 'syncCurrentFillOrStroke'
   | 'syncCurrentColorModel'
@@ -201,6 +202,10 @@ export type MessageForBackendTypes =
 export type UpdateShapeColorData = {
   newColorRgba: ColorRgba
   currentBgOrFg: CurrentBgOrFg
+}
+
+export type SyncUserSettingsData = {
+  userSettings: UserSettings
 }
 
 export type SyncCurrentFileColorProfileData = {
@@ -237,6 +242,7 @@ export type SyncIsColorCodeInputsOpenData = {
 
 export type MessageForBackendData =
   | UpdateShapeColorData
+  | SyncUserSettingsData
   | SyncCurrentFileColorProfileData
   | SyncCurrentFillOrStrokeData
   | SyncCurrentColorModelData

@@ -32,15 +32,11 @@ export default function RelativeChromaInput() {
   const keepInputSelected = useRef(false)
 
   useEffect(() => {
-    if (['oklch', 'oklchCss'].includes(currentColorModel)) {
-      setShowRelativeChroma(true)
-    } else {
-      setShowRelativeChroma(false)
-    }
+    setShowRelativeChroma(currentColorModel === 'oklch' ? true : false)
   }, [currentColorModel])
 
   useEffect(() => {
-    if (!['oklch', 'oklchCss'].includes($currentColorModel.get())) return
+    if ($currentColorModel.get() !== 'oklch') return
 
     input.current!.value = relativeChroma + '%'
 
@@ -52,7 +48,7 @@ export default function RelativeChromaInput() {
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
-      if (!['oklch', 'oklchCss'].includes($currentColorModel.get())) return
+      if ($currentColorModel.get() !== 'oklch') return
 
       // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
       if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return

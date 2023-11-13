@@ -20,13 +20,16 @@ import type {
   SyncIsContrastInputOpenData,
   CurrentContrastMethod,
   SyncCurrentContrastMethodData,
-  SyncCurrentFileColorProfileData
+  SyncCurrentFileColorProfileData,
+  UserSettings,
+  SyncUserSettingsData
 } from '../types'
 import getNewColorsRgba from './helpers/getNewColorsRgba/getNewColorsRgba'
 import getWindowHeigh from './helpers/getWindowHeigh/getWindowHeigh'
 import sendMessageToUi from './helpers/sendMessageToUi/sendMessageToUi'
 import updateShapeColor from './helpers/updateShapeColor/updateShapeColor'
 
+let userSettings: UserSettings
 let currentFillOrStroke: CurrentFillOrStroke = 'fill'
 let currentFileColorProfile: CurrentFileColorProfile
 let currentColorModel: CurrentColorModel
@@ -88,12 +91,22 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
   if (figma.editorType === 'figma') currentFileColorProfile = (await figma.clientStorage.getAsync('currentFileColorProfile')) || 'rgb'
   else if (figma.editorType === 'figjam') currentFileColorProfile = 'rgb'
 
+  const userSettingsString =
+    (await figma.clientStorage.getAsync('userSettings')) ||
+    '{"useSimplifiedChroma": false, "oklchInputOrder": "lch", "useHardwareAcceleration": true}'
+
+  userSettings = JSON.parse(userSettingsString)
+
   isContrastInputOpen = (await figma.clientStorage.getAsync('isContrastInputOpen')) || false
   isColorCodeInputsOpen = (await figma.clientStorage.getAsync('isColorCodeInputsOpen')) || false
   currentContrastMethod = (await figma.clientStorage.getAsync('currentContrastMethod')) || 'apca'
-  currentColorModel = (await figma.clientStorage.getAsync('currentColorModel')) || 'oklchCss'
+  currentColorModel = (await figma.clientStorage.getAsync('currentColorModel')) || 'oklch'
 
-  if (currentColorModel === 'okhsv' || currentColorModel === 'okhsl') {
+  // @ts-ignore
+  // For those who still have the old value before the introduction of the user settings.
+  if (currentColorModel === 'oklchCss') currentColorModel = 'oklch'
+
+  if (['okhsv', 'okhsl'].includes(currentColorModel)) {
     lockRelativeChroma = false
     lockContrast = false
   } else {
@@ -118,6 +131,7 @@ const init = async () => {
     type: 'syncLocalStorageValues',
     data: {
       figmaEditorType: figma.editorType,
+      userSettings: userSettings,
       currentFileColorProfile: currentFileColorProfile,
       isContrastInputOpen: isContrastInputOpen,
       lockRelativeChroma: lockRelativeChroma,
@@ -235,6 +249,12 @@ figma.ui.onmessage = (event: MessageForBackend) => {
       timeoutId = setTimeout(() => {
         itsAMe = false
       }, 500)
+      break
+
+    case 'SyncUserSettings':
+      data = event.data as SyncUserSettingsData
+      userSettings = data.userSettings
+      figma.clientStorage.setAsync('userSettings', JSON.stringify(data.userSettings))
       break
 
     case 'syncCurrentFileColorProfile':

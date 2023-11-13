@@ -17,7 +17,7 @@ import merge from 'lodash/merge'
 import convertAbsoluteChromaToRelative from '../../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
 import { setRelativeChroma } from '../relativeChroma/relativeChroma'
 
-export const $currentColorModel = atom<CurrentColorModel>('oklchCss')
+export const $currentColorModel = atom<CurrentColorModel>('oklch')
 
 export const setCurrentColorModel = action(
   $currentColorModel,

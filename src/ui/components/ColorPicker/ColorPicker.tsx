@@ -1,15 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import {
-  consoleLogInfos,
-  PICKER_SIZE,
-  RES_PICKER_SIZE_OKHSLV,
-  RES_PICKER_SIZE_OKLCH,
-  RES_PICKER_FACTOR_OKHSLV,
-  RES_PICKER_FACTOR_OKLCH,
-  OKLCH_CHROMA_SCALE,
-  useHardwareAcceleration
-} from '../../../constants'
+import { consoleLogInfos, PICKER_SIZE, OKLCH_CHROMA_SCALE } from '../../../constants'
 import utilsGlsl from '@virtual:shaders/src/ui/shaders/utils.glsl'
 import libraryGlsl from '@virtual:shaders/src/ui/shaders/library.glsl'
 import fShader from '@virtual:shaders/src/ui/shaders/f_shader.glsl'
@@ -38,6 +29,8 @@ import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getCol
 import round from 'lodash/round'
 import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
 import { renderImageData } from '../../helpers/colors/renderImageData/renderImageData'
+import { $userSettings } from '../../stores/settings/userSettings/userSettings'
+import getColorPickerResolutionInfos from '../../helpers/colors/getColorPickerResolutionInfos/getColorPickerResolutionInfos'
 
 // We use these var to measure speeds of color picker rendering (see in constants file to activate it).
 let colorPickerStrokesRenderingStart: number
@@ -92,7 +85,7 @@ export default function ColorPicker() {
   const updateManipulatorPosition = () => {
     let x: AbsoluteChroma | Saturation
 
-    if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+    if ($currentColorModel.get() === 'oklch') {
       x = $colorHxya.get().x * OKLCH_CHROMA_SCALE
     } else {
       x = $colorHxya.get().x / 100
@@ -126,7 +119,7 @@ export default function ColorPicker() {
     } else {
       newColorHxya.x = round(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, getColorHxyDecimals().x)
 
-      if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+      if ($currentColorModel.get() === 'oklch') {
         newColorHxya.x = round(newColorHxya.x / 100 / OKLCH_CHROMA_SCALE, getColorHxyDecimals().x)
       }
     }
@@ -137,7 +130,7 @@ export default function ColorPicker() {
       } else if (mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) {
         let valueToTest = newColorHxya.x
 
-        if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+        if ($currentColorModel.get() === 'oklch') {
           valueToTest = convertAbsoluteChromaToRelative({
             colorHxy: {
               h: $colorHxya.get().h,
@@ -193,7 +186,7 @@ export default function ColorPicker() {
     if (consoleLogInfos.includes('Color picker rendering speed')) {
       colorPickerStrokesRenderingEnd = performance.now()
       console.log('---')
-      console.log(`(Hardware acceleration ${useHardwareAcceleration ? 'on' : 'off'})`)
+      console.log(`(Hardware acceleration ${$userSettings.get().useHardwareAcceleration ? 'on' : 'off'})`)
       console.log('Color picker render durations:')
       console.log(` Strokes: ${round(colorPickerStrokesRenderingEnd - colorPickerStrokesRenderingStart, 4)} ms.`)
 
@@ -205,10 +198,10 @@ export default function ColorPicker() {
     })
     colorPicker.current!.style.backgroundColor = `rgb(${bgColor.r * 255}, ${bgColor.g * 255}, ${bgColor.b * 255})`
 
-    if (!useHardwareAcceleration) {
+    if (!$userSettings.get().useHardwareAcceleration) {
       canvas2dContext!.putImageData(renderImageData({ h: $colorHxya.get().h }), 0, 0)
     } else {
-      const size = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
+      const size = getColorPickerResolutionInfos().size
 
       canvasWebglContext!.clearColor(0, 0, 0, 1)
       canvasWebglContext!.clear(canvasWebglContext!.COLOR_BUFFER_BIT)
@@ -237,14 +230,14 @@ export default function ColorPicker() {
   }
 
   const scaleColorPickerCanvasAndWebglViewport = () => {
-    const resFactor = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_FACTOR_OKLCH : RES_PICKER_FACTOR_OKHSLV
-    const pickerSize = ['oklch', 'oklchCss'].includes($currentColorModel.get()) ? RES_PICKER_SIZE_OKLCH : RES_PICKER_SIZE_OKHSLV
+    const resFactor = getColorPickerResolutionInfos().factor
+    const pickerSize = getColorPickerResolutionInfos().size
 
     colorPickerCanvas.current!.style.transform = `scale(${resFactor})`
     colorPickerCanvas.current!.width = pickerSize
     colorPickerCanvas.current!.height = pickerSize
 
-    if (useHardwareAcceleration) {
+    if ($userSettings.get().useHardwareAcceleration) {
       canvasWebglContext!.viewport(0, 0, pickerSize, pickerSize)
     }
   }
@@ -254,7 +247,7 @@ export default function ColorPicker() {
   }
 
   const initCanvasContext = () => {
-    if (!useHardwareAcceleration) {
+    if (!$userSettings.get().useHardwareAcceleration) {
       canvas2dContext = colorPickerCanvas.current!.getContext('2d')
     } else {
       canvasWebglContext = colorPickerCanvas.current!.getContext('webgl2')
@@ -275,7 +268,7 @@ export default function ColorPicker() {
   const updateColorSpaceLabelInColorPicker = () => {
     let newValue: keyof typeof ColorSpacesNames | '' = ''
 
-    if (['oklch', 'oklchCss'].includes($currentColorModel.get())) {
+    if ($currentColorModel.get() === 'oklch') {
       if (inGamutSrgb(`oklch(${$colorHxya.get().y / 100} ${$colorHxya.get().x - 0.001} ${$colorHxya.get().h})`)) {
         newValue = 'sRGB'
       } else {
@@ -303,7 +296,7 @@ export default function ColorPicker() {
   useEffect(() => {
     if (!isMounted.current) return
 
-    if (useHardwareAcceleration) setDrawingBufferColorSpace()
+    if ($userSettings.get().useHardwareAcceleration) setDrawingBufferColorSpace()
 
     renderColorPickerCanvas()
   }, [currentFileColorProfile])
@@ -336,7 +329,7 @@ export default function ColorPicker() {
     initCanvasContext()
     scaleColorPickerCanvasAndWebglViewport()
 
-    if (useHardwareAcceleration) setDrawingBufferColorSpace()
+    if ($userSettings.get().useHardwareAcceleration) setDrawingBufferColorSpace()
 
     if (!$uiMessage.get().show) {
       renderColorPickerCanvas()

@@ -10,7 +10,7 @@ describe('convertRgbToHxy()', () => {
           g: 0.5,
           b: 0.75
         },
-        targetColorModel: 'oklchCss',
+        targetColorModel: 'oklch',
         colorSpace: 'p3',
         keepOklchDoubleDigit: false
       })

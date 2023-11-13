@@ -13,9 +13,6 @@
   align-items: center;
   padding: 16px 16px 16px 14px;
 }
-.c-dropdown__title-wrapper:hover {
-  cursor: pointer;
-}
 .c-dropdown__arrow-icon {
   position: relative;
   top: 0px;

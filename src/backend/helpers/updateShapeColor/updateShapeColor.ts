@@ -2,6 +2,7 @@
 
 import { ColorRgba, CurrentBgOrFg, CurrentFillOrStroke } from '../../../types'
 
+// TODO - use props
 export default function updateShapeColor(newColorRgba: ColorRgba, currentFillOrStroke: CurrentFillOrStroke, currentBgOrFg: CurrentBgOrFg) {
   let copyNode
   const type = currentFillOrStroke + 's'
