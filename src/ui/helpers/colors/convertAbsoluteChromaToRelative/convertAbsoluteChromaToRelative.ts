@@ -21,6 +21,8 @@ export default function convertAbsoluteChromaToRelative(props: Props): RelativeC
     currentFileColorProfile
   ).c
 
+  if (currentMaxChroma === undefined) return 0
+
   // Sometimes we can get 101%, like with #FFFF00, so we use clamp().
   return clamp(Math.round((colorHxy.x * 100) / currentMaxChroma), 0, 100)
 }
