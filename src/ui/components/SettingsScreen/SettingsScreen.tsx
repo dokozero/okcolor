@@ -3,7 +3,7 @@ import { consoleLogInfos } from '../../../constants'
 import { $isSettingsScreenOpen, setIsSettingsScreenOpen } from '../../stores/settings/isSetttingsScreenOpen/isSetttingsScreenOpen'
 import Toggle from '../Toggle/Toggle'
 import { $userSettings, setUserSettingsKeyWithSideEffects } from '../../stores/settings/userSettings/userSettings'
-import { OklchInputOrderList, SyncUserSettingsData } from '../../../types'
+import { OklchHlDecimalPrecisionRange, OklchInputOrderList, SyncUserSettingsData, UserSettings } from '../../../types'
 import InfoHoverTooltip from '../InfoHoverTooltip/InfoHoverTooltip'
 import { useState } from 'react'
 import sendMessageToBackend from '../../helpers/sendMessageToBackend/sendMessageToBackend'
@@ -11,13 +11,6 @@ import sendMessageToBackend from '../../helpers/sendMessageToBackend/sendMessage
 const handleIsSettingsScreenOpen = (event: React.MouseEvent<HTMLDivElement>) => {
   if (event.target !== event.currentTarget) return
   setIsSettingsScreenOpen(!$isSettingsScreenOpen.get())
-}
-
-const handleOklchInputOrder = (event: { target: HTMLSelectElement }) => {
-  setUserSettingsKeyWithSideEffects({
-    key: 'oklchInputOrder',
-    newValue: event.target.value as keyof typeof OklchInputOrderList
-  })
 }
 
 export default function SettingsScreen() {
@@ -52,13 +45,32 @@ export default function SettingsScreen() {
         <div onClick={handleIsSettingsScreenOpen} className="c-settings-screen">
           <div className="c-settings-screen__wrapper">
             <div className="c-settings-screen__items-group">
+              <div className="c-settings-screen__item">
+                OkLCH H/L decimal precision{' '}
+                <div className="select-wrapper c-settings-screen__item-oklch-hl-decimal-precision-wrapper">
+                  <select
+                    onChange={(e) => {
+                      setUserSettingsKeyWithSideEffects({
+                        key: 'oklchHlDecimalPrecision',
+                        newValue: parseInt(e.target.value) as OklchHlDecimalPrecisionRange
+                      })
+                    }}
+                    name="oklch_input_order"
+                    id="oklch_input_order"
+                  >
+                    <option value="1" selected={userSettings.oklchHlDecimalPrecision === 1 ? true : false}>
+                      1
+                    </option>
+                    <option value="2" selected={userSettings.oklchHlDecimalPrecision === 2 ? true : false}>
+                      2
+                    </option>
+                  </select>
+                </div>
+              </div>
               <div
                 className="c-settings-screen__item c-settings-screen__item--with-toggle"
                 onClick={() => {
-                  setUserSettingsKeyWithSideEffects({
-                    key: 'useSimplifiedChroma',
-                    newValue: !$userSettings.get().useSimplifiedChroma
-                  })
+                  setUserSettingsKeyWithSideEffects({ key: 'useSimplifiedChroma', newValue: !$userSettings.get().useSimplifiedChroma })
                 }}
               >
                 <div className="u-flex u-items-center">
@@ -69,8 +81,14 @@ export default function SettingsScreen() {
               </div>
               <div className="c-settings-screen__item">
                 OkLCH inputs order{' '}
-                <div className="select-wrapper">
-                  <select onChange={handleOklchInputOrder} name="oklch_input_order" id="oklch_input_order">
+                <div className="select-wrapper c-settings-screen__item-oklch-input-order-wrapper">
+                  <select
+                    onChange={(e) => {
+                      setUserSettingsKeyWithSideEffects({ key: 'oklchInputOrder', newValue: e.target.value as keyof typeof OklchInputOrderList })
+                    }}
+                    name="oklch_input_order"
+                    id="oklch_input_order"
+                  >
                     <option value="lch" selected={userSettings.oklchInputOrder === 'lch' ? true : false}>
                       L/C/H
                     </option>

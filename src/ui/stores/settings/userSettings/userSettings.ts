@@ -1,11 +1,16 @@
 import { action, map } from 'nanostores'
 import { logger } from '@nanostores/logger'
 import { consoleLogInfos } from '../../../../constants'
-import { OklchInputOrderList, SyncUserSettingsData, UserSettings } from '../../../../types'
+import { OklchHlDecimalPrecisionRange, OklchInputOrderList, SyncUserSettingsData, UserSettings } from '../../../../types'
 import merge from 'lodash/merge'
 import sendMessageToBackend from '../../../helpers/sendMessageToBackend/sendMessageToBackend'
+import { $colorHxya, setColorHxyaWithSideEffects } from '../../colors/colorHxya/colorHxya'
+import { $currentColorModel } from '../../colors/currentColorModel/currentColorModel'
+import getColorHxyDecimals from '../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
+import round from 'lodash/round'
 
 export const $userSettings = map<UserSettings>({
+  oklchHlDecimalPrecision: 1,
   useSimplifiedChroma: false,
   oklchInputOrder: 'lch',
   useHardwareAcceleration: true
@@ -18,7 +23,7 @@ export const setUserSettings = action($userSettings, 'setUserSettings', (userSet
 export const setUserSettingsKey = action(
   $userSettings,
   'setUserSettingsKey',
-  (userSettings, key: keyof UserSettings, newValue: boolean | keyof typeof OklchInputOrderList) => {
+  (userSettings, key: keyof UserSettings, newValue: OklchHlDecimalPrecisionRange | boolean | keyof typeof OklchInputOrderList) => {
     userSettings.setKey(key, newValue)
   }
 )
@@ -29,7 +34,7 @@ type SideEffects = {
 
 type Props = {
   key: keyof UserSettings
-  newValue: boolean | keyof typeof OklchInputOrderList
+  newValue: OklchHlDecimalPrecisionRange | boolean | keyof typeof OklchInputOrderList
   sideEffects?: Partial<SideEffects>
 }
 
@@ -50,6 +55,18 @@ export const setUserSettingsKeyWithSideEffects = action($userSettings, 'setUserS
       type: 'SyncUserSettings',
       data: {
         newUserSettings: { ...$userSettings.get(), [key]: newValue }
+      }
+    })
+  }
+
+  // We need to update colorHxya if decimal precision changes.
+  if (key === 'oklchHlDecimalPrecision') {
+    if ($currentColorModel.get() !== 'oklch') return
+    setColorHxyaWithSideEffects({
+      newColorHxya: {
+        h: round($colorHxya.get().h, getColorHxyDecimals().h),
+        x: round($colorHxya.get().x, getColorHxyDecimals().x),
+        y: round($colorHxya.get().y, getColorHxyDecimals().y)
       }
     })
   }

@@ -101,7 +101,6 @@ function App() {
 
         setColorsRgbaWithSideEffects({
           newColorsRgba: data.newColorsRgba,
-          keepOklchDoubleDigit: true,
           sideEffects: {
             syncColorRgbWithBackend: false
           },

@@ -14,11 +14,10 @@ type Props = {
   colorRgb: ColorRgb
   targetColorModel?: keyof typeof ColorModelList
   colorSpace?: CurrentFileColorProfile
-  keepOklchDoubleDigit?: boolean
 }
 
 export default function convertRgbToHxy(props: Props): ColorHxy {
-  const { colorRgb, targetColorModel = $currentColorModel.get(), colorSpace = $currentFileColorProfile.get(), keepOklchDoubleDigit = false } = props
+  const { colorRgb, targetColorModel = $currentColorModel.get(), colorSpace = $currentFileColorProfile.get() } = props
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch
   let newColorHxy: ColorHxy
@@ -62,18 +61,10 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
 
   switch (targetColorModel) {
     case 'oklch':
-      if (!keepOklchDoubleDigit) {
-        newColorHxy = {
-          h: round(culoriResult.h, getColorHxyDecimals().h),
-          x: round(culoriResult.c, getColorHxyDecimals().x),
-          y: round(culoriResult.l * 100, getColorHxyDecimals().y)
-        }
-      } else {
-        newColorHxy = {
-          h: round(culoriResult.h, 2),
-          x: round(culoriResult.c, 6),
-          y: round(culoriResult.l * 100, 2)
-        }
+      newColorHxy = {
+        h: round(culoriResult.h, getColorHxyDecimals().h),
+        x: round(culoriResult.c, getColorHxyDecimals().x),
+        y: round(culoriResult.l * 100, getColorHxyDecimals().y)
       }
       break
     case 'okhsl':

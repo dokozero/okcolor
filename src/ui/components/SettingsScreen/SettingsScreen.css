@@ -39,7 +39,11 @@
   padding-right: 8px;
 }
 
-.c-settings-screen__item .select-wrapper {
+.c-settings-screen__item-oklch-hl-decimal-precision-wrapper {
+  width: 33px;
+}
+
+.c-settings-screen__item-oklch-input-order-wrapper {
   width: 58px;
 }
 

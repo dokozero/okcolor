@@ -80,7 +80,7 @@ export default function BgOrFgToggle() {
     let borderLightness: Lightness = 80
 
     if (document.documentElement.classList.contains('figma-dark')) {
-      borderLightness = 50
+      borderLightness = 60
     }
 
     const toggleBorderColor = convertHxyToRgb({

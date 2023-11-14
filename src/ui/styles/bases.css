@@ -88,6 +88,12 @@ input.disabled {
   opacity: 0.5;
 }
 
+.input--tighten {
+  letter-spacing: -0.02em;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
 select {
   appearance: none;
 }

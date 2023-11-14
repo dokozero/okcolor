@@ -6,6 +6,8 @@ import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentBgOrFg } from '../../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import isColorCodeInGoodFormat from '../isColorCodeInGoodFormat/isColorCodeInGoodFormat'
+import getColorHxyDecimals from '../../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
+import round from 'lodash/round'
 
 const convertToRgb = converter('rgb')
 
@@ -53,12 +55,12 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
       matches = eventTargetValue.match(regex)!
 
       newColorHxy = {
-        h: parseFloat(matches[2]),
+        h: round(parseFloat(matches[2]), getColorHxyDecimals().h),
         x: parseFloat(matches[1]),
-        y: parseFloat(matches[0])
+        y: round(parseFloat(matches[0]), getColorHxyDecimals().h)
       }
 
-      newColorHxy.x = getClampedChroma(newColorHxy)
+      newColorHxy.x = round(getClampedChroma(newColorHxy), getColorHxyDecimals().x)
 
       if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {
         newColorA = parseFloat(matches![3])
@@ -85,8 +87,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
         g: parseFloat(matches![1]),
         b: parseFloat(matches![2])
       },
-      colorSpace: currentColorModel === 'oklch' ? 'p3' : 'rgb',
-      keepOklchDoubleDigit: true
+      colorSpace: currentColorModel === 'oklch' ? 'p3' : 'rgb'
     })
 
     if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {

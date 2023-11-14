@@ -40,7 +40,6 @@ type SideEffects = {
 
 type Props = {
   newColorsRgba: ColorsRgba
-  keepOklchDoubleDigit?: boolean
   sideEffects?: Partial<SideEffects>
   lockRelativeChroma?: boolean
   lockContrast?: boolean
@@ -56,13 +55,7 @@ const defaultSideEffects: SideEffects = {
 }
 
 export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWithSideEffects', (colorsRgba, props: Props) => {
-  const {
-    newColorsRgba,
-    keepOklchDoubleDigit = false,
-    sideEffects: partialSideEffects,
-    lockRelativeChroma = $lockRelativeChroma.get(),
-    lockContrast = $lockContrast.get()
-  } = props
+  const { newColorsRgba, sideEffects: partialSideEffects, lockRelativeChroma = $lockRelativeChroma.get(), lockContrast = $lockContrast.get() } = props
 
   const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
   merge(sideEffects, partialSideEffects)
@@ -84,8 +77,7 @@ export const setColorsRgbaWithSideEffects = action($colorsRgba, 'setColorsRgbaWi
 
   if (sideEffects.colorHxya.syncColorHxya) {
     const newColorHxy = convertRgbToHxy({
-      colorRgb: newColorRgbaCurrentFillOrStroke!,
-      keepOklchDoubleDigit: keepOklchDoubleDigit
+      colorRgb: newColorRgbaCurrentFillOrStroke!
     })
 
     setColorHxyaWithSideEffects({

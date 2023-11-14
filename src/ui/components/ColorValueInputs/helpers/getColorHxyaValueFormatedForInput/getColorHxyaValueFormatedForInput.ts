@@ -3,6 +3,7 @@ import { HxyaLabels, HxyaInputTypes } from '../../../../../types'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $userSettings } from '../../../../stores/settings/userSettings/userSettings'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'
+import getColorHxyDecimals from '../../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 
 export default function getColorHxyaValueFormatedForInput(value: keyof typeof HxyaLabels): HxyaInputTypes {
   switch (value) {
@@ -12,7 +13,7 @@ export default function getColorHxyaValueFormatedForInput(value: keyof typeof Hx
       if ($currentColorModel.get() === 'oklch' && $userSettings.get().useSimplifiedChroma) {
         return round($colorHxya.get().x * 100, 1)
       } else {
-        return $colorHxya.get().x
+        return round($colorHxya.get().x, getColorHxyDecimals({ lockRelativeChroma: false }).x)
       }
     case 'y':
       return $colorHxya.get().y

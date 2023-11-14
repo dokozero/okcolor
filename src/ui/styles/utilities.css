@@ -27,6 +27,9 @@
 .u-flex-no-shrink {
   flex-shrink: 0;
 }
+.u-flex-basis-38 {
+  flex-basis: 38px;
+}
 .u-flex-basis-55 {
   flex-basis: 55px;
 }

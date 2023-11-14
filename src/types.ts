@@ -5,7 +5,10 @@ export enum OklchInputOrderList {
   'hcl'
 }
 
+export type OklchHlDecimalPrecisionRange = 1 | 2
+
 export type UserSettings = {
+  oklchHlDecimalPrecision: OklchHlDecimalPrecisionRange
   useSimplifiedChroma: boolean
   oklchInputOrder: keyof typeof OklchInputOrderList
   useHardwareAcceleration: boolean

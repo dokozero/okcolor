@@ -83,6 +83,23 @@ export default function ColorValueInputs() {
   }, [userSettings.oklchInputOrder, currentColorModel])
 
   useEffect(() => {
+    if (['okhsv', 'okhsl'].includes(currentColorModel) || (currentColorModel === 'oklch' && userSettings.oklchHlDecimalPrecision === 1)) {
+      inputH.current!.classList.remove('input--tighten')
+      inputX.current!.classList.remove('input--tighten')
+      inputY.current!.classList.remove('input--tighten')
+      inputA.current!.classList.remove('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-38')
+    } else {
+      inputH.current!.classList.add('input--tighten')
+      inputX.current!.classList.add('input--tighten')
+      inputY.current!.classList.add('input--tighten')
+      inputA.current!.classList.add('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-38')
+    }
+
+    updateInputPositions()
+    updateInputTabIndexes()
+  }, [userSettings.oklchHlDecimalPrecision, currentColorModel])
+
+  useEffect(() => {
     // We use this tricks with disabled classes because of a bug using atoms to conditonaly use disabled attribute on input, see comment in "bases.css" for "input.disabled".
     if (lockRelativeChroma) {
       inputX.current!.classList.add('disabled')

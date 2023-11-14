@@ -1,10 +1,22 @@
-import { Hue, AbsoluteChroma, ApcaContrast, WcagContrast, Lightness, ColorRgb, CurrentBgOrFg, ColorsRgba } from '../../../../types'
+import {
+  Hue,
+  AbsoluteChroma,
+  ApcaContrast,
+  WcagContrast,
+  Lightness,
+  ColorRgb,
+  CurrentBgOrFg,
+  ColorsRgba,
+  OklchHlDecimalPrecisionRange
+} from '../../../../types'
 import { $colorsRgba } from '../../../stores/colors/colorsRgba/colorsRgba'
 import { $lockRelativeChroma } from '../../../stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $currentBgOrFg } from '../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
+import { $userSettings } from '../../../stores/settings/userSettings/userSettings'
 import convertHxyToRgb from '../../colors/convertHxyToRgb/convertHxyToRgb'
 import convertRelativeChromaToAbsolute from '../../colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import getClampedChroma from '../../colors/getClampedChroma/getClampedChroma'
+import getColorHxyDecimals from '../../colors/getColorHxyDecimals/getColorHxyDecimals'
 import getContrastFromBgandFgRgba from '../getContrastFromBgandFgRgba/getContrastFromBgandFgRgba'
 import clamp from 'lodash/clamp'
 import round from 'lodash/round'
@@ -13,6 +25,7 @@ type Props = {
   h: Hue
   x: AbsoluteChroma
   targetContrast: ApcaContrast | WcagContrast
+  precision?: OklchHlDecimalPrecisionRange
   lockRelativeChroma?: boolean
   currentBgOrFg?: CurrentBgOrFg
   colorsRgba?: ColorsRgba
@@ -35,6 +48,7 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     h,
     x,
     targetContrast,
+    precision = $userSettings.get().oklchHlDecimalPrecision,
     lockRelativeChroma = $lockRelativeChroma.get(),
     currentBgOrFg = $currentBgOrFg.get(),
     colorsRgba = JSON.parse(JSON.stringify($colorsRgba.get()))
@@ -128,24 +142,26 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
   let minY: number | null = null
   let maxY: number | null = null
 
+  const yStep = precision === 1 ? 0.1 : 0.05
+
   minY = yBetweenMinYAndMaxY
-  maxY = yBetweenMinYAndMaxY + 0.1
+  maxY = yBetweenMinYAndMaxY + yStep
   let minYFound = false
   let maxYFound = false
   loopCountLimit = 0
 
   // Second loop, from the first Y value found (yBetweenMinYAndMaxY), we look for the min and max Y (multiple Y values often give the same contrast).
-  while ((!minYFound || !maxYFound) && loopCountLimit < 100) {
+  while ((!minYFound || !maxYFound) && loopCountLimit < 500) {
     loopCountLimit++
 
     if (!minYFound) {
-      minY = round((minY -= 0.1), 1)
+      minY = round((minY -= yStep), getColorHxyDecimals().y)
       if (minY < 0 || minY > 100) {
         minY = clamp(minY, 0, 100)
         minYFound = true
       }
     } else {
-      maxY = round((maxY += 0.1), 1)
+      maxY = round((maxY += yStep), getColorHxyDecimals().y)
       if (maxY < 0 || maxY > 100) {
         maxY = clamp(maxY, 0, 100)
         maxYFound = true
@@ -183,10 +199,10 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     }
 
     if (tempNewContrast !== targetContrast && !minYFound) {
-      minY = round((minY += 0.1), 1)
+      minY = round((minY += yStep), getColorHxyDecimals().y)
       minYFound = true
     } else if (tempNewContrast !== targetContrast && !maxYFound) {
-      maxY = round((maxY -= 0.1), 1)
+      maxY = round((maxY -= yStep), getColorHxyDecimals().y)
       maxYFound = true
     }
   }
@@ -200,11 +216,11 @@ export default function getNewXandYFromContrast(props: Props): { x: AbsoluteChro
     console.log('yBetweenMinYAndMaxY', yBetweenMinYAndMaxY)
     console.log('minY', minY)
     console.log('-')
-    console.log('Average Y', round((minY + maxY) / 2, 1))
+    console.log('Average Y', round((minY + maxY) / 2, getColorHxyDecimals().y))
   }
 
   // Get the average of minY and maxY to get newY.
-  const newY = round((minY + maxY) / 2, 1)
+  const newY = round((minY + maxY) / 2, getColorHxyDecimals().y)
 
   return {
     x: newX,

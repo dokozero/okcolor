@@ -93,7 +93,7 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
 
   const userSettingsString =
     (await figma.clientStorage.getAsync('userSettings')) ||
-    '{"useSimplifiedChroma": false, "oklchInputOrder": "lch", "useHardwareAcceleration": true}'
+    '{"oklchHlDecimalPrecision": 1, "useSimplifiedChroma": false, "oklchInputOrder": "lch", "useHardwareAcceleration": true}'
 
   userSettings = JSON.parse(userSettingsString)
 
