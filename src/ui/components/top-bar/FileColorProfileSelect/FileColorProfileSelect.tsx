@@ -32,10 +32,10 @@ export default function FileColorProfileSelect() {
 
       <div className="select-wrapper">
         <select onChange={handleFileColorProfile} name="file_color_profile" id="file_color_profile">
-          <option value="rgb" selected={currentFileColorProfile === 'rgb' ? true : false}>
+          <option value="rgb" selected={currentFileColorProfile === 'rgb'}>
             sRGB
           </option>
-          <option value="p3" selected={currentFileColorProfile === 'p3' ? true : false}>
+          <option value="p3" selected={currentFileColorProfile === 'p3'}>
             Display P3
           </option>
         </select>

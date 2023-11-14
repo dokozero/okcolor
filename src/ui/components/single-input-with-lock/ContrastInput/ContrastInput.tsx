@@ -85,7 +85,7 @@ export default function ContrastInput() {
   }, [colorsRgba])
 
   useEffect(() => {
-    setShowContrast(currentColorModel === 'oklch' ? true : false)
+    setShowContrast(currentColorModel === 'oklch')
   }, [currentColorModel])
 
   useEffect(() => {
@@ -129,10 +129,10 @@ export default function ContrastInput() {
       >
         <div className="select-wrapper u-flex-basis-55">
           <select ref={contrastMethodSelect} onChange={handleContrastMethod} name="contrast_method" id="contrast_method">
-            <option value="apca" selected={currentContrastMethod === 'apca' ? true : false}>
+            <option value="apca" selected={currentContrastMethod === 'apca'}>
               APCA
             </option>
-            <option value="wcag" selected={currentContrastMethod === 'wcag' ? true : false}>
+            <option value="wcag" selected={currentContrastMethod === 'wcag'}>
               WCAG
             </option>
           </select>

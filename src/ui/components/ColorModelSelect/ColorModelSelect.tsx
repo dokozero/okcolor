@@ -17,13 +17,13 @@ export default function ColorModelSelect() {
   return (
     <div className="select-wrapper u-flex-no-shrink u-flex-basis-60">
       <select onChange={handleColorModel} name="color_model" id="color_model">
-        <option value="oklch" selected={currentColorModel === 'oklch' ? true : false}>
+        <option value="oklch" selected={currentColorModel === 'oklch'}>
           OkLCH
         </option>
-        <option value="okhsl" selected={currentColorModel === 'okhsl' ? true : false}>
+        <option value="okhsl" selected={currentColorModel === 'okhsl'}>
           OkHSL
         </option>
-        <option value="okhsv" selected={currentColorModel === 'okhsv' ? true : false}>
+        <option value="okhsv" selected={currentColorModel === 'okhsv'}>
           OkHSV
         </option>
       </select>

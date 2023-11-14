@@ -58,10 +58,10 @@ export default function SettingsScreen() {
                     name="oklch_input_order"
                     id="oklch_input_order"
                   >
-                    <option value="1" selected={userSettings.oklchHlDecimalPrecision === 1 ? true : false}>
+                    <option value="1" selected={userSettings.oklchHlDecimalPrecision === 1}>
                       1
                     </option>
-                    <option value="2" selected={userSettings.oklchHlDecimalPrecision === 2 ? true : false}>
+                    <option value="2" selected={userSettings.oklchHlDecimalPrecision === 2}>
                       2
                     </option>
                   </select>
@@ -89,10 +89,10 @@ export default function SettingsScreen() {
                     name="oklch_input_order"
                     id="oklch_input_order"
                   >
-                    <option value="lch" selected={userSettings.oklchInputOrder === 'lch' ? true : false}>
+                    <option value="lch" selected={userSettings.oklchInputOrder === 'lch'}>
                       L/C/H
                     </option>
-                    <option value="hcl" selected={userSettings.oklchInputOrder === 'hcl' ? true : false}>
+                    <option value="hcl" selected={userSettings.oklchInputOrder === 'hcl'}>
                       H/C/L
                     </option>
                   </select>

@@ -32,7 +32,7 @@ export default function RelativeChromaInput() {
   const keepInputSelected = useRef(false)
 
   useEffect(() => {
-    setShowRelativeChroma(currentColorModel === 'oklch' ? true : false)
+    setShowRelativeChroma(currentColorModel === 'oklch')
   }, [currentColorModel])
 
   useEffect(() => {
