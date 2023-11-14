@@ -4,7 +4,7 @@ import { consoleLogInfos } from '../../../constants'
 import { CurrentFillOrStroke, SyncCurrentFillOrStrokeData } from '../../../types'
 import convertRgbToHxy from '../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
 import sendMessageToBackend from '../../helpers/sendMessageToBackend/sendMessageToBackend'
-import { setColorHxya } from '../colors/colorHxya/colorHxya'
+import { setColorHxyaWithSideEffects } from '../colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../colors/colorsRgba/colorsRgba'
 import { $lockContrast, setLockContrast } from '../contrasts/lockContrast/lockContrast'
 import merge from 'lodash/merge'
@@ -51,7 +51,7 @@ export const setCurrentFillOrStrokeWithSideEffects = action(
       const newColorRgba = $colorsRgba.get()[newCurrentFillOrStroke]
       const newColorHxy = convertRgbToHxy({ colorRgb: newColorRgba! })
 
-      setColorHxya({
+      setColorHxyaWithSideEffects({
         newColorHxya: { ...newColorHxy, a: newColorRgba!.a },
         lockRelativeChroma: false,
         lockContrast: false

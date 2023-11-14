@@ -87,7 +87,7 @@ export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithS
     const key = $currentBgOrFg.get() === 'bg' ? 'parentFill' : `${$currentFillOrStroke.get()}`
 
     setColorsRgbaWithSideEffects({
-      newColorsRgba: { ...$colorsRgba.get(), [key]: { ...newColorRgb, a: colorHxya.get().a } },
+      newColorsRgba: { ...$colorsRgba.get(), [key]: { ...newColorRgb, a: filteredNewColorHxya.a } },
       sideEffects: {
         colorHxya: {
           syncColorHxya: false
@@ -107,7 +107,7 @@ export const setColorHxyaWithSideEffects = action($colorHxya, 'setColorHxyaWithS
 
     setRelativeChroma(
       convertAbsoluteChromaToRelative({
-        colorHxy: colorHxya.get()
+        colorHxy: filteredNewColorHxya
       })
     )
   }
