@@ -87,12 +87,13 @@ export default function FillOrStrokeToggle() {
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
-      if (!$colorsRgba.get().fill || !$colorsRgba.get().stroke) return
+      if (!['x', 'X'].includes(event.key)) return
 
+      if (!$colorsRgba.get().fill || !$colorsRgba.get().stroke) return
       // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "x" while he's in one of them.
       if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
 
-      if (['x', 'X'].includes(event.key)) handleFillOrStroke()
+      handleFillOrStroke()
     })
   }, [])
 
