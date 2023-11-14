@@ -8,6 +8,7 @@ import {
   setCurrentFillOrStrokeWithSideEffects,
   setCurrentFillOrStroke
 } from '../../stores/currentFillOrStroke/currentFillOrStroke'
+import { $uiMessage } from '../../stores/uiMessage/uiMessage'
 
 export default function FillOrStrokeToggle() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -83,6 +84,17 @@ export default function FillOrStrokeToggle() {
       )
     }
   }, [colorsRgba, currentBgOrFg])
+
+  useEffect(() => {
+    document.addEventListener('keydown', (event) => {
+      if (!$colorsRgba.get().fill || !$colorsRgba.get().stroke) return
+
+      // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "x" while he's in one of them.
+      if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
+
+      if (['x', 'X'].includes(event.key)) handleFillOrStroke()
+    })
+  }, [])
 
   return (
     <div
