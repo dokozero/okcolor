@@ -8,6 +8,7 @@ import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStr
 import { setColorHxyaWithSideEffects, $colorHxya } from '../colorHxya/colorHxya'
 import { $colorsRgba } from '../colorsRgba/colorsRgba'
 import merge from 'lodash/merge'
+import { $currentBgOrFg } from '../../contrasts/currentBgOrFg/currentBgOrFg'
 
 export const $currentFileColorProfile = atom<CurrentFileColorProfile>('rgb')
 
@@ -45,7 +46,8 @@ export const setCurrentFileColorProfileWithSideEffects = action(
 
     currentFileColorProfile.set(newCurrentFileColorProfile)
 
-    const currentColorRgba = $colorsRgba.get()[`${$currentFillOrStroke.get()}`]
+    const key = $currentBgOrFg.get() === 'bg' ? 'parentFill' : `${$currentFillOrStroke.get()}`
+    const currentColorRgba = $colorsRgba.get()[key]
 
     if (sideEffects.syncColorHxya) {
       const newColorHxy = convertRgbToHxy({
