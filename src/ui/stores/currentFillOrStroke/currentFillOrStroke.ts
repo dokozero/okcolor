@@ -45,6 +45,15 @@ export const setCurrentFillOrStrokeWithSideEffects = action(
 
     currentFillOrStroke.set(newCurrentFillOrStroke)
 
+    if (sideEffects.syncCurrentFillOrStrokeWithBackend) {
+      sendMessageToBackend<SyncCurrentFillOrStrokeData>({
+        type: 'syncCurrentFillOrStroke',
+        data: {
+          newCurrentFillOrStroke: newCurrentFillOrStroke
+        }
+      })
+    }
+
     if (newCurrentFillOrStroke === 'stroke' && $lockContrast.get()) setLockContrast(false)
 
     if (sideEffects.syncColorHxya) {
@@ -55,15 +64,6 @@ export const setCurrentFillOrStrokeWithSideEffects = action(
         newColorHxya: { ...newColorHxy, a: newColorRgba!.a },
         lockRelativeChroma: false,
         lockContrast: false
-      })
-    }
-
-    if (sideEffects.syncCurrentFillOrStrokeWithBackend) {
-      sendMessageToBackend<SyncCurrentFillOrStrokeData>({
-        type: 'syncCurrentFillOrStroke',
-        data: {
-          newCurrentFillOrStroke: newCurrentFillOrStroke
-        }
       })
     }
   }
