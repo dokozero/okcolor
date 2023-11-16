@@ -87,12 +87,12 @@ export default function ColorValueInputs() {
       inputH.current!.classList.remove('input--tighten')
       inputX.current!.classList.remove('input--tighten')
       inputY.current!.classList.remove('input--tighten')
-      inputA.current!.classList.remove('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-38')
+      inputA.current!.classList.remove('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-36')
     } else {
       inputH.current!.classList.add('input--tighten')
       inputX.current!.classList.add('input--tighten')
       inputY.current!.classList.add('input--tighten')
-      inputA.current!.classList.add('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-38')
+      inputA.current!.classList.add('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-36')
     }
 
     updateInputPositions()
