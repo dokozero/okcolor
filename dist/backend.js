@@ -39,11 +39,13 @@ function H() {
     let o = s.parent;
     for (; o; )
       if (o.fills && ((a = o.fills) == null ? void 0 : a.length) !== 0) {
-        o.fills[0].type === "SOLID" && (e.newColorsRgba.parentFill = {
+        if (o.fills[0].type !== "SOLID")
+          break;
+        e.newColorsRgba.parentFill = {
           r: o.fills[0].color.r,
           g: o.fills[0].color.g,
           b: o.fills[0].color.b
-        });
+        };
         break;
       } else if (o.parent)
         o = o.parent;
@@ -108,7 +110,7 @@ function J(t) {
     s[0].color.r = e.r, s[0].color.g = e.g, s[0].color.b = e.b, s[0].opacity = e.a, C === "bg" ? a.fills = s : p[r] = s;
   }
 }
-let b, i = "fill", S, g, h, u, A, d, y, I = !1, c = {
+let I, i = "fill", S, g, h, u, A, d, y, b = !1, c = {
   parentFill: null,
   fill: null,
   stroke: null
@@ -132,7 +134,7 @@ const U = ["fills", "fillStyleId", "strokes", "strokeStyleId", "strokeWeight", "
 }, D = async () => {
   figma.editorType === "figma" ? S = await figma.clientStorage.getAsync("currentFileColorProfile") || "rgb" : figma.editorType === "figjam" && (S = "rgb");
   const t = await figma.clientStorage.getAsync("userSettings") || '{"oklchHlDecimalPrecision": 1, "useSimplifiedChroma": false, "oklchInputOrder": "lch", "useHardwareAcceleration": true}';
-  b = JSON.parse(t), h = await figma.clientStorage.getAsync("isContrastInputOpen") || !1, y = await figma.clientStorage.getAsync("isColorCodeInputsOpen") || !1, A = await figma.clientStorage.getAsync("currentContrastMethod") || "apca", g = await figma.clientStorage.getAsync("currentColorModel") || "oklch", g === "oklchCss" && (g = "oklch"), ["okhsv", "okhsl"].includes(g) ? (u = !1, d = !1) : (u = await figma.clientStorage.getAsync("lockRelativeChroma") || !1, d = await figma.clientStorage.getAsync("lockContrast") || !1);
+  I = JSON.parse(t), h = await figma.clientStorage.getAsync("isContrastInputOpen") || !1, y = await figma.clientStorage.getAsync("isColorCodeInputsOpen") || !1, A = await figma.clientStorage.getAsync("currentContrastMethod") || "apca", g = await figma.clientStorage.getAsync("currentColorModel") || "oklch", g === "oklchCss" && (g = "oklch"), ["okhsv", "okhsl"].includes(g) ? (u = !1, d = !1) : (u = await figma.clientStorage.getAsync("lockRelativeChroma") || !1, d = await figma.clientStorage.getAsync("lockContrast") || !1);
   const e = T({
     currentColorModel: g,
     isColorCodeInputsOpen: y,
@@ -146,7 +148,7 @@ const v = async () => {
     type: "syncLocalStorageValues",
     data: {
       newFigmaEditorType: figma.editorType,
-      newUserSettings: b,
+      newUserSettings: I,
       newCurrentFileColorProfile: S,
       newIsContrastInputOpen: h,
       newLockRelativeChroma: u,
@@ -175,7 +177,7 @@ const v = async () => {
     }
   }));
 }, E = (t) => {
-  if (I || t.documentChanges[0].type !== "PROPERTY_CHANGE")
+  if (b || t.documentChanges[0].type !== "PROPERTY_CHANGE")
     return;
   if (t.documentChanges[0].properties.some((l) => U.includes(l))) {
     const l = JSON.parse(JSON.stringify(c));
@@ -205,16 +207,16 @@ figma.ui.onmessage = (t) => {
       v();
       break;
     case "updateShapeColor":
-      e = t.data, I = !0, J({
+      e = t.data, b = !0, J({
         newColorRgba: e.newColorRgba,
         currentFillOrStroke: i,
         currentBgOrFg: e.newCurrentBgOrFg
       }), m && clearTimeout(m), m = setTimeout(() => {
-        I = !1;
+        b = !1;
       }, 500);
       break;
     case "SyncUserSettings":
-      e = t.data, b = e.newUserSettings, figma.clientStorage.setAsync("userSettings", JSON.stringify(e.newUserSettings));
+      e = t.data, I = e.newUserSettings, figma.clientStorage.setAsync("userSettings", JSON.stringify(e.newUserSettings));
       break;
     case "syncCurrentFileColorProfile":
       e = t.data, S = e.newCurrentFileColorProfile, figma.clientStorage.setAsync("currentFileColorProfile", e.newCurrentFileColorProfile);

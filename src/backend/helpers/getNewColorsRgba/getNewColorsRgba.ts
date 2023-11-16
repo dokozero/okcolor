@@ -17,6 +17,8 @@ const supportedNodeTypes = [
   'HIGHLIGHT'
 ]
 
+const supportedParentTypes = ['GROUP', 'FRAME', 'COMPONENT']
+
 type GetNewColorsRgbaReturn = {
   newColorsRgba: ColorsRgba
   uiMessageCode: keyof typeof uiMessageTexts | null
@@ -72,18 +74,21 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
 
   // Get the parent fill if possible.
   // We test is selection.length is 1 because we don't want to display the contrast of multiple selected shapes as it would show one contrast value and that wouldn't be clear of which one of the selected shape it would be.
-  if ((firstSelection.parent?.type === 'GROUP' || firstSelection.parent?.type === 'FRAME') && selection.length === 1) {
+  if (supportedParentTypes.includes(firstSelection.parent?.type) && selection.length === 1) {
     let currentObject = firstSelection.parent
 
     while (currentObject) {
       if (currentObject.fills && currentObject.fills?.length !== 0) {
         // We do this test on a new if and not on the one above, because for example if we have a label with a parent frame which has a gradient and who also have a parent frame with a solid fill, the above condition would be true and we would update parentFill, however if the fill type is not solid we run the "break".
-        if (currentObject.fills[0].type === 'SOLID') {
-          returnObject.newColorsRgba.parentFill = {
-            r: currentObject.fills[0].color.r,
-            g: currentObject.fills[0].color.g,
-            b: currentObject.fills[0].color.b
-          }
+        if (currentObject.fills[0].type !== 'SOLID') break
+
+        // If the parent has a color from a variable, this condition prevent continuing, for now we take the parent fill but we can't modify the color but at least the user can change the fg color to control the contrast.
+        // if (currentObject.fills[0].boundVariables?.color) break
+
+        returnObject.newColorsRgba.parentFill = {
+          r: currentObject.fills[0].color.r,
+          g: currentObject.fills[0].color.g,
+          b: currentObject.fills[0].color.b
         }
         break
       } else if (currentObject.parent) {
