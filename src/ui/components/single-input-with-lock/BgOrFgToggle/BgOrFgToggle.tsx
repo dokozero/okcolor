@@ -10,6 +10,7 @@ import { $currentColorModel } from '../../../stores/colors/currentColorModel/cur
 import { $currentBgOrFg, setCurrentBgOrFgWithSideEffects } from '../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke/currentFillOrStroke'
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
+import round from 'lodash/round'
 
 export default function BgOrFgToggle() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -36,19 +37,22 @@ export default function BgOrFgToggle() {
 
   useEffect(() => {
     if ($currentFillOrStroke.get() === 'stroke' || $currentColorModel.get() !== 'oklch') return
-
-    // Handle rare case if for example use launches the plugin with a parentFill, the bg toggle will have the color, but if select the parent shape in Figma, changes the color then select again the child element, the bg toggle background will still be the old one.
-    if (!colorsRgba.parentFill) {
-      bgToggleWrapper.current!.style.backgroundColor = ''
-      return
-    }
-    if (!colorsRgba.fill) return
+    if (!colorsRgba.parentFill || !colorsRgba.fill) return
 
     let whiteTextContrast: ApcaContrast | WcagContrast
     let blackTextContrast: ApcaContrast | WcagContrast
 
-    if ($currentBgOrFg.get() === 'fg' || !fgToggleWrapper.current!.style.backgroundColor) {
-      fgToggleWrapper.current!.style.backgroundColor = `rgb(${colorsRgba.fill.r * 255}, ${colorsRgba.fill.g * 255}, ${colorsRgba.fill.b * 255})`
+    let fgToggleWrapperBgColor = ''
+    let bgToggleWrapperBgColor = ''
+
+    fgToggleWrapperBgColor = `rgb(${round(colorsRgba.fill.r * 255, 0)}, ${round(colorsRgba.fill.g * 255, 0)}, ${round(colorsRgba.fill.b * 255, 0)})`
+    bgToggleWrapperBgColor = `rgb(${round(colorsRgba.parentFill.r * 255, 0)}, ${round(colorsRgba.parentFill.g * 255, 0)}, ${round(
+      colorsRgba.parentFill.b * 255,
+      0
+    )})`
+
+    if (fgToggleWrapper.current!.style.backgroundColor !== fgToggleWrapperBgColor) {
+      fgToggleWrapper.current!.style.backgroundColor = fgToggleWrapperBgColor
 
       // Define color of Fg toggle label
       whiteTextContrast = getContrastFromBgandFgRgba({
@@ -66,10 +70,8 @@ export default function BgOrFgToggle() {
       else fgTogglelabel.current!.style.color = '#000000'
     }
 
-    if ($currentBgOrFg.get() === 'bg' || !bgToggleWrapper.current!.style.backgroundColor) {
-      bgToggleWrapper.current!.style.backgroundColor = `rgb(${colorsRgba.parentFill.r * 255}, ${colorsRgba.parentFill.g * 255}, ${
-        colorsRgba.parentFill.b * 255
-      })`
+    if (bgToggleWrapper.current!.style.backgroundColor !== bgToggleWrapperBgColor) {
+      bgToggleWrapper.current!.style.backgroundColor = bgToggleWrapperBgColor
 
       // Define color of Bg toggle label
       whiteTextContrast = getContrastFromBgandFgRgba({
