@@ -152,7 +152,7 @@ export default function ColorPicker() {
   }
 
   const renderSrgbLimitStroke = () => {
-    if ($currentFileColorProfile.get() === 'p3') {
+    if ($currentColorModel.get() === 'oklch' && $currentFileColorProfile.get() === 'p3') {
       srgbLimitStroke.current!.setAttribute('d', getSrgbStrokeLimit())
     } else {
       srgbLimitStroke.current!.setAttribute('d', '')
@@ -160,7 +160,7 @@ export default function ColorPicker() {
   }
 
   const renderRelativeChromaStroke = () => {
-    if ($lockRelativeChroma.get()) {
+    if ($currentColorModel.get() === 'oklch' && $lockRelativeChroma.get()) {
       relativeChromaStroke.current!.setAttribute('d', getRelativeChromaStrokeLimit())
     } else {
       relativeChromaStroke.current!.setAttribute('d', '')
@@ -168,7 +168,7 @@ export default function ColorPicker() {
   }
 
   const renderContrastStroke = () => {
-    if ($lockContrast.get() && $colorsRgba.get().parentFill && $colorsRgba.get().fill) {
+    if ($currentColorModel.get() === 'oklch' && $lockContrast.get() && $colorsRgba.get().parentFill && $colorsRgba.get().fill) {
       contrastStroke.current!.setAttribute('d', getContrastStrokeLimit())
     } else {
       contrastStroke.current!.setAttribute('d', '')
@@ -179,6 +179,7 @@ export default function ColorPicker() {
     if (consoleLogInfos.includes('Color picker rendering speed')) {
       colorPickerStrokesRenderingStart = performance.now()
     }
+
     renderSrgbLimitStroke()
     renderRelativeChromaStroke()
     renderContrastStroke()
@@ -193,10 +194,12 @@ export default function ColorPicker() {
       colorPickerCanvasRenderingStart = performance.now()
     }
 
-    const bgColor = convertHxyToRgb({
-      colorHxy: { h: $colorHxya.get().h, x: 0.006, y: document.documentElement.classList.contains('figma-dark') ? 36 : 95 }
-    })
-    colorPicker.current!.style.backgroundColor = `rgb(${bgColor.r * 255}, ${bgColor.g * 255}, ${bgColor.b * 255})`
+    if ($currentColorModel.get() === 'oklch') {
+      const bgColor = convertHxyToRgb({
+        colorHxy: { h: $colorHxya.get().h, x: 0.006, y: document.documentElement.classList.contains('figma-dark') ? 36 : 95 }
+      })
+      colorPicker.current!.style.backgroundColor = `rgb(${bgColor.r * 255}, ${bgColor.g * 255}, ${bgColor.b * 255})`
+    }
 
     if (!$userSettings.get().useHardwareAcceleration) {
       canvas2dContext!.putImageData(renderImageData({ h: $colorHxya.get().h }), 0, 0)
