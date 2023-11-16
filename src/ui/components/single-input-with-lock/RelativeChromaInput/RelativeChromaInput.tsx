@@ -79,7 +79,6 @@ export default function RelativeChromaInput() {
         />
       </div>
 
-      {/* TODO - refactor to standalone component. */}
       <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockRelativeChroma}>
         <div className={'c-single-input-with-lock__lock' + (lockRelativeChroma ? ' c-single-input-with-lock__lock--closed' : '')}>
           {!lockRelativeChroma ? <OpenLockIcon /> : <ClosedLockIcon />}

@@ -13,6 +13,7 @@ export default function Toggle(props: Props) {
   const { value, setValue } = props
 
   const handleToggle = () => {
+    // We test if setValue() exists because in some cases we can have the toggle action controlled by the onClick from the parent.
     if (setValue) setValue(!value)
   }
 

@@ -35,47 +35,61 @@ export default function BgOrFgToggle() {
   }
 
   useEffect(() => {
-    if (['okhsv', 'okhsl'].includes(currentColorModel)) return
+    if ($currentFillOrStroke.get() === 'stroke' || $currentColorModel.get() !== 'oklch') return
 
-    if (!colorsRgba.parentFill || !colorsRgba.fill) return
-
-    bgToggleWrapper.current!.style.backgroundColor = `rgb(${colorsRgba.parentFill.r * 255}, ${colorsRgba.parentFill.g * 255}, ${
-      colorsRgba.parentFill.b * 255
-    })`
-    fgToggleWrapper.current!.style.backgroundColor = `rgb(${colorsRgba.fill.r * 255}, ${colorsRgba.fill.g * 255}, ${colorsRgba.fill.b * 255})`
+    // Handle rare case if for example use launches the plugin with a parentFill, the bg toggle will have the color, but if select the parent shape in Figma, changes the color then select again the child element, the bg toggle background will still be the old one.
+    if (!colorsRgba.parentFill) {
+      bgToggleWrapper.current!.style.backgroundColor = ''
+      return
+    }
+    if (!colorsRgba.fill) return
 
     let whiteTextContrast: ApcaContrast | WcagContrast
     let blackTextContrast: ApcaContrast | WcagContrast
 
-    // Define color of Bg toggle label
-    whiteTextContrast = getContrastFromBgandFgRgba({
-      fg: { r: 1, g: 1, b: 1, a: 1 },
-      bg: colorsRgba.parentFill
-    })
-    blackTextContrast = getContrastFromBgandFgRgba({
-      fg: { r: 0, g: 0, b: 0, a: 1 },
-      bg: colorsRgba.parentFill
-    })
+    if ($currentBgOrFg.get() === 'fg' || !fgToggleWrapper.current!.style.backgroundColor) {
+      fgToggleWrapper.current!.style.backgroundColor = `rgb(${colorsRgba.fill.r * 255}, ${colorsRgba.fill.g * 255}, ${colorsRgba.fill.b * 255})`
 
-    if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) bgToggleLabel.current!.style.color = '#FFFFFF'
-    else bgToggleLabel.current!.style.color = '#000000'
+      // Define color of Fg toggle label
+      whiteTextContrast = getContrastFromBgandFgRgba({
+        fg: { r: 1, g: 1, b: 1, a: 1 },
+        bg: colorsRgba.fill,
+        currentContrastMethod: 'apca'
+      })
+      blackTextContrast = getContrastFromBgandFgRgba({
+        fg: { r: 0, g: 0, b: 0, a: 1 },
+        bg: colorsRgba.fill,
+        currentContrastMethod: 'apca'
+      })
 
-    // Define color of Fg toggle label
-    whiteTextContrast = getContrastFromBgandFgRgba({
-      fg: { r: 1, g: 1, b: 1, a: 1 },
-      bg: colorsRgba.fill
-    })
-    blackTextContrast = getContrastFromBgandFgRgba({
-      fg: { r: 0, g: 0, b: 0, a: 1 },
-      bg: colorsRgba.fill
-    })
+      if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) fgTogglelabel.current!.style.color = '#FFFFFF'
+      else fgTogglelabel.current!.style.color = '#000000'
+    }
 
-    if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) fgTogglelabel.current!.style.color = '#FFFFFF'
-    else fgTogglelabel.current!.style.color = '#000000'
+    if ($currentBgOrFg.get() === 'bg' || !bgToggleWrapper.current!.style.backgroundColor) {
+      bgToggleWrapper.current!.style.backgroundColor = `rgb(${colorsRgba.parentFill.r * 255}, ${colorsRgba.parentFill.g * 255}, ${
+        colorsRgba.parentFill.b * 255
+      })`
+
+      // Define color of Bg toggle label
+      whiteTextContrast = getContrastFromBgandFgRgba({
+        fg: { r: 1, g: 1, b: 1, a: 1 },
+        bg: colorsRgba.parentFill,
+        currentContrastMethod: 'apca'
+      })
+      blackTextContrast = getContrastFromBgandFgRgba({
+        fg: { r: 0, g: 0, b: 0, a: 1 },
+        bg: colorsRgba.parentFill,
+        currentContrastMethod: 'apca'
+      })
+
+      if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) bgToggleLabel.current!.style.color = '#FFFFFF'
+      else bgToggleLabel.current!.style.color = '#000000'
+    }
   }, [colorsRgba, currentColorModel])
 
   useEffect(() => {
-    if ($currentFillOrStroke.get() === 'stroke') return
+    if ($currentFillOrStroke.get() === 'stroke' || $currentColorModel.get() !== 'oklch') return
 
     let borderLightness: Lightness = 80
 
