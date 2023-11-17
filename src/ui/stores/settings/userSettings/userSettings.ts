@@ -8,6 +8,7 @@ import { $colorHxya, setColorHxyaWithSideEffects } from '../../colors/colorHxya/
 import { $currentColorModel } from '../../colors/currentColorModel/currentColorModel'
 import getColorHxyDecimals from '../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
+import { $uiMessage } from '../../uiMessage/uiMessage'
 
 export const $userSettings = map<UserSettings>({
   oklchHlDecimalPrecision: 1,
@@ -61,7 +62,7 @@ export const setUserSettingsKeyWithSideEffects = action($userSettings, 'setUserS
 
   // We need to update colorHxya if decimal precision changes.
   if (key === 'oklchHlDecimalPrecision') {
-    if ($currentColorModel.get() !== 'oklch') return
+    if ($currentColorModel.get() !== 'oklch' || $uiMessage.get().show) return
     setColorHxyaWithSideEffects({
       newColorHxya: {
         h: round($colorHxya.get().h, getColorHxyDecimals().h),
