@@ -197,6 +197,7 @@ function App() {
       // We launch the init procedure from the plugin (send some values and the color shape if any is selected) when the UI is ready.
       sendMessageToBackend({ type: 'triggerInit' })
     } else {
+      setSelectionId('123')
       setAreStoreValuesReady(true)
     }
   }, [])
