@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import { ApcaContrast, Lightness, WcagContrast } from '../../../../types'
+import { ColorRgb } from '../../../../types'
 import { useStore } from '@nanostores/react'
 import { consoleLogInfos } from '../../../../constants'
 import convertHxyToRgb from '../../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
@@ -10,7 +10,7 @@ import { $currentColorModel } from '../../../stores/colors/currentColorModel/cur
 import { $currentBgOrFg, setCurrentBgOrFgWithSideEffects } from '../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke/currentFillOrStroke'
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
-import round from 'lodash/round'
+import { $selectionId } from '../../../stores/selectionId/selectionId'
 
 export default function BgOrFgToggle() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -25,6 +25,7 @@ export default function BgOrFgToggle() {
   const fgTogglelabel = useRef<HTMLDivElement>(null)
   const bgToggleLabel = useRef<HTMLDivElement>(null)
 
+  const selectionId = useStore($selectionId)
   const colorsRgba = useStore($colorsRgba)
   const colorHxya = useStore($colorHxya)
   const currentColorModel = useStore($currentColorModel)
@@ -35,83 +36,59 @@ export default function BgOrFgToggle() {
     else setCurrentBgOrFgWithSideEffects({ newCurrentBgOrFg: 'bg' })
   }
 
+  const updateBgOrFgToggleBackground = (target: 'bg' | 'fg') => {
+    if ((target === 'bg' && !$colorsRgba.get().parentFill) || (target === 'fg' && !$colorsRgba.get().fill)) {
+      return
+    }
+
+    let targetColorRgb: ColorRgb | ColorRgb
+    if (target === 'bg') {
+      targetColorRgb = { ...$colorsRgba.get().parentFill! }
+      bgToggleWrapper.current!.style.backgroundColor = `rgb(${targetColorRgb.r * 255}, ${targetColorRgb.g * 255}, ${targetColorRgb.b * 255})`
+    } else {
+      targetColorRgb = { ...$colorsRgba.get().fill! }
+      fgToggleWrapper.current!.style.backgroundColor = `rgb(${targetColorRgb.r * 255}, ${targetColorRgb.g * 255}, ${targetColorRgb.b * 255})`
+    }
+
+    const whiteTextContrast = getContrastFromBgandFgRgba({ fg: { r: 1, g: 1, b: 1, a: 1 }, bg: targetColorRgb, currentContrastMethod: 'apca' })
+    const blackTextContrast = getContrastFromBgandFgRgba({ fg: { r: 0, g: 0, b: 0, a: 1 }, bg: targetColorRgb, currentContrastMethod: 'apca' })
+
+    const isWhiteTextContrastHigher = Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)
+    if (target === 'bg') bgToggleLabel.current!.style.color = isWhiteTextContrastHigher ? '#FFFFFF' : '#000000'
+    else fgTogglelabel.current!.style.color = isWhiteTextContrastHigher ? '#FFFFFF' : '#000000'
+  }
+
   useEffect(() => {
-    if ($currentFillOrStroke.get() === 'stroke' || $currentColorModel.get() !== 'oklch') return
+    if (!$colorsRgba.get().parentFill || !$colorsRgba.get().fill) return
+    if ($currentFillOrStroke.get() === 'stroke' || currentColorModel !== 'oklch' || $uiMessage.get().show) return
+
+    updateBgOrFgToggleBackground('bg')
+    updateBgOrFgToggleBackground('fg')
+  }, [selectionId, currentColorModel])
+
+  useEffect(() => {
     if (!colorsRgba.parentFill || !colorsRgba.fill) return
+    if ($currentFillOrStroke.get() === 'stroke' || $currentColorModel.get() !== 'oklch' || $uiMessage.get().show) return
 
-    let whiteTextContrast: ApcaContrast | WcagContrast
-    let blackTextContrast: ApcaContrast | WcagContrast
-
-    let fgToggleWrapperBgColor = ''
-    let bgToggleWrapperBgColor = ''
-
-    fgToggleWrapperBgColor = `rgb(${round(colorsRgba.fill.r * 255, 0)}, ${round(colorsRgba.fill.g * 255, 0)}, ${round(colorsRgba.fill.b * 255, 0)})`
-    bgToggleWrapperBgColor = `rgb(${round(colorsRgba.parentFill.r * 255, 0)}, ${round(colorsRgba.parentFill.g * 255, 0)}, ${round(
-      colorsRgba.parentFill.b * 255,
-      0
-    )})`
-
-    if (fgToggleWrapper.current!.style.backgroundColor !== fgToggleWrapperBgColor) {
-      fgToggleWrapper.current!.style.backgroundColor = fgToggleWrapperBgColor
-
-      // Define color of Fg toggle label
-      whiteTextContrast = getContrastFromBgandFgRgba({
-        fg: { r: 1, g: 1, b: 1, a: 1 },
-        bg: colorsRgba.fill,
-        currentContrastMethod: 'apca'
-      })
-      blackTextContrast = getContrastFromBgandFgRgba({
-        fg: { r: 0, g: 0, b: 0, a: 1 },
-        bg: colorsRgba.fill,
-        currentContrastMethod: 'apca'
-      })
-
-      if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) fgTogglelabel.current!.style.color = '#FFFFFF'
-      else fgTogglelabel.current!.style.color = '#000000'
-    }
-
-    if (bgToggleWrapper.current!.style.backgroundColor !== bgToggleWrapperBgColor) {
-      bgToggleWrapper.current!.style.backgroundColor = bgToggleWrapperBgColor
-
-      // Define color of Bg toggle label
-      whiteTextContrast = getContrastFromBgandFgRgba({
-        fg: { r: 1, g: 1, b: 1, a: 1 },
-        bg: colorsRgba.parentFill,
-        currentContrastMethod: 'apca'
-      })
-      blackTextContrast = getContrastFromBgandFgRgba({
-        fg: { r: 0, g: 0, b: 0, a: 1 },
-        bg: colorsRgba.parentFill,
-        currentContrastMethod: 'apca'
-      })
-
-      if (Math.abs(whiteTextContrast) > Math.abs(blackTextContrast)) bgToggleLabel.current!.style.color = '#FFFFFF'
-      else bgToggleLabel.current!.style.color = '#000000'
-    }
-  }, [colorsRgba, currentColorModel])
+    updateBgOrFgToggleBackground($currentBgOrFg.get())
+  }, [colorsRgba])
 
   useEffect(() => {
     if ($currentFillOrStroke.get() === 'stroke' || $currentColorModel.get() !== 'oklch') return
-
-    let borderLightness: Lightness = 80
-
-    if (document.documentElement.classList.contains('figma-dark')) {
-      borderLightness = 60
-    }
 
     const toggleBorderColor = convertHxyToRgb({
       colorHxy: {
         h: $colorHxya.get().h,
         x: $colorHxya.get().x,
-        y: borderLightness
+        y: document.documentElement.classList.contains('figma-dark') ? 60 : 80
       }
     })
 
     if (currentBgOrFg === 'bg') {
-      fgToggle.current!.style.borderColor = 'transparent'
+      if (fgToggle.current!.style.borderColor !== 'transparent') fgToggle.current!.style.borderColor = 'transparent'
       bgToggle.current!.style.borderColor = `rgb(${toggleBorderColor.r * 255}, ${toggleBorderColor.g * 255}, ${toggleBorderColor.b * 255})`
     } else {
-      bgToggle.current!.style.borderColor = 'transparent'
+      if (bgToggle.current!.style.borderColor !== 'transparent') bgToggle.current!.style.borderColor = 'transparent'
       fgToggle.current!.style.borderColor = `rgb(${toggleBorderColor.r * 255}, ${toggleBorderColor.g * 255}, ${toggleBorderColor.b * 255})`
     }
   }, [currentBgOrFg, colorHxya])
