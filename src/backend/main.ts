@@ -48,7 +48,7 @@ let colorsRgba: ColorsRgba = {
   stroke: null
 }
 
-const changePropertiesToReactTo = ['fills', 'fillStyleId', 'strokes', 'strokeStyleId', 'strokeWeight', 'textStyleId']
+const changePropertiesToReactTo = ['fills', 'fillStyleId', 'strokes', 'strokeStyleId', 'strokeWeight', 'textStyleId', 'paint']
 
 /**
  * Local helpers
@@ -178,37 +178,41 @@ const handleFigmaOnSelectionChange = () => {
 
 const handleFigmaOnDocumentChange = (event: DocumentChangeEvent) => {
   if (itsAMe) return
-  if (event.documentChanges[0].type !== 'PROPERTY_CHANGE') return
+
+  if (event.documentChanges[0].type !== 'PROPERTY_CHANGE' && event.documentChanges[0].type !== 'STYLE_PROPERTY_CHANGE') return
 
   const changeProperties = event.documentChanges[0].properties
 
   // We don't run the code if for example the user has changed the rotation of the shape.
   // We take into account "strokeWeight" to handle the case where the user add a stroke but then remove it with cmd+z, that event has for some reasons the changeProperty "strokeWeight" and not "stroke".
   // For "fillStyleId", it's to take into account if user has a shape with a color style and he change it to another or if he uses the eyedropper thus removing the color style.
-  if (changeProperties.some((item) => changePropertiesToReactTo.includes(item))) {
-    // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
-    const oldColorsRgba = JSON.parse(JSON.stringify(colorsRgba))
+  if (!changeProperties.some((item) => changePropertiesToReactTo.includes(item))) return
 
-    if (updateColorsRgbaOrSendUiMessageCodeToUi() === 'uiMessageCode sent') return
+  // We test if user has added a fill or a stroke to an already selected shape, if yes we need to update the UI and activate the fill/stroke selector accordingly.
+  const oldColorsRgba = JSON.parse(JSON.stringify(colorsRgba))
 
-    if (JSON.stringify(oldColorsRgba) !== JSON.stringify(colorsRgba)) {
-      if (currentFillOrStroke === 'fill' && !colorsRgba.fill) {
-        currentFillOrStroke = 'stroke'
-      } else if (currentFillOrStroke === 'stroke' && !colorsRgba.stroke) {
-        currentFillOrStroke = 'fill'
-      }
+  if (updateColorsRgbaOrSendUiMessageCodeToUi() === 'uiMessageCode sent') return
+
+  if (JSON.stringify(oldColorsRgba) !== JSON.stringify(colorsRgba)) {
+    if (currentFillOrStroke === 'fill' && !colorsRgba.fill) {
+      currentFillOrStroke = 'stroke'
+    } else if (currentFillOrStroke === 'stroke' && !colorsRgba.stroke) {
+      currentFillOrStroke = 'fill'
     }
-
-    sendMessageToUi<SyncNewShapeData>({
-      type: 'syncNewShape',
-      data: {
-        newCurrentFillOrStroke: currentFillOrStroke,
-        newColorsRgba: colorsRgba,
-        newLockRelativeChroma: lockRelativeChroma,
-        newLockContrast: lockContrast
-      }
-    })
   }
+
+  selectionId = getSelectionId()
+
+  sendMessageToUi<SyncNewShapeData>({
+    type: 'syncNewShape',
+    data: {
+      selectionId: selectionId,
+      newCurrentFillOrStroke: currentFillOrStroke,
+      newColorsRgba: colorsRgba,
+      newLockRelativeChroma: lockRelativeChroma,
+      newLockContrast: lockContrast
+    }
+  })
 }
 
 // If user change shape selection.
