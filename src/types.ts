@@ -1,5 +1,8 @@
 import { uiMessageTexts } from './ui/ui-messages'
 
+// this value contain the id of the current select shape in the editor, this is useful for example in ColorPicker, as we render the color picker when the hue changes, if the user launches the plugin with no selection then select a shape with pure black or white, the hue will stay the same and thus, color picker will be empty, so tou fix this, we also react to the selectionId (see its store) to update whenever the user select a new shape.
+export type SelectionId = string
+
 export enum OklchInputOrderList {
   'lch',
   'hcl'
@@ -169,6 +172,7 @@ export type SyncLocalStorageValuesData = {
 }
 
 export type SyncNewShapeData = {
+  selectionId: SelectionId
   newCurrentFillOrStroke: CurrentFillOrStroke
   newColorsRgba: ColorsRgba
   newLockContrast: boolean

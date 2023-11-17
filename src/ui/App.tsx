@@ -33,6 +33,7 @@ import SettingsScreen from './components/SettingsScreen/SettingsScreen'
 import FileColorProfileSelect from './components/top-bar/FileColorProfileSelect/FileColorProfileSelect'
 import SettingsToggle from './components/top-bar/SettingsToggle/SettingsToggle'
 import { setUserSettings } from './stores/settings/userSettings/userSettings'
+import { setSelectionId } from './stores/selectionId/selectionId'
 
 // We use these var to measure speeds of app loading time (see in constants file to activate it).
 let appLoadingStart: number
@@ -76,6 +77,8 @@ function App() {
       if (pluginMessage.type === 'syncNewShape') {
         const data = pluginMessage.data as SyncNewShapeData
 
+        setSelectionId(data.selectionId)
+
         if ($uiMessage.get().show) {
           hideUiMessageWithSideEffects()
         }
@@ -114,6 +117,8 @@ function App() {
       // Set the UI in a disabled mode and update the UI message.
       else if (pluginMessage.type === 'displayUiMessage') {
         const data = pluginMessage.data as DisplayUiMessageData
+
+        setSelectionId('')
 
         showUiMessageWithSideEffects({ messageCode: data.uiMessageCode, nodeType: data.nodeType })
 

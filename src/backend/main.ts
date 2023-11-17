@@ -22,7 +22,8 @@ import type {
   SyncCurrentContrastMethodData,
   SyncCurrentFileColorProfileData,
   UserSettings,
-  SyncUserSettingsData
+  SyncUserSettingsData,
+  SelectionId
 } from '../types'
 import getNewColorsRgba from './helpers/getNewColorsRgba/getNewColorsRgba'
 import getWindowHeigh from './helpers/getWindowHeigh/getWindowHeigh'
@@ -38,6 +39,7 @@ let lockRelativeChroma: boolean
 let currentContrastMethod: CurrentContrastMethod
 let lockContrast: boolean
 let isColorCodeInputsOpen: boolean
+let selectionId: SelectionId = ''
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
 let itsAMe = false
@@ -80,6 +82,10 @@ const updateColorsRgbaOrSendUiMessageCodeToUi = (): string => {
     colorsRgba = JSON.parse(JSON.stringify(result.newColorsRgba))
   }
   return 'colorsRgba updated'
+}
+
+const getSelectionId = (): SelectionId => {
+  return figma.currentPage?.selection[0] ? figma.currentPage.selection[0].id : ''
 }
 
 /**
@@ -144,10 +150,12 @@ const init = async () => {
 
   if (updateColorsRgbaOrSendUiMessageCodeToUi() === 'uiMessageCode sent') return
   currentFillOrStroke = colorsRgba.fill ? 'fill' : 'stroke'
+  selectionId = getSelectionId()
 
   sendMessageToUi<SyncNewShapeData>({
     type: 'syncNewShape',
     data: {
+      selectionId: selectionId,
       newCurrentFillOrStroke: currentFillOrStroke,
       newColorsRgba: colorsRgba,
       newLockRelativeChroma: lockRelativeChroma,
@@ -162,12 +170,13 @@ const init = async () => {
 
 const handleFigmaOnSelectionChange = () => {
   if (updateColorsRgbaOrSendUiMessageCodeToUi() === 'uiMessageCode sent') return
-
   currentFillOrStroke = colorsRgba.fill ? 'fill' : 'stroke'
+  selectionId = getSelectionId()
 
   sendMessageToUi<SyncNewShapeData>({
     type: 'syncNewShape',
     data: {
+      selectionId: selectionId,
       newCurrentFillOrStroke: currentFillOrStroke,
       newColorsRgba: colorsRgba,
       newLockRelativeChroma: lockRelativeChroma,

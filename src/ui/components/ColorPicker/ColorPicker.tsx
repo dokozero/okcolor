@@ -31,6 +31,7 @@ import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb/convertHxyToRg
 import { renderImageData } from '../../helpers/colors/renderImageData/renderImageData'
 import { $userSettings } from '../../stores/settings/userSettings/userSettings'
 import getColorPickerResolutionInfos from '../../helpers/colors/getColorPickerResolutionInfos/getColorPickerResolutionInfos'
+import { $selectionId } from '../../stores/selectionId/selectionId'
 
 // We use these var to measure speeds of color picker rendering (see in constants file to activate it).
 let colorPickerStrokesRenderingStart: number
@@ -65,6 +66,7 @@ export default function ColorPicker() {
 
   const [colorSpaceOfCurrentColor, setColorSpaceOfCurrentColor] = useState<keyof typeof ColorSpacesNames | ''>('')
 
+  const selectionId = useStore($selectionId)
   const uiMessage = useStore($uiMessage)
   const colorHxya = useStore($colorHxya)
   const currentColorModel = useStore($currentColorModel)
@@ -294,7 +296,7 @@ export default function ColorPicker() {
     if (!isMounted.current) return
     updateManipulatorPosition()
     updateColorSpaceLabelInColorPicker()
-  }, [colorHxya.x, colorHxya.y])
+  }, [colorHxya.x, colorHxya.y, selectionId])
 
   useEffect(() => {
     if (!isMounted.current) return
@@ -305,9 +307,9 @@ export default function ColorPicker() {
   }, [currentFileColorProfile])
 
   useEffect(() => {
-    if (!isMounted.current) return
+    if (!isMounted.current || selectionId === '') return
     renderColorPickerCanvas()
-  }, [colorHxya.h])
+  }, [colorHxya.h, selectionId])
 
   useEffect(() => {
     if (!isMounted.current) return
