@@ -62,9 +62,9 @@ export default function getColorCodeStrings(props: Props = {}): NewColorStrings 
     newColorStrings.currentColorModel =
       `oklch(${colorHxya.y}% ${round(colorHxya.x, 6)} ${colorHxya.h}` + (colorHxya.a !== 1 ? ` / ${colorHxya.a})` : ')')
   } else if (currentColorModel === 'okhsl') {
-    newColorStrings.currentColorModel = `{mode: "okhsl", h: ${colorHxya.h}, s: ${colorHxya.x}, l: ${colorHxya.y}}`
+    newColorStrings.currentColorModel = `{mode: "okhsl", h: ${colorHxya.h}, s: ${colorHxya.x / 100}, l: ${colorHxya.y / 100}}`
   } else if (currentColorModel === 'okhsv') {
-    newColorStrings.currentColorModel = `{mode: "okhsv", h: ${colorHxya.h}, s: ${colorHxya.x}, v: ${colorHxya.y}}`
+    newColorStrings.currentColorModel = `{mode: "okhsv", h: ${colorHxya.h}, s: ${colorHxya.x / 100}, v: ${colorHxya.y / 100}}`
   }
 
   if (currentColorModel === 'oklch') {
