@@ -40,7 +40,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
   }
 
   let regex: RegExp
-  let matches: RegExpMatchArray | [] = []
+  let matches: RegExpMatchArray | null
 
   let newColorHxy: ColorHxy = {
     h: 0,
@@ -50,10 +50,12 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
   let newColorA: Opacity = 1
 
   if (eventTargetId === 'currentColorModel') {
-    if (currentColorModel === 'oklch') {
-      regex = /(\d+(\.\d+)?)/g
-      matches = eventTargetValue.match(regex)!
+    regex = /(\d+(\.\d+)?)/g
+    matches = eventTargetValue.match(regex)
+    // Just in case of the isColorCodeInGoodFormat() didn't catched an error.
+    if (!matches) return
 
+    if (currentColorModel === 'oklch') {
       newColorHxy = {
         h: round(parseFloat(matches[2]), getColorHxyDecimals().h),
         x: parseFloat(matches[1]),
@@ -66,20 +68,18 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
         newColorA = parseFloat(matches![3])
       }
     } else {
-      if (currentColorModel === 'okhsv') regex = /h:\s*(\d+)\s*,\s*s:\s*(\d+)\s*,\s*v:\s*(\d+)\s*/
-      else if (currentColorModel === 'okhsl') regex = /h:\s*(\d+)\s*,\s*s:\s*(\d+)\s*,\s*l:\s*(\d+)\s*/
-
-      matches = eventTargetValue.match(regex!)!
       newColorHxy = {
-        h: parseInt(matches[1]),
-        x: parseInt(matches[2]),
-        y: parseInt(matches[3])
+        h: parseInt(matches[0]),
+        x: round(parseFloat(matches[1]) * 100, getColorHxyDecimals().x),
+        y: round(parseFloat(matches[2]) * 100, getColorHxyDecimals().y)
       }
       if (currentBgOrFg === 'fg') newColorA = colorHxya.a
     }
   } else if (eventTargetId === 'color') {
     regex = /(\b\d+(\.\d+)?\b)/g
-    matches = eventTargetValue.match(regex)!
+    matches = eventTargetValue.match(regex)
+    // Just in case of the isColorCodeInGoodFormat() didn't catched an error.
+    if (!matches) return
 
     newColorHxy = convertRgbToHxy({
       colorRgb: {
@@ -95,7 +95,9 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
     }
   } else if (eventTargetId === 'rgba') {
     regex = /(\d+(\.\d+)?)/g
-    matches = eventTargetValue.match(regex)!
+    matches = eventTargetValue.match(regex)
+    // Just in case of the isColorCodeInGoodFormat() didn't catched an error.
+    if (!matches) return
 
     newColorHxy = convertRgbToHxy({
       colorRgb: {
@@ -111,7 +113,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
     }
   } else if (eventTargetId === 'hex') {
     const newColorRgb = convertToRgb(eventTargetValue)
-    if (newColorRgb === undefined) return undefined
+    if (!newColorRgb) return
 
     newColorHxy = convertRgbToHxy({
       colorRgb: newColorRgb,

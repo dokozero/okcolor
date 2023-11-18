@@ -19,7 +19,7 @@ export default function isColorCodeInGoodFormat(props: Props): boolean {
   let value4: number | null
 
   if (format === 'oklch') {
-    regex = /oklch\((\d+(\.\d+)?)%\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)(\s\/\s(\d+(\.\d+)?))?\)/
+    regex = /oklch\((\d+(\.\d+)?)%\s*(\d*(\.\d+)?)\s*(\d+(\.\d+)?)(\s*\/\s*(\d+(\.\d+)?))?\)/
     match = color.match(regex)
 
     if (!match) return false
@@ -34,36 +34,36 @@ export default function isColorCodeInGoodFormat(props: Props): boolean {
     if (value3 < 0 || value3 > 360) return false
     if (value4 !== null && (value4 < 0 || value4 > 1)) return false
   } else if (format === 'okhsl') {
-    regex = /h:\s*(\d+)\s*,\s*s:\s*(\d+)\s*,\s*l:\s*(\d+)\s*/
+    regex = /{mode:\s*"okhsl",\s*h:\s*(\d+)\s*,\s*s:\s*(\d+(\.\d+)?)\s*,\s*l:\s*(\d+(\.\d+)?)\s*}/
     match = color.match(regex)
 
     if (!match) return false
 
     value1 = parseInt(match[1])
-    value2 = parseInt(match[2])
-    value3 = parseInt(match[3])
+    value2 = parseFloat(match[2])
+    value3 = parseFloat(match[4])
 
     if (value1 < 0 || value1 > 360) return false
-    if (value2 < 0 || value2 > 100) return false
-    if (value3 < 0 || value3 > 100) return false
+    if (value2 < 0 || value2 > 1) return false
+    if (value3 < 0 || value3 > 1) return false
   } else if (format === 'okhsv') {
-    regex = /h:\s*(\d+)\s*,\s*s:\s*(\d+)\s*,\s*v:\s*(\d+)\s*/
+    regex = /{mode:\s*"okhsv",\s*h:\s*(\d+)\s*,\s*s:\s*(\d+(\.\d+)?)\s*,\s*v:\s*(\d+(\.\d+)?)\s*}/
     match = color.match(regex)
 
     if (!match) return false
 
     value1 = parseInt(match[1])
-    value2 = parseInt(match[2])
-    value3 = parseInt(match[3])
+    value2 = parseFloat(match[2])
+    value3 = parseFloat(match[4])
 
     if (value1 < 0 || value1 > 360) return false
-    if (value2 < 0 || value2 > 100) return false
-    if (value3 < 0 || value3 > 100) return false
+    if (value2 < 0 || value2 > 1) return false
+    if (value3 < 0 || value3 > 1) return false
   } else if (format === 'color') {
     if (['okhsv', 'okhsl'].includes(currentColorModel)) {
-      regex = /color\(srgb\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)(\s\/\s(\d+(\.\d+)?))?\)/
+      regex = /color\(srgb\s*(\d+(\.\d+)?)\s*(\d+(\.\d+)?)\s*(\d+(\.\d+)?)(\s*\/\s*(\d+(\.\d+)?))?\)/
     } else {
-      regex = /color\(display-p3\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)(\s\/\s(\d+(\.\d+)?))?\)/
+      regex = /color\(display-p3\s*(\d+(\.\d+)?)\s*(\d+(\.\d+)?)\s*(\d+(\.\d+)?)(\s*\/\s*(\d+(\.\d+)?))?\)/
     }
 
     match = color.match(regex)
