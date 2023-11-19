@@ -56,5 +56,12 @@
   padding-top: 0px;
   margin-top: -10px;
   font-size: var(--base-font-size);
-  color: var(--figma-color-text-secondary);
+}
+
+/* We don't use --figma-color-text because it already has an opacity in it. For --figma-color-text-secondary, the contrast is not enought on light mode. */
+.figma-light .c-settings-screen__item--restart-message {
+  color: rgba(0, 0, 0, 0.65);
+}
+.figma-dark .c-settings-screen__item--restart-message {
+  color: rgba(255, 255, 255, 0.7);
 }
