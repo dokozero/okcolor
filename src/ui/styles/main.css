@@ -1,0 +1,22 @@
+@import './bases.css';
+
+/* These a the styles that belong only to the React components. */
+@import '../components/top-bar/FileColorProfileSelect/FileColorProfileSelect.css';
+@import '../components/top-bar/SettingsToggle/SettingsToggle.css';
+@import '../components/InfoHoverTooltip/InfoHoverTooltip.css';
+@import '../components/Toggle/Toggle.css';
+@import '../components/SettingsScreen/SettingsScreen.css';
+@import '../components/ColorPicker/ColorPicker.css';
+@import '../components/ColorValueInputs/ColorValueInputs.css';
+@import '../components/FillOrStrokeToggle/FillOrStrokeToggle.css';
+@import '../components/single-input-with-lock/BgOrFgToggle/BgOrFgToggle.css';
+
+/* These are a bit different than the previous styles, they are still for components but not for a specific one. For example, c-dropdown.css has shared styles used in ContrastInput.tsx and ColorCodeInputs.tsx, hence why these files are in the "styles" folder and not in "components". */
+@import './shared-components/c-dropdown.css';
+@import './shared-components/c-copy-action.css';
+@import './shared-components/c-single-input-with-lock.css';
+@import './shared-components/c-slider.css';
+
+@import './utilities.css';
+
+@import './others.css';

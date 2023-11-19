@@ -1,7 +1,7 @@
 .c-color-picker {
   position: relative;
   border-top: 1px solid var(--figma-color-border);
-  background: var(--figma-color-bg-secondary);
+  background-color: var(--figma-color-bg-secondary);
 }
 .c-color-picker__message-wrapper {
   display: none;
@@ -37,24 +37,27 @@
 
 .c-color-picker__canvas,
 .c-color-picker__manipulator,
-.c-color-picker__srgb-boundary,
-.c-color-picker__relative-chroma-stroke {
+.c-color-picker__srgb-limit-stroke,
+.c-color-picker__relative-chroma-stroke,
+.c-color-picker__contrast-stroke {
   position: absolute;
 }
 .c-color-picker__canvas {
   transform-origin: left top;
 }
 .c-color-picker__manipulator,
-.c-color-picker__srgb-boundary,
-.c-color-picker__relative-chroma-stroke {
+.c-color-picker__srgb-limit-stroke,
+.c-color-picker__relative-chroma-stroke,
+.c-color-picker__contrast-stroke {
   pointer-events: none;
 }
 
 .c-color-picker--deactivated .c-color-picker__canvas,
 .c-color-picker--deactivated .c-color-picker__manipulator,
-.c-color-picker--deactivated .c-color-picker__srgb-boundary,
+.c-color-picker--deactivated .c-color-picker__srgb-limit-stroke,
 .c-color-picker--deactivated .c-color-picker__relative-chroma-stroke,
-.c-color-picker--deactivated .c-color-picker__color-space {
+.c-color-picker--deactivated .c-color-picker__color-space,
+.c-color-picker--deactivated .c-color-picker__contrast-stroke {
   display: none;
 }
 

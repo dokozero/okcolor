@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react'
-import { selectInputContent } from '../../helpers/others'
 import { consoleLogInfos } from '../../../constants'
-import { $colorHxya, $isMouseInsideDocument, $showCssColorCodes, updateColorHxyaAndSyncColorsRgbaAndPlugin } from '../../store'
 import { useStore } from '@nanostores/react'
-import getColorCodeStrings from './helpers/getColorCodeStrings'
-import getNewColorHxya from './helpers/getNewColorHxya'
-import { ColorCodesInputValues, PartialColorHxya } from '../../../types'
-import copyToClipboard from '../../helpers/copyToClipboard'
+import { ColorCodesInputValues } from '../../../types'
+import copyToClipboard from '../../helpers/copyToClipboard/copyToClipboard'
+import selectInputContent from '../../helpers/selectInputContent/selectInputContent'
+import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
+import { $isColorCodeInputsOpen, setIsColorCodeInputsOpenWithSideEffects } from '../../stores/colors/isColorCodeInputsOpen/isColorCodeInputsOpen'
+import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument/isMouseInsideDocument'
+import getColorCodeStrings from './helpers/getColorCodeStrings/getColorCodeStrings'
+import getNewColorHxya from './helpers/getNewColorHxya/getNewColorHxya'
 
 // We only need this object to check if the value of an input has been changed on blur.
 const colorCodesInputValues: { [key in ColorCodesInputValues]: string } = {
@@ -25,7 +27,7 @@ export default function ColorCodeInputs() {
 
   const colorHxya = useStore($colorHxya)
 
-  const showCssColorCodes = useStore($showCssColorCodes)
+  const isColorCodeInputsOpen = useStore($isColorCodeInputsOpen)
 
   const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null)
   const colorCode_colorInput = useRef<HTMLInputElement>(null)
@@ -37,11 +39,15 @@ export default function ColorCodeInputs() {
   const colorCode_rgbaCopyAction = useRef<HTMLDivElement>(null)
   const colorCode_hexCopyAction = useRef<HTMLDivElement>(null)
 
+  const handleIsColorCodeInputsOpen = () => {
+    setIsColorCodeInputsOpenWithSideEffects({ newIsColorCodeInputsOpen: !$isColorCodeInputsOpen.get() })
+  }
+
   const removeModifierClassOnCopyActions = () => {
-    colorCode_currentColorModelCopyAction.current!.classList.remove('c-color-code-inputs__copy-action--copied')
-    colorCode_colorCopyAction.current!.classList.remove('c-color-code-inputs__copy-action--copied')
-    colorCode_rgbaCopyAction.current!.classList.remove('c-color-code-inputs__copy-action--copied')
-    colorCode_hexCopyAction.current!.classList.remove('c-color-code-inputs__copy-action--copied')
+    colorCode_currentColorModelCopyAction.current!.classList.remove('c-copy-action--copied')
+    colorCode_colorCopyAction.current!.classList.remove('c-copy-action--copied')
+    colorCode_rgbaCopyAction.current!.classList.remove('c-copy-action--copied')
+    colorCode_hexCopyAction.current!.classList.remove('c-copy-action--copied')
   }
 
   const updateColorCodeInputs = () => {
@@ -63,22 +69,33 @@ export default function ColorCodeInputs() {
     // If we are outside the window but user has pressed Enter or Tab key, we want to continue and update the input.
     if (lastKeyPressed === 'Escape' || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
       eventTarget.value = colorCodesInputValues[eventTargetId]
-      return
-    } else {
       lastKeyPressed = ''
+      return
     }
 
     // This test is to know if user has for example pressed the tab key but without modyfing the value.
     if (colorCodesInputValues[eventTargetId] === eventTarget.value) {
       // Even if the color on input is the same, we allow to update the UI if rgba of hex inputs are focused, like this the user can simply set the sRGB fallback of an P3 color with "Enter" key.
       if (!((eventTargetId === 'rgba' || eventTargetId === 'hex') && lastKeyPressed !== 'Enter')) {
+        lastKeyPressed = ''
         return
       }
     }
 
-    const newColorHxya = getNewColorHxya(eventTargetId, eventTarget.value)
-    if (newColorHxya) updateColorHxyaAndSyncColorsRgbaAndPlugin(newColorHxya as PartialColorHxya)
-    else eventTarget.value = colorCodesInputValues[eventTargetId]
+    const newColorHxya = getNewColorHxya({
+      eventTargetId: eventTargetId,
+      eventTargetValue: eventTarget.value
+    })
+
+    if (newColorHxya) {
+      setColorHxyaWithSideEffects({
+        newColorHxya: newColorHxya,
+        lockRelativeChroma: false,
+        lockContrast: false
+      })
+    } else eventTarget.value = colorCodesInputValues[eventTargetId]
+
+    lastKeyPressed = ''
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -91,27 +108,19 @@ export default function ColorCodeInputs() {
   const handleCopyActionOnClick = (event: React.MouseEvent<HTMLDivElement>, input: HTMLInputElement) => {
     removeModifierClassOnCopyActions()
     copyToClipboard(input.value)
-    ;(event.target as HTMLDivElement).classList.add('c-color-code-inputs__copy-action--copied')
+    ;(event.target as HTMLDivElement).classList.add('c-copy-action--copied')
   }
 
   useEffect(() => {
-    if (colorHxya.h === null) return
-
     updateColorCodeInputs()
   }, [colorHxya])
 
   return (
-    <div className={'c-color-code-inputs' + (showCssColorCodes ? ' c-color-code-inputs--open' : '')}>
-      <div
-        className="c-color-code-inputs__title-wrapper"
-        onClick={() => {
-          $showCssColorCodes.set(!$showCssColorCodes.get())
-          parent.postMessage({ pluginMessage: { message: 'syncShowCssColorCodes', showCssColorCodes: $showCssColorCodes.get() } }, '*')
-        }}
-      >
+    <div className={'c-dropdown u-mt-10' + (isColorCodeInputsOpen ? ' c-dropdown--open' : '')}>
+      <div className="c-dropdown__title-wrapper" onClick={handleIsColorCodeInputsOpen}>
         <div>Color codes</div>
 
-        <div className={'c-color-code-inputs__arrow-icon' + (showCssColorCodes ? ' c-color-code-inputs__arrow-icon--open' : '')}>
+        <div className={'c-dropdown__arrow-icon' + (isColorCodeInputsOpen ? ' c-dropdown__arrow-icon--open' : '')}>
           <svg className="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
             <path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fillRule="nonzero" fillOpacity="1" stroke="none"></path>
           </svg>
@@ -119,7 +128,7 @@ export default function ColorCodeInputs() {
       </div>
 
       <div
-        className={'c-color-code-inputs__inputs-wraper ' + (showCssColorCodes ? '' : ' u-display-none')}
+        className={'c-dropdown__content-wraper u-px-9' + (isColorCodeInputsOpen ? '' : ' u-display-none')}
         onMouseLeave={removeModifierClassOnCopyActions}
       >
         <div className="input-wrapper">
@@ -133,7 +142,7 @@ export default function ColorCodeInputs() {
           />
           <div
             ref={colorCode_currentColorModelCopyAction}
-            className="c-color-code-inputs__copy-action"
+            className="c-copy-action"
             onClick={(event) => {
               handleCopyActionOnClick(event, colorCode_currentColorModelInput.current!)
             }}
@@ -153,7 +162,7 @@ export default function ColorCodeInputs() {
           />
           <div
             ref={colorCode_colorCopyAction}
-            className="c-color-code-inputs__copy-action"
+            className="c-copy-action"
             onClick={(event) => {
               handleCopyActionOnClick(event, colorCode_colorInput.current!)
             }}
@@ -173,7 +182,7 @@ export default function ColorCodeInputs() {
           />
           <div
             ref={colorCode_rgbaCopyAction}
-            className="c-color-code-inputs__copy-action"
+            className="c-copy-action"
             onClick={(event) => {
               handleCopyActionOnClick(event, colorCode_rgbaInput.current!)
             }}
@@ -193,7 +202,7 @@ export default function ColorCodeInputs() {
           />
           <div
             ref={colorCode_hexCopyAction}
-            className="c-color-code-inputs__copy-action"
+            className="c-copy-action"
             onClick={(event) => {
               handleCopyActionOnClick(event, colorCode_hexInput.current!)
             }}

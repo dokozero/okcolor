@@ -1,18 +1,11 @@
 import { useEffect, useRef } from 'react'
-
 import { consoleLogInfos, SLIDER_SIZE } from '../../../../constants'
-import { limitMouseManipulatorPosition, roundWithDecimal } from '../../../helpers/others'
-import {
-  $currentColorModel,
-  $colorHxya,
-  $lockRelativeChroma,
-  $colorValueDecimals,
-  updateColorHxyaAndSyncColorsRgbaAndPlugin,
-  $mouseEventCallback
-} from '../../../store'
 import { useStore } from '@nanostores/react'
-import getClampedChroma from '../../../helpers/getClampedChroma'
-import convertRelativeChromaToAbsolute from '../../../helpers/convertRelativeChromaToAbsolute'
+import limitMouseManipulatorPosition from '../../../helpers/limitMouseManipulatorPosition/limitMouseManipulatorPosition'
+import { $colorHxya, setColorHxyaWithSideEffects } from '../../../stores/colors/colorHxya/colorHxya'
+import { setMouseEventCallback } from '../../../stores/mouseEventCallback/mouseEventCallback'
+import getColorHxyDecimals from '../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
+import round from 'lodash/round'
 
 export default function HueSlider() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -28,37 +21,20 @@ export default function HueSlider() {
     const rect = hueSlider.current!.getBoundingClientRect()
     const canvasY = event.clientX - rect.left - 7
 
-    const newColorHxya = {
-      h: roundWithDecimal(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, $colorValueDecimals.get()!.h),
-      x: $colorHxya.get().x
-    }
-
-    if ($lockRelativeChroma.get()) {
-      newColorHxya.x = convertRelativeChromaToAbsolute({
-        colorHxy: {
-          h: newColorHxya.h,
-          x: $colorHxya.get().x,
-          y: $colorHxya.get().y
-        }
-      })
-    } else {
-      if (['oklch', 'oklchCss'].includes($currentColorModel.get()!)) {
-        newColorHxya.x = getClampedChroma({ h: newColorHxya.h, x: $colorHxya.get().x, y: $colorHxya.get().y })
+    setColorHxyaWithSideEffects({
+      newColorHxya: {
+        h: round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorHxyDecimals().h)
       }
-    }
-
-    updateColorHxyaAndSyncColorsRgbaAndPlugin(newColorHxya)
+    })
   }
 
   useEffect(() => {
-    if (colorHxya.h === null) return
-
-    manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate(SLIDER_SIZE * ($colorHxya.get().h! / 360) - 1, -1)
+    manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate(SLIDER_SIZE * ($colorHxya.get().h / 360) - 1, -1)
   }, [colorHxya.h])
 
   useEffect(() => {
     hueSlider.current!.addEventListener('mousedown', () => {
-      $mouseEventCallback.set(handleNewManipulatorPosition)
+      setMouseEventCallback(handleNewManipulatorPosition)
     })
   }, [])
 

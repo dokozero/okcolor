@@ -1,0 +1,52 @@
+.c-single-input-with-lock {
+  height: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.c-single-input-with-lock--with-label {
+  padding: 0 12px 0 14px;
+}
+.c-single-input-with-lock--with-select {
+  padding: 0 12px 0 9px;
+}
+.c-single-input-with-lock--deactivated {
+  pointer-events: none;
+  opacity: 0.5;
+}
+.c-single-input-with-lock__label {
+  font-size: var(--base-font-size);
+  color: var(--figma-color-text);
+  white-space: nowrap;
+}
+
+.c-single-input-with-lock__input-wrapper {
+  max-width: 40px;
+  margin-left: 9px;
+}
+
+.c-single-input-with-lock__lock-wrapper {
+  height: 100%;
+  margin-left: 4px;
+  padding: 2px;
+  border-radius: var(--base-border-radius);
+}
+.c-single-input-with-lock__lock-wrapper:hover {
+  outline: 1px solid var(--figma-color-border);
+  outline-offset: -1px;
+}
+.c-single-input-with-lock__lock {
+  height: 100%;
+  padding: 0 6px 0 5px;
+  border-radius: var(--base-border-radius);
+  display: flex;
+  align-items: center;
+}
+.c-single-input-with-lock__lock--closed {
+  background-color: var(--figma-color-bg-secondary);
+}
+.c-single-input-with-lock__lock svg {
+  fill: var(--figma-color-text);
+  position: relative;
+  left: 1.5px;
+}

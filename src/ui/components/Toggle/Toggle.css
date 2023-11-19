@@ -1,0 +1,41 @@
+.c-toggle {
+  padding: 8px;
+}
+
+.c-toggle-element {
+  position: relative;
+  width: 24px;
+  height: 12px;
+  border-radius: 99px;
+}
+
+.figma-light .c-toggle-element {
+  background-color: var(--figma-color-bg-disabled-secondary);
+}
+
+.figma-dark .c-toggle-element {
+  background-color: var(--figma-color-bg-disabled);
+}
+
+.c-toggle-element::before {
+  content: ' ';
+  display: block;
+  position: absolute;
+  top: 1px;
+  right: 13px;
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  border-radius: 99px;
+  transition: right 0.1s ease-in;
+}
+
+.figma-light .c-toggle-element--active,
+.figma-dark .c-toggle-element--active {
+  background-color: var(--figma-color-bg-brand);
+}
+
+.c-toggle-element--active::before {
+  left: unset;
+  right: 1px;
+}

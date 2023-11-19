@@ -1,0 +1,33 @@
+.c-dropdown {
+  border-top: 1px solid var(--figma-color-border);
+  font-size: var(--base-font-size);
+  font-weight: 400;
+  color: var(--figma-color-text);
+}
+.c-dropdown--open {
+  font-weight: 500;
+}
+.c-dropdown__title-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 16px 14px;
+}
+.c-dropdown__arrow-icon {
+  position: relative;
+  top: 0px;
+  opacity: 0.5;
+  transform: rotate(-180deg);
+  fill: var(--figma-color-text);
+}
+.c-dropdown__title-wrapper:hover .c-dropdown__arrow-icon {
+  opacity: 1;
+}
+.c-dropdown__arrow-icon--open {
+  top: 2px;
+  transform: rotate(0deg);
+}
+
+.c-dropdown__content-wraper {
+  margin-top: -4px;
+}

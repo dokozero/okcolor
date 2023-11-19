@@ -1,0 +1,21 @@
+.c-settings-toggle {
+  padding: 13px 8px;
+  border-radius: var(--base-border-radius);
+}
+
+.c-settings-toggle:hover {
+  background-color: var(--figma-color-bg-secondary);
+}
+
+.c-settings-toggle--active,
+.c-settings-toggle--active:hover {
+  background-color: var(--figma-color-bg-brand);
+}
+
+.c-settings-toggle svg {
+  fill: var(--figma-color-text);
+}
+
+.c-settings-toggle--active svg {
+  fill: #ffffff;
+}
