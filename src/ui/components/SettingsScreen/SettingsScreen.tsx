@@ -5,7 +5,7 @@ import Toggle from '../Toggle/Toggle'
 import { $userSettings, setUserSettingsKeyWithSideEffects } from '../../stores/settings/userSettings/userSettings'
 import { OklchHlDecimalPrecisionRange, OklchInputOrderList, SyncUserSettingsData } from '../../../types'
 import InfoHoverTooltip from '../InfoHoverTooltip/InfoHoverTooltip'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import sendMessageToBackend from '../../helpers/sendMessageToBackend/sendMessageToBackend'
 
 const handleIsSettingsScreenOpen = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -38,6 +38,20 @@ export default function SettingsScreen() {
 
     setShowRestartMessage(!showRestartMessage)
   }
+
+  // Close the settings screen when Esc is pressed.
+  useEffect(() => {
+    if (!isSettingsScreenOpen) return
+
+    const eventCallback = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsSettingsScreenOpen(false)
+    }
+    document.addEventListener('keydown', eventCallback)
+
+    return () => {
+      document.removeEventListener('keydown', eventCallback)
+    }
+  }, [isSettingsScreenOpen])
 
   return (
     <>
