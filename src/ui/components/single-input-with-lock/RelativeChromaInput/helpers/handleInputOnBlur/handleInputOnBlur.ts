@@ -8,6 +8,7 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
 
   if (isNaN(newValue)) {
     eventTarget.value = $relativeChroma.get() + '%'
+    lastKeyPressed.current = ''
     return
   }
 
@@ -19,10 +20,10 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
     (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed.current))
   ) {
     eventTarget.value = $relativeChroma.get() + '%'
-    return
-  } else {
     lastKeyPressed.current = ''
+    return
   }
 
+  lastKeyPressed.current = ''
   setRelativeChromaWithSideEffects({ newRelativeChroma: clampedNewRelativeChroma })
 }

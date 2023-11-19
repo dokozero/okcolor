@@ -16,6 +16,7 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
 
   if (isNaN(newValue)) {
     eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
+    lastKeyPressed.current = ''
     return
   }
 
@@ -27,10 +28,10 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
     (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed.current))
   ) {
     eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
-    return
-  } else {
     lastKeyPressed.current = ''
+    return
   }
 
+  lastKeyPressed.current = ''
   formatAndSendNewValueToStore(eventId, clampedNewValue)
 }

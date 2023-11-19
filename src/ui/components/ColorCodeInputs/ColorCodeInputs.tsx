@@ -69,15 +69,15 @@ export default function ColorCodeInputs() {
     // If we are outside the window but user has pressed Enter or Tab key, we want to continue and update the input.
     if (lastKeyPressed === 'Escape' || (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed))) {
       eventTarget.value = colorCodesInputValues[eventTargetId]
-      return
-    } else {
       lastKeyPressed = ''
+      return
     }
 
     // This test is to know if user has for example pressed the tab key but without modyfing the value.
     if (colorCodesInputValues[eventTargetId] === eventTarget.value) {
       // Even if the color on input is the same, we allow to update the UI if rgba of hex inputs are focused, like this the user can simply set the sRGB fallback of an P3 color with "Enter" key.
       if (!((eventTargetId === 'rgba' || eventTargetId === 'hex') && lastKeyPressed !== 'Enter')) {
+        lastKeyPressed = ''
         return
       }
     }
@@ -94,6 +94,8 @@ export default function ColorCodeInputs() {
         lockContrast: false
       })
     } else eventTarget.value = colorCodesInputValues[eventTargetId]
+
+    lastKeyPressed = ''
   }
 
   const handleInputOnKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

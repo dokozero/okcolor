@@ -12,6 +12,7 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
 
   if (isNaN(newValue)) {
     eventTarget.value = String($contrast.get())
+    lastKeyPressed.current = ''
     return
   }
 
@@ -23,10 +24,10 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
     (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed.current))
   ) {
     eventTarget.value = String($contrast.get())
-    return
-  } else {
     lastKeyPressed.current = ''
+    return
   }
 
+  lastKeyPressed.current = ''
   setContrastWithSideEffects({ newContrast: clampedNewContrast })
 }
