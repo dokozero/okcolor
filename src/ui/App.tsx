@@ -71,7 +71,6 @@ function App() {
         setIsColorCodeInputsOpen(data.newIsColorCodeInputsOpen)
         setCurrentColorModel(data.newCurrentColorModel)
       }
-      // Update the color based on the selected shape in Figma.
 
       // synNewShape
       if (pluginMessage.type === 'syncNewShape') {

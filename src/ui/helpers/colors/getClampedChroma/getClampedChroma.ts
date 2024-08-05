@@ -7,6 +7,9 @@ import getColorHxyDecimals from '../getColorHxyDecimals/getColorHxyDecimals'
 export default function getClampedChroma(colorHxy: ColorHxy, currentFileColorProfile = $currentFileColorProfile.get()): RelativeChroma {
   const clamped = clampChromaInGamut({ mode: 'oklch', l: colorHxy.y / 100, c: colorHxy.x, h: colorHxy.h }, 'oklch', currentFileColorProfile)
 
+  // TODO - check
+  // const clampToP3 = toGamut('p3', 'oklch', null)
+
   // If we send a pure black to clampChromaInGamut (l and c to 0), clamped.c will be undefined.
   if (!clamped.c) return 0
 

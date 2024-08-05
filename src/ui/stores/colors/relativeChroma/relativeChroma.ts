@@ -28,6 +28,7 @@ const defaultSideEffects: SideEffects = {
 export const setRelativeChromaWithSideEffects = action($relativeChroma, 'setRelativeChromaWithSideEffects', (relativeChroma, props: Props) => {
   const { newRelativeChroma, sideEffects: partialSideEffects } = props
 
+  // TODO - add SideEffects type (sideEffects: SideEffects)
   const sideEffects = JSON.parse(JSON.stringify(defaultSideEffects))
   merge(sideEffects, partialSideEffects)
 

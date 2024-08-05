@@ -4,6 +4,8 @@
 
 This is a plugin for Figma, [see its community page](https://www.figma.com/community/plugin/1173638098109123591/OkColor).
 
+Check https://github.com/users/dokozero/projects/1, discussions, issues.
+
 –
 
 Picking color and creating balanced color palettes with Figma is not an easy task, HSL and HSB are not perceptually uniform, HSL's lightness is relative to the current hue, so for each of them, the real perceived 50% lightness is not at L 50.
@@ -16,6 +18,7 @@ OkColor solves all these problems and more, its params are reliable and uniform,
 
 If we change the hue of a color in OkLCH and keep the same lightness value, we know that the resulting color will have the same perceived lightness.
 
+TODO - Update
 You can also easily create perceptually uniform color palettes, and do more advanced things with OkLCH like picking colors in P3 space and use the relative chroma ([see this thread for more infos](https://twitter.com/dokozero/status/1711379022553272371)).
 
 For more details, check [plugin community's page](https://www.figma.com/community/plugin/1173638098109123591/OkColor) for a FAQ and a playground file that explain in more details the plugin.
