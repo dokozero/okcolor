@@ -50,9 +50,6 @@
 .u-mt-4 {
   margin-top: 4px;
 }
-.u-mr-4 {
-  margin-right: 4px;
-}
 .u-mt-6 {
   margin-top: 6px;
 }
@@ -76,6 +73,9 @@
 }
 .u-mt-20 {
   margin-top: 20px;
+}
+.u-mr-8 {
+  margin-right: 8px;
 }
 .u-px-9 {
   padding-left: 9px;

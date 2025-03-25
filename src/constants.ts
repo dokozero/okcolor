@@ -7,7 +7,7 @@ export const SLIDER_SIZE = 148
 
 export const OKLCH_CHROMA_SCALE = 2.7
 
-export const MAX_CHROMA_P3 = 0.37
+export const MAX_CHROMA_P3 = 0.368
 
 // prettier-ignore
 // Comment the lines you don't want.

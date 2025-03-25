@@ -31,7 +31,7 @@ The rendering of the color picker is done by [freydev](https://github.com/freyde
 
 The APCA contrast feature is made possible by the work of [Myndex](https://www.myndex.com/APCA/) .
 
-To know more about these uniform color spaces, you can check his original article: [Oksvh and Okhsl](https://bottosson.github.io/posts/colorpicker/) and the one from oklch.com's creators: [OKLCH in CSS: why we moved from RGB and HSL](https://evilmartians.com/chronicles/oklch-in-css-why-quit-rgb-hsl).
+To know more about these uniform color spaces, you can check the original article from Björn Ottosson: [Oksvh and Okhsl](https://bottosson.github.io/posts/colorpicker/) and the one from oklch.com's creators: [OKLCH in CSS: why we moved from RGB and HSL](https://evilmartians.com/chronicles/oklch-in-css-why-quit-rgb-hsl).
 
 # For developpers
 

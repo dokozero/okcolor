@@ -1,4 +1,4 @@
-body.deactivated .c-file-color-profile-select,
+body.deactivated .c-file-color-profile,
 body.deactivated .o-bottom-controls {
   pointer-events: none;
   opacity: 0.5;

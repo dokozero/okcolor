@@ -24,14 +24,12 @@
   line-height: 1.4;
 }
 
-.c-color-picker__color-space {
+.c-color-picker__color-space-label {
   z-index: 1;
   position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 12px;
-  color: var(--figma-color-text);
-  opacity: 0.7;
+  top: 5px;
+  right: 5px;
+  font-size: var(--base-font-size);
   user-select: none;
 }
 
@@ -52,11 +50,12 @@
   pointer-events: none;
 }
 
+/* TODO - rename to 'disabled' */
 .c-color-picker--deactivated .c-color-picker__canvas,
 .c-color-picker--deactivated .c-color-picker__manipulator,
 .c-color-picker--deactivated .c-color-picker__srgb-limit-stroke,
 .c-color-picker--deactivated .c-color-picker__relative-chroma-stroke,
-.c-color-picker--deactivated .c-color-picker__color-space,
+.c-color-picker--deactivated .c-color-picker__color-space-label,
 .c-color-picker--deactivated .c-color-picker__contrast-stroke {
   display: none;
 }

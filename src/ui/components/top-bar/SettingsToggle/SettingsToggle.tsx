@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react'
 import { consoleLogInfos } from '../../../../constants'
 import { $isSettingsScreenOpen, setIsSettingsScreenOpen } from '../../../stores/settings/isSetttingsScreenOpen/isSetttingsScreenOpen'
-import ThreeDotsIcon from '../../icons/ThreeDotsIcon/ThreeDotsIcon'
+import TwoLinesWithDotsIcon from '../../icons/TwoLinesWithDotsIcon/TwoLinesWithDotsIcon'
 
 const handleIsSettingsScreenOpen = () => {
   setIsSettingsScreenOpen(!$isSettingsScreenOpen.get())
@@ -16,7 +16,7 @@ export default function SettingsToggle() {
 
   return (
     <div className={'c-settings-toggle' + (isSettingsScreenOpen ? ' c-settings-toggle--active' : '')} onClick={handleIsSettingsScreenOpen}>
-      <ThreeDotsIcon />
+      <TwoLinesWithDotsIcon />
     </div>
   )
 }

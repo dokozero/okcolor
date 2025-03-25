@@ -74,6 +74,13 @@ enum FillOrStrokeList {
 }
 export type CurrentFillOrStroke = keyof typeof FillOrStrokeList
 
+export enum OklchRenderModeList {
+  'triangle',
+  'square'
+}
+
+export type OklchRenderMode = 'triangle' | 'square'
+
 enum CurrentBgOrFgList {
   'bg',
   'fg'

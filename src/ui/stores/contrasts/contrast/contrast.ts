@@ -10,6 +10,8 @@ import { $colorHxya, setColorHxyaWithSideEffects } from '../../colors/colorHxya/
 import { $colorsRgba } from '../../colors/colorsRgba/colorsRgba'
 import filterNewContrast from '../../../helpers/contrasts/filterNewContrast/filterNewContrast'
 import merge from 'lodash/merge'
+import { $lockRelativeChroma } from '../../colors/lockRelativeChroma/lockRelativeChroma'
+import { $oklchRenderMode } from '../../oklchRenderMode/oklchRenderMode'
 
 export const $contrast = atom<ApcaContrast | WcagContrast>(0)
 
@@ -39,13 +41,23 @@ export const setContrastWithSideEffects = action($contrast, 'setContrastWithSide
   const filteredNewContrast = filterNewContrast(newContrast)
 
   if (sideEffects.syncColorHxya) {
+    let localLockRelativeChroma = $lockRelativeChroma.get()
+
+    // We lock the relative chroma locally because when in square OkLCH mode, we want to keep relative chroma fixed when updating the contrast.
+    if ($oklchRenderMode.get() === 'square') {
+      localLockRelativeChroma = true
+    }
+
     const newXy = getNewXandYFromContrast({
       h: $colorHxya.get().h,
       x: $colorHxya.get().x,
-      targetContrast: filteredNewContrast
+      targetContrast: filteredNewContrast,
+      lockRelativeChroma: localLockRelativeChroma
     })
+
     setColorHxyaWithSideEffects({
       newColorHxya: newXy,
+      lockRelativeChroma: localLockRelativeChroma,
       sideEffects: {
         colorsRgba: {
           syncContrast: false

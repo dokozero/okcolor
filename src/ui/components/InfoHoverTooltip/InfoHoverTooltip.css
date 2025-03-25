@@ -9,7 +9,7 @@
 }
 
 .c-info-hover-tooltip__tooltip {
-  z-index: 1;
+  z-index: 99;
   position: absolute;
   top: 26px;
   visibility: hidden;

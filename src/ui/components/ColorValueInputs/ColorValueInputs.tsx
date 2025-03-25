@@ -12,6 +12,7 @@ import getColorHxyaValueFormatedForInput from './helpers/getColorHxyaValueFormat
 import handleInputOnBlur from './helpers/handleInputOnBlur/handleInputOnBlur'
 import handleInputOnKeyDown from './helpers/handleInputOnKeyDown/handleInputOnKeyDown'
 import { $userSettings } from '../../stores/settings/userSettings/userSettings'
+import round from 'lodash/round'
 
 export type KeepInputSelected = {
   state: boolean
@@ -133,7 +134,7 @@ export default function ColorValueInputs() {
   }, [colorHxya.h])
 
   useEffect(() => {
-    inputX.current!.value = getColorHxyaValueFormatedForInput('x').toString()
+    inputX.current!.value = round(getColorHxyaValueFormatedForInput('x'), 3).toString()
   }, [colorHxya.x, currentColorModel, userSettings.useSimplifiedChroma])
 
   useEffect(() => {

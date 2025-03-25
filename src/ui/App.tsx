@@ -30,10 +30,11 @@ import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventC
 import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage/uiMessage'
 import round from 'lodash/round'
 import SettingsScreen from './components/SettingsScreen/SettingsScreen'
-import FileColorProfileSelect from './components/top-bar/FileColorProfileSelect/FileColorProfileSelect'
+import FileColorProfile from './components/top-bar/FileColorProfile/FileColorProfile'
 import SettingsToggle from './components/top-bar/SettingsToggle/SettingsToggle'
 import { setUserSettings } from './stores/settings/userSettings/userSettings'
 import { setSelectionId } from './stores/selectionId/selectionId'
+import OklchRenderModeToggle from './components/top-bar/OklchRenderModeToggle/OklchRenderModeToggle'
 
 // We use these var to measure speeds of app loading time (see in constants file to activate it).
 let appLoadingStart: number
@@ -87,7 +88,8 @@ function App() {
           if (data.newLockRelativeChroma !== $lockRelativeChroma.get()) {
             setLockRelativeChroma(data.newLockRelativeChroma)
           }
-          //For this value, we have the same same reason but also another one: if the user has the plugin running with a shape that has a parent fill then select another one that doesn't have one, if he select back a shape with a parent fill, we need to check if $lockContrast is not equal to the one from backend and update it in accordance.
+
+          // For this value, we have the same same reason but also another one: if the user has the plugin running with a shape that has a parent fill then select another one that doesn't have one, if he select back a shape with a parent fill, we need to check if $lockContrast is not equal to the one from backend and update it in accordance.
           if (data.newLockContrast !== $lockContrast.get() && data.newColorsRgba.parentFill) {
             setLockContrast(data.newLockContrast)
           } else if (!data.newColorsRgba.parentFill || !data.newColorsRgba.fill) {
@@ -208,10 +210,14 @@ function App() {
       <>
         <SettingsScreen />
 
-        <div className="u-flex u-items-center u-justify-between">
-          <FileColorProfileSelect />
+        <div className="c-top-bar">
+          <OklchRenderModeToggle />
 
-          <div className="u-mr-4">
+          <div className="u-ml-auto u-mr-8">
+            <FileColorProfile />
+          </div>
+
+          <div>
             <SettingsToggle />
           </div>
         </div>

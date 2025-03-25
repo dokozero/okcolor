@@ -1,0 +1,12 @@
+.c-square-oklch-icon__outerline,
+.c-square-oklch-icon__square-line {
+  fill: var(--figma-color-text);
+}
+
+.c-square-oklch-icon__square-fill {
+  fill: #ababab;
+}
+
+.figma-dark .c-square-oklch-icon__square-fill {
+  fill: #898989;
+}

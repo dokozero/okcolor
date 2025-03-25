@@ -1,0 +1,12 @@
+.c-triangle-oklch-icon__outerline,
+.c-triangle-oklch-icon__triangle-line {
+  fill: var(--figma-color-text);
+}
+
+.c-triangle-oklch-icon__triangle-fill {
+  fill: #ababab;
+}
+
+.figma-dark .c-triangle-oklch-icon__triangle-fill {
+  fill: #898989;
+}

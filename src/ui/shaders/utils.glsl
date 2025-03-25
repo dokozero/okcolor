@@ -129,7 +129,7 @@ vec3 oklchToRgb(in vec3 lch, in bool isSpaceP3) {
   return rgbInSpace;
 }
 
-// This alternative uses the sames step for sRGB than P3, in case for the future if bugs are found with sRGB render.
+// This alternative uses the same steps for sRGB than P3, in case for the future if bugs are found with sRGB render.
 // vec3 oklchToRgb(in vec3 lch, in bool isSpaceP3) {
 //   vec3 lab = lchToLab(lch);
 //   vec3 lrgb = oklabToLrgbSrgb(lab);

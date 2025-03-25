@@ -94,8 +94,23 @@ const getSelectionId = (): SelectionId => {
 
 const getLocalStorageValueAndCreateUiWindow = async () => {
   // We force the currentFileColorProfile value to sRGB in FigJam because they don't suport P3 yet (https://help.figma.com/hc/en-us/articles/360039825114).
-  if (figma.editorType === 'figma') currentFileColorProfile = (await figma.clientStorage.getAsync('currentFileColorProfile')) || 'rgb'
-  else if (figma.editorType === 'figjam') currentFileColorProfile = 'rgb'
+  // if (figma.editorType === 'figma') currentFileColorProfile = (await figma.clientStorage.getAsync('currentFileColorProfile')) || 'rgb'
+  // else if (figma.editorType === 'figjam') currentFileColorProfile = 'rgb'
+
+  switch (figma.root.documentColorProfile) {
+    case 'SRGB':
+    case 'LEGACY':
+      currentFileColorProfile = 'rgb'
+      break
+
+    case 'DISPLAY_P3':
+      currentFileColorProfile = 'p3'
+      break
+
+    default:
+      currentFileColorProfile = 'rgb'
+      break
+  }
 
   const userSettingsString =
     (await figma.clientStorage.getAsync('userSettings')) ||

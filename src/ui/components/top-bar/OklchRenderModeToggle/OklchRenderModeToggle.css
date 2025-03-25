@@ -1,0 +1,24 @@
+.c-oklch-render-mode-toggle {
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.c-oklch-render-mode-toggle__element {
+  padding: 4px;
+  border-radius: var(--base-border-radius);
+  border: 1px solid transparent;
+}
+.c-oklch-render-mode-toggle__element:hover {
+  border-color: var(--figma-color-bg-secondary);
+}
+
+.c-oklch-render-mode-toggle__element--active {
+  background-color: var(--figma-color-bg-secondary);
+}
+
+.c-oklch-render-mode-toggle--deactivated {
+  pointer-events: none;
+  opacity: 0.5;
+}

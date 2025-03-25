@@ -6,6 +6,9 @@ import { $colorHxya, setColorHxyaWithSideEffects } from '../../../stores/colors/
 import { setMouseEventCallback } from '../../../stores/mouseEventCallback/mouseEventCallback'
 import getColorHxyDecimals from '../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
+import { $oklchRenderMode } from '../../../stores/oklchRenderMode/oklchRenderMode'
+import convertRelativeChromaToAbsolute from '../../../helpers/colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
+import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 
 export default function HueSlider() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -21,11 +24,38 @@ export default function HueSlider() {
     const rect = hueSlider.current!.getBoundingClientRect()
     const canvasY = event.clientX - rect.left - 7
 
-    setColorHxyaWithSideEffects({
-      newColorHxya: {
-        h: round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorHxyDecimals().h)
+    const newHValue = round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorHxyDecimals().h)
+
+    if ($currentColorModel.get() !== 'oklch') {
+      setColorHxyaWithSideEffects({
+        newColorHxya: {
+          h: round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorHxyDecimals().h)
+        }
+      })
+    } else {
+      if ($oklchRenderMode.get() === 'triangle') {
+        setColorHxyaWithSideEffects({
+          newColorHxya: {
+            h: newHValue
+          }
+        })
+      } else if ($oklchRenderMode.get() === 'square') {
+        const newXValue = convertRelativeChromaToAbsolute({
+          h: newHValue,
+          y: $colorHxya.get().y
+        })
+
+        setColorHxyaWithSideEffects({
+          newColorHxya: {
+            x: newXValue,
+            h: newHValue
+          },
+          sideEffects: {
+            syncRelativeChroma: false
+          }
+        })
       }
-    })
+    }
   }
 
   useEffect(() => {
