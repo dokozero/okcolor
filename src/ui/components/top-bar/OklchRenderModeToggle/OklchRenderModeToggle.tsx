@@ -6,6 +6,7 @@ import { $isTransitionRunning, $oklchRenderMode, setOklchRenderMode } from '../.
 import { useEffect } from 'react'
 import TriangleOklchIcon from '../../icons/TriangleOklchIcon/TriangleOklchIcon'
 import SquareOklchIcon from '../../icons/SquareOklchIcon/SquareOklchIcon'
+import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
 
 const handleOklchRenderMode = () => {
   if ($currentColorModel.get() !== 'oklch') return
@@ -30,6 +31,9 @@ export default function OklchRenderModeToggle() {
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
       if (!['t', 'T', 's', 'S'].includes(event.key)) return
+
+      // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
+      if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
 
       handleOklchRenderMode()
     })
