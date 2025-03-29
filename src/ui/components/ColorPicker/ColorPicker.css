@@ -3,6 +3,9 @@
   border-top: 1px solid var(--figma-color-border);
   background-color: var(--figma-color-bg-secondary);
 }
+.c-color-picker:focus {
+  outline: none;
+}
 .c-color-picker__message-wrapper {
   display: none;
   z-index: 1;
