@@ -186,7 +186,11 @@ function App() {
       }
     })
 
-    document.addEventListener('keyup', () => {
+    document.addEventListener('keyup', (event) => {
+      // We prevent setting setCurrentKeysPressed to empty when user is using arrow keys.
+      // For example in the color picker, without this, user would be able to only use the shift key one time.
+      if (['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(event.key)) return
+
       setCurrentKeysPressed([''])
     })
 
