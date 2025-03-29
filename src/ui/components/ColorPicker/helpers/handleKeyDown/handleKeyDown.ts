@@ -45,6 +45,19 @@ export default function handleKeyDown(eventKey: 'ArrowUp' | 'ArrowDown' | 'Arrow
     newValue -= stepUpdateValue
   }
 
+  // To avoid getting out of the color picker.
+  if (axis === 'y' && (newValue < 0 || newValue > 100)) {
+    return
+  }
+  if (axis === 'x' && $oklchRenderMode.get() === 'square' && (newValue < 0 || newValue > 100)) {
+    return
+  }
+
+  // Without this, the min value will be something like 0.004.
+  if (axis === 'x' && $oklchRenderMode.get() === 'triangle' && newValue < 0) {
+    newValue = 0
+  }
+
   if ($oklchRenderMode.get() === 'square' && axis === 'x') {
     setRelativeChromaWithSideEffects({
       newRelativeChroma: newValue
