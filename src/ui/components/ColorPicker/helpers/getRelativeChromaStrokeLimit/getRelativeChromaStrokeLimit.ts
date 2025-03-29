@@ -4,7 +4,6 @@ import { ColorHxya, CurrentFileColorProfile, OklchRenderMode, RelativeChroma, Sv
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $currentFileColorProfile } from '../../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import { $relativeChroma } from '../../../../stores/colors/relativeChroma/relativeChroma'
-import { $oklchRenderMode } from '../../../../stores/oklchRenderMode/oklchRenderMode'
 import getLinearMappedValue from '../../../../helpers/getLinearMappedValue/getLinearMappedValue'
 
 type Props = {
@@ -20,7 +19,6 @@ export default function getRelativeChromaStrokeLimit(props: Props): SvgPath {
     colorHxya = $colorHxya.get(),
     currentFileColorProfile = $currentFileColorProfile.get(),
     relativeChroma = $relativeChroma.get(),
-    oklchRenderMode = $oklchRenderMode.get(),
     position
   } = props
 
@@ -28,63 +26,46 @@ export default function getRelativeChromaStrokeLimit(props: Props): SvgPath {
 
   const precision = 0.5
 
+  let relativeChromaMapped: number
+  let maxChromaCurrentLineMapped: number
+
+  let maxChromaCurrentLine: any
+
+  let xPosition: number
+
   for (let l = 0; l < PICKER_SIZE; l += 1 / precision) {
-    if (oklchRenderMode === 'triangle') {
-      const maxChromaCurrentProfil = clampChromaInGamut(
-        {
-          mode: 'oklch',
-          l: (PICKER_SIZE - l) / PICKER_SIZE,
-          c: MAX_CHROMA_P3,
-          h: colorHxya.h
-        },
-        'oklch',
-        currentFileColorProfile
-      )
+    maxChromaCurrentLine = clampChromaInGamut(
+      {
+        mode: 'oklch',
+        l: (PICKER_SIZE - l) / PICKER_SIZE,
+        c: MAX_CHROMA_P3,
+        h: colorHxya.h
+      },
+      'oklch',
+      currentFileColorProfile
+    )
 
-      const finalPosition = maxChromaCurrentProfil.c * (relativeChroma / 100) * PICKER_SIZE * OKLCH_CHROMA_SCALE
+    maxChromaCurrentLineMapped = maxChromaCurrentLine.c * (relativeChroma / 100) * PICKER_SIZE * OKLCH_CHROMA_SCALE
 
-      // const finalPosition = lerp(sRGBMaxChroma.c, 0, p3MaxChroma.c, 0, MAX_CHROMA_P3)
-      // const finalPosition = lerp(relativeChroma, 0, 100, 0, MAX_CHROMA_P3) * PICKER_SIZE * OKLCH_CHROMA_SCALE
-      const startPosition = (relativeChroma * PICKER_SIZE) / 100
+    relativeChromaMapped = getLinearMappedValue({
+      valueToMap: relativeChroma,
+      originalRange: { min: 0, max: 100 },
+      targetRange: { min: 0, max: PICKER_SIZE }
+    })
 
-      // const xPosition = lerp(position, 100, 0, startPosition, finalPosition)
-      const xPosition = getLinearMappedValue({
-        valueToMap: position,
-        originalRange: { min: 100, max: 0 },
-        targetRange: { min: startPosition, max: finalPosition }
-      })
+    xPosition = getLinearMappedValue({
+      valueToMap: position,
+      originalRange: {
+        min: 0,
+        max: 100
+      },
+      targetRange: {
+        min: maxChromaCurrentLineMapped,
+        max: relativeChromaMapped
+      }
+    })
 
-      d += `L${xPosition.toFixed(2)} ${l} `
-
-      // d += `L${((relativeChroma * PICKER_SIZE) / 100).toFixed(2)} ${l} `
-      // d += `L${(maxChromaCurrentProfil.c * (relativeChroma / 100) * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `
-    } else {
-      const maxChromaCurrentProfil = clampChromaInGamut(
-        {
-          mode: 'oklch',
-          l: (PICKER_SIZE - l) / PICKER_SIZE,
-          c: MAX_CHROMA_P3,
-          h: colorHxya.h
-        },
-        'oklch',
-        currentFileColorProfile
-      )
-
-      const startPosition = maxChromaCurrentProfil.c * (relativeChroma / 100) * PICKER_SIZE * OKLCH_CHROMA_SCALE
-
-      // const finalPosition = lerp(sRGBMaxChroma.c, 0, p3MaxChroma.c, 0, MAX_CHROMA_P3)
-      // const finalPosition = lerp(relativeChroma, 0, 100, 0, MAX_CHROMA_P3) * PICKER_SIZE * OKLCH_CHROMA_SCALE
-      const finalPosition = (relativeChroma * PICKER_SIZE) / 100
-
-      // const xPosition = lerp(position, 0, 100, startPosition, finalPosition)
-      const xPosition = getLinearMappedValue({
-        valueToMap: position,
-        originalRange: { min: 0, max: 100 },
-        targetRange: { min: startPosition, max: finalPosition }
-      })
-
-      d += `L${xPosition.toFixed(2)} ${l} `
-    }
+    d += `L${xPosition.toFixed(2)} ${l} `
   }
 
   return d

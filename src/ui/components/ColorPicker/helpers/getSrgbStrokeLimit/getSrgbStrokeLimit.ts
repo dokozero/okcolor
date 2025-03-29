@@ -11,8 +11,6 @@ type Props = {
   position: number
 }
 
-let lightnessValueToUse: number
-
 export default function getSrgbStrokeLimit(props: Props): SvgPath {
   const { colorHxya = $colorHxya.get(), oklchRenderMode = $oklchRenderMode.get(), position } = props
 
@@ -20,20 +18,29 @@ export default function getSrgbStrokeLimit(props: Props): SvgPath {
 
   const precision = 0.5
 
-  for (let l = 0; l < PICKER_SIZE; l += 1 / precision) {
-    let xPosition
+  let sRGBMaxChroma: any
+  let p3MaxChroma: any
 
-    // We do this to avoid not stright line at of the line near the bottom.
-    if (oklchRenderMode === 'square' && position === 100 && l > 230) {
-      lightnessValueToUse = 230
-    } else {
-      lightnessValueToUse = l
+  let xPosition: number
+  let yPosition: number
+  let sRGBMaxChromaMappedToMaxChromaP3: number
+
+  for (let l = 0; l <= PICKER_SIZE; l += 1 / precision) {
+    yPosition = getLinearMappedValue({
+      valueToMap: l,
+      originalRange: { min: 0, max: PICKER_SIZE },
+      targetRange: { min: 100, max: 0.5 }
+    })
+
+    // We do this to get a straight line near the bottom and avoid a zig-zag.
+    if (oklchRenderMode === 'square' && position === 100 && yPosition < 10) {
+      yPosition = 10
     }
 
-    const sRGBMaxChroma = clampChromaInGamut(
+    sRGBMaxChroma = clampChromaInGamut(
       {
         mode: 'oklch',
-        l: (PICKER_SIZE - lightnessValueToUse) / PICKER_SIZE,
+        l: yPosition / 100,
         c: MAX_CHROMA_P3,
         h: colorHxya.h
       },
@@ -41,10 +48,10 @@ export default function getSrgbStrokeLimit(props: Props): SvgPath {
       'rgb'
     )
 
-    const p3MaxChroma = clampChromaInGamut(
+    p3MaxChroma = clampChromaInGamut(
       {
         mode: 'oklch',
-        l: (PICKER_SIZE - lightnessValueToUse) / PICKER_SIZE,
+        l: yPosition / 100,
         c: MAX_CHROMA_P3,
         h: colorHxya.h
       },
@@ -52,44 +59,23 @@ export default function getSrgbStrokeLimit(props: Props): SvgPath {
       'p3'
     )
 
-    if (oklchRenderMode === 'triangle') {
-      // const finalPosition = (sRGBMaxChroma.c * MAX_CHROMA_P3) / p3MaxChroma.c
-      // xPosition = sRGBMaxChroma.c
-      // const startPosition = lerp(sRGBMaxChroma.c, 0, p3MaxChroma.c, 0, MAX_CHROMA_P3)
-      const startPosition = getLinearMappedValue({
-        valueToMap: sRGBMaxChroma.c,
-        originalRange: { min: 0, max: p3MaxChroma.c },
-        targetRange: { min: 0, max: MAX_CHROMA_P3 }
-      })
+    sRGBMaxChromaMappedToMaxChromaP3 = getLinearMappedValue({
+      valueToMap: sRGBMaxChroma.c,
+      originalRange: { min: 0, max: p3MaxChroma.c },
+      targetRange: { min: 0, max: MAX_CHROMA_P3 }
+    })
 
-      // xPosition = lerp(position, 100, 0, startPosition, sRGBMaxChroma.c)
-      xPosition = getLinearMappedValue({
-        valueToMap: position,
-        originalRange: { min: 100, max: 0 },
-        targetRange: { min: startPosition, max: sRGBMaxChroma.c }
-      })
-
-      // const temp = 100 / position
-      // const max = (MAX_CHROMA_P3 - xPosition) / temp
-
-      // if (position > 0) {
-      // xPosition += max
-      // }
-    } else {
-      // const finalPosition = lerp(sRGBMaxChroma.c, 0, p3MaxChroma.c, 0, MAX_CHROMA_P3)
-      const finalPosition = getLinearMappedValue({
-        valueToMap: sRGBMaxChroma.c,
-        originalRange: { min: 0, max: p3MaxChroma.c },
-        targetRange: { min: 0, max: MAX_CHROMA_P3 }
-      })
-
-      // xPosition = lerp(position, 0, 100, sRGBMaxChroma.c, finalPosition)
-      xPosition = getLinearMappedValue({
-        valueToMap: position,
-        originalRange: { min: 0, max: 100 },
-        targetRange: { min: sRGBMaxChroma.c, max: finalPosition }
-      })
-    }
+    xPosition = getLinearMappedValue({
+      valueToMap: position,
+      originalRange: {
+        min: 0,
+        max: 100
+      },
+      targetRange: {
+        min: sRGBMaxChroma.c,
+        max: sRGBMaxChromaMappedToMaxChromaP3
+      }
+    })
 
     d += `L${(xPosition * PICKER_SIZE * OKLCH_CHROMA_SCALE).toFixed(2)} ${l} `
   }

@@ -27,6 +27,7 @@ import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit
 import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit/getSrgbStrokeLimit'
 import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
+import clamp from 'lodash/clamp'
 import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
 import { renderImageData } from '../../helpers/colors/renderImageData/renderImageData'
 import { $userSettings } from '../../stores/settings/userSettings/userSettings'
@@ -108,7 +109,6 @@ export default function ColorPicker() {
           originalRange: { min: 0, max: 100 },
           targetRange: { min: startPosition, max: endPosition }
         })
-        // x = lerp(position, 0, 100, startPosition, endPosition)
       } else if ($oklchRenderMode.get() === 'square') {
         if ($colorHxya.get().y < 1 || $colorHxya.get().y > 99) {
           x = previousXManipulatorPosition
@@ -122,27 +122,9 @@ export default function ColorPicker() {
             targetRange: { min: startPosition, max: endPosition }
           })
 
-          // x = lerp(position, 100, 0, startPosition, endPosition)
-
           previousXManipulatorPosition = x
         }
-
-        // const currentMaxChroma = getClampedChroma({
-        //   h: $colorHxya.get().h,
-        //   x: MAX_CHROMA_P3,
-        //   y: $colorHxya.get().y
-        // })
-
-        // const tempX = $colorHxya.get().x
-
-        // x = lerp(tempX, 0, currentMaxChroma, 0, 1)
       }
-
-      // if ($oklchRenderMode.get() === 'triangle') {
-      //   x = $colorHxya.get().x * OKLCH_CHROMA_SCALE
-      // } else {
-      //   x = $relativeChroma.get() / 100
-      // }
     } else {
       x = $colorHxya.get().x / 100
     }
@@ -197,7 +179,6 @@ export default function ColorPicker() {
       updateValues = false
 
       if (mainMouseMovement === 'vertical' && Math.round(newYValue) % 5 === 0) {
-        // setColorHxyaWithSideEffects({ newColorHxya: { x: newXValue, y: Math.round(newYValue) } })
         newYValue = Math.round(newYValue)
 
         updateValues = true
@@ -289,7 +270,89 @@ export default function ColorPicker() {
     }
   }
 
-  const renderColorPickerCanvas = (animation = false) => {
+  const animateOklchRenderModeTransition = ({
+    useHardwareAcceleration = $userSettings.get().useHardwareAcceleration
+  }: { useHardwareAcceleration?: boolean } = {}) => {
+    const canvasToAnimate = useHardwareAcceleration ? canvas2dContextTransition : canvas2dContext
+
+    let position = $oklchRenderMode.get() === 'square' ? 0 : 100
+    canvasToAnimate!.putImageData(renderImageData({ h: $colorHxya.get().h, position }), 0, 0)
+
+    if (useHardwareAcceleration) {
+      colorPickerCanvas.current!.classList.add('u-visibility-hidden')
+      colorPickerTransitionCanvas.current!.classList.remove('u-visibility-hidden')
+    }
+
+    const frameInterval = 30 // Interval in ms
+    let lastFrameTime = performance.now()
+    let animationComplete = false
+
+    const animateCanvas = () => {
+      const now = performance.now()
+      if (now - lastFrameTime >= frameInterval) {
+        lastFrameTime = now
+
+        updateManipulatorPosition({ position: position })
+        renderSrgbLimitStroke({ position: position })
+        renderRelativeChromaStroke({ position: position })
+        renderContrastStroke({ position: position })
+        setColorOfColorSpaceLabel({ position: position })
+
+        canvasToAnimate!.putImageData(renderImageData({ h: $colorHxya.get().h, position: clamp(position, 0, 100) }), 0, 0)
+
+        if ($oklchRenderMode.get() === 'square') {
+          if (position > 100) {
+            animationComplete = true
+          }
+          position += 8
+        } else {
+          if (position < 0) {
+            animationComplete = true
+          }
+          position -= 8
+        }
+      }
+
+      if (animationComplete) {
+        if (useHardwareAcceleration) {
+          colorPickerCanvas.current!.classList.remove('u-visibility-hidden')
+          colorPickerTransitionCanvas.current!.classList.add('u-visibility-hidden')
+
+          // Continue with WebGL rendering
+          const size = getColorPickerResolutionInfos().size
+          canvasWebglContext!.clearColor(0, 0, 0, 1)
+          canvasWebglContext!.clear(canvasWebglContext!.COLOR_BUFFER_BIT)
+
+          // Rest of your WebGL setup.
+          const uniforms = {
+            resolution: [size, size],
+            chromaScale: OKLCH_CHROMA_SCALE,
+            isSpaceP3: $currentFileColorProfile.get() === 'p3',
+            colorModel: ColorModelList[$currentColorModel.get()],
+            oklchRenderMode: OklchRenderModeList[$oklchRenderMode.get()],
+            hueRad: ($colorHxya.get().h * Math.PI) / 180
+          }
+          twgl.setUniforms(programInfo, uniforms)
+          twgl.drawBufferInfo(canvasWebglContext!, bufferInfo)
+        }
+
+        updateManipulatorPosition()
+        renderSrgbLimitStroke()
+        renderRelativeChromaStroke()
+        renderContrastStroke()
+        setColorOfColorSpaceLabel()
+
+        setIsTransitionRunning(false)
+      } else {
+        requestAnimationFrame(animateCanvas)
+      }
+    }
+
+    // Start the animation
+    animateCanvas()
+  }
+
+  const renderColorPickerCanvas = ({ animation = false }: { animation?: boolean } = {}) => {
     if (consoleLogInfos.includes('Color picker rendering speed')) {
       colorPickerStrokesRenderingStart = performance.now()
     }
@@ -304,138 +367,23 @@ export default function ColorPicker() {
       colorPickerCanvasRenderingStart = performance.now()
     }
 
-    if ($currentColorModel.get() === 'oklch') {
+    if ($currentColorModel.get() === 'oklch' && $oklchRenderMode.get() === 'triangle') {
       const bgColor = convertHxyToRgb({
         colorHxy: { h: $colorHxya.get().h, x: 0.006, y: document.documentElement.classList.contains('figma-dark') ? 36 : 95 }
       })
+
       colorPicker.current!.style.backgroundColor = `rgb(${bgColor.r * 255}, ${bgColor.g * 255}, ${bgColor.b * 255})`
     }
 
+    if (animation) {
+      animateOklchRenderModeTransition()
+      return
+    }
+
     if (!$userSettings.get().useHardwareAcceleration) {
-      if (animation) {
-        const frameInterval = 25 // interval in ms
-        let lastFrameTime = performance.now()
-        let position = $oklchRenderMode.get() === 'square' ? 0 : 100
-        let animationComplete = false
-
-        const animateCanvas = () => {
-          const now = performance.now()
-          if (now - lastFrameTime >= frameInterval) {
-            updateManipulatorPosition({ position: position })
-            renderSrgbLimitStroke({ position: position })
-            renderRelativeChromaStroke({ position: position })
-            renderContrastStroke({ position: position })
-
-            lastFrameTime = now
-            if ($oklchRenderMode.get() === 'square') {
-              canvas2dContext!.putImageData(renderImageData({ h: $colorHxya.get().h, position }), 0, 0)
-              position += 5
-              if (position > 100) animationComplete = true
-            } else {
-              canvas2dContext!.putImageData(renderImageData({ h: $colorHxya.get().h, position }), 0, 0)
-              position -= 5
-              if (position < 0) animationComplete = true
-            }
-          }
-
-          if (!animationComplete) {
-            requestAnimationFrame(animateCanvas)
-          }
-        }
-
-        // Start the animation
-        animateCanvas()
-
-        // This is crucial - return early to avoid executing the WebGL code below
-        return
-      } else {
-        const position = $oklchRenderMode.get() === 'triangle' ? 0 : 100
-        canvas2dContext!.putImageData(renderImageData({ h: $colorHxya.get().h, position }), 0, 0)
-      }
+      const position = $oklchRenderMode.get() === 'triangle' ? 0 : 100
+      canvas2dContext!.putImageData(renderImageData({ h: $colorHxya.get().h, position }), 0, 0)
     } else {
-      // console.log('1')
-      if (animation) {
-        setIsTransitionRunning(true)
-
-        let position = $oklchRenderMode.get() === 'square' ? 0 : 100
-        canvas2dContextTransition!.putImageData(renderImageData({ h: $colorHxya.get().h, position }), 0, 0)
-
-        // flushSync(() => {
-        colorPickerCanvas.current!.classList.add('u-visibility-hidden')
-        colorPickerTransitionCanvas.current!.classList.remove('u-visibility-hidden')
-        // })
-
-        const frameInterval = 30 // interval in ms
-        let lastFrameTime = performance.now()
-        position = $oklchRenderMode.get() === 'square' ? 0 : 100
-        let animationComplete = false
-
-        const animateCanvas = () => {
-          const now = performance.now()
-          if (now - lastFrameTime >= frameInterval) {
-            lastFrameTime = now
-
-            updateManipulatorPosition({ position: position })
-            renderSrgbLimitStroke({ position: position })
-            renderRelativeChromaStroke({ position: position })
-            renderContrastStroke({ position: position })
-            setColorOfColorSpaceLabel({ position: position })
-
-            if ($oklchRenderMode.get() === 'square') {
-              canvas2dContextTransition!.putImageData(renderImageData({ h: $colorHxya.get().h, position }), 0, 0)
-              position += 8
-              if (position > 100) animationComplete = true
-            } else {
-              canvas2dContextTransition!.putImageData(renderImageData({ h: $colorHxya.get().h, position }), 0, 0)
-              position -= 8
-              if (position < 0) animationComplete = true
-            }
-          }
-
-          if (animationComplete) {
-            // Animation is complete, switch back to main canvas
-            // flushSync(() => {
-            colorPickerCanvas.current!.classList.remove('u-visibility-hidden')
-            colorPickerTransitionCanvas.current!.classList.add('u-visibility-hidden')
-            // })
-
-            // Continue with WebGL rendering
-            const size = getColorPickerResolutionInfos().size
-            canvasWebglContext!.clearColor(0, 0, 0, 1)
-            canvasWebglContext!.clear(canvasWebglContext!.COLOR_BUFFER_BIT)
-
-            // Rest of your WebGL setup...
-            const uniforms = {
-              resolution: [size, size],
-              chromaScale: OKLCH_CHROMA_SCALE,
-              isSpaceP3: $currentFileColorProfile.get() === 'p3',
-              colorModel: ColorModelList[$currentColorModel.get()],
-              oklchRenderMode: OklchRenderModeList[$oklchRenderMode.get()],
-              hueRad: ($colorHxya.get().h * Math.PI) / 180
-            }
-            twgl.setUniforms(programInfo, uniforms)
-            twgl.drawBufferInfo(canvasWebglContext!, bufferInfo)
-
-            updateManipulatorPosition()
-            renderSrgbLimitStroke()
-            renderRelativeChromaStroke()
-            renderContrastStroke()
-            setColorOfColorSpaceLabel()
-
-            // console.log('2')
-            setIsTransitionRunning(false)
-          } else {
-            requestAnimationFrame(animateCanvas)
-          }
-        }
-
-        // Start the animation
-        animateCanvas()
-
-        // This is crucial - return early to avoid executing the WebGL code below
-        return
-      }
-
       const size = getColorPickerResolutionInfos().size
 
       canvasWebglContext!.clearColor(0, 0, 0, 1)
@@ -449,10 +397,17 @@ export default function ColorPicker() {
         oklchRenderMode: OklchRenderModeList[$oklchRenderMode.get()],
         hueRad: ($colorHxya.get().h * Math.PI) / 180
       }
-      twgl.setUniforms(programInfo, uniforms)
 
+      twgl.setUniforms(programInfo, uniforms)
       twgl.drawBufferInfo(canvasWebglContext!, bufferInfo)
     }
+
+    updateManipulatorPosition()
+    renderSrgbLimitStroke()
+    renderRelativeChromaStroke()
+    renderContrastStroke()
+    setColorOfColorSpaceLabel()
+
     if (consoleLogInfos.includes('Color picker rendering speed')) {
       colorPickerCanvasRenderingEnd = performance.now()
       console.log(` Canvas: ${round(colorPickerCanvasRenderingEnd - colorPickerCanvasRenderingStart, 4)} ms.`)
@@ -463,32 +418,32 @@ export default function ColorPicker() {
         )} ms.`
       )
     }
-
-    updateManipulatorPosition()
-    renderSrgbLimitStroke()
-    renderRelativeChromaStroke()
-    renderContrastStroke()
-    setColorOfColorSpaceLabel()
   }
 
   const scaleColorPickerCanvasAndWebglViewport = () => {
     let resFactor = getColorPickerResolutionInfos().factor
     let pickerSize = getColorPickerResolutionInfos().size
 
-    colorPickerCanvas.current!.style.transform = `scale(${resFactor})`
+    if ($userSettings.get().useHardwareAcceleration) {
+      colorPickerCanvas.current!.style.transform = `scale(${resFactor})`
+    } else {
+      // We add a bit more to X scale as there a one-pixel gap without.
+      colorPickerCanvas.current!.style.transform = `scale(${resFactor + 0.003}, ${resFactor})`
+    }
+
     colorPickerCanvas.current!.width = pickerSize
     colorPickerCanvas.current!.height = pickerSize
 
     if ($userSettings.get().useHardwareAcceleration) {
       canvasWebglContext!.viewport(0, 0, pickerSize, pickerSize)
+
+      resFactor = getColorPickerResolutionInfos('oklchTransition').factor
+      pickerSize = getColorPickerResolutionInfos('oklchTransition').size
+
+      colorPickerTransitionCanvas.current!.style.transform = `scale(${resFactor})`
+      colorPickerTransitionCanvas.current!.width = pickerSize
+      colorPickerTransitionCanvas.current!.height = pickerSize
     }
-
-    resFactor = getColorPickerResolutionInfos('oklchTransition').factor
-    pickerSize = getColorPickerResolutionInfos('oklchTransition').size
-
-    colorPickerTransitionCanvas.current!.style.transform = `scale(${resFactor})`
-    colorPickerTransitionCanvas.current!.width = pickerSize
-    colorPickerTransitionCanvas.current!.height = pickerSize
   }
 
   const setDrawingBufferColorSpace = () => {
@@ -496,12 +451,12 @@ export default function ColorPicker() {
   }
 
   const initCanvasContext = () => {
-    canvas2dContextTransition = colorPickerTransitionCanvas.current!.getContext('2d')
-    colorPickerTransitionCanvas.current!.classList.add('u-visibility-hidden')
-
     if (!$userSettings.get().useHardwareAcceleration) {
       canvas2dContext = colorPickerCanvas.current!.getContext('2d')
     } else {
+      canvas2dContextTransition = colorPickerTransitionCanvas.current!.getContext('2d')
+      colorPickerTransitionCanvas.current!.classList.add('u-visibility-hidden')
+
       canvasWebglContext = colorPickerCanvas.current!.getContext('webgl2')
 
       const arrays = { position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0] }
@@ -577,7 +532,9 @@ export default function ColorPicker() {
   useEffect(() => {
     if (!isMounted.current || selectionId === '') return
 
-    renderColorPickerCanvas(true)
+    renderColorPickerCanvas({
+      animation: true
+    })
   }, [oklchRenderMode])
 
   useEffect(() => {
@@ -615,7 +572,7 @@ export default function ColorPicker() {
       updateColorSpaceLabelInColorPicker()
     }
 
-    colorPickerCanvas.current!.addEventListener('mousedown', () => {
+    colorPicker.current!.addEventListener('mousedown', () => {
       setMouseEventCallback(handleNewManipulatorPosition)
     })
 
@@ -679,6 +636,7 @@ export default function ColorPicker() {
       }
     })
 
+    colorPicker.current!.addEventListener('mousemove', (event) => {
       const deltaX = Math.abs(event.clientX - lastMouseX)
       const deltaY = Math.abs(event.clientY - lastMouseY)
 

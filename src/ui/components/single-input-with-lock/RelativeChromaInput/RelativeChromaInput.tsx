@@ -51,6 +51,7 @@ export default function RelativeChromaInput() {
       if (!['c', 'C'].includes(event.key)) return
 
       if ($currentColorModel.get() !== 'oklch') return
+
       // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
       if ($uiMessage.get().show || document.activeElement?.tagName === 'INPUT') return
 

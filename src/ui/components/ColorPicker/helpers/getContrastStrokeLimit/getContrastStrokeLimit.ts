@@ -43,16 +43,15 @@ export default function getContrastStrokeLimit(props: Props): SvgPath {
     y: endXy.y
   })
 
-  const distanceFromEndXToMaxP3 = MAX_CHROMA_P3 - endXy.x
+  const distanceFromEndXToMaxP3 = MAX_CHROMA_P3 - clampedChroma
 
-  // const endXShiftValue = lerp(position, 0, 100, 0, distanceFromEndXToMaxP3)
   const endXShiftValue = getLinearMappedValue({
     valueToMap: position,
     originalRange: { min: 0, max: 100 },
     targetRange: { min: 0, max: distanceFromEndXToMaxP3 }
   })
 
-  endXy.x = endXy.x + endXShiftValue
+  endXy.x = clampedChroma + endXShiftValue
 
   path = `M0 ${PICKER_SIZE - (startXy.y * PICKER_SIZE) / 100} `
 
@@ -60,29 +59,34 @@ export default function getContrastStrokeLimit(props: Props): SvgPath {
   let loopCountLimit = 0
   let previousY = startXy.y
 
-  while (i < endXy.x && loopCountLimit < 1000) {
-    if (endXy.x - i > 0.01) i += 0.01
-    else i += 0.001
+  let newX: number
+  let newY: number
+
+  while (i < endXy.x && loopCountLimit < 100) {
+    if (endXy.x - i > 0.01) {
+      i += 0.01
+    } else {
+      i += 0.001
+    }
 
     loopCountLimit++
 
-    // const newX = lerp(i, 0, endXy.x, 0, clampedChroma)
-    const newX = getLinearMappedValue({
+    newX = getLinearMappedValue({
       valueToMap: i,
       originalRange: { min: 0, max: endXy.x },
       targetRange: { min: 0, max: clampedChroma }
     })
 
-    const { y } = getNewXandYFromContrast({
+    newY = getNewXandYFromContrast({
       h: colorHxya.h,
       x: newX,
       targetContrast: contrast,
       lockRelativeChroma: false
-    })
+    }).y
 
-    if (y !== previousY) {
-      path += `L${i * PICKER_SIZE * OKLCH_CHROMA_SCALE} ${PICKER_SIZE - (y * PICKER_SIZE) / 100} `
-      previousY = y
+    if (newY !== previousY) {
+      path += `L${i * PICKER_SIZE * OKLCH_CHROMA_SCALE} ${PICKER_SIZE - (newY * PICKER_SIZE) / 100} `
+      previousY = newY
     }
   }
 
