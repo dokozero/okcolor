@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import getClampedChroma from './getClampedChroma'
 
 describe('getClampedChroma()', () => {
-  test('0.268', () => {
+  test('0.267529', () => {
     expect(
       getClampedChroma(
         {
@@ -12,6 +12,6 @@ describe('getClampedChroma()', () => {
         },
         'p3'
       )
-    ).toStrictEqual(0.268)
+    ).toStrictEqual(0.267529)
   })
 })
