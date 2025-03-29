@@ -9,5 +9,6 @@ export default function getStepUpdateValue(eventId: string): number {
     if ($userSettings.get().useSimplifiedChroma) return shiftPressed ? 1 : 0.1
     else return shiftPressed ? 0.01 : 0.001
   }
+
   return shiftPressed ? 10 : 1
 }

@@ -153,7 +153,7 @@ function App() {
       }
     })
 
-    // This is in case the user has multiple Figma files open with OkColor open in them as well. Without this if the plugin is focused, by pressing "ctrl + tab", the plugin in the previous tab will get the 'ctrl' in $currentKeysPressed and when the user comes back and move the manipulator in the ColorPicker, the ctrl modifier effect will be taken into account even if he's not pressing it.
+    // Reset the current keys pressed when the plugin loses focus.
     window.addEventListener('blur', () => {
       if ($currentKeysPressed.get()) setCurrentKeysPressed([''])
     })
@@ -178,20 +178,16 @@ function App() {
       setMouseEventCallback(null)
     })
 
-    // We want to know if the user has one of these two keys down because in ColorPciker we constrain the color picker manipulator depending on them and in others parts like ColorValueInputs.
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Shift') {
-        setCurrentKeysPressed([...$currentKeysPressed.get(), 'shift'])
-      } else if (event.key === 'Control') {
-        setCurrentKeysPressed([...$currentKeysPressed.get(), 'ctrl'])
+      switch (event.key) {
+        case 'Shift':
+          setCurrentKeysPressed([...$currentKeysPressed.get(), 'shift'])
+          break
       }
     })
 
-    document.addEventListener('keyup', (event) => {
-      // We do this test on 'ArrowDown' and 'ArrowUp' because if not, in the inputs like relative chroma's one, we wouldn't be able to keep shift pressed more than one time.
-      if (!['ArrowUp', 'ArrowDown'].includes(event.key) && $currentKeysPressed.get()) {
-        setCurrentKeysPressed([''])
-      }
+    document.addEventListener('keyup', () => {
+      setCurrentKeysPressed([''])
     })
 
     if (useBackend) {

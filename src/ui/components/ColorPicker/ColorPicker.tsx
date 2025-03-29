@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import { consoleLogInfos, PICKER_SIZE, OKLCH_CHROMA_SCALE } from '../../../constants'
+import { consoleLogInfos, PICKER_SIZE, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../constants'
 import utilsGlsl from '@virtual:shaders/src/ui/shaders/utils.glsl'
 import libraryGlsl from '@virtual:shaders/src/ui/shaders/library.glsl'
 import fShader from '@virtual:shaders/src/ui/shaders/f_shader.glsl'
@@ -8,7 +8,6 @@ import vShader from '@virtual:shaders/src/ui/shaders/v_shader.glsl'
 import * as twgl from 'twgl.js'
 import { inGamut } from '../../helpers/colors/culori.mjs'
 import { AbsoluteChroma, Saturation, ColorModelList, OklchRenderModeList } from '../../../types'
-import convertAbsoluteChromaToRelative from '../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
 import limitMouseManipulatorPosition from '../../helpers/limitMouseManipulatorPosition/limitMouseManipulatorPosition'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../stores/colors/colorsRgba/colorsRgba'
@@ -52,12 +51,6 @@ let canvas2dContextTransition: CanvasRenderingContext2D | null = null
 let canvasWebglContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
 let programInfo: twgl.ProgramInfo
-
-let lastMouseX: number
-let lastMouseY: number
-let mainMouseMovement: 'vertical' | 'horizontal' | null = null
-
-let currentConstrainedMove = false
 
 enum ColorSpacesNames {
   'sRGB',
@@ -140,78 +133,83 @@ export default function ColorPicker() {
     if ($isTransitionRunning.get()) return
 
     const rect = colorPickerCanvas.current!.getBoundingClientRect()
-    const canvasX = event.clientX - rect.left
-    const canvasY = event.clientY - rect.top
 
-    let newXValue = $colorHxya.get().x
+    let setColorHxya = true
 
-    if ($currentColorModel.get() === 'oklch' && $oklchRenderMode.get() === 'square') {
-      newXValue = $relativeChroma.get()
-    }
+    // Get the new X and Y value between 0 and 100.
+    const canvasY = limitMouseManipulatorPosition(1 - (event.clientY - rect.top) / PICKER_SIZE) * 100
+    let canvasX = limitMouseManipulatorPosition((event.clientX - rect.left) / PICKER_SIZE) * 100
 
-    let newYValue = $colorHxya.get().y
+    let newXValue: number
+    let newYValue: number
 
-    // Get the new Y value.
-    if (($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) || $lockContrast.get()) {
-      currentConstrainedMove = true
+    if ($lockContrast.get()) {
+      newYValue = $colorHxya.get().y
     } else {
-      newYValue = round(limitMouseManipulatorPosition(1 - canvasY / PICKER_SIZE) * 100, getColorHxyDecimals().y)
+      newYValue = round(canvasY, getColorHxyDecimals().y)
     }
 
-    // Get the new X value.
-    if ($oklchRenderMode.get() === 'triangle' || $currentColorModel.get() !== 'oklch') {
-      if ($currentKeysPressed.get().includes('shift') && mainMouseMovement === 'vertical' && !$lockRelativeChroma.get()) {
-        currentConstrainedMove = true
+    if ($lockRelativeChroma.get()) {
+      newXValue = $colorHxya.get().x
+    } else {
+      if ($currentColorModel.get() !== 'oklch') {
+        newXValue = round(canvasX, getColorHxyDecimals().x)
       } else {
-        newXValue = round(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, getColorHxyDecimals().x)
+        if ($oklchRenderMode.get() === 'triangle') {
+          newXValue = getLinearMappedValue({
+            valueToMap: canvasX,
+            originalRange: { min: 0, max: 100 },
+            targetRange: { min: 0, max: MAX_CHROMA_P3 }
+          })
 
-        if ($currentColorModel.get() === 'oklch') {
-          newXValue = round(newXValue / 100 / OKLCH_CHROMA_SCALE, getColorHxyDecimals().x)
-        }
-      }
-    } else if ($oklchRenderMode.get() === 'square') {
-      if (!$lockRelativeChroma.get()) {
-        newXValue = round(limitMouseManipulatorPosition(canvasX / PICKER_SIZE) * 100, 0)
-      }
-    }
-
-    let updateValues = true
-
-    if ($currentKeysPressed.get().includes('ctrl')) {
-      updateValues = false
-
-      if (mainMouseMovement === 'vertical' && Math.round(newYValue) % 5 === 0) {
-        newYValue = Math.round(newYValue)
-
-        updateValues = true
-      } else if (mainMouseMovement === 'horizontal' && !$lockRelativeChroma.get()) {
-        let valueToTest = newXValue
-
-        if ($currentColorModel.get() === 'oklch' && $oklchRenderMode.get() === 'triangle') {
-          valueToTest = convertAbsoluteChromaToRelative({
-            colorHxy: {
-              h: $colorHxya.get().h,
-              x: newXValue,
-              y: newYValue
-            }
+          newXValue = round(newXValue, getColorHxyDecimals().x)
+        } else {
+          newXValue = convertRelativeChromaToAbsolute({
+            h: $colorHxya.get().h,
+            y: newYValue,
+            relativeChroma: canvasX
           })
         }
-
-        if (valueToTest % 5 === 0) {
-          updateValues = true
-        }
       }
     }
 
-    if (updateValues) {
-      if ($currentColorModel.get() === 'oklch' && $oklchRenderMode.get() === 'square') {
-        newXValue = convertRelativeChromaToAbsolute({
-          h: $colorHxya.get().h,
-          y: newYValue,
-          relativeChroma: newXValue
-        })
+    if ($currentKeysPressed.get().includes('shift')) {
+      setColorHxya = false
+
+      if (!$lockContrast.get() && round(newYValue) % 5 === 0) {
+        newYValue = round(newYValue)
+
+        setColorHxya = true
       }
 
+      if (!$lockRelativeChroma.get() && round(canvasX) % 5 === 0) {
+        canvasX = round(canvasX)
+
+        if ($currentColorModel.get() !== 'oklch') {
+          newXValue = round(canvasX, getColorHxyDecimals().x)
+        } else {
+          if ($oklchRenderMode.get() === 'triangle') {
+            newXValue = getLinearMappedValue({
+              valueToMap: canvasX,
+              originalRange: { min: 0, max: 100 },
+              targetRange: { min: 0, max: MAX_CHROMA_P3 }
+            })
+
+            newXValue = round(newXValue, getColorHxyDecimals().x)
+          } else {
+            newXValue = convertRelativeChromaToAbsolute({
+              h: $colorHxya.get().h,
+              y: newYValue,
+              relativeChroma: canvasX
+            })
+          }
+        }
+
+        setColorHxya = true
+      }
+    }
+
+    if (setColorHxya) {
       setColorHxyaWithSideEffects({
         newColorHxya: {
           x: newXValue,

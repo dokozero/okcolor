@@ -128,7 +128,7 @@ export type ColorsRgba = {
   stroke: ColorRgba | null
 }
 
-type KeysPressed = 'shift' | 'ctrl' | ''
+type KeysPressed = 'shift' | ''
 
 export type CurrentKeysPressed = KeysPressed[]
 
