@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react'
 import { consoleLogInfos } from '../../../../constants'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $figmaEditorType } from '../../../stores/figmaEditorType/figmaEditorType'
-import { $isTransitionRunning, $oklchRenderMode, setOklchRenderMode } from '../../../stores/oklchRenderMode/oklchRenderMode'
+import { $isTransitionRunning, $oklchRenderMode, setOklchRenderModeWithSideEffects } from '../../../stores/oklchRenderMode/oklchRenderMode'
 import { useEffect } from 'react'
 import TriangleOklchIcon from '../../icons/TriangleOklchIcon/TriangleOklchIcon'
 import SquareOklchIcon from '../../icons/SquareOklchIcon/SquareOklchIcon'
@@ -13,9 +13,13 @@ const handleOklchRenderMode = () => {
   if ($isTransitionRunning.get()) return
 
   if ($oklchRenderMode.get() === 'square') {
-    setOklchRenderMode('triangle')
+    setOklchRenderModeWithSideEffects({
+      newOklchRenderMode: 'triangle'
+    })
   } else {
-    setOklchRenderMode('square')
+    setOklchRenderModeWithSideEffects({
+      newOklchRenderMode: 'square'
+    })
   }
 }
 

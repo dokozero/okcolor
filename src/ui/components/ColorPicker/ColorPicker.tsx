@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import { consoleLogInfos, PICKER_SIZE, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../constants'
+import { consoleLogInfos, PICKER_SIZE, OKLCH_CHROMA_SCALE } from '../../../constants'
 import utilsGlsl from '@virtual:shaders/src/ui/shaders/utils.glsl'
 import libraryGlsl from '@virtual:shaders/src/ui/shaders/library.glsl'
 import fShader from '@virtual:shaders/src/ui/shaders/f_shader.glsl'

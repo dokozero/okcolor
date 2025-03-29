@@ -176,6 +176,7 @@ export type SyncLocalStorageValuesData = {
   newLockContrast: boolean
   newIsColorCodeInputsOpen: boolean
   newCurrentColorModel: CurrentColorModel
+  newOklchRenderMode: OklchRenderMode
 }
 
 export type SyncNewShapeData = {
@@ -212,6 +213,7 @@ export type MessageForBackendTypes =
   | 'syncCurrentContrastMethod'
   | 'syncLockContrast'
   | 'syncIsColorCodeInputsOpen'
+  | 'syncOklchRenderMode'
 
 export type UpdateShapeColorData = {
   newColorRgba: ColorRgba
@@ -254,6 +256,10 @@ export type SyncIsColorCodeInputsOpenData = {
   newIsColorCodeInputsOpen: boolean
 }
 
+export type SyncOklchRenderModeData = {
+  newOklchRenderMode: OklchRenderMode
+}
+
 export type MessageForBackendData =
   | UpdateShapeColorData
   | SyncUserSettingsData
@@ -265,6 +271,7 @@ export type MessageForBackendData =
   | SyncCurrentContrastMethodData
   | SyncLockContrastData
   | SyncIsColorCodeInputsOpenData
+  | SyncOklchRenderModeData
 
 export type MessageForBackend = {
   type: MessageForBackendTypes

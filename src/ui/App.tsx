@@ -1,6 +1,5 @@
 import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
-
 import ColorPicker from './components/ColorPicker/ColorPicker'
 import FillOrStrokeToggle from './components/FillOrStrokeToggle/FillOrStrokeToggle'
 import HueSlider from './components/sliders/HueSlider/HueSlider'
@@ -35,6 +34,7 @@ import SettingsToggle from './components/top-bar/SettingsToggle/SettingsToggle'
 import { setUserSettings } from './stores/settings/userSettings/userSettings'
 import { setSelectionId } from './stores/selectionId/selectionId'
 import OklchRenderModeToggle from './components/top-bar/OklchRenderModeToggle/OklchRenderModeToggle'
+import { setOklchRenderMode } from './stores/oklchRenderMode/oklchRenderMode'
 
 // We use these var to measure speeds of app loading time (see in constants file to activate it).
 let appLoadingStart: number
@@ -71,6 +71,7 @@ function App() {
         setLockContrast(data.newLockContrast)
         setIsColorCodeInputsOpen(data.newIsColorCodeInputsOpen)
         setCurrentColorModel(data.newCurrentColorModel)
+        setOklchRenderMode(data.newOklchRenderMode)
       }
 
       // synNewShape
