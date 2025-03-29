@@ -1,16 +1,25 @@
 import clamp from 'lodash/clamp'
 import { $relativeChroma, setRelativeChromaWithSideEffects } from '../../../../../stores/colors/relativeChroma/relativeChroma'
 import { $isMouseInsideDocument } from '../../../../../stores/isMouseInsideDocument/isMouseInsideDocument'
+import parseInputString from '../../../../../helpers/inputs/parseInputString/parseInputString'
+import round from 'lodash/round'
 
 export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputElement>, lastKeyPressed: React.MutableRefObject<string>) {
   const eventTarget = event.target
-  const newValue = parseInt(eventTarget.value)
 
-  if (isNaN(newValue)) {
+  const resetToOldValue = () => {
     eventTarget.value = $relativeChroma.get() + '%'
     lastKeyPressed.current = ''
     return
   }
+
+  const rawValue = parseInputString(eventTarget.value)
+
+  if (rawValue === null) {
+    return resetToOldValue()
+  }
+
+  const newValue = round(rawValue)
 
   const clampedNewRelativeChroma = clamp(newValue, 0, 100)
 
@@ -19,9 +28,7 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
     lastKeyPressed.current === 'Escape' ||
     (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed.current))
   ) {
-    eventTarget.value = $relativeChroma.get() + '%'
-    lastKeyPressed.current = ''
-    return
+    return resetToOldValue()
   }
 
   lastKeyPressed.current = ''

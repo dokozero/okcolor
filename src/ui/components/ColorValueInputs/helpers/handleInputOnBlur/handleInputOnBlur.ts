@@ -5,31 +5,34 @@ import { $isMouseInsideDocument } from '../../../../stores/isMouseInsideDocument
 import clampColorHxyaValueInInputFormat from '../clampColorHxyaValueInInputFormat/clampColorHxyaValueInInputFormat'
 import formatAndSendNewValueToStore from '../formatAndSendNewValueToStore/formatAndSendNewValueToStore'
 import getColorHxyaValueFormatedForInput from '../getColorHxyaValueFormatedForInput/getColorHxyaValueFormatedForInput'
+import parseInputString from '../../../../helpers/inputs/parseInputString/parseInputString'
 
 export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputElement>, lastKeyPressed: React.MutableRefObject<string>) {
   const eventTarget = event.target as HTMLInputElement
-
   const eventId = eventTarget.id as HxyaLabels
-
   const oldValue = getColorHxyaValueFormatedForInput(eventId)
-  const newValue = round(parseFloat(eventTarget.value), getColorHxyDecimals({ forInputs: true })[`${eventId}`])
 
-  if (isNaN(newValue)) {
+  const resetToOldValue = () => {
     eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
     lastKeyPressed.current = ''
     return
   }
 
-  const clampedNewValue = clampColorHxyaValueInInputFormat(eventId, newValue)
+  const rawValue = parseInputString(eventTarget.value)
 
+  if (rawValue === null) {
+    return resetToOldValue()
+  }
+
+  const newValue = round(rawValue, getColorHxyDecimals({ forInputs: true })[`${eventId}`])
+
+  const clampedNewValue = clampColorHxyaValueInInputFormat(eventId, newValue)
   if (
     clampedNewValue === oldValue ||
     lastKeyPressed.current === 'Escape' ||
     (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed.current))
   ) {
-    eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
-    lastKeyPressed.current = ''
-    return
+    return resetToOldValue()
   }
 
   lastKeyPressed.current = ''

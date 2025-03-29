@@ -4,17 +4,25 @@ import getContrastRange from '../../../../../helpers/contrasts/getContrastRange/
 import { $contrast, setContrastWithSideEffects } from '../../../../../stores/contrasts/contrast/contrast'
 import { $currentContrastMethod } from '../../../../../stores/contrasts/currentContrastMethod/currentContrastMethod'
 import { $isMouseInsideDocument } from '../../../../../stores/isMouseInsideDocument/isMouseInsideDocument'
+import parseInputString from '../../../../../helpers/inputs/parseInputString/parseInputString'
+import round from 'lodash/round'
 
 export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputElement>, lastKeyPressed: React.MutableRefObject<string>) {
   const eventTarget = event.target
 
-  const newValue: ApcaContrast | WcagContrast = $currentContrastMethod.get() === 'apca' ? parseInt(eventTarget.value) : parseFloat(eventTarget.value)
-
-  if (isNaN(newValue)) {
+  const resetToOldValue = () => {
     eventTarget.value = String($contrast.get())
     lastKeyPressed.current = ''
     return
   }
+
+  const rawValue = parseInputString(eventTarget.value)
+
+  if (rawValue === null) {
+    return resetToOldValue()
+  }
+
+  const newValue: ApcaContrast | WcagContrast = $currentContrastMethod.get() === 'apca' ? round(rawValue) : rawValue
 
   const clampedNewContrast = clamp(newValue, getContrastRange().negative.max, getContrastRange().positive.max)
 
@@ -23,9 +31,7 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
     lastKeyPressed.current === 'Escape' ||
     (!$isMouseInsideDocument.get() && !['Enter', 'Tab'].includes(lastKeyPressed.current))
   ) {
-    eventTarget.value = String($contrast.get())
-    lastKeyPressed.current = ''
-    return
+    return resetToOldValue()
   }
 
   lastKeyPressed.current = ''
