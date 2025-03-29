@@ -164,6 +164,7 @@ function App() {
 
     document.addEventListener('mousedown', (event) => {
       if ($mouseEventCallback.get()) $mouseEventCallback.get()!(event)
+
       isMouseDown = true
     })
 

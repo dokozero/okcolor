@@ -1,4 +1,4 @@
-import { round } from 'lodash'
+import round from 'lodash/round'
 import convertRelativeChromaToAbsolute from '../../../../helpers/colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import getColorHxyDecimals from '../../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../../../stores/colors/colorHxya/colorHxya'

@@ -1,8 +1,14 @@
 .c-color-picker {
   position: relative;
-  border-top: 1px solid var(--figma-color-border);
   background-color: var(--figma-color-bg-secondary);
+
+  /* To get the same look as Figma color picker. */
+  /* margin-left: 16px;
+  margin-top: 16px;
+  border-radius: var(--base-border-radius);
+  overflow: hidden; */
 }
+
 .c-color-picker:focus {
   outline: none;
 }

@@ -7,9 +7,8 @@ import fShader from '@virtual:shaders/src/ui/shaders/f_shader.glsl'
 import vShader from '@virtual:shaders/src/ui/shaders/v_shader.glsl'
 import * as twgl from 'twgl.js'
 import { inGamut } from '../../helpers/colors/culori.mjs'
-import { AbsoluteChroma, Saturation, ColorModelList, OklchRenderModeList } from '../../../types'
-import limitMouseManipulatorPosition from '../../helpers/limitMouseManipulatorPosition/limitMouseManipulatorPosition'
-import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
+import { ColorModelList, OklchRenderModeList } from '../../../types'
+import { $colorHxya } from '../../stores/colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../stores/colors/colorsRgba/colorsRgba'
 import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
 import { $currentFileColorProfile } from '../../stores/colors/currentFileColorProfile/currentFileColorProfile'
@@ -18,13 +17,11 @@ import { $relativeChroma } from '../../stores/colors/relativeChroma/relativeChro
 import { $contrast } from '../../stores/contrasts/contrast/contrast'
 import { $currentBgOrFg } from '../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { $lockContrast } from '../../stores/contrasts/lockContrast/lockContrast'
-import { $currentKeysPressed } from '../../stores/currentKeysPressed/currentKeysPressed'
 import { setMouseEventCallback } from '../../stores/mouseEventCallback/mouseEventCallback'
 import { $uiMessage } from '../../stores/uiMessage/uiMessage'
 import getContrastStrokeLimit from './helpers/getContrastStrokeLimit/getContrastStrokeLimit'
 import getRelativeChromaStrokeLimit from './helpers/getRelativeChromaStrokeLimit/getRelativeChromaStrokeLimit'
 import getSrgbStrokeLimit from './helpers/getSrgbStrokeLimit/getSrgbStrokeLimit'
-import getColorHxyDecimals from '../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
 import clamp from 'lodash/clamp'
 import convertHxyToRgb from '../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
@@ -33,10 +30,11 @@ import { $userSettings } from '../../stores/settings/userSettings/userSettings'
 import getColorPickerResolutionInfos from '../../helpers/colors/getColorPickerResolutionInfos/getColorPickerResolutionInfos'
 import { $selectionId } from '../../stores/selectionId/selectionId'
 import { $isTransitionRunning, $oklchRenderMode, setIsTransitionRunning } from '../../stores/oklchRenderMode/oklchRenderMode'
-import convertRelativeChromaToAbsolute from '../../helpers/colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import getLinearMappedValue from '../../helpers/getLinearMappedValue/getLinearMappedValue'
 import handleKeyDown from './helpers/handleKeyDown/handleKeyDown'
 import handleWheel from './helpers/handleWheel/handleWheel'
+import handleNewManipulatorPosition from './helpers/handleNewManipulatorPosition/handleNewManipulatorPosition'
+import getNewManipulatorPosition from './helpers/getNewManipulatorPosition/getNewManipulatorPosition'
 
 // We use these var to measure speeds of color picker rendering (see in constants file to activate it).
 let colorPickerStrokesRenderingStart: number
@@ -56,8 +54,6 @@ enum ColorSpacesNames {
   'sRGB',
   'P3'
 }
-
-let previousXManipulatorPosition = 0
 
 export default function ColorPicker() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -90,135 +86,11 @@ export default function ColorPicker() {
   const contrastStroke = useRef<SVGPathElement>(null)
 
   const updateManipulatorPosition = ({ position = $oklchRenderMode.get() === 'triangle' ? 0 : 100 }: { position?: number } = {}) => {
-    let x: AbsoluteChroma | Saturation
+    const newManipulatorPosition = getNewManipulatorPosition({
+      position: position
+    })
 
-    if ($currentColorModel.get() === 'oklch') {
-      let startPosition = 0
-      let endPosition = 0
-
-      if ($oklchRenderMode.get() === 'triangle') {
-        startPosition = $colorHxya.get().x * OKLCH_CHROMA_SCALE
-        endPosition = $relativeChroma.get() / 100
-        x = getLinearMappedValue({
-          valueToMap: position,
-          originalRange: { min: 0, max: 100 },
-          targetRange: { min: startPosition, max: endPosition }
-        })
-      } else if ($oklchRenderMode.get() === 'square') {
-        if ($colorHxya.get().y < 1 || $colorHxya.get().y > 99) {
-          x = previousXManipulatorPosition
-        } else {
-          startPosition = $relativeChroma.get() / 100
-          endPosition = $colorHxya.get().x * OKLCH_CHROMA_SCALE
-
-          x = getLinearMappedValue({
-            valueToMap: position,
-            originalRange: { min: 100, max: 0 },
-            targetRange: { min: startPosition, max: endPosition }
-          })
-
-          previousXManipulatorPosition = x
-        }
-      }
-    } else {
-      x = $colorHxya.get().x / 100
-    }
-
-    const y = $colorHxya.get().y / 100
-
-    manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(PICKER_SIZE * x!, PICKER_SIZE * (1 - y))
-  }
-
-  const handleNewManipulatorPosition = (event: MouseEvent) => {
-    if ($isTransitionRunning.get()) return
-
-    const rect = colorPickerCanvas.current!.getBoundingClientRect()
-
-    let setColorHxya = true
-
-    // Get the new X and Y value between 0 and 100.
-    const canvasY = limitMouseManipulatorPosition(1 - (event.clientY - rect.top) / PICKER_SIZE) * 100
-    let canvasX = limitMouseManipulatorPosition((event.clientX - rect.left) / PICKER_SIZE) * 100
-
-    let newXValue: number
-    let newYValue: number
-
-    if ($lockContrast.get()) {
-      newYValue = $colorHxya.get().y
-    } else {
-      newYValue = round(canvasY, getColorHxyDecimals().y)
-    }
-
-    if ($lockRelativeChroma.get()) {
-      newXValue = $colorHxya.get().x
-    } else {
-      if ($currentColorModel.get() !== 'oklch') {
-        newXValue = round(canvasX, getColorHxyDecimals().x)
-      } else {
-        if ($oklchRenderMode.get() === 'triangle') {
-          newXValue = getLinearMappedValue({
-            valueToMap: canvasX,
-            originalRange: { min: 0, max: 100 },
-            targetRange: { min: 0, max: MAX_CHROMA_P3 }
-          })
-
-          newXValue = round(newXValue, getColorHxyDecimals().x)
-        } else {
-          newXValue = convertRelativeChromaToAbsolute({
-            h: $colorHxya.get().h,
-            y: newYValue,
-            relativeChroma: canvasX
-          })
-        }
-      }
-    }
-
-    if ($currentKeysPressed.get().includes('shift')) {
-      setColorHxya = false
-
-      if (!$lockContrast.get() && round(newYValue) % 5 === 0) {
-        newYValue = round(newYValue)
-
-        setColorHxya = true
-      }
-
-      if (!$lockRelativeChroma.get() && round(canvasX) % 5 === 0) {
-        canvasX = round(canvasX)
-
-        if ($currentColorModel.get() !== 'oklch') {
-          newXValue = round(canvasX, getColorHxyDecimals().x)
-        } else {
-          if ($oklchRenderMode.get() === 'triangle') {
-            newXValue = getLinearMappedValue({
-              valueToMap: canvasX,
-              originalRange: { min: 0, max: 100 },
-              targetRange: { min: 0, max: MAX_CHROMA_P3 }
-            })
-
-            newXValue = round(newXValue, getColorHxyDecimals().x)
-          } else {
-            newXValue = convertRelativeChromaToAbsolute({
-              h: $colorHxya.get().h,
-              y: newYValue,
-              relativeChroma: canvasX
-            })
-          }
-        }
-
-        setColorHxya = true
-      }
-    }
-
-    if (setColorHxya) {
-      setColorHxyaWithSideEffects({
-        newColorHxya: {
-          x: newXValue,
-          y: newYValue
-        }
-      })
-    }
-
-    updateManipulatorPosition()
+    manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(newManipulatorPosition.x, newManipulatorPosition.y)
   }
 
   const setColorOfColorSpaceLabel = ({ position = $oklchRenderMode.get() === 'triangle' ? 0 : 100 }: { position?: number } = {}) => {
@@ -573,7 +445,16 @@ export default function ColorPicker() {
     }
 
     colorPicker.current!.addEventListener('mousedown', () => {
-      setMouseEventCallback(handleNewManipulatorPosition)
+      setMouseEventCallback((event: MouseEvent) => {
+        if ($isTransitionRunning.get()) return
+
+        handleNewManipulatorPosition({
+          event: event,
+          rect: colorPickerCanvas.current!.getBoundingClientRect()
+        })
+
+        updateManipulatorPosition()
+      })
     })
 
     // Change x or y values from key press.

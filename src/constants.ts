@@ -3,6 +3,10 @@ export const useBackend = true
 
 // We use a different value for the slider as they take less room.
 export const PICKER_SIZE = 240
+
+// To get the same look as Figma color picker.
+// export const PICKER_SIZE = 208
+
 export const SLIDER_SIZE = 148
 
 export const OKLCH_CHROMA_SCALE = 2.7
