@@ -591,6 +591,14 @@ export default function ColorPicker() {
       handleWheel(event)
     })
 
+    // Focus the color picker on mouse enter to capture arrow key events without the need to click first on the picker.
+    colorPicker.current!.addEventListener('mouseenter', () => {
+      // We don't focus the color picker if an input has already the focus.
+      if (document.activeElement?.tagName === 'INPUT') return
+
+      colorPicker.current!.focus()
+    })
+
     isMounted.current = true
   }, [])
 
