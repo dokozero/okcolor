@@ -461,14 +461,16 @@ export default function ColorPicker() {
 
     // Change x or y values from key press.
     colorPicker.current!.addEventListener('keydown', (event) => {
+      if ($currentColorModel.get() !== 'oklch') return
       if ($isTransitionRunning.get()) return
       if (!['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(event.key)) return
 
       handleKeyDown(event.key as 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight')
     })
 
-    // Change hue value on vertical wheel.scroll
+    // Change hue value on vertical wheel scroll.
     colorPicker.current!.addEventListener('wheel', (event) => {
+      if ($currentColorModel.get() !== 'oklch') return
       if ($isTransitionRunning.get()) return
 
       handleWheel(event)
