@@ -34,6 +34,7 @@ export default function OklchRenderModeToggle() {
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
+      if ($currentColorModel.get() !== 'oklch') return
       if (!['t', 'T', 's', 'S'].includes(event.key)) return
 
       // We test if document.activeElement?.tagName is an input because we don't want to trigger this code if user type "c" while he's in one of them.
