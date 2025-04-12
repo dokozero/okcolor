@@ -14,7 +14,7 @@ export default function getNewContrastValueFromArrowKey(
   const currentContrastMethod = $currentContrastMethod.get()
 
   let stepUpdateValue: number
-  if (currentContrastMethod === 'apca') stepUpdateValue = isShiftPressed ? 10 : 1
+  if (currentContrastMethod === 'apca') stepUpdateValue = isShiftPressed ? 5 : 1
   else stepUpdateValue = isShiftPressed ? 1 : 0.1
 
   const contrastRange = getContrastRange()

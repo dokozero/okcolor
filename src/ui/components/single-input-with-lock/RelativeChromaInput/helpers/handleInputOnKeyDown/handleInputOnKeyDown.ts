@@ -19,7 +19,7 @@ export default function handleInputOnKeyDown(
     event.preventDefault()
     keepInputSelected.current = true
 
-    const stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 10 : 1
+    const stepUpdateValue = $currentKeysPressed.get().includes('shift') ? 5 : 1
 
     if (eventKey === 'ArrowUp') newValue += stepUpdateValue
     else if (eventKey === 'ArrowDown') newValue -= stepUpdateValue
