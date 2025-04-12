@@ -6,18 +6,17 @@
   font-size: var(--base-font-size);
   color: var(--figma-color-text);
 }
-.c-file-color-profile--deactivated {
-  pointer-events: none;
-  opacity: 0.5;
-}
+
 .c-file-color-profile__label {
   font-size: var(--base-font-size);
   color: var(--figma-color-text);
   margin-right: 20px;
 }
+
 .c-file-color-profile .select-wrapper {
   width: 82px;
 }
+
 .c-file-color-profile select {
   padding: 7px;
 }

@@ -205,7 +205,6 @@ export type MessageForBackendTypes =
   | 'triggerInit'
   | 'updateShapeColor'
   | 'SyncUserSettings'
-  | 'syncCurrentFileColorProfile'
   | 'syncCurrentFillOrStroke'
   | 'syncCurrentColorModel'
   | 'syncIsContrastInputOpen'
@@ -222,10 +221,6 @@ export type UpdateShapeColorData = {
 
 export type SyncUserSettingsData = {
   newUserSettings: UserSettings
-}
-
-export type SyncCurrentFileColorProfileData = {
-  newCurrentFileColorProfile: CurrentFileColorProfile
 }
 
 export type SyncCurrentFillOrStrokeData = {
@@ -263,7 +258,6 @@ export type SyncOklchRenderModeData = {
 export type MessageForBackendData =
   | UpdateShapeColorData
   | SyncUserSettingsData
-  | SyncCurrentFileColorProfileData
   | SyncCurrentFillOrStrokeData
   | SyncCurrentColorModelData
   | SyncIsContrastInputOpenData

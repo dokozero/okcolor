@@ -20,7 +20,6 @@ import type {
   SyncIsContrastInputOpenData,
   CurrentContrastMethod,
   SyncCurrentContrastMethodData,
-  SyncCurrentFileColorProfileData,
   UserSettings,
   SyncUserSettingsData,
   SelectionId,
@@ -287,12 +286,6 @@ figma.ui.onmessage = (event: MessageForBackend) => {
       data = event.data as SyncUserSettingsData
       userSettings = data.newUserSettings
       figma.clientStorage.setAsync('userSettings', JSON.stringify(data.newUserSettings))
-      break
-
-    case 'syncCurrentFileColorProfile':
-      data = event.data as SyncCurrentFileColorProfileData
-      currentFileColorProfile = data.newCurrentFileColorProfile
-      figma.clientStorage.setAsync('currentFileColorProfile', data.newCurrentFileColorProfile)
       break
 
     case 'syncCurrentFillOrStroke':
