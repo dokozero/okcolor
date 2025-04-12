@@ -145,6 +145,8 @@ export default function ColorPicker() {
   const animateOklchRenderModeTransition = ({
     useHardwareAcceleration = $userSettings.get().useHardwareAcceleration
   }: { useHardwareAcceleration?: boolean } = {}) => {
+    setIsTransitionRunning(true)
+
     const canvasToAnimate = useHardwareAcceleration ? canvas2dContextTransition : canvas2dContext
 
     let position = $oklchRenderMode.get() === 'square' ? 0 : 100
