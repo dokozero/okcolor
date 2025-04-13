@@ -1,9 +1,12 @@
+import clamp from 'lodash/clamp'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $lockRelativeChroma } from '../../../../stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $relativeChroma, setRelativeChromaWithSideEffects } from '../../../../stores/colors/relativeChroma/relativeChroma'
 import { $lockContrast } from '../../../../stores/contrasts/lockContrast/lockContrast'
 import { $currentKeysPressed } from '../../../../stores/currentKeysPressed/currentKeysPressed'
 import { $oklchRenderMode } from '../../../../stores/oklchRenderMode/oklchRenderMode'
+import getColorHxyDecimals from '../../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
+import round from 'lodash/round'
 
 export default function handleKeyDown(eventKey: 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight') {
   if ($lockRelativeChroma.get() && (eventKey === 'ArrowLeft' || eventKey === 'ArrowRight')) return
@@ -31,6 +34,11 @@ export default function handleKeyDown(eventKey: 'ArrowUp' | 'ArrowDown' | 'Arrow
     newValue += stepUpdateValue
   } else if (eventKey === 'ArrowDown' || eventKey === 'ArrowLeft') {
     newValue -= stepUpdateValue
+  }
+
+  if (axis === 'y') {
+    // Fix floating-point inaccuracies, for example 16.08 - 1 gives 15.079999999999998.
+    newValue = round(newValue, getColorHxyDecimals().y)
   }
 
   // To avoid getting out of the color picker.
