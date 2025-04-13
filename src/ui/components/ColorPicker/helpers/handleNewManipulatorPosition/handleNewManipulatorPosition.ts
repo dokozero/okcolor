@@ -108,10 +108,20 @@ export default function handleNewManipulatorPosition(props: Props) {
   }
 
   if (setColorHxya) {
+    let syncRelativeChroma = true
+
+    // We use this to avoid getting relative chroma at 0 when in oklch square mode and lightness to 0 or 100.
+    if ($oklchRenderMode.get() === 'square' && (newYValue < 0.1 || newYValue > 99.9)) {
+      syncRelativeChroma = false
+    }
+
     setColorHxyaWithSideEffects({
       newColorHxya: {
         x: newXValue,
         y: newYValue
+      },
+      sideEffects: {
+        syncRelativeChroma: syncRelativeChroma
       }
     })
   }
