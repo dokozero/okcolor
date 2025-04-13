@@ -32,7 +32,7 @@ export default function getNewManipulatorPosition(props: Props) {
         targetRange: { min: startPosition, max: endPosition }
       })
     } else if ($oklchRenderMode.get() === 'square') {
-      if ($colorHxya.get().y < 1 || $colorHxya.get().y > 99) {
+      if ($colorHxya.get().y < 0.1 || $colorHxya.get().y > 99.9) {
         // Fix to avoid the manipulator going to left corner when Y is at 100 or 0.
         newManipulatorPosition.x = previousXManipulatorPosition
       } else {

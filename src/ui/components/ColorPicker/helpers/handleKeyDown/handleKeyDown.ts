@@ -34,9 +34,7 @@ export default function handleKeyDown(eventKey: 'ArrowUp' | 'ArrowDown' | 'Arrow
   }
 
   // To avoid getting out of the color picker.
-  if (newValue < 0 || newValue > 100) {
-    return
-  }
+  newValue = clamp(newValue, 0, 100)
 
   if (axis === 'x') {
     setRelativeChromaWithSideEffects({
