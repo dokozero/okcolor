@@ -62,7 +62,7 @@ export default function RelativeChromaInput() {
   return (
     <div
       className={
-        'c-single-input-with-lock c-single-input-with-lock--with-label u-mt-6 ' +
+        'c-single-input-with-lock c-single-input-with-lock--with-label u-mt-7 ' +
         (showRelativeChroma ? '' : 'u-visibility-hidden u-position-absolute')
       }
     >

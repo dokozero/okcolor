@@ -1,37 +1,26 @@
 .c-bg-or-fg-toggle {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-}
-.c-bg-or-fg-toggle:hover {
-  border-radius: 6px;
-  outline: 1px solid var(--figma-color-border, rgba(0, 0, 0, 0.1));
-  outline-offset: -3px;
+  border-radius: var(--base-border-radius);
+  background-color: var(--figma-color-bg-secondary);
 }
 
 .c-bg-or-fg-toggle__element {
-  padding: 2px;
-  border: 1px solid;
-  border-width: 2px;
-  border-style: solid;
+  padding: 4px;
+  border: 1px solid transparent;
   border-radius: var(--base-border-radius);
 }
 
-.c-bg-or-fg-toggle__element-wrapper {
-  padding: 3px;
-  border: 1px solid;
-}
-.figma-light .c-bg-or-fg-toggle__element-wrapper {
-  border-color: rgb(0, 0, 0, 0.3);
-}
-.figma-dark .c-bg-or-fg-toggle__element-wrapper {
-  border-color: rgb(255, 255, 255, 0.3);
+.c-bg-or-fg-toggle__element--active {
+  border: 1px solid var(--figma-color-border);
+  background-color: var(--figma-color-bg);
 }
 
 .c-bg-or-fg-toggle__element-label {
   font-size: var(--base-font-size);
   font-weight: 400;
+  color: var(--figma-color-text-secondary);
 }
-.c-bg-or-fg-toggle__element-label--active {
+
+.c-bg-or-fg-toggle__element--active .c-bg-or-fg-toggle__element-label {
   font-weight: 500;
 }

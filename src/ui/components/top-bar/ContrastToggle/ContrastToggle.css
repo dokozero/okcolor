@@ -1,24 +1,29 @@
-.c-settings-toggle {
+.c-contrast-toggle {
   padding: 5px;
   border-radius: var(--base-border-radius);
 }
 
-.c-settings-toggle:hover {
+.c-contrast-toggle--deactivated {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.c-contrast-toggle:hover {
   background-color: var(--figma-color-bg-secondary);
 }
 
-.c-settings-toggle--active {
+.c-contrast-toggle--active {
   background-color: var(--figma-color-bg-selected);
 }
 
-.c-settings-toggle--active:hover {
+.c-contrast-toggle--active:hover {
   background-color: var(--figma-color-bg-selected-secondary);
 }
 
-.c-settings-toggle svg {
+.c-contrast-toggle svg {
   fill: var(--figma-color-icon);
 }
 
-.c-settings-toggle--active svg {
+.c-contrast-toggle--active svg {
   fill: var(--figma-color-icon-brand);
 }

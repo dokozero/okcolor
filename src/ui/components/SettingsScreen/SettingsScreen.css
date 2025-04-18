@@ -20,17 +20,18 @@
 
 .c-settings-screen__items-group {
   padding: 7px 0;
+  border-top: 1px solid var(--figma-color-border);
 }
 
-.c-settings-screen__items-group {
-  border-top: 1px solid var(--figma-color-border);
+.c-settings-screen__items-group--one-child {
+  padding: 5px 0;
 }
 
 .c-settings-screen__item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 11px 4px 14px;
+  padding: 3px 15px 3px 16px;
   font-size: var(--base-font-size);
   color: var(--figma-color-text);
 }
@@ -45,10 +46,6 @@
 
 .c-settings-screen__item-oklch-input-order-wrapper {
   width: 58px;
-}
-
-.c-settings-screen__item select {
-  padding: 7px;
 }
 
 .c-settings-screen__item--restart-message {

@@ -9,6 +9,7 @@ import round from 'lodash/round'
 import { $oklchRenderMode } from '../../../stores/oklchRenderMode/oklchRenderMode'
 import convertRelativeChromaToAbsolute from '../../../helpers/colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
+import getLinearMappedValue from '../../../helpers/getLinearMappedValue/getLinearMappedValue'
 
 export default function HueSlider() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -59,7 +60,13 @@ export default function HueSlider() {
   }
 
   useEffect(() => {
-    manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate(SLIDER_SIZE * ($colorHxya.get().h / 360) - 1, -1)
+    const xPosition = getLinearMappedValue({
+      valueToMap: $colorHxya.get().h,
+      originalRange: { min: 0, max: 360 },
+      targetRange: { min: -1, max: SLIDER_SIZE }
+    })
+
+    manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate(xPosition, -1)
   }, [colorHxya.h])
 
   useEffect(() => {
@@ -75,9 +82,9 @@ export default function HueSlider() {
       </div>
 
       <div className="c-slider__manipulator">
-        <svg ref={manipulatorHueSlider} transform="translate(0,0)" width="14" height="14">
-          <circle cx="7" cy="7" r="4.8" fill="none" strokeWidth="2.8" stroke="#555555"></circle>
-          <circle cx="7" cy="7" r="4.8" fill="none" strokeWidth="2.5" stroke="#ffffff"></circle>
+        <svg ref={manipulatorHueSlider} transform="translate(0,0)" width="18" height="18">
+          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
+          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
         </svg>
       </div>
     </div>

@@ -114,7 +114,7 @@ export default function SettingsScreen() {
               </div>
             </div>
 
-            <div className="c-settings-screen__items-group">
+            <div className="c-settings-screen__items-group c-settings-screen__items-group--one-child">
               <div className="c-settings-screen__item c-settings-screen__item--with-toggle" onClick={handleUseHardwareAcceleration}>
                 <div className="u-flex u-items-center">
                   Use hardware acceleration{' '}

@@ -84,16 +84,16 @@ export default function ColorValueInputs() {
   }, [userSettings.oklchInputOrder, currentColorModel])
 
   useEffect(() => {
-    if (['okhsv', 'okhsl'].includes(currentColorModel) || (currentColorModel === 'oklch' && userSettings.oklchHlDecimalPrecision === 1)) {
+    if (['okhsv', 'okhsl'].includes(currentColorModel)) {
       inputH.current!.classList.remove('input--tighten')
       inputX.current!.classList.remove('input--tighten')
       inputY.current!.classList.remove('input--tighten')
-      inputA.current!.classList.remove('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-36')
+      inputA.current!.classList.remove('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-23')
     } else {
       inputH.current!.classList.add('input--tighten')
       inputX.current!.classList.add('input--tighten')
       inputY.current!.classList.add('input--tighten')
-      inputA.current!.classList.add('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-36')
+      inputA.current!.classList.add('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-23')
     }
 
     updateInputPositions()
@@ -142,7 +142,7 @@ export default function ColorValueInputs() {
   }, [colorHxya.y])
 
   useEffect(() => {
-    inputA.current!.value = getColorHxyaValueFormatedForInput('a').toString() + '%'
+    inputA.current!.value = getColorHxyaValueFormatedForInput('a').toString()
   }, [colorHxya.a])
 
   useEffect(() => {
@@ -202,6 +202,7 @@ export default function ColorValueInputs() {
           handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
         }}
       />
+      <div className="c-color-value-inputs__opacity-percent-char">%</div>
     </div>
   )
 }

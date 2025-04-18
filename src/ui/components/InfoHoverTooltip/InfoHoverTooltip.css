@@ -4,7 +4,7 @@
 }
 
 .c-info-hover-tooltip svg {
-  fill: var(--figma-color-text);
+  fill: var(--figma-color-icon);
   opacity: 0.9;
 }
 

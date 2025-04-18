@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { PICKER_SIZE } from '../constants'
+import { WINDOW_WIDTH } from '../constants'
 import type {
   ColorsRgba,
   CurrentColorModel,
@@ -64,7 +64,7 @@ const resizeWindowHeight = () => {
     isContrastInputOpen: isContrastInputOpen
   })
 
-  figma.ui.resize(PICKER_SIZE, windowHeight)
+  figma.ui.resize(WINDOW_WIDTH, windowHeight)
 }
 
 const updateColorsRgbaOrSendUiMessageCodeToUi = (): string => {
@@ -139,7 +139,7 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
     isContrastInputOpen: isContrastInputOpen
   })
 
-  figma.showUI(__html__, { width: PICKER_SIZE, height: initialWindowHeight, themeColors: true })
+  figma.showUI(__html__, { width: WINDOW_WIDTH, height: initialWindowHeight, themeColors: true })
 }
 
 getLocalStorageValueAndCreateUiWindow()

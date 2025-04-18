@@ -80,7 +80,7 @@ export default function ColorPicker() {
   const colorSpaceLabel = useRef<HTMLDivElement>(null)
   const colorPickerCanvas = useRef<HTMLCanvasElement>(null)
   const colorPickerTransitionCanvas = useRef<HTMLCanvasElement>(null)
-  const manipulatorColorPicker = useRef<SVGGElement>(null)
+  const manipulatorColorPicker = useRef<SVGSVGElement>(null)
   const srgbLimitStroke = useRef<SVGPathElement>(null)
   const relativeChromaStroke = useRef<SVGPathElement>(null)
   const contrastStroke = useRef<SVGPathElement>(null)
@@ -90,7 +90,7 @@ export default function ColorPicker() {
       position: position
     })
 
-    manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(newManipulatorPosition.x, newManipulatorPosition.y)
+    manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(newManipulatorPosition.x - 9, newManipulatorPosition.y - 9)
   }
 
   const setColorOfColorSpaceLabel = ({ position = $oklchRenderMode.get() === 'triangle' ? 0 : 100 }: { position?: number } = {}) => {
@@ -381,10 +381,12 @@ export default function ColorPicker() {
     if ($currentFileColorProfile.get() === 'rgb') return
 
     if ($oklchRenderMode.get() === 'square') {
-      if ($relativeChroma.get() > 84 && colorHxya.y > 91) {
-        colorSpaceLabel.current!.style.opacity = '0.3'
+      if ($relativeChroma.get() > 82 && colorHxya.y > 90) {
+        // colorSpaceLabel.current!.style.opacity = '0.2'
+        colorSpaceLabel.current!.style.top = '27px'
       } else {
-        colorSpaceLabel.current!.style.opacity = '1'
+        // colorSpaceLabel.current!.style.opacity = '1'
+        colorSpaceLabel.current!.style.top = '5px'
       }
     }
   }, [colorHxya.y, relativeChroma])
@@ -447,6 +449,8 @@ export default function ColorPicker() {
     }
 
     colorPicker.current!.addEventListener('mousedown', () => {
+      if ($uiMessage.get().show) return
+
       setMouseEventCallback((event: MouseEvent) => {
         if ($isTransitionRunning.get()) return
 
@@ -462,6 +466,7 @@ export default function ColorPicker() {
     // Change x or y values from key press.
     colorPicker.current!.addEventListener('keydown', (event) => {
       if ($currentColorModel.get() !== 'oklch') return
+      if ($uiMessage.get().show) return
       if ($isTransitionRunning.get()) return
       if (!['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(event.key)) return
 
@@ -471,6 +476,7 @@ export default function ColorPicker() {
     // Change hue value on vertical wheel scroll.
     colorPicker.current!.addEventListener('wheel', (event) => {
       if ($currentColorModel.get() !== 'oklch') return
+      if ($uiMessage.get().show) return
       if ($isTransitionRunning.get()) return
 
       handleWheel(event)
@@ -489,33 +495,33 @@ export default function ColorPicker() {
 
   return (
     <div ref={colorPicker} tabIndex={0} className="c-color-picker" style={{ width: `${PICKER_SIZE}px`, height: `${PICKER_SIZE}px` }}>
-      <div className="c-color-picker__message-wrapper">
-        <p className="c-color-picker__message-text">{uiMessage.message}</p>
+      <div className="c-color-picker__wrapper">
+        <div className="c-color-picker__message-wrapper">
+          <p className="c-color-picker__message-text">{uiMessage.message}</p>
+        </div>
+
+        <div ref={colorSpaceLabel} className={`c-color-picker__color-space-label`}>
+          {colorSpaceOfCurrentColor}
+        </div>
+
+        <canvas ref={colorPickerTransitionCanvas} className="c-color-picker__canvas" id="okhxy-xy-picker-transition"></canvas>
+        <canvas ref={colorPickerCanvas} className="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
+        <svg className="c-color-picker__srgb-limit-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
+          <path ref={srgbLimitStroke} fill="none" stroke="#FFFFFF" />
+        </svg>
+
+        <svg className="c-color-picker__relative-chroma-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
+          <path ref={relativeChromaStroke} fill="none" stroke="#FFFFFF80" />
+        </svg>
+
+        <svg className="c-color-picker__contrast-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
+          <path ref={contrastStroke} fill="none" stroke="#FFFFFF80" />
+        </svg>
       </div>
 
-      <div ref={colorSpaceLabel} className={`c-color-picker__color-space-label`}>
-        {colorSpaceOfCurrentColor}
-      </div>
-
-      <canvas ref={colorPickerTransitionCanvas} className="c-color-picker__canvas" id="okhxy-xy-picker-transition"></canvas>
-      <canvas ref={colorPickerCanvas} className="c-color-picker__canvas" id="okhxy-xy-picker"></canvas>
-      <svg className="c-color-picker__srgb-limit-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
-        <path ref={srgbLimitStroke} fill="none" stroke="#FFFFFF" />
-      </svg>
-
-      <svg className="c-color-picker__relative-chroma-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
-        <path ref={relativeChromaStroke} fill="none" stroke="#FFFFFF80" />
-      </svg>
-
-      <svg className="c-color-picker__contrast-stroke" width={PICKER_SIZE} height={PICKER_SIZE}>
-        <path ref={contrastStroke} fill="none" stroke="#FFFFFF80" />
-      </svg>
-
-      <svg className="c-color-picker__manipulator" width={PICKER_SIZE} height={PICKER_SIZE}>
-        <g ref={manipulatorColorPicker} transform="translate(-10,-10)">
-          <circle cx="0" cy="0" r="4.8" fill="none" strokeWidth="2.8" stroke="#555555"></circle>
-          <circle cx="0" cy="0" r="4.8" fill="none" strokeWidth="2.5" stroke="#ffffff"></circle>
-        </g>
+      <svg ref={manipulatorColorPicker} transform="translate(0,0)" className="c-color-picker__manipulator" width="18" height="18">
+        <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
+        <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
       </svg>
     </div>
   )

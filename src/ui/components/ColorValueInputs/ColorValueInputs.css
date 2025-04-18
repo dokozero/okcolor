@@ -1,4 +1,15 @@
-.c-color-value-inputs__input-wrapper:hover input:not(:last-child),
-.c-color-value-inputs__input-wrapper:focus-within input:not(:last-child) {
-  border-right-color: var(--figma-color-border, rgba(0, 0, 0, 0.1));
+.c-color-value-inputs__opacity-percent-char {
+  margin-left: -1px;
+
+  display: flex;
+  align-items: center;
+  height: 100%;
+  order: 99;
+
+  padding-right: 3px;
+
+  font-size: var(--base-font-size);
+  color: var(--figma-color-text-secondary);
+
+  background-color: var(--figma-color-bg-secondary);
 }

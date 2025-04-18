@@ -8,6 +8,7 @@ import { $currentBgOrFg } from '../../../stores/contrasts/currentBgOrFg/currentB
 import { $lockContrast } from '../../../stores/contrasts/lockContrast/lockContrast'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke/currentFillOrStroke'
 import { setMouseEventCallback } from '../../../stores/mouseEventCallback/mouseEventCallback'
+import getLinearMappedValue from '../../../helpers/getLinearMappedValue/getLinearMappedValue'
 
 const opacitysliderBackgroundImg =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwIAAABUCAYAAAAxg4DPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJMSURBVHgB7dlBbQNAEATBcxQky5+Sl4pjAHmdLPnRVQTm3ZrH8/l8nQszc27s7rlhz549e/bs2bNnz569z+39HAAAIEcIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgCAhAAAAQUIAAACCHq+3c2F3z42ZOTfs2bNnz549e/bs2bP3uT2PAAAABAkBAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAEDQ7+6eGzNzbtizZ8+ePXv27NmzZ+/7ex4BAAAIEgIAABAkBAAAIEgIAABAkBAAAIAgIQAAAEFCAAAAgoQAAAAECQEAAAgSAgAAECQEAAAgSAgAAECQEAAAgKDH6+1c2N1zY2bODXv27NmzZ+8/9uzZs2fvbs8jAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABD0u7vnxsycG/bs2bNnz549e/bs2fv+nkcAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABAkBAAAIEgIAABAkBAAAIOjxejsXdvfcmJlzw549e/bs2bNnz549e5/b8wgAAECQEAAAgCAhAAAAQUIAAACChAAAAAQJAQAACBICAAAQJAQAACBICAAAQJAQAACAICEAAABBQgAAAIKEAAAABP0BZxb7duWmOFoAAAAASUVORK5CYII='
@@ -27,7 +28,13 @@ export default function OpacitySlider() {
   const manipulatorOpacitySlider = useRef<SVGSVGElement>(null)
 
   const updateManipulatorPosition = () => {
-    manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate(SLIDER_SIZE * $colorHxya.get().a - 1, -1)
+    const xPosition = getLinearMappedValue({
+      valueToMap: $colorHxya.get().a,
+      originalRange: { min: 0, max: 1 },
+      targetRange: { min: -1, max: SLIDER_SIZE }
+    })
+
+    manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate(xPosition, -1)
   }
 
   const handleNewManipulatorPosition = (event: MouseEvent) => {
@@ -64,15 +71,15 @@ export default function OpacitySlider() {
   }, [])
 
   return (
-    <div className={'c-slider u-mt-16' + (currentBgOrFg === 'bg' || lockContrast ? ' c-slider--deactivated' : '')}>
+    <div className={'c-slider u-mt-12' + (currentBgOrFg === 'bg' || lockContrast ? ' c-slider--deactivated' : '')}>
       <div ref={opacitySliderWrapper} className="c-slider__canvas">
         <div ref={opacitySlider} className="u-w-full u-h-full" id="opacity-slider"></div>
       </div>
 
       <div className="c-slider__manipulator">
-        <svg ref={manipulatorOpacitySlider} transform="translate(0,0)" width="14" height="14">
-          <circle cx="7" cy="7" r="4.8" fill="none" strokeWidth="2.8" stroke="#555555"></circle>
-          <circle cx="7" cy="7" r="4.8" fill="none" strokeWidth="2.5" stroke="#ffffff"></circle>
+        <svg ref={manipulatorOpacitySlider} transform="translate(0,0)" width="18" height="18">
+          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
+          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
         </svg>
       </div>
     </div>

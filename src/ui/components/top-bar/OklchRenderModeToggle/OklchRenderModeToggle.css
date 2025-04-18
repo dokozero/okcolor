@@ -8,10 +8,9 @@
 .c-oklch-render-mode-toggle__element {
   padding: 4px;
   border-radius: var(--base-border-radius);
-  border: 1px solid transparent;
 }
 .c-oklch-render-mode-toggle__element:hover {
-  border-color: var(--figma-color-bg-secondary);
+  background-color: var(--figma-color-bg-secondary);
 }
 
 .c-oklch-render-mode-toggle__element--active {

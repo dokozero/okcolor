@@ -18,7 +18,7 @@ import { setCurrentFileColorProfile } from './stores/colors/currentFileColorProf
 import { setLockRelativeChroma, $lockRelativeChroma } from './stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $currentBgOrFg, setCurrentBgOrFg } from './stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { setCurrentContrastMethod } from './stores/contrasts/currentContrastMethod/currentContrastMethod'
-import { setIsContrastInputOpen } from './stores/contrasts/isContrastInputOpen/isContrastInputOpen'
+import { $isContrastInputOpen, setIsContrastInputOpen } from './stores/contrasts/isContrastInputOpen/isContrastInputOpen'
 import { setLockContrast, $lockContrast } from './stores/contrasts/lockContrast/lockContrast'
 import { setCurrentFillOrStroke } from './stores/currentFillOrStroke/currentFillOrStroke'
 import { $currentKeysPressed, setCurrentKeysPressed } from './stores/currentKeysPressed/currentKeysPressed'
@@ -35,6 +35,8 @@ import { setUserSettings } from './stores/settings/userSettings/userSettings'
 import { setSelectionId } from './stores/selectionId/selectionId'
 import OklchRenderModeToggle from './components/top-bar/OklchRenderModeToggle/OklchRenderModeToggle'
 import { setOklchRenderMode } from './stores/oklchRenderMode/oklchRenderMode'
+import ContrastToggle from './components/top-bar/ContrastToggle/ContrastToggle'
+import { useStore } from '@nanostores/react'
 
 // We use these var to measure speeds of app loading time (see in constants file to activate it).
 let appLoadingStart: number
@@ -52,6 +54,8 @@ function App() {
 
   // We use this var to avoid loading the components before we have all te values from the backend, see comment on the top of the file fore more infos.
   const [areStoreValuesReady, setAreStoreValuesReady] = useState(false)
+
+  const isContrastInputOpen = useStore($isContrastInputOpen)
 
   if (useBackend) {
     // Updates from the backend.
@@ -212,22 +216,28 @@ function App() {
       <>
         <SettingsScreen />
 
-        <div className="c-top-bar">
+        <div className={'c-top-bar' + (isContrastInputOpen ? '' : ' u-mb-16')}>
           <OklchRenderModeToggle />
 
-          <div className="u-ml-auto u-mr-8">
+          <div className="u-ml-auto">
             <FileColorProfile />
           </div>
 
-          <div>
+          <div className="u-ml-8">
+            <ContrastToggle />
+          </div>
+
+          <div className="u-ml-8">
             <SettingsToggle />
           </div>
         </div>
 
+        <ContrastInput />
+
         <ColorPicker />
 
         <div className="o-bottom-controls">
-          <div className="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
+          <div className="u-flex u-items-center u-justify-between u-px-16 u-mt-12">
             <FillOrStrokeToggle />
 
             <div className="u-flex u-flex-col">
@@ -236,13 +246,12 @@ function App() {
             </div>
           </div>
 
-          <div className="u-flex u-h-28 u-px-9 u-mt-12">
+          <div className="u-flex u-gap-6 u-h-28 u-px-15 u-mt-11">
             <ColorModelSelect />
             <ColorValueInputs />
           </div>
 
           <RelativeChromaInput />
-          <ContrastInput />
           <ColorCodeInputs />
         </div>
       </>

@@ -4,6 +4,7 @@
 @import '../components/top-bar/top-bar.css';
 @import '../components/top-bar/FileColorProfile/FileColorProfile.css';
 @import '../components/top-bar/OklchRenderModeToggle/OklchRenderModeToggle.css';
+@import '../components/top-bar/ContrastToggle/ContrastToggle.css';
 @import '../components/top-bar/SettingsToggle/SettingsToggle.css';
 @import '../components/InfoHoverTooltip/InfoHoverTooltip.css';
 @import '../components/Toggle/Toggle.css';

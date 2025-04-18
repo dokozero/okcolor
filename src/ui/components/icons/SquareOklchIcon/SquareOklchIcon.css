@@ -1,6 +1,6 @@
 .c-square-oklch-icon__outerline,
 .c-square-oklch-icon__square-line {
-  fill: var(--figma-color-text);
+  fill: var(--figma-color-icon);
 }
 
 .c-square-oklch-icon__square-fill {

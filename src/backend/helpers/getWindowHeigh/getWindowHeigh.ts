@@ -8,14 +8,14 @@ type Props = {
 
 const pluginHeights = {
   okhsvl: {
-    colorCodes: 564,
-    noColorCodes: 435
+    colorCodes: 572,
+    noColorCodes: 440
   },
   oklch: {
-    contrastAndColorCodes: 681,
-    contrastAndNoColorCodes: 552,
-    noContrastAndColorCodes: 647,
-    noContrastAndNoColorCodes: 516
+    contrastAndColorCodes: 639,
+    contrastAndNoColorCodes: 507,
+    noContrastAndColorCodes: 607,
+    noContrastAndNoColorCodes: 475
   }
 }
 

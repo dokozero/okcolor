@@ -15,7 +15,7 @@ export default function ColorModelSelect() {
   const currentColorModel = useStore($currentColorModel)
 
   return (
-    <div className="select-wrapper u-flex-no-shrink u-flex-basis-60">
+    <div className="select-wrapper u-flex-no-shrink u-flex-basis-62">
       <select onChange={handleColorModel} name="color_model" id="color_model">
         <option value="oklch" selected={currentColorModel === 'oklch'}>
           OkLCH

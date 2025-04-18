@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useStore } from '@nanostores/react'
 import { CurrentContrastMethod } from '../../../../types'
 import getContrastFromBgandFgRgba from '../../../helpers/contrasts/getContrastFromBgandFgRgba/getContrastFromBgandFgRgba'
@@ -10,7 +10,7 @@ import {
   $currentContrastMethod,
   setCurrentContrastMethodWithSideEffects
 } from '../../../stores/contrasts/currentContrastMethod/currentContrastMethod'
-import { $isContrastInputOpen, setIsContrastInputOpenWithSideEffects } from '../../../stores/contrasts/isContrastInputOpen/isContrastInputOpen'
+import { $isContrastInputOpen } from '../../../stores/contrasts/isContrastInputOpen/isContrastInputOpen'
 import { setLockContrastWithSideEffects, $lockContrast } from '../../../stores/contrasts/lockContrast/lockContrast'
 import { $currentFillOrStroke } from '../../../stores/currentFillOrStroke/currentFillOrStroke'
 import { $uiMessage } from '../../../stores/uiMessage/uiMessage'
@@ -23,10 +23,6 @@ import OpenLockIcon from '../../icons/OpenLockIcon/OpenLockIcon'
 
 const handleLockContrast = () => {
   setLockContrastWithSideEffects({ newLockContrast: !$lockContrast.get() })
-}
-
-const handleIsContrastInputOpen = () => {
-  setIsContrastInputOpenWithSideEffects({ newIsContrastInputOpen: !$isContrastInputOpen.get() })
 }
 
 const handleContrastMethod = (event: { target: HTMLSelectElement }) => {
@@ -49,12 +45,10 @@ export default function ContrastInput() {
   const colorsRgba = useStore($colorsRgba)
   const contrast = useStore($contrast)
   const lockContrast = useStore($lockContrast)
-  const currentColorModel = useStore($currentColorModel)
   const currentFillOrStroke = useStore($currentFillOrStroke)
   const currentContrastMethod = useStore($currentContrastMethod)
 
   const isContrastInputOpen = useStore($isContrastInputOpen)
-  const [showContrast, setShowContrast] = useState<boolean | undefined>(undefined)
 
   const contrastMethodSelect = useRef<HTMLSelectElement>(null)
   const input = useRef<HTMLInputElement>(null)
@@ -85,10 +79,6 @@ export default function ContrastInput() {
   }, [colorsRgba])
 
   useEffect(() => {
-    setShowContrast(currentColorModel === 'oklch')
-  }, [currentColorModel])
-
-  useEffect(() => {
     document.addEventListener('keydown', (event) => {
       if (!['l', 'L'].includes(event.key)) return
 
@@ -104,60 +94,42 @@ export default function ContrastInput() {
   return (
     <div
       className={
-        'c-dropdown u-mt-10' +
-        (isContrastInputOpen ? ' c-dropdown--open' : ' -u-mb-10') +
-        (showContrast ? '' : ' u-visibility-hidden u-position-absolute')
+        'c-contrast-input c-single-input-with-lock c-single-input-with-lock--with-select u-my-10' +
+        (isContrastInputOpen ? '' : ' u-display-none') +
+        ((!colorsRgba.parentFill || !colorsRgba.fill || currentFillOrStroke === 'stroke') && !$uiMessage.get().show
+          ? ' c-single-input-with-lock--deactivated'
+          : '')
       }
     >
-      <div className="c-dropdown__title-wrapper" onClick={handleIsContrastInputOpen}>
-        <div>Contrast</div>
-
-        <div className={'c-dropdown__arrow-icon' + (isContrastInputOpen ? ' c-dropdown__arrow-icon--open' : '')}>
-          <svg className="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
-            <path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fillRule="nonzero" fillOpacity="1" stroke="none"></path>
-          </svg>
-        </div>
+      <div className="select-wrapper u-flex-basis-62">
+        <select ref={contrastMethodSelect} onChange={handleContrastMethod} name="contrast_method" id="contrast_method">
+          <option value="apca" selected={currentContrastMethod === 'apca'}>
+            APCA
+          </option>
+          <option value="wcag" selected={currentContrastMethod === 'wcag'}>
+            WCAG
+          </option>
+        </select>
       </div>
 
-      <div
-        className={
-          'c-single-input-with-lock c-single-input-with-lock--with-select c-dropdown__content-wraper u-mb-12' +
-          (isContrastInputOpen ? '' : ' u-display-none') +
-          ((!colorsRgba.parentFill || !colorsRgba.fill || currentFillOrStroke === 'stroke') && !$uiMessage.get().show
-            ? ' c-single-input-with-lock--deactivated'
-            : '')
-        }
-      >
-        <div className="select-wrapper u-flex-basis-55">
-          <select ref={contrastMethodSelect} onChange={handleContrastMethod} name="contrast_method" id="contrast_method">
-            <option value="apca" selected={currentContrastMethod === 'apca'}>
-              APCA
-            </option>
-            <option value="wcag" selected={currentContrastMethod === 'wcag'}>
-              WCAG
-            </option>
-          </select>
-        </div>
+      <BgOrFgToggle />
 
-        <BgOrFgToggle />
+      <div className="input-wrapper c-single-input-with-lock__input-wrapper">
+        <input
+          ref={input}
+          onClick={selectInputContent}
+          onBlur={(e) => {
+            handleInputOnBlur(e, lastKeyPressed)
+          }}
+          onKeyDown={(e) => {
+            handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
+          }}
+        />
+      </div>
 
-        <div className="input-wrapper c-single-input-with-lock__input-wrapper">
-          <input
-            ref={input}
-            onClick={selectInputContent}
-            onBlur={(e) => {
-              handleInputOnBlur(e, lastKeyPressed)
-            }}
-            onKeyDown={(e) => {
-              handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
-            }}
-          />
-        </div>
-
-        <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockContrast}>
-          <div className={'c-single-input-with-lock__lock' + (lockContrast ? ' c-single-input-with-lock__lock--closed' : '')}>
-            {!lockContrast ? <OpenLockIcon /> : <ClosedLockIcon />}
-          </div>
+      <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockContrast}>
+        <div className={'c-single-input-with-lock__lock' + (lockContrast ? ' c-single-input-with-lock__lock--closed' : '')}>
+          {!lockContrast ? <OpenLockIcon /> : <ClosedLockIcon />}
         </div>
       </div>
     </div>

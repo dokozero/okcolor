@@ -9,6 +9,8 @@ import { $isColorCodeInputsOpen, setIsColorCodeInputsOpenWithSideEffects } from 
 import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument/isMouseInsideDocument'
 import getColorCodeStrings from './helpers/getColorCodeStrings/getColorCodeStrings'
 import getNewColorHxya from './helpers/getNewColorHxya/getNewColorHxya'
+import DownArrowIcon from '../icons/DownArrowIcon/DownArrowIcon'
+import CopyIcon from '../icons/CopyIcon/CopyIcon'
 
 // We only need this object to check if the value of an input has been changed on blur.
 const colorCodesInputValues: { [key in ColorCodesInputValues]: string } = {
@@ -108,7 +110,7 @@ export default function ColorCodeInputs() {
   const handleCopyActionOnClick = (event: React.MouseEvent<HTMLDivElement>, input: HTMLInputElement) => {
     removeModifierClassOnCopyActions()
     copyToClipboard(input.value)
-    ;(event.target as HTMLDivElement).classList.add('c-copy-action--copied')
+    ;(event.currentTarget as HTMLDivElement).classList.add('c-copy-action--copied')
   }
 
   useEffect(() => {
@@ -121,14 +123,12 @@ export default function ColorCodeInputs() {
         <div>Color codes</div>
 
         <div className={'c-dropdown__arrow-icon' + (isColorCodeInputsOpen ? ' c-dropdown__arrow-icon--open' : '')}>
-          <svg className="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
-            <path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fillRule="nonzero" fillOpacity="1" stroke="none"></path>
-          </svg>
+          <DownArrowIcon />
         </div>
       </div>
 
       <div
-        className={'c-dropdown__content-wraper u-px-9' + (isColorCodeInputsOpen ? '' : ' u-display-none')}
+        className={'c-dropdown__content-wraper u-px-15' + (isColorCodeInputsOpen ? '' : ' u-display-none')}
         onMouseLeave={removeModifierClassOnCopyActions}
       >
         <div className="input-wrapper">
@@ -147,11 +147,13 @@ export default function ColorCodeInputs() {
               handleCopyActionOnClick(event, colorCode_currentColorModelInput.current!)
             }}
           >
-            Copy
+            <div className="c-copy-action__wrapper">
+              <CopyIcon /> Copy
+            </div>
           </div>
         </div>
 
-        <div className="input-wrapper u-mt-4">
+        <div className="input-wrapper u-mt-6">
           <input
             ref={colorCode_colorInput}
             id="color"
@@ -167,11 +169,13 @@ export default function ColorCodeInputs() {
               handleCopyActionOnClick(event, colorCode_colorInput.current!)
             }}
           >
-            Copy
+            <div className="c-copy-action__wrapper">
+              <CopyIcon /> Copy
+            </div>
           </div>
         </div>
 
-        <div className="input-wrapper u-mt-4">
+        <div className="input-wrapper u-mt-6">
           <input
             ref={colorCode_rgbaInput}
             id="rgba"
@@ -187,11 +191,13 @@ export default function ColorCodeInputs() {
               handleCopyActionOnClick(event, colorCode_rgbaInput.current!)
             }}
           >
-            Copy
+            <div className="c-copy-action__wrapper">
+              <CopyIcon /> Copy
+            </div>
           </div>
         </div>
 
-        <div className="input-wrapper u-mt-4">
+        <div className="input-wrapper u-mt-6">
           <input
             ref={colorCode_hexInput}
             id="hex"
@@ -207,7 +213,9 @@ export default function ColorCodeInputs() {
               handleCopyActionOnClick(event, colorCode_hexInput.current!)
             }}
           >
-            Copy
+            <div className="c-copy-action__wrapper">
+              <CopyIcon /> Copy
+            </div>
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ import { $lockRelativeChroma, setLockRelativeChromaWithSideEffects } from '../lo
 import merge from 'lodash/merge'
 import convertAbsoluteChromaToRelative from '../../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
 import { setRelativeChroma } from '../relativeChroma/relativeChroma'
+import { setIsContrastInputOpenWithSideEffects } from '../../contrasts/isContrastInputOpen/isContrastInputOpen'
 
 export const $currentColorModel = atom<CurrentColorModel>('oklch')
 
@@ -87,6 +88,8 @@ export const setCurrentColorModelWithSideEffects = action(
     }
 
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {
+      setIsContrastInputOpenWithSideEffects({ newIsContrastInputOpen: false })
+
       // If one of these values are true, we need to set them to false as relativeChroma and contrast are hidden in OkHSV or OkHSL
       if (sideEffects.syncLockRelativeChroma && $lockRelativeChroma.get()) {
         setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: false })

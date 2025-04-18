@@ -1,6 +1,6 @@
 .c-triangle-oklch-icon__outerline,
 .c-triangle-oklch-icon__triangle-line {
-  fill: var(--figma-color-text);
+  fill: var(--figma-color-icon);
 }
 
 .c-triangle-oklch-icon__triangle-fill {

@@ -1,7 +1,6 @@
 import { useStore } from '@nanostores/react'
 import { consoleLogInfos } from '../../../../constants'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
-import { $figmaEditorType } from '../../../stores/figmaEditorType/figmaEditorType'
 import { $isTransitionRunning, $oklchRenderMode, setOklchRenderModeWithSideEffects } from '../../../stores/oklchRenderMode/oklchRenderMode'
 import { useEffect } from 'react'
 import TriangleOklchIcon from '../../icons/TriangleOklchIcon/TriangleOklchIcon'
@@ -28,7 +27,6 @@ export default function OklchRenderModeToggle() {
     console.log('Component render — OklchRenderModeToggle')
   }
 
-  const figmaEditorType = useStore($figmaEditorType)
   const currentColorModel = useStore($currentColorModel)
   const oklchRenderMode = useStore($oklchRenderMode)
 
@@ -46,10 +44,7 @@ export default function OklchRenderModeToggle() {
 
   return (
     <div
-      className={
-        'c-oklch-render-mode-toggle' +
-        (figmaEditorType === 'figjam' || ['okhsv', 'okhsl'].includes(currentColorModel) ? ' c-oklch-render-mode-toggle--deactivated' : '')
-      }
+      className={'c-oklch-render-mode-toggle' + (['okhsv', 'okhsl'].includes(currentColorModel) ? ' c-oklch-render-mode-toggle--deactivated' : '')}
       onClick={handleOklchRenderMode}
     >
       <div

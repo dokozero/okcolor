@@ -1,15 +1,29 @@
 .c-copy-action {
   visibility: hidden;
+  padding: 0 5px 0 2px;
   position: absolute;
-  right: 0;
-  height: 26px;
-  line-height: 26px;
-  padding: 0 6px;
-  background-color: var(--figma-color-bg);
-}
-.c-copy-action--copied {
+  right: 1px;
+  height: 22px;
+  border-radius: var(--base-border-radius);
+  background-color: var(--figma-color-bg-secondary);
+  font-weight: 400;
+  font-size: var(--base-font-size);
   color: var(--figma-color-text-secondary);
 }
+
+.c-copy-action__wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.c-copy-action svg {
+  fill: var(--figma-color-icon-secondary);
+}
+
 .c-dropdown__content-wraper .input-wrapper:hover .c-copy-action {
   visibility: visible;
+}
+
+.c-copy-action--copied .c-copy-action__wrapper {
+  opacity: 0.5;
 }
