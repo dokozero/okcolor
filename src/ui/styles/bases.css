@@ -104,3 +104,23 @@ input.disabled {
 select {
   appearance: none;
 }
+
+.input-percent-char {
+  margin-left: -1px;
+
+  display: flex;
+  align-items: center;
+  height: 100%;
+  order: 99;
+
+  padding-right: 7px;
+
+  font-size: var(--base-font-size);
+  color: var(--figma-color-text-secondary);
+
+  background-color: var(--figma-color-bg-secondary);
+}
+
+.input--tighten + .input-percent-char {
+  padding-right: 3px;
+}

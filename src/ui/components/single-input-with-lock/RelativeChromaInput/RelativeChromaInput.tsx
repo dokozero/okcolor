@@ -38,7 +38,7 @@ export default function RelativeChromaInput() {
   useEffect(() => {
     if ($currentColorModel.get() !== 'oklch') return
 
-    input.current!.value = relativeChroma + '%'
+    input.current!.value = relativeChroma.toString()
 
     if (keepInputSelected.current) {
       input.current!.select()
@@ -67,7 +67,7 @@ export default function RelativeChromaInput() {
       }
     >
       <div className="c-single-input-with-lock__label">Relative chroma</div>
-      <div className="input-wrapper c-single-input-with-lock__input-wrapper u-ml-auto">
+      <div className="input-wrapper c-single-input-with-lock__input-wrapper u-max-w-50 u-ml-auto">
         <input
           ref={input}
           onClick={selectInputContent}
@@ -78,6 +78,7 @@ export default function RelativeChromaInput() {
             handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
           }}
         />
+        <div className="input-percent-char">%</div>
       </div>
 
       <div className="c-single-input-with-lock__lock-wrapper" onClick={handleLockRelativeChroma}>

@@ -202,7 +202,7 @@ export default function ColorValueInputs() {
           handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
         }}
       />
-      <div className="c-color-value-inputs__opacity-percent-char">%</div>
+      <div className="input-percent-char">%</div>
     </div>
   )
 }

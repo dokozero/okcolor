@@ -117,6 +117,10 @@
   margin-left: auto;
 }
 
+.u-max-w-50 {
+  max-width: 50px;
+}
+
 .u-opacity-50 {
   opacity: 0.5;
 }

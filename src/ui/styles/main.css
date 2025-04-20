@@ -10,7 +10,6 @@
 @import '../components/Toggle/Toggle.css';
 @import '../components/SettingsScreen/SettingsScreen.css';
 @import '../components/ColorPicker/ColorPicker.css';
-@import '../components/ColorValueInputs/ColorValueInputs.css';
 @import '../components/FillOrStrokeToggle/FillOrStrokeToggle.css';
 @import '../components/single-input-with-lock/BgOrFgToggle/BgOrFgToggle.css';
 @import '../components/icons/SquareOklchIcon/SquareOklchIcon.css';
