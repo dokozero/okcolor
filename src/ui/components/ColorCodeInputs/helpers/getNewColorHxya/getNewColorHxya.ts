@@ -1,11 +1,10 @@
-import { ColorCodesInputValues, ColorHxya, ColorModelList, ColorHxy, Opacity, CurrentBgOrFg, CurrentColorModel } from '../../../../../types'
+import { ColorCodesInputValues, ColorHxya, ColorHxy, Opacity, CurrentBgOrFg, CurrentColorModel } from '../../../../../types'
 import { converter } from '../../../../helpers/colors/culori.mjs'
 import convertRgbToHxy from '../../../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
 import getClampedChroma from '../../../../helpers/colors/getClampedChroma/getClampedChroma'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentBgOrFg } from '../../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
-import isColorCodeInGoodFormat from '../isColorCodeInGoodFormat/isColorCodeInGoodFormat'
 import getColorHxyDecimals from '../../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
 
@@ -27,17 +26,6 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
     currentColorModel = $currentColorModel.get(),
     currentBgOrFg = $currentBgOrFg.get()
   } = props
-
-  let colorFormat: keyof typeof ColorCodesInputValues | keyof typeof ColorModelList = eventTargetId
-
-  if (eventTargetId === 'currentColorModel') {
-    colorFormat = currentColorModel
-  }
-
-  // For hex, the color eventTargetValue is already checked bellow with convertToRgb().
-  if (colorFormat !== 'hex') {
-    if (!isColorCodeInGoodFormat({ color: eventTargetValue, format: colorFormat })) return
-  }
 
   let regex: RegExp
   let matches: RegExpMatchArray | null

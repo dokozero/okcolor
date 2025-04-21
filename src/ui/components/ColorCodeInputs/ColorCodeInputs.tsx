@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
-import { ColorCodesInputValues } from '../../../types'
+import { ColorCodesInputValues, ColorModelList } from '../../../types'
 import copyToClipboard from '../../helpers/copyToClipboard/copyToClipboard'
 import selectInputContent from '../../helpers/selectInputContent/selectInputContent'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
@@ -11,6 +11,8 @@ import getColorCodeStrings from './helpers/getColorCodeStrings/getColorCodeStrin
 import getNewColorHxya from './helpers/getNewColorHxya/getNewColorHxya'
 import DownArrowIcon from '../icons/DownArrowIcon/DownArrowIcon'
 import CopyIcon from '../icons/CopyIcon/CopyIcon'
+import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
+import isColorCodeInGoodFormat from './helpers/isColorCodeInGoodFormat/isColorCodeInGoodFormat'
 
 // We only need this object to check if the value of an input has been changed on blur.
 const colorCodesInputValues: { [key in ColorCodesInputValues]: string } = {
@@ -75,18 +77,44 @@ export default function ColorCodeInputs() {
       return
     }
 
-    // This test is to know if user has for example pressed the tab key but without modyfing the value.
+    // Test if user has for example pressed the tab key but without modyfing the value.
     if (colorCodesInputValues[eventTargetId] === eventTarget.value) {
       // Even if the color on input is the same, we allow to update the UI if rgba of hex inputs are focused, like this the user can simply set the sRGB fallback of an P3 color with "Enter" key.
-      if (!((eventTargetId === 'rgba' || eventTargetId === 'hex') && lastKeyPressed !== 'Enter')) {
+      if (eventTargetId !== 'rgba' && eventTargetId !== 'hex') {
         lastKeyPressed = ''
         return
       }
     }
 
+    let eventTargetValue = eventTarget.value
+    let colorFormat: keyof typeof ColorCodesInputValues | keyof typeof ColorModelList = eventTargetId
+
+    if (eventTargetId === 'currentColorModel') {
+      colorFormat = $currentColorModel.get()
+    }
+
+    // If oklch() color has a lightness value in decimal (0 to 1), convert it to percentage (0% to 100%).
+    if (colorFormat === 'oklch') {
+      const regex = /oklch\((0(?:\.\d+)?|1(?:\.0+)?)\s+(\d*(?:\.\d+)?)\s+(\d+(?:\.\d+)?)(?:\s*\/\s*(\d+(?:\.\d+)?))?\)/
+      const match = eventTargetValue.match(regex)
+
+      if (match) {
+        eventTargetValue = eventTargetValue.replace(regex, (_, lightness, chroma, hue, alpha) => {
+          const percentLightness = (parseFloat(lightness) * 100).toFixed(2).replace(/\.?0+$/, '') + '%'
+          return `oklch(${percentLightness} ${chroma} ${hue}${alpha ? ` / ${alpha}` : ''})`
+        })
+      }
+    }
+
+    // Test if the color code is in a good format.
+    if (!isColorCodeInGoodFormat({ color: eventTargetValue, format: colorFormat })) {
+      eventTarget.value = colorCodesInputValues[eventTargetId]
+      return
+    }
+
     const newColorHxya = getNewColorHxya({
       eventTargetId: eventTargetId,
-      eventTargetValue: eventTarget.value
+      eventTargetValue: eventTargetValue
     })
 
     if (newColorHxya) {

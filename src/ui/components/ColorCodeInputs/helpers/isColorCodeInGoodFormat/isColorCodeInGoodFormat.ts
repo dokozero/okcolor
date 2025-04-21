@@ -1,5 +1,8 @@
+import { converter } from '../../../../helpers/colors/culori.mjs'
 import { CurrentColorModel } from '../../../../../types'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'
+
+const convertToRgb = converter('rgb')
 
 type Props = {
   color: string
@@ -98,6 +101,9 @@ export default function isColorCodeInGoodFormat(props: Props): boolean {
     if (value2 < 0 || value2 > 255) return false
     if (value3 < 0 || value3 > 255) return false
     if (value4 !== null && (value4 < 0 || value4 > 1)) return false
+  } else if (format === 'hex') {
+    const newColorRgb = convertToRgb(color)
+    if (!newColorRgb) return false
   }
 
   return true

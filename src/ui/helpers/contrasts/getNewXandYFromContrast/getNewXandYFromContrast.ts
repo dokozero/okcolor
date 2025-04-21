@@ -36,7 +36,7 @@ type Props = {
  * If lockRelativeChroma is true, the returned X will take it into account.
  */
 
-// The approach to find the lightness is to start from the top (newY = 100) and go one step bellow (newYStep[0] = 50),
+// The approach to find the lightness is to start from the top (newY = 100) and go one step below (newYStep[0] = 50),
 // then if tempNewContrast === targetContrast we are done, but if that's not the case, we continue. When we go too far, we change the order
 // of scanning from top-bottom to bottom-up while making the step smaller (newY += newYStep[currentStepIndex] where currentStepIndex is incremented),
 // then, if again we go to far on this new direction, we reverse order with a smaller newYStep, until we find the goo lightness.
