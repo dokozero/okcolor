@@ -6,7 +6,7 @@ import { $colorHxya, setColorHxyaWithSideEffects } from '../../../stores/colors/
 import { setMouseEventCallback } from '../../../stores/mouseEventCallback/mouseEventCallback'
 import getColorHxyDecimals from '../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
-import { $oklchRenderMode } from '../../../stores/oklchRenderMode/oklchRenderMode'
+import { $isTransitionRunning, $oklchRenderMode } from '../../../stores/oklchRenderMode/oklchRenderMode'
 import convertRelativeChromaToAbsolute from '../../../helpers/colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import getLinearMappedValue from '../../../helpers/getLinearMappedValue/getLinearMappedValue'
@@ -22,6 +22,8 @@ export default function HueSlider() {
   const manipulatorHueSlider = useRef<SVGSVGElement>(null)
 
   const handleNewManipulatorPosition = (event: MouseEvent) => {
+    if ($isTransitionRunning.get()) return
+
     const rect = hueSlider.current!.getBoundingClientRect()
     const canvasY = event.clientX - rect.left - 7
 
