@@ -352,7 +352,7 @@ export default function ColorPicker() {
     let newValue: keyof typeof ColorSpacesNames | '' = ''
 
     if ($currentColorModel.get() === 'oklch') {
-      if (inGamutSrgb(`oklch(${$colorHxya.get().y / 100} ${$colorHxya.get().x - 0.001} ${$colorHxya.get().h})`)) {
+      if (inGamutSrgb(`oklch(${$colorHxya.get().y / 100} ${$colorHxya.get().x} ${$colorHxya.get().h})`)) {
         newValue = 'sRGB'
       } else {
         newValue = 'P3'
