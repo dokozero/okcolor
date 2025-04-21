@@ -85,7 +85,7 @@ export default function getContrastStrokeLimit(props: Props): SvgPath {
     }).y
 
     if (newY !== previousY) {
-      path += `L${i * PICKER_SIZE * OKLCH_CHROMA_SCALE} ${PICKER_SIZE - (newY * PICKER_SIZE) / 100} `
+      path += `L${i * PICKER_SIZE * OKLCH_CHROMA_SCALE} ${PICKER_SIZE - (newY * PICKER_SIZE) / 100 - 0.5} `
       previousY = newY
     }
   }

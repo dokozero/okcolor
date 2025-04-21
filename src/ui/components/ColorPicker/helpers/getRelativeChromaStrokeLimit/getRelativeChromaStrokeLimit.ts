@@ -65,7 +65,7 @@ export default function getRelativeChromaStrokeLimit(props: Props): SvgPath {
       }
     })
 
-    d += `L${xPosition.toFixed(2)} ${l} `
+    d += `L${(xPosition - 1).toFixed(2)} ${l} `
   }
 
   return d
