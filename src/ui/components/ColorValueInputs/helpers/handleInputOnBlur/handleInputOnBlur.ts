@@ -13,7 +13,7 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
   const oldValue = getColorHxyaValueFormatedForInput(eventId)
 
   const resetToOldValue = () => {
-    eventTarget.value = oldValue.toString() + (eventId === 'a' ? '%' : '')
+    eventTarget.value = oldValue.toString()
     lastKeyPressed.current = ''
     return
   }

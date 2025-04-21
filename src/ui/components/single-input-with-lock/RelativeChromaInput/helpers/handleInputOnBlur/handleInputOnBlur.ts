@@ -8,7 +8,7 @@ export default function handleInputOnBlur(event: React.FocusEvent<HTMLInputEleme
   const eventTarget = event.target
 
   const resetToOldValue = () => {
-    eventTarget.value = $relativeChroma.get() + '%'
+    eventTarget.value = $relativeChroma.get().toString()
     lastKeyPressed.current = ''
     return
   }

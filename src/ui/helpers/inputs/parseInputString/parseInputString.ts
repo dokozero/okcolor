@@ -3,22 +3,19 @@
  * If not, simply parses the string as a number.
  */
 export default function parseInputString(inputString: string): number | null {
-  // Remove % symbol and trim whitespace
-  const cleanedValue = inputString.replace('%', '').trim()
-
   // Check if the input contains mathematical operators
-  const containsMathOperators = /[+\-*/]/.test(cleanedValue)
+  const containsMathOperators = /[+\-*/]/.test(inputString)
 
   if (containsMathOperators) {
     try {
       // Use Function constructor to safely evaluate the expression
-      return Function('return ' + cleanedValue)()
+      return Function('return ' + inputString)()
     } catch (error) {
       return null // Expression evaluation failed
     }
   } else {
     // Parse as a simple number
-    const parsedValue = parseFloat(cleanedValue)
+    const parsedValue = parseFloat(inputString)
 
     return isNaN(parsedValue) ? null : parsedValue
   }
