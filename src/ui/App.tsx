@@ -37,6 +37,7 @@ import OklchRenderModeToggle from './components/top-bar/OklchRenderModeToggle/Ok
 import { setOklchRenderMode } from './stores/oklchRenderMode/oklchRenderMode'
 import ContrastToggle from './components/top-bar/ContrastToggle/ContrastToggle'
 import { useStore } from '@nanostores/react'
+import Alert from './components/Alert/Alert'
 
 // We use these var to measure speeds of app loading time (see in constants file to activate it).
 let appLoadingStart: number
@@ -214,6 +215,8 @@ function App() {
   } else {
     return (
       <>
+        <Alert />
+
         <SettingsScreen />
 
         <div className={'c-top-bar' + (isContrastInputOpen ? '' : ' u-mb-16')}>

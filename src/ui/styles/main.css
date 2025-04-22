@@ -1,6 +1,7 @@
 @import './bases.css';
 
 /* These a the styles that belong only to the React components. */
+@import '../components/Alert/Alert.css';
 @import '../components/top-bar/top-bar.css';
 @import '../components/top-bar/FileColorProfile/FileColorProfile.css';
 @import '../components/top-bar/OklchRenderModeToggle/OklchRenderModeToggle.css';
