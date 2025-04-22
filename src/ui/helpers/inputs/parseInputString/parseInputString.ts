@@ -10,7 +10,7 @@ export default function parseInputString(inputString: string): number | null {
     try {
       // Use Function constructor to safely evaluate the expression
       return Function('return ' + inputString)()
-    } catch (error) {
+    } catch {
       return null // Expression evaluation failed
     }
   } else {

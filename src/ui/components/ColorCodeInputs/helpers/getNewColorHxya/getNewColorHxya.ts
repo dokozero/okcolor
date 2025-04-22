@@ -1,5 +1,4 @@
 import { ColorCodesInputValues, ColorHxya, ColorHxy, Opacity, CurrentBgOrFg, CurrentColorModel } from '../../../../../types'
-import { converter } from '../../../../helpers/colors/culori.mjs'
 import convertRgbToHxy from '../../../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
 import getClampedChroma from '../../../../helpers/colors/getClampedChroma/getClampedChroma'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
@@ -7,6 +6,7 @@ import { $currentColorModel } from '../../../../stores/colors/currentColorModel/
 import { $currentBgOrFg } from '../../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
 import getColorHxyDecimals from '../../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
+import { converter } from 'culori'
 
 const convertToRgb = converter('rgb')
 

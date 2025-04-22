@@ -1,4 +1,4 @@
-import { converter } from '../../../../helpers/colors/culori.mjs'
+import { converter } from 'culori'
 import { CurrentColorModel } from '../../../../../types'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'
 

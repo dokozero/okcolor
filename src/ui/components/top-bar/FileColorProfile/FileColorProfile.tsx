@@ -15,13 +15,16 @@ export default function FileColorProfile() {
 
   switch ($figmaEditorType.get()) {
     case 'figma':
-      tooltipText = 'File color profile, automatically set from file settings.'
+      tooltipText = 'File color profile, specified in its settings.'
       break
     case 'figjam':
-      tooltipText = 'File color profile, FigJam files only support sRGB.'
+      tooltipText = 'File color profile, FigJam only supports sRGB.'
+      break
+    case 'slides':
+      tooltipText = 'File color profile, Figma Slides only supports sRGB.'
       break
     default:
-      tooltipText = 'File color profile, automatically set from file settings.'
+      tooltipText = 'File color profile, specified in its settings.'
       break
   }
 

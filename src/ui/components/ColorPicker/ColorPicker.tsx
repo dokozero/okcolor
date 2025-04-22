@@ -6,7 +6,7 @@ import libraryGlsl from '@virtual:shaders/src/ui/shaders/library.glsl'
 import fShader from '@virtual:shaders/src/ui/shaders/f_shader.glsl'
 import vShader from '@virtual:shaders/src/ui/shaders/v_shader.glsl'
 import * as twgl from 'twgl.js'
-import { inGamut } from '../../helpers/colors/culori.mjs'
+import { inGamut } from 'culori'
 import { ColorModelList, OklchRenderModeList } from '../../../types'
 import { $colorHxya } from '../../stores/colors/colorHxya/colorHxya'
 import { $colorsRgba } from '../../stores/colors/colorsRgba/colorsRgba'
@@ -50,10 +50,7 @@ let canvasWebglContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
 let programInfo: twgl.ProgramInfo
 
-enum ColorSpacesNames {
-  'sRGB',
-  'P3'
-}
+type ColorSpacesNames = 'sRGB' | 'P3'
 
 export default function ColorPicker() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -62,7 +59,7 @@ export default function ColorPicker() {
 
   const isMounted = useRef(false)
 
-  const [colorSpaceOfCurrentColor, setColorSpaceOfCurrentColor] = useState<keyof typeof ColorSpacesNames | ''>('')
+  const [colorSpaceOfCurrentColor, setColorSpaceOfCurrentColor] = useState<ColorSpacesNames | ''>('')
 
   const selectionId = useStore($selectionId)
   const uiMessage = useStore($uiMessage)
@@ -349,7 +346,7 @@ export default function ColorPicker() {
   const updateColorSpaceLabelInColorPicker = () => {
     if ($currentFileColorProfile.get() === 'rgb') return
 
-    let newValue: keyof typeof ColorSpacesNames | '' = ''
+    let newValue: ColorSpacesNames | '' = ''
 
     if ($currentColorModel.get() === 'oklch') {
       if (inGamutSrgb(`oklch(${$colorHxya.get().y / 100} ${$colorHxya.get().x} ${$colorHxya.get().h})`)) {

@@ -1,8 +1,8 @@
 import { ColorHxy, ColorModelList, CurrentFileColorProfile, ColorRgb } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
-import { converter } from '../culori.mjs'
-import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
+import { converter } from 'culori'
+import type { Rgb, Okhsl, Okhsv, Oklch } from 'culori'
 import clamp from 'lodash/clamp'
 
 const convertToRgb = converter('rgb')

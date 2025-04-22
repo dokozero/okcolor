@@ -1,9 +1,9 @@
-import { clampChromaInGamut } from '../../../../helpers/colors/culori.mjs'
 import { PICKER_SIZE, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../../constants'
 import { ColorHxya, OklchRenderMode, SvgPath } from '../../../../../types'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $oklchRenderMode } from '../../../../stores/oklchRenderMode/oklchRenderMode'
 import getLinearMappedValue from '../../../../helpers/getLinearMappedValue/getLinearMappedValue'
+import { clampChroma } from 'culori'
 
 type Props = {
   colorHxya?: ColorHxya
@@ -37,7 +37,7 @@ export default function getSrgbStrokeLimit(props: Props): SvgPath {
       yPosition = 10
     }
 
-    sRGBMaxChroma = clampChromaInGamut(
+    sRGBMaxChroma = clampChroma(
       {
         mode: 'oklch',
         l: yPosition / 100,
@@ -48,7 +48,7 @@ export default function getSrgbStrokeLimit(props: Props): SvgPath {
       'rgb'
     )
 
-    p3MaxChroma = clampChromaInGamut(
+    p3MaxChroma = clampChroma(
       {
         mode: 'oklch',
         l: yPosition / 100,

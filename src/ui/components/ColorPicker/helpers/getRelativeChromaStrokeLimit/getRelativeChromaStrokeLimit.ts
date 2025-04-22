@@ -1,10 +1,10 @@
-import { clampChromaInGamut } from '../../../../helpers/colors/culori.mjs'
 import { PICKER_SIZE, OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../../constants'
 import { ColorHxya, CurrentFileColorProfile, OklchRenderMode, RelativeChroma, SvgPath } from '../../../../../types'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $currentFileColorProfile } from '../../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import { $relativeChroma } from '../../../../stores/colors/relativeChroma/relativeChroma'
 import getLinearMappedValue from '../../../../helpers/getLinearMappedValue/getLinearMappedValue'
+import { clampChroma } from 'culori'
 
 type Props = {
   colorHxya?: ColorHxya
@@ -34,7 +34,7 @@ export default function getRelativeChromaStrokeLimit(props: Props): SvgPath {
   let xPosition: number
 
   for (let l = 0; l < PICKER_SIZE; l += 1 / precision) {
-    maxChromaCurrentLine = clampChromaInGamut(
+    maxChromaCurrentLine = clampChroma(
       {
         mode: 'oklch',
         l: (PICKER_SIZE - l) / PICKER_SIZE,

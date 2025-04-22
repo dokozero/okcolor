@@ -44,7 +44,8 @@ export type RgbaArray = [RgbElement, RgbElement, RgbElement, Opacity]
 enum FigmaEditorTypeList {
   'figjam',
   'figma',
-  'dev'
+  'dev',
+  'slides'
 }
 export type FigmaEditorType = keyof typeof FigmaEditorTypeList
 

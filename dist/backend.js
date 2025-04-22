@@ -41,8 +41,7 @@ function G() {
     let o = r.parent;
     for (; o; )
       if (o.fills && ((_ = o.fills) == null ? void 0 : _.length) !== 0) {
-        if (o.fills[0].type !== "SOLID")
-          break;
+        if (o.fills[0].type !== "SOLID") break;
         e.newColorsRgba.parentFill = {
           r: o.fills[0].color.r,
           g: o.fills[0].color.g,
@@ -196,8 +195,7 @@ const V = async () => {
     }
   }));
 }, W = (t) => {
-  if (R || t.documentChanges[0].type !== "PROPERTY_CHANGE" && t.documentChanges[0].type !== "STYLE_PROPERTY_CHANGE" || !t.documentChanges[0].properties.some((g) => Y.includes(g)))
-    return;
+  if (R || t.documentChanges[0].type !== "PROPERTY_CHANGE" && t.documentChanges[0].type !== "STYLE_PROPERTY_CHANGE" || !t.documentChanges[0].properties.some((g) => Y.includes(g))) return;
   const i = JSON.parse(JSON.stringify(c));
   N() !== "uiMessageCode sent" && (JSON.stringify(i) !== JSON.stringify(c) && (a === "fill" && !c.fill ? a = "stroke" : a === "stroke" && !c.stroke && (a = "fill")), y = T(), S({
     type: "syncNewShape",

@@ -1,8 +1,8 @@
 import { ColorRgb, ColorModelList, CurrentFileColorProfile, ColorHxy } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
-import { converter } from '../culori.mjs'
-import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
+import { converter } from 'culori'
+import type { Rgb, Okhsl, Okhsv, Oklch } from 'culori'
 import getColorHxyDecimals from '../getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
 

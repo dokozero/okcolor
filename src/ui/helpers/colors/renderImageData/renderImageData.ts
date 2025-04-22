@@ -1,10 +1,10 @@
+import { clampChroma } from 'culori'
 import { OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../constants'
 import { AbsoluteChroma, ColorRgb, CurrentColorModel, CurrentFileColorProfile, Hue } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
 import getLinearMappedValue from '../../getLinearMappedValue/getLinearMappedValue'
 import convertHxyToRgb from '../convertHxyToRgb/convertHxyToRgb'
-import { clampChromaInGamut } from '../culori.mjs'
 import getColorPickerResolutionInfos from '../getColorPickerResolutionInfos/getColorPickerResolutionInfos'
 
 const localDebugInfos = {
@@ -92,7 +92,7 @@ export const renderImageData = (props: Props): ImageData => {
 
       currentPixelLineIndex = 0
 
-      maxChromaCurrentLine = clampChromaInGamut(
+      maxChromaCurrentLine = clampChroma(
         {
           mode: 'oklch',
           l: currentY,
