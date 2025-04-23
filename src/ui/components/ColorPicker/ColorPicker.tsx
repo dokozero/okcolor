@@ -74,6 +74,7 @@ export default function ColorPicker() {
   const oklchRenderMode = useStore($oklchRenderMode)
 
   const colorPicker = useRef<HTMLDivElement>(null)
+  const colorPickerWrapper = useRef<HTMLDivElement>(null)
   const colorSpaceLabel = useRef<HTMLDivElement>(null)
   const colorPickerCanvas = useRef<HTMLCanvasElement>(null)
   const colorPickerTransitionCanvas = useRef<HTMLCanvasElement>(null)
@@ -243,7 +244,7 @@ export default function ColorPicker() {
         colorHxy: { h: $colorHxya.get().h, x: 0.006, y: document.documentElement.classList.contains('figma-dark') ? 36 : 95 }
       })
 
-      colorPicker.current!.style.backgroundColor = `rgb(${bgColor.r * 255}, ${bgColor.g * 255}, ${bgColor.b * 255})`
+      colorPickerWrapper.current!.style.backgroundColor = `rgb(${bgColor.r * 255}, ${bgColor.g * 255}, ${bgColor.b * 255})`
     }
 
     if (animation) {
@@ -422,7 +423,7 @@ export default function ColorPicker() {
 
   useEffect(() => {
     if (uiMessage.show) {
-      colorPicker.current!.style.backgroundColor = ''
+      colorPickerWrapper.current!.style.backgroundColor = ''
       colorPicker.current!.classList.add('c-color-picker--deactivated')
     } else {
       colorPicker.current!.classList.remove('c-color-picker--deactivated')
@@ -491,8 +492,8 @@ export default function ColorPicker() {
   }, [])
 
   return (
-    <div ref={colorPicker} tabIndex={0} className="c-color-picker" style={{ width: `${PICKER_SIZE}px`, height: `${PICKER_SIZE}px` }}>
-      <div className="c-color-picker__wrapper">
+    <div ref={colorPicker} tabIndex={0} className="c-color-picker" style={{ width: `${PICKER_SIZE + 32}px`, height: `${PICKER_SIZE}px` }}>
+      <div ref={colorPickerWrapper} className="c-color-picker__wrapper">
         <div className="c-color-picker__message-wrapper">
           <p className="c-color-picker__message-text">{uiMessage.message}</p>
         </div>

@@ -1,9 +1,7 @@
 .c-color-picker {
   position: relative;
 
-  margin-left: 16px;
-
-  background-color: var(--figma-color-bg-secondary);
+  padding: 0 16px;
 
   border-radius: var(--base-border-radius);
 }
@@ -14,7 +12,8 @@
   height: 100%;
   overflow: hidden;
 
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: var(--figma-color-bg-secondary);
+  outline: 1px solid rgba(0, 0, 0, 0.08);
 
   border-radius: var(--base-border-radius);
 }
