@@ -19,7 +19,7 @@ OkColor solves all these problems and more, its params are reliable and uniform,
 If we change the hue of a color in OkLCH and keep the same lightness value, we know that the resulting color will have the same perceived lightness.
 
 TODO - Update
-You can also easily create perceptually uniform color palettes, and do more advanced things with OkLCH like picking colors in P3 space and use the relative chroma ([see this thread for more infos](https://twitter.com/dokozero/status/1711379022553272371)).
+You can also easily create perceptually uniform color palettes, and do more advanced things with OkLCH like picking colors in P3 gamut and use the relative chroma ([see this thread for more infos](https://twitter.com/dokozero/status/1711379022553272371)).
 
 For more details, check [plugin community's page](https://www.figma.com/community/plugin/1173638098109123591/OkColor) for a FAQ and a playground file that explain in more details the plugin.
 

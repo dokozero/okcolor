@@ -112,11 +112,11 @@ vec3 lrgbToRgb(in vec3 rgb) {
   return vec3(processedR, processedG, processedB);
 }
 
-vec3 oklchToRgb(in vec3 lch, in bool isSpaceP3) {
+vec3 oklchToRgb(in vec3 lch, in bool isGamutP3) {
   vec3 lab = lchToLab(lch);
   vec3 lrgbInSpace;
   
-  if (!isSpaceP3) {
+  if (!isGamutP3) {
     lrgbInSpace = oklabToLrgbSrgb(lab);
   } else {
     // Converting to rgb in P3 space needs a few more steps.
@@ -130,13 +130,13 @@ vec3 oklchToRgb(in vec3 lch, in bool isSpaceP3) {
 }
 
 // This alternative uses the same steps for sRGB than P3, in case for the future if bugs are found with sRGB render.
-// vec3 oklchToRgb(in vec3 lch, in bool isSpaceP3) {
+// vec3 oklchToRgb(in vec3 lch, in bool isGamutP3) {
 //   vec3 lab = lchToLab(lch);
 //   vec3 lrgb = oklabToLrgbSrgb(lab);
 //   vec3 xyz = lrgbToXyz(lrgb);
 
 //   vec3 lrgbInSpace;
-//   if (isSpaceP3) {
+//   if (isGamutP3) {
 //     lrgbInSpace = xyzToLrgbP3(xyz);
 //   } else {
 //     lrgbInSpace = xyzToLrgbSrgb(xyz);

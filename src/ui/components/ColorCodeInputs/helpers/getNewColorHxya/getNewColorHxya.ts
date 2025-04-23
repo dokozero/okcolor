@@ -75,7 +75,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
         g: parseFloat(matches![1]),
         b: parseFloat(matches![2])
       },
-      colorSpace: currentColorModel === 'oklch' ? 'p3' : 'rgb'
+      gamut: currentColorModel === 'oklch' ? 'p3' : 'rgb'
     })
 
     if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {
@@ -93,7 +93,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
         g: parseFloat(matches![1]) / 255,
         b: parseFloat(matches![2]) / 255
       },
-      colorSpace: 'rgb'
+      gamut: 'rgb'
     })
 
     if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {
@@ -105,7 +105,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
 
     newColorHxy = convertRgbToHxy({
       colorRgb: newColorRgb,
-      colorSpace: 'rgb'
+      gamut: 'rgb'
     })
 
     if (newColorRgb.alpha && currentBgOrFg === 'fg') {

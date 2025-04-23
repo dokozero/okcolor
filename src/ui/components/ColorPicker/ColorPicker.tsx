@@ -50,7 +50,7 @@ let canvasWebglContext: WebGL2RenderingContext | null = null
 let bufferInfo: twgl.BufferInfo
 let programInfo: twgl.ProgramInfo
 
-type ColorSpacesNames = 'sRGB' | 'P3'
+type GamutNames = 'sRGB' | 'P3'
 
 export default function ColorPicker() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -59,7 +59,7 @@ export default function ColorPicker() {
 
   const isMounted = useRef(false)
 
-  const [colorSpaceOfCurrentColor, setColorSpaceOfCurrentColor] = useState<ColorSpacesNames | ''>('')
+  const [gamutOfCurrentColor, setGamutOfCurrentColor] = useState<GamutNames | ''>('')
 
   const selectionId = useStore($selectionId)
   const uiMessage = useStore($uiMessage)
@@ -75,7 +75,7 @@ export default function ColorPicker() {
 
   const colorPicker = useRef<HTMLDivElement>(null)
   const colorPickerWrapper = useRef<HTMLDivElement>(null)
-  const colorSpaceLabel = useRef<HTMLDivElement>(null)
+  const gamutLabel = useRef<HTMLDivElement>(null)
   const colorPickerCanvas = useRef<HTMLCanvasElement>(null)
   const colorPickerTransitionCanvas = useRef<HTMLCanvasElement>(null)
   const manipulatorColorPicker = useRef<SVGSVGElement>(null)
@@ -91,7 +91,7 @@ export default function ColorPicker() {
     manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(newManipulatorPosition.x - 9, newManipulatorPosition.y - 9)
   }
 
-  const setColorOfColorSpaceLabel = ({ position = $oklchRenderMode.get() === 'triangle' ? 0 : 100 }: { position?: number } = {}) => {
+  const setColorOfGamutLabel = ({ position = $oklchRenderMode.get() === 'triangle' ? 0 : 100 }: { position?: number } = {}) => {
     if ($currentFileColorProfile.get() === 'rgb') return
 
     // We do this to prevent transition while we still see the picker background.
@@ -113,7 +113,7 @@ export default function ColorPicker() {
       targetRange: { min: minLightness, max: 60 }
     })
 
-    colorSpaceLabel.current!.style.color = `oklch(${lightness}% ${chroma} ${$colorHxya.get().h})`
+    gamutLabel.current!.style.color = `oklch(${lightness}% ${chroma} ${$colorHxya.get().h})`
   }
 
   const renderSrgbLimitStroke = ({ position = $oklchRenderMode.get() === 'triangle' ? 0 : 100 }: { position?: number } = {}) => {
@@ -168,7 +168,7 @@ export default function ColorPicker() {
         renderSrgbLimitStroke({ position: position })
         renderRelativeChromaStroke({ position: position })
         renderContrastStroke({ position: position })
-        setColorOfColorSpaceLabel({ position: position })
+        setColorOfGamutLabel({ position: position })
 
         canvasToAnimate!.putImageData(renderImageData({ h: $colorHxya.get().h, position: clamp(position, 0, 100) }), 0, 0)
 
@@ -199,7 +199,7 @@ export default function ColorPicker() {
           const uniforms = {
             resolution: [size, size],
             chromaScale: OKLCH_CHROMA_SCALE,
-            isSpaceP3: $currentFileColorProfile.get() === 'p3',
+            isGamutP3: $currentFileColorProfile.get() === 'p3',
             colorModel: ColorModelList[$currentColorModel.get()],
             oklchRenderMode: OklchRenderModeList[$oklchRenderMode.get()],
             hueRad: ($colorHxya.get().h * Math.PI) / 180
@@ -212,7 +212,7 @@ export default function ColorPicker() {
         renderSrgbLimitStroke()
         renderRelativeChromaStroke()
         renderContrastStroke()
-        setColorOfColorSpaceLabel()
+        setColorOfGamutLabel()
 
         setIsTransitionRunning(false)
       } else {
@@ -264,7 +264,7 @@ export default function ColorPicker() {
       const uniforms = {
         resolution: [size, size],
         chromaScale: OKLCH_CHROMA_SCALE,
-        isSpaceP3: $currentFileColorProfile.get() === 'p3',
+        isGamutP3: $currentFileColorProfile.get() === 'p3',
         colorModel: ColorModelList[$currentColorModel.get()],
         oklchRenderMode: OklchRenderModeList[$oklchRenderMode.get()],
         hueRad: ($colorHxya.get().h * Math.PI) / 180
@@ -278,7 +278,7 @@ export default function ColorPicker() {
     renderSrgbLimitStroke()
     renderRelativeChromaStroke()
     renderContrastStroke()
-    setColorOfColorSpaceLabel()
+    setColorOfGamutLabel()
 
     if (consoleLogInfos.includes('Color picker rendering speed')) {
       colorPickerCanvasRenderingEnd = performance.now()
@@ -344,10 +344,10 @@ export default function ColorPicker() {
     }
   }
 
-  const updateColorSpaceLabelInColorPicker = () => {
+  const updateGamutLabelInColorPicker = () => {
     if ($currentFileColorProfile.get() === 'rgb') return
 
-    let newValue: ColorSpacesNames | '' = ''
+    let newValue: GamutNames | '' = ''
 
     if ($currentColorModel.get() === 'oklch') {
       if (inGamutSrgb(`oklch(${$colorHxya.get().y / 100} ${$colorHxya.get().x} ${$colorHxya.get().h})`)) {
@@ -357,8 +357,8 @@ export default function ColorPicker() {
       }
     }
 
-    if (colorSpaceOfCurrentColor !== newValue) {
-      setColorSpaceOfCurrentColor(newValue)
+    if (gamutOfCurrentColor !== newValue) {
+      setGamutOfCurrentColor(newValue)
     }
   }
 
@@ -371,7 +371,7 @@ export default function ColorPicker() {
   useEffect(() => {
     if (!isMounted.current) return
     updateManipulatorPosition()
-    updateColorSpaceLabelInColorPicker()
+    updateGamutLabelInColorPicker()
   }, [colorHxya.x, colorHxya.y, selectionId])
 
   useEffect(() => {
@@ -380,11 +380,9 @@ export default function ColorPicker() {
 
     if ($oklchRenderMode.get() === 'square') {
       if ($relativeChroma.get() > 82 && colorHxya.y > 90) {
-        // colorSpaceLabel.current!.style.opacity = '0.2'
-        colorSpaceLabel.current!.style.top = '27px'
+        gamutLabel.current!.style.top = '27px'
       } else {
-        // colorSpaceLabel.current!.style.opacity = '1'
-        colorSpaceLabel.current!.style.top = '5px'
+        gamutLabel.current!.style.top = '5px'
       }
     }
   }, [colorHxya.y, relativeChroma])
@@ -400,7 +398,7 @@ export default function ColorPicker() {
   useEffect(() => {
     if (!isMounted.current || selectionId === '') return
     renderColorPickerCanvas()
-    updateColorSpaceLabelInColorPicker()
+    updateGamutLabelInColorPicker()
   }, [colorHxya.h, selectionId])
 
   useEffect(() => {
@@ -435,7 +433,7 @@ export default function ColorPicker() {
     scaleColorPickerCanvasAndWebglViewport()
 
     if ($currentFileColorProfile.get() === 'rgb') {
-      colorSpaceLabel.current!.style.display = 'none'
+      gamutLabel.current!.style.display = 'none'
     }
 
     if ($userSettings.get().useHardwareAcceleration) setDrawingBufferColorSpace()
@@ -443,7 +441,7 @@ export default function ColorPicker() {
     if (!$uiMessage.get().show) {
       renderColorPickerCanvas()
       updateManipulatorPosition()
-      updateColorSpaceLabelInColorPicker()
+      updateGamutLabelInColorPicker()
     }
 
     colorPicker.current!.addEventListener('mousedown', () => {
@@ -498,8 +496,8 @@ export default function ColorPicker() {
           <p className="c-color-picker__message-text">{uiMessage.message}</p>
         </div>
 
-        <div ref={colorSpaceLabel} className={`c-color-picker__color-space-label`}>
-          {colorSpaceOfCurrentColor}
+        <div ref={gamutLabel} className={`c-color-picker__gamut-label`}>
+          {gamutOfCurrentColor}
         </div>
 
         <canvas ref={colorPickerTransitionCanvas} className="c-color-picker__canvas" id="okhxy-xy-picker-transition"></canvas>

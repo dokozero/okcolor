@@ -141,7 +141,7 @@ export const renderImageData = (props: Props): ImageData => {
             rgbColor = convertHxyToRgb({
               colorHxy: { h: h, x: xValue, y: currentY * 100 },
               originColorModel: 'oklch',
-              colorSpace: 'rgb'
+              gamut: 'rgb'
             })
 
             imageDataPixelRgb = rgbColor!

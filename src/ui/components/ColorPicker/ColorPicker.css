@@ -43,7 +43,7 @@
   line-height: 1.4;
 }
 
-.c-color-picker__color-space-label {
+.c-color-picker__gamut-label {
   z-index: 1;
   position: absolute;
   top: 5px;
@@ -74,7 +74,7 @@
 .c-color-picker--deactivated .c-color-picker__manipulator,
 .c-color-picker--deactivated .c-color-picker__srgb-limit-stroke,
 .c-color-picker--deactivated .c-color-picker__relative-chroma-stroke,
-.c-color-picker--deactivated .c-color-picker__color-space-label,
+.c-color-picker--deactivated .c-color-picker__gamut-label,
 .c-color-picker--deactivated .c-color-picker__contrast-stroke {
   display: none;
 }

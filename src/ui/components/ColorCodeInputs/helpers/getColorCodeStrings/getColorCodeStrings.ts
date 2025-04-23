@@ -45,16 +45,16 @@ export default function getColorCodeStrings(props: Props = {}): NewColorStrings 
         x: clamped.c,
         y: clamped.l * 100
       },
-      colorSpace: 'rgb'
+      gamut: 'rgb'
     })
     rgbP3 = convertHxyToRgb({
       colorHxy: colorHxya,
-      colorSpace: 'p3'
+      gamut: 'p3'
     })
   } else {
     rgbSrgb = convertHxyToRgb({
       colorHxy: colorHxya,
-      colorSpace: 'rgb'
+      gamut: 'rgb'
     })
   }
 

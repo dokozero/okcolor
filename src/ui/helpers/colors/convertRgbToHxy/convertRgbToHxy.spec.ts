@@ -11,7 +11,7 @@ describe('convertRgbToHxy()', () => {
           b: 0.75
         },
         targetColorModel: 'oklch',
-        colorSpace: 'p3'
+        gamut: 'p3'
       })
     ).toStrictEqual({
       h: 244.8,

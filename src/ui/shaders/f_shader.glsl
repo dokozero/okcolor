@@ -1,7 +1,7 @@
 precision mediump float;
 uniform vec2 resolution;
 uniform float chromaScale;
-uniform bool isSpaceP3;
+uniform bool isGamutP3;
 uniform int colorModel;
 uniform int oklchRenderMode;
 uniform float hueRad;
@@ -17,7 +17,7 @@ void main() {
       float h = hueRad;
 
       vec3 oklch = vec3(l, absoluteChroma, h);
-      vec3 oklchRgb = oklchToRgb(oklch, isSpaceP3);
+      vec3 oklchRgb = oklchToRgb(oklch, isGamutP3);
 
       if (isInBounds(oklchRgb)) {
         gl_FragColor = vec4(oklchRgb, 1.0);
