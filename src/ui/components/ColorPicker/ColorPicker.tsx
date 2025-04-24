@@ -159,6 +159,8 @@ export default function ColorPicker() {
     let lastFrameTime = performance.now()
     let animationComplete = false
 
+    gamutLabel.current!.style.transitionDuration = '0.5s'
+
     const animateCanvas = () => {
       const now = performance.now()
       if (now - lastFrameTime >= frameInterval) {
@@ -213,6 +215,8 @@ export default function ColorPicker() {
         renderRelativeChromaStroke()
         renderContrastStroke()
         setColorOfGamutLabel()
+
+        gamutLabel.current!.style.transitionDuration = '0.2s'
 
         setIsTransitionRunning(false)
       } else {
@@ -378,14 +382,12 @@ export default function ColorPicker() {
     if ($currentColorModel.get() !== 'oklch') return
     if ($currentFileColorProfile.get() === 'rgb') return
 
-    if ($oklchRenderMode.get() === 'square') {
-      if ($relativeChroma.get() > 82 && colorHxya.y > 90) {
-        gamutLabel.current!.style.top = '27px'
-      } else {
-        gamutLabel.current!.style.top = '5px'
-      }
+    if (oklchRenderMode === 'square' && relativeChroma > 82 && colorHxya.y > 89) {
+      gamutLabel.current!.style.top = '29px'
+    } else {
+      gamutLabel.current!.style.top = '5px'
     }
-  }, [colorHxya.y, relativeChroma])
+  }, [colorHxya.y, relativeChroma, oklchRenderMode])
 
   useEffect(() => {
     if (!isMounted.current) return

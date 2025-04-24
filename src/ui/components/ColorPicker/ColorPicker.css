@@ -46,10 +46,10 @@
 .c-color-picker__gamut-label {
   z-index: 1;
   position: absolute;
-  top: 5px;
   right: 5px;
   font-size: var(--base-font-size);
   user-select: none;
+  transition: top 0.2s ease-out;
 }
 
 .c-color-picker__canvas,
