@@ -52,8 +52,8 @@ export default function Alert() {
 
         <div className="c-alert__content">
           <p>
-            Please use OkLCH, {$currentColorModel.get() === 'okhsl' ? 'OkHSL' : 'OkHSV'} has fewer features and will be removed. Email me at:
-            contact@dokozero.design if you still need it.
+            Please use OkLCH, {$currentColorModel.get() === 'okhsl' ? 'OkHSL' : 'OkHSV'} works only in sRGB with no CSS support and will be removed.
+            Email me at: contact@dokozero.design if you still need it.
           </p>
         </div>
 
