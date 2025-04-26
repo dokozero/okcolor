@@ -19,7 +19,7 @@ export default function HueSlider() {
   const colorHxya = useStore($colorHxya)
 
   const hueSlider = useRef<HTMLDivElement>(null)
-  const manipulatorHueSlider = useRef<SVGSVGElement>(null)
+  const manipulatorHueSlider = useRef<HTMLDivElement>(null)
 
   const handleNewManipulatorPosition = (event: MouseEvent) => {
     if ($isTransitionRunning.get()) return
@@ -68,7 +68,7 @@ export default function HueSlider() {
       targetRange: { min: -1, max: SLIDER_SIZE }
     })
 
-    manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate(xPosition, -1)
+    manipulatorHueSlider.current!.style.transform = `translate(${xPosition}px, -1px)`
   }, [colorHxya.h])
 
   useEffect(() => {
@@ -83,11 +83,13 @@ export default function HueSlider() {
         <div ref={hueSlider} className="u-w-full u-h-full" id="okhxy-h-slider"></div>
       </div>
 
-      <div className="c-slider__manipulator">
-        <svg ref={manipulatorHueSlider} transform="translate(0,0)" width="18" height="18">
-          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
-          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
-        </svg>
+      <div className="c-slider__manipulator-container">
+        <div className="c-slider__manipulator" ref={manipulatorHueSlider}>
+          <svg width="18" height="18">
+            <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
+            <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
+          </svg>
+        </div>
       </div>
     </div>
   )

@@ -25,7 +25,7 @@ export default function OpacitySlider() {
 
   const opacitySliderWrapper = useRef<HTMLDivElement>(null)
   const opacitySlider = useRef<HTMLDivElement>(null)
-  const manipulatorOpacitySlider = useRef<SVGSVGElement>(null)
+  const manipulatorOpacitySlider = useRef<HTMLDivElement>(null)
 
   const updateManipulatorPosition = () => {
     const xPosition = getLinearMappedValue({
@@ -34,7 +34,7 @@ export default function OpacitySlider() {
       targetRange: { min: -1, max: SLIDER_SIZE }
     })
 
-    manipulatorOpacitySlider.current!.transform.baseVal.getItem(0).setTranslate(xPosition, -1)
+    manipulatorOpacitySlider.current!.style.transform = `translate(${xPosition}px, -1px)`
   }
 
   const handleNewManipulatorPosition = (event: MouseEvent) => {
@@ -76,11 +76,13 @@ export default function OpacitySlider() {
         <div ref={opacitySlider} className="u-w-full u-h-full" id="opacity-slider"></div>
       </div>
 
-      <div className="c-slider__manipulator">
-        <svg ref={manipulatorOpacitySlider} transform="translate(0,0)" width="18" height="18">
-          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
-          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
-        </svg>
+      <div className="c-slider__manipulator-container">
+        <div className="c-slider__manipulator" ref={manipulatorOpacitySlider}>
+          <svg width="18" height="18">
+            <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
+            <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
+          </svg>
+        </div>
       </div>
     </div>
   )

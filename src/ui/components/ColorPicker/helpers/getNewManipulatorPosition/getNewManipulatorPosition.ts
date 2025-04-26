@@ -52,8 +52,8 @@ export default function getNewManipulatorPosition(props: Props) {
     newManipulatorPosition.x = $colorHxya.get().x / 100
   }
 
-  newManipulatorPosition.x = PICKER_SIZE * newManipulatorPosition.x
-  newManipulatorPosition.y = PICKER_SIZE * (1 - $colorHxya.get().y / 100)
+  newManipulatorPosition.x = PICKER_SIZE * newManipulatorPosition.x - 9
+  newManipulatorPosition.y = PICKER_SIZE * (1 - $colorHxya.get().y / 100) - 9
 
   return newManipulatorPosition
 }

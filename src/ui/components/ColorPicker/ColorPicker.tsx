@@ -78,7 +78,7 @@ export default function ColorPicker() {
   const gamutLabel = useRef<HTMLDivElement>(null)
   const colorPickerCanvas = useRef<HTMLCanvasElement>(null)
   const colorPickerTransitionCanvas = useRef<HTMLCanvasElement>(null)
-  const manipulatorColorPicker = useRef<SVGSVGElement>(null)
+  const manipulatorColorPicker = useRef<HTMLDivElement>(null)
   const srgbLimitStroke = useRef<SVGPathElement>(null)
   const relativeChromaStroke = useRef<SVGPathElement>(null)
   const contrastStroke = useRef<SVGPathElement>(null)
@@ -88,7 +88,7 @@ export default function ColorPicker() {
       position: position
     })
 
-    manipulatorColorPicker.current!.transform.baseVal.getItem(0).setTranslate(newManipulatorPosition.x - 9, newManipulatorPosition.y - 9)
+    manipulatorColorPicker.current!.style.transform = `translate(${newManipulatorPosition.x}px, ${newManipulatorPosition.y}px)`
   }
 
   const setColorOfGamutLabel = ({ position = $oklchRenderMode.get() === 'triangle' ? 0 : 100 }: { position?: number } = {}) => {
@@ -517,10 +517,12 @@ export default function ColorPicker() {
         </svg>
       </div>
 
-      <svg ref={manipulatorColorPicker} transform="translate(0,0)" className="c-color-picker__manipulator" width="18" height="18">
-        <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
-        <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
-      </svg>
+      <div ref={manipulatorColorPicker} className="c-color-picker__manipulator">
+        <svg width="18" height="18">
+          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
+          <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
+        </svg>
+      </div>
     </div>
   )
 }
