@@ -215,6 +215,9 @@ function App() {
   } else {
     return (
       <>
+        {/* To test the render in CSS against the one in Figma */}
+        {/* <div style={{ height: '100px', width: '100%', backgroundColor: 'oklch(49.12% 0.29387 279.5)' }}></div> */}
+
         <Alert />
 
         <SettingsScreen />
