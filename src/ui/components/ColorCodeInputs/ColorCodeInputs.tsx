@@ -33,6 +33,8 @@ export default function ColorCodeInputs() {
 
   const isColorCodeInputsOpen = useStore($isColorCodeInputsOpen)
 
+  // const colorBgTest = useRef<HTMLDivElement>(null)
+
   const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null)
   const colorCode_colorInput = useRef<HTMLInputElement>(null)
   const colorCode_rgbaInput = useRef<HTMLInputElement>(null)
@@ -56,6 +58,8 @@ export default function ColorCodeInputs() {
 
   const updateColorCodeInputs = () => {
     const newColorStrings = getColorCodeStrings()
+
+    // colorBgTest.current!.style.backgroundColor = newColorStrings.currentColorModel
 
     colorCode_currentColorModelInput.current!.value = newColorStrings.currentColorModel
     colorCode_colorInput.current!.value = newColorStrings.color
@@ -147,6 +151,9 @@ export default function ColorCodeInputs() {
 
   return (
     <div className={'c-dropdown u-mt-10' + (isColorCodeInputsOpen ? ' c-dropdown--open' : '')}>
+      {/* To test the render in CSS against the one in Figma */}
+      {/* <div ref={colorBgTest} style={{ height: '100px', width: '100%' }}></div> */}
+
       <div className="c-dropdown__title-wrapper" onClick={handleIsColorCodeInputsOpen}>
         <div>Color codes</div>
 
