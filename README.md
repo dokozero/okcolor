@@ -12,11 +12,11 @@ Picking color and creating balanced color palettes with Figma is not an easy tas
 
 Same problem with hue, if we make a palette from hue 0 to 70 with the same incremental value, we'll get a palette that is not perceptually progressive, some hue changes will seem bigger than others.
 
-We also have a problem known as the “Abney effect”, mainly in the blue hues. If we take the hue 240, it shift from blue to purple when we update the lightness.
+We also have a problem known as the “Abney effect”, mainly in the blue hues. If we take the hue 240, it shifts from blue to purple when we update the lightness.
 
 OkColor solves all these problems and more, its params are reliable and uniform, you know what you'll get.
 
-If we change the hue of a color in OkLCH and keep the same lightness value, we know that the resulting color will have the same perceived lightness.
+If we change a color hue in OkLCH and keep the same lightness value, we know that the resulting color will have the same perceived lightness.
 
 You can also easily create perceptually uniform color palettes, pick colors in P3 gamut, use the relative chroma ([see this thread for more infos](https://twitter.com/dokozero/status/1711379022553272371)) and more.
 
