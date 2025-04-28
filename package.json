@@ -1,7 +1,6 @@
 {
   "name": "okcolor",
   "description": "A Figma plugin to get OK Colors",
-  "version": "10.0",
   "author": "Doko Zero",
   "license": "MIT",
   "type": "module",
