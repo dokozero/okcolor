@@ -36,7 +36,7 @@
     "nanostores": "^0.9.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "twgl.js": "^5.5.4",
+    "twgl.js": "^6.1.1",
     "vite-plugin-virtual-plain-text": "^1.4.5"
   },
   "devDependencies": {
@@ -44,7 +44,7 @@
     "@eslint/js": "^9.25.1",
     "@figma/plugin-typings": "^1.110.0",
     "@types/culori": "^2.1.1",
-    "@types/node": "^22.14.1",
+    "@types/node": "^22.15.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@typescript-eslint/eslint-plugin": "^8.31.0",
@@ -55,7 +55,7 @@
     "globals": "^16.0.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
-    "vite": "^6.3.2",
+    "vite": "^6.3.3",
     "vite-plugin-singlefile": "^2.2.0",
     "vitest": "^3.1.2"
   }
