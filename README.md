@@ -4,7 +4,7 @@
 
 This is a plugin for Figma, [see its community page](https://www.figma.com/community/plugin/1173638098109123591/OkColor).
 
-Check https://github.com/users/dokozero/projects/1, discussions, issues.
+Check https://github.com/users/dokozero/projects/1 for the roadmap.
 
 –
 
@@ -18,9 +18,9 @@ OkColor solves all these problems and more, its params are reliable and uniform,
 
 If we change the hue of a color in OkLCH and keep the same lightness value, we know that the resulting color will have the same perceived lightness.
 
-You can also easily create perceptually uniform color palettes, and do more advanced things like picking colors in P3 gamut and use the relative chroma ([see this thread for more infos](https://twitter.com/dokozero/status/1711379022553272371)).
+You can also easily create perceptually uniform color palettes, pick colors in P3 gamut, use the relative chroma ([see this thread for more infos](https://twitter.com/dokozero/status/1711379022553272371)) and more.
 
-For more details, check [plugin community's page](https://www.figma.com/community/plugin/1173638098109123591/OkColor).
+For more details, you can check [plugin community's page](https://www.figma.com/community/plugin/1173638098109123591/OkColor).
 
 ## Credits
 
