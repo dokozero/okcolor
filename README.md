@@ -1,4 +1,4 @@
-![Easier color palettes and accessibility](readme-banner.webp)
+![Easier color palettes and accessibility](https://ik.imagekit.io/cgavlsdta/tr:cp-true/okcolor/covert-art.webp?updatedAt=1745861931799)
 
 # OkColor
 
