@@ -58,6 +58,11 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
 
   // We do this because the previous test garanties that selection[0] will have the properties we will use.
   const firstSelection = selection[0] as any
+
+  if (firstSelection.fills[0]?.boundVariables?.color) {
+    console.log('True')
+  }
+
   const selectionFill = firstSelection.fills[0]
   const selectionStroke = firstSelection.strokes[0]
 
@@ -83,7 +88,7 @@ export default function getNewColorsRgba(): GetNewColorsRgbaReturn {
         if (currentObject.fills[0].type !== 'SOLID') break
 
         // If the parent has a color from a variable, this condition prevent continuing, for now we take the parent fill but we can't modify the color but at least the user can change the fg color to control the contrast.
-        // if (currentObject.fills[0].boundVariables?.color) break
+        // if (currentObject.fills[0]?.boundVariables?.color) break
 
         returnObject.newColorsRgba.parentFill = {
           r: currentObject.fills[0].color.r,

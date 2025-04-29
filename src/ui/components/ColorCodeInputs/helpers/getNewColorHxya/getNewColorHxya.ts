@@ -1,13 +1,12 @@
-import { ColorCodesInputValues, ColorHxya, ColorModelList, ColorHxy, Opacity, CurrentBgOrFg, CurrentColorModel } from '../../../../../types'
-import { converter } from '../../../../helpers/colors/culori.mjs'
+import { ColorCodesInputValues, ColorHxya, ColorHxy, Opacity, CurrentBgOrFg, CurrentColorModel } from '../../../../../types'
 import convertRgbToHxy from '../../../../helpers/colors/convertRgbToHxy/convertRgbToHxy'
 import getClampedChroma from '../../../../helpers/colors/getClampedChroma/getClampedChroma'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
 import { $currentColorModel } from '../../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentBgOrFg } from '../../../../stores/contrasts/currentBgOrFg/currentBgOrFg'
-import isColorCodeInGoodFormat from '../isColorCodeInGoodFormat/isColorCodeInGoodFormat'
 import getColorHxyDecimals from '../../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
+import { converter } from 'culori'
 
 const convertToRgb = converter('rgb')
 
@@ -27,17 +26,6 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
     currentColorModel = $currentColorModel.get(),
     currentBgOrFg = $currentBgOrFg.get()
   } = props
-
-  let colorFormat: keyof typeof ColorCodesInputValues | keyof typeof ColorModelList = eventTargetId
-
-  if (eventTargetId === 'currentColorModel') {
-    colorFormat = currentColorModel
-  }
-
-  // For hex, the color eventTargetValue is already checked bellow with convertToRgb().
-  if (colorFormat !== 'hex') {
-    if (!isColorCodeInGoodFormat({ color: eventTargetValue, format: colorFormat })) return
-  }
 
   let regex: RegExp
   let matches: RegExpMatchArray | null
@@ -87,7 +75,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
         g: parseFloat(matches![1]),
         b: parseFloat(matches![2])
       },
-      colorSpace: currentColorModel === 'oklch' ? 'p3' : 'rgb'
+      gamut: currentColorModel === 'oklch' ? 'p3' : 'rgb'
     })
 
     if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {
@@ -105,7 +93,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
         g: parseFloat(matches![1]) / 255,
         b: parseFloat(matches![2]) / 255
       },
-      colorSpace: 'rgb'
+      gamut: 'rgb'
     })
 
     if (matches[3]?.valueOf() && currentBgOrFg === 'fg') {
@@ -117,7 +105,7 @@ export default function getNewColorHxya(props: Props): ColorHxya | undefined {
 
     newColorHxy = convertRgbToHxy({
       colorRgb: newColorRgb,
-      colorSpace: 'rgb'
+      gamut: 'rgb'
     })
 
     if (newColorRgb.alpha && currentBgOrFg === 'fg') {

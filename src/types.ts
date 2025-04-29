@@ -44,11 +44,12 @@ export type RgbaArray = [RgbElement, RgbElement, RgbElement, Opacity]
 enum FigmaEditorTypeList {
   'figjam',
   'figma',
-  'dev'
+  'dev',
+  'slides'
 }
 export type FigmaEditorType = keyof typeof FigmaEditorTypeList
 
-// We use 'rgb' and not 'srgb' because Culori use it like this, even if it's confusing because rgb is a color model, not a space.
+// We use 'rgb' and not 'srgb' because Culori use it like this, even if it's confusing because rgb is a color model, not a gamut.
 enum FileColorProfileList {
   'rgb',
   'p3'
@@ -73,6 +74,13 @@ enum FillOrStrokeList {
   'stroke'
 }
 export type CurrentFillOrStroke = keyof typeof FillOrStrokeList
+
+export enum OklchRenderModeList {
+  'triangle',
+  'square'
+}
+
+export type OklchRenderMode = 'triangle' | 'square'
 
 enum CurrentBgOrFgList {
   'bg',
@@ -121,7 +129,7 @@ export type ColorsRgba = {
   stroke: ColorRgba | null
 }
 
-type KeysPressed = 'shift' | 'ctrl' | ''
+type KeysPressed = 'shift' | ''
 
 export type CurrentKeysPressed = KeysPressed[]
 
@@ -169,6 +177,7 @@ export type SyncLocalStorageValuesData = {
   newLockContrast: boolean
   newIsColorCodeInputsOpen: boolean
   newCurrentColorModel: CurrentColorModel
+  newOklchRenderMode: OklchRenderMode
 }
 
 export type SyncNewShapeData = {
@@ -197,7 +206,6 @@ export type MessageForBackendTypes =
   | 'triggerInit'
   | 'updateShapeColor'
   | 'SyncUserSettings'
-  | 'syncCurrentFileColorProfile'
   | 'syncCurrentFillOrStroke'
   | 'syncCurrentColorModel'
   | 'syncIsContrastInputOpen'
@@ -205,6 +213,7 @@ export type MessageForBackendTypes =
   | 'syncCurrentContrastMethod'
   | 'syncLockContrast'
   | 'syncIsColorCodeInputsOpen'
+  | 'syncOklchRenderMode'
 
 export type UpdateShapeColorData = {
   newColorRgba: ColorRgba
@@ -213,10 +222,6 @@ export type UpdateShapeColorData = {
 
 export type SyncUserSettingsData = {
   newUserSettings: UserSettings
-}
-
-export type SyncCurrentFileColorProfileData = {
-  newCurrentFileColorProfile: CurrentFileColorProfile
 }
 
 export type SyncCurrentFillOrStrokeData = {
@@ -247,10 +252,13 @@ export type SyncIsColorCodeInputsOpenData = {
   newIsColorCodeInputsOpen: boolean
 }
 
+export type SyncOklchRenderModeData = {
+  newOklchRenderMode: OklchRenderMode
+}
+
 export type MessageForBackendData =
   | UpdateShapeColorData
   | SyncUserSettingsData
-  | SyncCurrentFileColorProfileData
   | SyncCurrentFillOrStrokeData
   | SyncCurrentColorModelData
   | SyncIsContrastInputOpenData
@@ -258,6 +266,7 @@ export type MessageForBackendData =
   | SyncCurrentContrastMethodData
   | SyncLockContrastData
   | SyncIsColorCodeInputsOpenData
+  | SyncOklchRenderModeData
 
 export type MessageForBackend = {
   type: MessageForBackendTypes

@@ -297,7 +297,7 @@ vec3 get_Cs(float L, float a_, float b_)
     return vec3( C_0, C_mid, C_max );
 }
 
-vec3 okhsl_to_srgb(vec3 hsl)
+vec3 okhsl_to_srgb(vec3 hsl, bool isOklchSquareRender)
 {
     float h = hsl.x;
     float s = hsl.y;
@@ -348,11 +348,24 @@ vec3 okhsl_to_srgb(vec3 hsl)
     }
 
     vec3 rgb = oklab_to_linear_srgb(vec3( L, C * a_, C * b_ ));
-    return vec3(
-        srgb_transfer_function(rgb.r),
-        srgb_transfer_function(rgb.g),
-        srgb_transfer_function(rgb.b)
-    );
+
+    // We use a different gamma correction for square oklch render to match the one in triangle render.
+    if (isOklchSquareRender)
+    {
+        return vec3(
+            pow(rgb.r, 1.0/1.8),
+            pow(rgb.g, 1.0/1.8),
+            pow(rgb.b, 1.0/1.8)
+        );
+    } else
+    {
+        return vec3(
+            srgb_transfer_function(rgb.r),
+            srgb_transfer_function(rgb.g),
+            srgb_transfer_function(rgb.b)
+        );
+    }
+
 }
 
 vec3 okhsv_to_srgb(vec3 hsv)

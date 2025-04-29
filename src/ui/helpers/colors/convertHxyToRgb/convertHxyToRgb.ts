@@ -1,8 +1,8 @@
 import { ColorHxy, ColorModelList, CurrentFileColorProfile, ColorRgb } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
-import { converter } from '../culori.mjs'
-import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
+import { converter } from 'culori'
+import type { Rgb, Okhsl, Okhsv, Oklch } from 'culori'
 import clamp from 'lodash/clamp'
 
 const convertToRgb = converter('rgb')
@@ -11,11 +11,11 @@ const convertToP3 = converter('p3')
 type Props = {
   colorHxy: ColorHxy
   originColorModel?: keyof typeof ColorModelList
-  colorSpace?: CurrentFileColorProfile
+  gamut?: CurrentFileColorProfile
 }
 
 export default function convertHxyToRgb(props: Props): ColorRgb {
-  const { colorHxy, originColorModel = $currentColorModel.get(), colorSpace = $currentFileColorProfile.get() } = props
+  const { colorHxy, originColorModel = $currentColorModel.get(), gamut = $currentFileColorProfile.get() } = props
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch
   let newColorRgb: ColorRgb
@@ -34,9 +34,9 @@ export default function convertHxyToRgb(props: Props): ColorRgb {
       break
   }
 
-  if (colorSpace === 'rgb') {
+  if (gamut === 'rgb') {
     culoriResult = convertToRgb(colorObject)
-  } else if (colorSpace === 'p3') {
+  } else if (gamut === 'p3') {
     culoriResult = convertToP3(colorObject)
   }
 

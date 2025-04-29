@@ -34,7 +34,7 @@ export default function filterNewColorHxya(props: Props): ColorHxya {
   if (filteredColorHxya.y === 0.01) filteredColorHxya.y = 0
   else if (filteredColorHxya.y === 99.99) filteredColorHxya.y = 100
 
-  // In these two color models, we don't have realtive chroma or contrast activated.
+  // In these two color models, we don't have relative chroma or contrast enabled.
   if (['okhsv', 'okhsl'].includes($currentColorModel.get())) return filteredColorHxya
 
   if (lockRelativeChroma) {

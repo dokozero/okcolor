@@ -11,8 +11,8 @@ const unsecuredCopyToClipboard = (textToCopy: string) => {
   // Attempt to copy the text to the clipboard.
   try {
     document.execCommand('copy')
-  } catch (e) {
-    console.log('Unable to copy content to clipboard!', e)
+  } catch (error) {
+    console.log('Unable to copy content to clipboard, error: ', error)
   }
 
   // Remove the textarea element from the DOM.

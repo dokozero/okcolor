@@ -11,11 +11,11 @@ import { $lockContrast, setLockContrastWithSideEffects } from '../../contrasts/l
 import { $currentFillOrStroke } from '../../currentFillOrStroke/currentFillOrStroke'
 import { setColorHxya, $colorHxya } from '../colorHxya/colorHxya'
 import { $colorsRgba } from '../colorsRgba/colorsRgba'
-import { setCurrentFileColorProfileWithSideEffects } from '../currentFileColorProfile/currentFileColorProfile'
 import { $lockRelativeChroma, setLockRelativeChromaWithSideEffects } from '../lockRelativeChroma/lockRelativeChroma'
 import merge from 'lodash/merge'
 import convertAbsoluteChromaToRelative from '../../../helpers/colors/convertAbsoluteChromaToRelative/convertAbsoluteChromaToRelative'
 import { setRelativeChroma } from '../relativeChroma/relativeChroma'
+import { setIsContrastInputOpenWithSideEffects } from '../../contrasts/isContrastInputOpen/isContrastInputOpen'
 
 export const $currentColorModel = atom<CurrentColorModel>('oklch')
 
@@ -33,7 +33,6 @@ type SideEffects = {
   syncColorHxya: boolean
   syncLockRelativeChroma: boolean
   syncLockContrast: boolean
-  syncCurrentFileColorProfile: boolean
   syncRelativeChroma: boolean
   syncContrast: boolean
 }
@@ -49,7 +48,6 @@ const defaultSideEffects: SideEffects = {
   syncColorHxya: true,
   syncLockRelativeChroma: true,
   syncLockContrast: true,
-  syncCurrentFileColorProfile: true,
   syncRelativeChroma: true,
   syncContrast: true
 }
@@ -90,18 +88,15 @@ export const setCurrentColorModelWithSideEffects = action(
     }
 
     if (['okhsv', 'okhsl'].includes(newCurrentColorModel)) {
-      // If one of these values are true, we need to set them to false as relativeChroma and contrast are hidden in OkHSV or OkHSL
-      if (sideEffects.syncLockRelativeChroma && $lockRelativeChroma.get()) setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: false })
-      if (sideEffects.syncLockContrast && $lockContrast.get()) setLockContrastWithSideEffects({ newLockContrast: false })
+      setIsContrastInputOpenWithSideEffects({ newIsContrastInputOpen: false })
 
-      if (sideEffects.syncCurrentFileColorProfile) {
-        // We constrain to sRGB profile with these models to avoid confusion for users as they are not intended to be used in P3's space.
-        setCurrentFileColorProfileWithSideEffects({
-          newCurrentFileColorProfile: 'rgb',
-          sideEffects: {
-            syncColorHxya: false
-          }
-        })
+      // If one of these values are true, we need to set them to false as relativeChroma and contrast are hidden in OkHSV or OkHSL
+      if (sideEffects.syncLockRelativeChroma && $lockRelativeChroma.get()) {
+        setLockRelativeChromaWithSideEffects({ newLockRelativeChroma: false })
+      }
+
+      if (sideEffects.syncLockContrast && $lockContrast.get()) {
+        setLockContrastWithSideEffects({ newLockContrast: false })
       }
     } else {
       // In case of the user launched the plugin in OkHSV or OkHSL mode then change to OkLCH, as we don't update the relativeChroma and contrast values in these models, we need to set them to avoid empty values.

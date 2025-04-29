@@ -12,6 +12,7 @@ import getColorHxyaValueFormatedForInput from './helpers/getColorHxyaValueFormat
 import handleInputOnBlur from './helpers/handleInputOnBlur/handleInputOnBlur'
 import handleInputOnKeyDown from './helpers/handleInputOnKeyDown/handleInputOnKeyDown'
 import { $userSettings } from '../../stores/settings/userSettings/userSettings'
+import round from 'lodash/round'
 
 export type KeepInputSelected = {
   state: boolean
@@ -83,16 +84,16 @@ export default function ColorValueInputs() {
   }, [userSettings.oklchInputOrder, currentColorModel])
 
   useEffect(() => {
-    if (['okhsv', 'okhsl'].includes(currentColorModel) || (currentColorModel === 'oklch' && userSettings.oklchHlDecimalPrecision === 1)) {
+    if (['okhsv', 'okhsl'].includes(currentColorModel)) {
       inputH.current!.classList.remove('input--tighten')
       inputX.current!.classList.remove('input--tighten')
       inputY.current!.classList.remove('input--tighten')
-      inputA.current!.classList.remove('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-36')
+      inputA.current!.classList.remove('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-23')
     } else {
       inputH.current!.classList.add('input--tighten')
       inputX.current!.classList.add('input--tighten')
       inputY.current!.classList.add('input--tighten')
-      inputA.current!.classList.add('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-36')
+      inputA.current!.classList.add('input--tighten', 'u-flex-no-shrink', 'u-flex-basis-23')
     }
 
     updateInputPositions()
@@ -133,7 +134,7 @@ export default function ColorValueInputs() {
   }, [colorHxya.h])
 
   useEffect(() => {
-    inputX.current!.value = getColorHxyaValueFormatedForInput('x').toString()
+    inputX.current!.value = round(getColorHxyaValueFormatedForInput('x'), 3).toString()
   }, [colorHxya.x, currentColorModel, userSettings.useSimplifiedChroma])
 
   useEffect(() => {
@@ -141,7 +142,7 @@ export default function ColorValueInputs() {
   }, [colorHxya.y])
 
   useEffect(() => {
-    inputA.current!.value = getColorHxyaValueFormatedForInput('a').toString() + '%'
+    inputA.current!.value = getColorHxyaValueFormatedForInput('a').toString()
   }, [colorHxya.a])
 
   useEffect(() => {
@@ -201,6 +202,7 @@ export default function ColorValueInputs() {
           handleInputOnKeyDown(e, lastKeyPressed, keepInputSelected)
         }}
       />
+      <div className="input-percent-char">%</div>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { formatHex8, formatHex, clampChromaInGamut } from '../../../../helpers/colors/culori.mjs'
+import { clampChroma, formatHex, formatHex8 } from 'culori'
 import { ColorCodesInputValues, ColorHxya, ColorRgb, CurrentColorModel } from '../../../../../types'
 import convertHxyToRgb from '../../../../helpers/colors/convertHxyToRgb/convertHxyToRgb'
 import { $colorHxya } from '../../../../stores/colors/colorHxya/colorHxya'
@@ -38,23 +38,23 @@ export default function getColorCodeStrings(props: Props = {}): NewColorStrings 
 
   // We don't clamp chroma with the models that don't use it because they already work in sRGB.
   if (currentColorModel === 'oklch') {
-    clamped = clampChromaInGamut({ mode: 'oklch', l: colorHxya.y / 100, c: colorHxya.x, h: colorHxya.h }, 'oklch', 'rgb')
+    clamped = clampChroma({ mode: 'oklch', l: colorHxya.y / 100, c: colorHxya.x, h: colorHxya.h }, 'oklch', 'rgb')
     rgbSrgb = convertHxyToRgb({
       colorHxy: {
         h: clamped.h,
         x: clamped.c,
         y: clamped.l * 100
       },
-      colorSpace: 'rgb'
+      gamut: 'rgb'
     })
     rgbP3 = convertHxyToRgb({
       colorHxy: colorHxya,
-      colorSpace: 'p3'
+      gamut: 'p3'
     })
   } else {
     rgbSrgb = convertHxyToRgb({
       colorHxy: colorHxya,
-      colorSpace: 'rgb'
+      gamut: 'rgb'
     })
   }
 

@@ -1,6 +1,6 @@
 :root {
   --base-font-size: 11px;
-  --base-border-radius: 2px;
+  --base-border-radius: 6px;
 }
 
 * {
@@ -23,44 +23,46 @@ p {
   display: flex;
   position: relative;
   width: 100%;
-  height: 28px;
+  height: 26px;
   align-items: center;
+  border: 1px solid transparent;
 }
 
 .input-wrapper {
-  border: 1px solid transparent;
+  display: flex;
+  gap: 1px;
+  outline-offset: -2px;
   border-radius: var(--base-border-radius);
+  overflow: hidden;
 }
 
-.input-wrapper:hover,
-select:hover {
-  border: 1px solid var(--figma-color-border, rgba(0, 0, 0, 0.1));
+.input-wrapper:hover {
+  outline: 1px solid var(--figma-color-border);
 }
 
 .input-wrapper:focus-within {
-  border: 1px solid var(--figma-color-border-selected);
   outline: 1px solid var(--figma-color-border-selected);
 }
 
 .select-wrapper::before {
   display: block;
   position: absolute;
-  top: 2px;
-  right: 1px;
+  right: -3px;
   pointer-events: none;
 }
+
 .figma-light .select-wrapper::before {
-  content: url("data:image/svg+xml,%3Csvg width='16' height='24' viewBox='0 0 16 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='16' height='24' fill='white' style='fill:white;fill:white;fill-opacity:1;'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M7.10001 13.508L4.10001 10.508L4.80801 9.79999L7.45401 12.447L10.1 9.79999L10.808 10.508L7.80801 13.508L7.45401 13.861L7.10001 13.508Z' fill='%23888888' style='fill:%23888888;fill:color(display-p3 0.5333 0.5333 0.5333);fill-opacity:1;'/%3E%3C/svg%3E%0A");
+  content: url("data:image/svg+xml, %3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M9.14599 11.146C9.19244 11.0994 9.24761 11.0625 9.30836 11.0373C9.36911 11.0121 9.43423 10.9991 9.49999 10.9991C9.56576 10.9991 9.63088 11.0121 9.69163 11.0373C9.75237 11.0625 9.80755 11.0994 9.85399 11.146L11.5 12.793L13.146 11.146C13.2399 11.0521 13.3672 10.9994 13.5 10.9994C13.6328 10.9994 13.7601 11.0521 13.854 11.146C13.9479 11.2399 14.0006 11.3672 14.0006 11.5C14.0006 11.6328 13.9479 11.7601 13.854 11.854L11.854 13.854C11.8075 13.9006 11.7524 13.9375 11.6916 13.9627C11.6309 13.9879 11.5658 14.0009 11.5 14.0009C11.4342 14.0009 11.3691 13.9879 11.3084 13.9627C11.2476 13.9375 11.1924 13.9006 11.146 13.854L9.14599 11.854C9.09943 11.8076 9.06249 11.7524 9.03728 11.6916C9.01207 11.6309 8.9991 11.5658 8.9991 11.5C8.9991 11.4342 9.01207 11.3691 9.03728 11.3084C9.06249 11.2476 9.09943 11.1924 9.14599 11.146Z' fill='black' style='fill:black;fill-opacity:1;'/%3E%3C/svg%3E");
 }
 .figma-dark .select-wrapper::before {
-  content: url("data:image/svg+xml,%3Csvg width='16' height='24' viewBox='0 0 16 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='16' height='24' fill='%232C2C2C' style='fill:%232C2C2C;fill:color(display-p3 0.1725 0.1725 0.1725);fill-opacity:1;'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M7.10001 13.508L4.10001 10.508L4.80801 9.79999L7.45401 12.447L10.1 9.79999L10.808 10.508L7.80801 13.508L7.45401 13.861L7.10001 13.508Z' fill='%23A8A8A8' style='fill:%23A8A8A8;fill:color(display-p3 0.6600 0.6600 0.6600);fill-opacity:1;'/%3E%3C/svg%3E%0A");
+  content: url("data:image/svg+xml, %3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M9.14599 11.146C9.19244 11.0994 9.24761 11.0625 9.30836 11.0373C9.36911 11.0121 9.43423 10.9991 9.49999 10.9991C9.56576 10.9991 9.63088 11.0121 9.69163 11.0373C9.75237 11.0625 9.80755 11.0994 9.85399 11.146L11.5 12.793L13.146 11.146C13.2399 11.0521 13.3672 10.9994 13.5 10.9994C13.6328 10.9994 13.7601 11.0521 13.854 11.146C13.9479 11.2399 14.0006 11.3672 14.0006 11.5C14.0006 11.6328 13.9479 11.7601 13.854 11.854L11.854 13.854C11.8075 13.9006 11.7524 13.9375 11.6916 13.9627C11.6309 13.9879 11.5658 14.0009 11.5 14.0009C11.4342 14.0009 11.3691 13.9879 11.3084 13.9627C11.2476 13.9375 11.1924 13.9006 11.146 13.854L9.14599 11.854C9.09943 11.8076 9.06249 11.7524 9.03728 11.6916C9.01207 11.6309 8.9991 11.5658 8.9991 11.5C8.9991 11.4342 9.01207 11.3691 9.03728 11.3084C9.06249 11.2476 9.09943 11.1924 9.14599 11.146Z' fill='white' style='fill:white;fill-opacity:1;'/%3E%3C/svg%3E");
 }
 
 select,
 input {
   width: 100%;
   height: 100%;
-  padding: 7px 4px;
+  padding: 0 7px;
   font-family: 'Inter', sans-serif;
   font-size: var(--base-font-size);
   font-weight: 400;
@@ -69,15 +71,20 @@ input {
   background-color: transparent;
   cursor: default;
 }
+
 input {
   border: 0;
-  border-right: 1px solid transparent;
+  background-color: var(--figma-color-bg-secondary);
 }
+
 select {
   /* We set the height to 100% only for the select and not the input because it would make a 1 px gap between the outer border of input-wrapper and the left borders of the nested input when hovering. */
   height: 100%;
-  border: 1px solid transparent;
+  letter-spacing: -0.02em;
+  border-radius: var(--base-border-radius);
+  border: 1px solid var(--figma-color-border, rgba(0, 0, 0, 0.1));
 }
+
 select:focus,
 input:focus {
   outline: none;
@@ -96,4 +103,24 @@ input.disabled {
 
 select {
   appearance: none;
+}
+
+.input-percent-char {
+  margin-left: -1px;
+
+  display: flex;
+  align-items: center;
+  height: 100%;
+  order: 99;
+
+  padding-right: 7px;
+
+  font-size: var(--base-font-size);
+  color: var(--figma-color-text-secondary);
+
+  background-color: var(--figma-color-bg-secondary);
+}
+
+.input--tighten + .input-percent-char {
+  padding-right: 3px;
 }

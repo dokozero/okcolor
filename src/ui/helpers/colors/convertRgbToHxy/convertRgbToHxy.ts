@@ -1,8 +1,8 @@
 import { ColorRgb, ColorModelList, CurrentFileColorProfile, ColorHxy } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
-import { converter } from '../culori.mjs'
-import type { Rgb, Okhsl, Okhsv, Oklch } from '../culori.mjs'
+import { converter } from 'culori'
+import type { Rgb, Okhsl, Okhsv, Oklch } from 'culori'
 import getColorHxyDecimals from '../getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
 
@@ -13,11 +13,11 @@ const convertToOkhsv = converter('okhsv')
 type Props = {
   colorRgb: ColorRgb
   targetColorModel?: keyof typeof ColorModelList
-  colorSpace?: CurrentFileColorProfile
+  gamut?: CurrentFileColorProfile
 }
 
 export default function convertRgbToHxy(props: Props): ColorHxy {
-  const { colorRgb, targetColorModel = $currentColorModel.get(), colorSpace = $currentFileColorProfile.get() } = props
+  const { colorRgb, targetColorModel = $currentColorModel.get(), gamut = $currentFileColorProfile.get() } = props
 
   let culoriResult: Rgb | Okhsl | Okhsv | Oklch
   let newColorHxy: ColorHxy
@@ -39,17 +39,17 @@ export default function convertRgbToHxy(props: Props): ColorHxy {
   }
 
   // color() function in CSS use different names for the color profile than the one used in this plugin.
-  let colorFunctionSpace: string
+  let colorFunctionGamut: string
 
-  if (colorSpace === 'p3') {
-    colorFunctionSpace = 'display-p3'
+  if (gamut === 'p3') {
+    colorFunctionGamut = 'display-p3'
   } else {
-    colorFunctionSpace = 'srgb'
+    colorFunctionGamut = 'srgb'
   }
 
   switch (targetColorModel) {
     case 'oklch':
-      culoriResult = convertToOklch(`color(${colorFunctionSpace} ${colorRgb.r} ${colorRgb.g} ${colorRgb.b})`)
+      culoriResult = convertToOklch(`color(${colorFunctionGamut} ${colorRgb.r} ${colorRgb.g} ${colorRgb.b})`)
       break
     case 'okhsl':
       culoriResult = convertToOkhsl(`color(srgb ${colorRgb.r} ${colorRgb.g} ${colorRgb.b})`)

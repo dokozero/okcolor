@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { consoleLogInfos } from '../../../constants'
 import { useStore } from '@nanostores/react'
-import { ColorCodesInputValues } from '../../../types'
+import { ColorCodesInputValues, ColorModelList } from '../../../types'
 import copyToClipboard from '../../helpers/copyToClipboard/copyToClipboard'
 import selectInputContent from '../../helpers/selectInputContent/selectInputContent'
 import { $colorHxya, setColorHxyaWithSideEffects } from '../../stores/colors/colorHxya/colorHxya'
@@ -9,6 +9,10 @@ import { $isColorCodeInputsOpen, setIsColorCodeInputsOpenWithSideEffects } from 
 import { $isMouseInsideDocument } from '../../stores/isMouseInsideDocument/isMouseInsideDocument'
 import getColorCodeStrings from './helpers/getColorCodeStrings/getColorCodeStrings'
 import getNewColorHxya from './helpers/getNewColorHxya/getNewColorHxya'
+import DownArrowIcon from '../icons/DownArrowIcon/DownArrowIcon'
+import CopyIcon from '../icons/CopyIcon/CopyIcon'
+import { $currentColorModel } from '../../stores/colors/currentColorModel/currentColorModel'
+import isColorCodeInGoodFormat from './helpers/isColorCodeInGoodFormat/isColorCodeInGoodFormat'
 
 // We only need this object to check if the value of an input has been changed on blur.
 const colorCodesInputValues: { [key in ColorCodesInputValues]: string } = {
@@ -28,6 +32,8 @@ export default function ColorCodeInputs() {
   const colorHxya = useStore($colorHxya)
 
   const isColorCodeInputsOpen = useStore($isColorCodeInputsOpen)
+
+  // const colorBgTest = useRef<HTMLDivElement>(null)
 
   const colorCode_currentColorModelInput = useRef<HTMLInputElement>(null)
   const colorCode_colorInput = useRef<HTMLInputElement>(null)
@@ -53,6 +59,8 @@ export default function ColorCodeInputs() {
   const updateColorCodeInputs = () => {
     const newColorStrings = getColorCodeStrings()
 
+    // colorBgTest.current!.style.backgroundColor = newColorStrings.currentColorModel
+
     colorCode_currentColorModelInput.current!.value = newColorStrings.currentColorModel
     colorCode_colorInput.current!.value = newColorStrings.color
     colorCode_rgbaInput.current!.value = newColorStrings.rgba
@@ -73,18 +81,44 @@ export default function ColorCodeInputs() {
       return
     }
 
-    // This test is to know if user has for example pressed the tab key but without modyfing the value.
+    // Test if user has for example pressed the tab key but without modyfing the value.
     if (colorCodesInputValues[eventTargetId] === eventTarget.value) {
       // Even if the color on input is the same, we allow to update the UI if rgba of hex inputs are focused, like this the user can simply set the sRGB fallback of an P3 color with "Enter" key.
-      if (!((eventTargetId === 'rgba' || eventTargetId === 'hex') && lastKeyPressed !== 'Enter')) {
+      if (eventTargetId !== 'rgba' && eventTargetId !== 'hex') {
         lastKeyPressed = ''
         return
       }
     }
 
+    let eventTargetValue = eventTarget.value
+    let colorFormat: keyof typeof ColorCodesInputValues | keyof typeof ColorModelList = eventTargetId
+
+    if (eventTargetId === 'currentColorModel') {
+      colorFormat = $currentColorModel.get()
+    }
+
+    // If oklch() color has a lightness value in decimal (0 to 1), convert it to percentage (0% to 100%).
+    if (colorFormat === 'oklch') {
+      const regex = /oklch\((0(?:\.\d+)?|1(?:\.0+)?)\s+(\d*(?:\.\d+)?)\s+(\d+(?:\.\d+)?)(?:\s*\/\s*(\d+(?:\.\d+)?))?\)/
+      const match = eventTargetValue.match(regex)
+
+      if (match) {
+        eventTargetValue = eventTargetValue.replace(regex, (_, lightness, chroma, hue, alpha) => {
+          const percentLightness = (parseFloat(lightness) * 100).toFixed(2).replace(/\.?0+$/, '') + '%'
+          return `oklch(${percentLightness} ${chroma} ${hue}${alpha ? ` / ${alpha}` : ''})`
+        })
+      }
+    }
+
+    // Test if the color code is in a good format.
+    if (!isColorCodeInGoodFormat({ color: eventTargetValue, format: colorFormat })) {
+      eventTarget.value = colorCodesInputValues[eventTargetId]
+      return
+    }
+
     const newColorHxya = getNewColorHxya({
       eventTargetId: eventTargetId,
-      eventTargetValue: eventTarget.value
+      eventTargetValue: eventTargetValue
     })
 
     if (newColorHxya) {
@@ -108,7 +142,7 @@ export default function ColorCodeInputs() {
   const handleCopyActionOnClick = (event: React.MouseEvent<HTMLDivElement>, input: HTMLInputElement) => {
     removeModifierClassOnCopyActions()
     copyToClipboard(input.value)
-    ;(event.target as HTMLDivElement).classList.add('c-copy-action--copied')
+    ;(event.currentTarget as HTMLDivElement).classList.add('c-copy-action--copied')
   }
 
   useEffect(() => {
@@ -117,18 +151,19 @@ export default function ColorCodeInputs() {
 
   return (
     <div className={'c-dropdown u-mt-10' + (isColorCodeInputsOpen ? ' c-dropdown--open' : '')}>
+      {/* To test the render in CSS against the one in Figma */}
+      {/* <div ref={colorBgTest} style={{ height: '100px', width: '100%' }}></div> */}
+
       <div className="c-dropdown__title-wrapper" onClick={handleIsColorCodeInputsOpen}>
         <div>Color codes</div>
 
         <div className={'c-dropdown__arrow-icon' + (isColorCodeInputsOpen ? ' c-dropdown__arrow-icon--open' : '')}>
-          <svg className="svg" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
-            <path d="M.646 4.647l.708.707L4 2.707l2.646 2.647.708-.707L4 1.293.646 4.647z" fillRule="nonzero" fillOpacity="1" stroke="none"></path>
-          </svg>
+          <DownArrowIcon />
         </div>
       </div>
 
       <div
-        className={'c-dropdown__content-wraper u-px-9' + (isColorCodeInputsOpen ? '' : ' u-display-none')}
+        className={'c-dropdown__content-wraper u-px-15' + (isColorCodeInputsOpen ? '' : ' u-display-none')}
         onMouseLeave={removeModifierClassOnCopyActions}
       >
         <div className="input-wrapper">
@@ -147,11 +182,13 @@ export default function ColorCodeInputs() {
               handleCopyActionOnClick(event, colorCode_currentColorModelInput.current!)
             }}
           >
-            Copy
+            <div className="c-copy-action__wrapper">
+              <CopyIcon /> Copy
+            </div>
           </div>
         </div>
 
-        <div className="input-wrapper u-mt-4">
+        <div className="input-wrapper u-mt-6">
           <input
             ref={colorCode_colorInput}
             id="color"
@@ -167,11 +204,13 @@ export default function ColorCodeInputs() {
               handleCopyActionOnClick(event, colorCode_colorInput.current!)
             }}
           >
-            Copy
+            <div className="c-copy-action__wrapper">
+              <CopyIcon /> Copy
+            </div>
           </div>
         </div>
 
-        <div className="input-wrapper u-mt-4">
+        <div className="input-wrapper u-mt-6">
           <input
             ref={colorCode_rgbaInput}
             id="rgba"
@@ -187,11 +226,13 @@ export default function ColorCodeInputs() {
               handleCopyActionOnClick(event, colorCode_rgbaInput.current!)
             }}
           >
-            Copy
+            <div className="c-copy-action__wrapper">
+              <CopyIcon /> Copy
+            </div>
           </div>
         </div>
 
-        <div className="input-wrapper u-mt-4">
+        <div className="input-wrapper u-mt-6">
           <input
             ref={colorCode_hexInput}
             id="hex"
@@ -207,7 +248,9 @@ export default function ColorCodeInputs() {
               handleCopyActionOnClick(event, colorCode_hexInput.current!)
             }}
           >
-            Copy
+            <div className="c-copy-action__wrapper">
+              <CopyIcon /> Copy
+            </div>
           </div>
         </div>
       </div>

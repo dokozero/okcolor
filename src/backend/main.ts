@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { PICKER_SIZE } from '../constants'
+import { WINDOW_WIDTH } from '../constants'
 import type {
   ColorsRgba,
   CurrentColorModel,
@@ -20,10 +20,11 @@ import type {
   SyncIsContrastInputOpenData,
   CurrentContrastMethod,
   SyncCurrentContrastMethodData,
-  SyncCurrentFileColorProfileData,
   UserSettings,
   SyncUserSettingsData,
-  SelectionId
+  SelectionId,
+  OklchRenderMode,
+  SyncOklchRenderModeData
 } from '../types'
 import getNewColorsRgba from './helpers/getNewColorsRgba/getNewColorsRgba'
 import getWindowHeigh from './helpers/getWindowHeigh/getWindowHeigh'
@@ -40,6 +41,7 @@ let currentContrastMethod: CurrentContrastMethod
 let lockContrast: boolean
 let isColorCodeInputsOpen: boolean
 let selectionId: SelectionId = ''
+let oklchRenderMode: OklchRenderMode
 
 // We use this variable to prevent the triggering of figma.on "documentchange".
 let itsAMe = false
@@ -55,7 +57,6 @@ const changePropertiesToReactTo = ['fills', 'fillStyleId', 'strokes', 'strokeSty
 /**
  * Local helpers
  */
-
 const resizeWindowHeight = () => {
   const windowHeight = getWindowHeigh({
     currentColorModel: currentColorModel,
@@ -63,7 +64,7 @@ const resizeWindowHeight = () => {
     isContrastInputOpen: isContrastInputOpen
   })
 
-  figma.ui.resize(PICKER_SIZE, windowHeight)
+  figma.ui.resize(WINDOW_WIDTH, windowHeight)
 }
 
 const updateColorsRgbaOrSendUiMessageCodeToUi = (): string => {
@@ -93,9 +94,20 @@ const getSelectionId = (): SelectionId => {
  */
 
 const getLocalStorageValueAndCreateUiWindow = async () => {
-  // We force the currentFileColorProfile value to sRGB in FigJam because they don't suport P3 yet (https://help.figma.com/hc/en-us/articles/360039825114).
-  if (figma.editorType === 'figma') currentFileColorProfile = (await figma.clientStorage.getAsync('currentFileColorProfile')) || 'rgb'
-  else if (figma.editorType === 'figjam') currentFileColorProfile = 'rgb'
+  switch (figma.root.documentColorProfile) {
+    case 'SRGB':
+    case 'LEGACY':
+      currentFileColorProfile = 'rgb'
+      break
+
+    case 'DISPLAY_P3':
+      currentFileColorProfile = 'p3'
+      break
+
+    default:
+      currentFileColorProfile = 'rgb'
+      break
+  }
 
   const userSettingsString =
     (await figma.clientStorage.getAsync('userSettings')) ||
@@ -107,6 +119,7 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
   isColorCodeInputsOpen = (await figma.clientStorage.getAsync('isColorCodeInputsOpen')) || false
   currentContrastMethod = (await figma.clientStorage.getAsync('currentContrastMethod')) || 'apca'
   currentColorModel = (await figma.clientStorage.getAsync('currentColorModel')) || 'oklch'
+  oklchRenderMode = (await figma.clientStorage.getAsync('oklchRenderMode')) || 'square'
 
   // @ts-ignore
   // For those who still have the old value before the introduction of the user settings.
@@ -126,7 +139,7 @@ const getLocalStorageValueAndCreateUiWindow = async () => {
     isContrastInputOpen: isContrastInputOpen
   })
 
-  figma.showUI(__html__, { width: PICKER_SIZE, height: initialWindowHeight, themeColors: true })
+  figma.showUI(__html__, { width: WINDOW_WIDTH, height: initialWindowHeight, themeColors: true })
 }
 
 getLocalStorageValueAndCreateUiWindow()
@@ -144,7 +157,8 @@ const init = async () => {
       newCurrentContrastMethod: currentContrastMethod,
       newLockContrast: lockContrast,
       newIsColorCodeInputsOpen: isColorCodeInputsOpen,
-      newCurrentColorModel: currentColorModel
+      newCurrentColorModel: currentColorModel,
+      newOklchRenderMode: oklchRenderMode
     }
   })
 
@@ -274,12 +288,6 @@ figma.ui.onmessage = (event: MessageForBackend) => {
       figma.clientStorage.setAsync('userSettings', JSON.stringify(data.newUserSettings))
       break
 
-    case 'syncCurrentFileColorProfile':
-      data = event.data as SyncCurrentFileColorProfileData
-      currentFileColorProfile = data.newCurrentFileColorProfile
-      figma.clientStorage.setAsync('currentFileColorProfile', data.newCurrentFileColorProfile)
-      break
-
     case 'syncCurrentFillOrStroke':
       data = event.data as SyncCurrentFillOrStrokeData
       currentFillOrStroke = data.newCurrentFillOrStroke
@@ -322,6 +330,12 @@ figma.ui.onmessage = (event: MessageForBackend) => {
       isColorCodeInputsOpen = data.newIsColorCodeInputsOpen
       figma.clientStorage.setAsync('isColorCodeInputsOpen', isColorCodeInputsOpen)
       resizeWindowHeight()
+      break
+
+    case 'syncOklchRenderMode':
+      data = event.data as SyncOklchRenderModeData
+      oklchRenderMode = data.newOklchRenderMode
+      figma.clientStorage.setAsync('oklchRenderMode', oklchRenderMode)
       break
   }
 }

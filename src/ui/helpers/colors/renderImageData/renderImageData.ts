@@ -1,11 +1,10 @@
-// Rendering of the color picker without hardware acceleration (imageData instead of WebGL).
-
+import { clampChroma } from 'culori'
 import { OKLCH_CHROMA_SCALE, MAX_CHROMA_P3 } from '../../../../constants'
 import { AbsoluteChroma, ColorRgb, CurrentColorModel, CurrentFileColorProfile, Hue } from '../../../../types'
 import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
 import { $currentFileColorProfile } from '../../../stores/colors/currentFileColorProfile/currentFileColorProfile'
+import getLinearMappedValue from '../../getLinearMappedValue/getLinearMappedValue'
 import convertHxyToRgb from '../convertHxyToRgb/convertHxyToRgb'
-import { clampChromaInGamut } from '../culori.mjs'
 import getColorPickerResolutionInfos from '../getColorPickerResolutionInfos/getColorPickerResolutionInfos'
 
 const localDebugInfos = {
@@ -18,15 +17,17 @@ type Props = {
   h: Hue
   currentColorModel?: CurrentColorModel
   currentFileColorProfile?: CurrentFileColorProfile
+  position: number
 }
 
 let rgbColor: ColorRgb | null = null
 let pixelIndex: number
 
+/**
+ * Rendering of the color picker without hardware acceleration (imageData instead of WebGL).
+ */
 export const renderImageData = (props: Props): ImageData => {
-  const { h, currentColorModel = $currentColorModel.get(), currentFileColorProfile = $currentFileColorProfile.get() } = props
-
-  const pickerSize = getColorPickerResolutionInfos().size
+  const { h, currentColorModel = $currentColorModel.get(), currentFileColorProfile = $currentFileColorProfile.get(), position } = props
 
   let imageData: ImageData
 
@@ -34,6 +35,8 @@ export const renderImageData = (props: Props): ImageData => {
   let currentY: number
 
   if (['okhsv', 'okhsl'].includes(currentColorModel)) {
+    const pickerSize = getColorPickerResolutionInfos().size
+
     imageData = new ImageData(pickerSize, pickerSize)
 
     for (let y = 0; y < pickerSize; y++) {
@@ -54,6 +57,8 @@ export const renderImageData = (props: Props): ImageData => {
       }
     }
   } else if (['oklch'].includes(currentColorModel)) {
+    const pickerSize = getColorPickerResolutionInfos('oklchTransition').size
+
     // For local debug if needed.
     let numberOfRenderedPixelsForCurrentLine = 0
     let numberOfTotalRenderedPixels = 0
@@ -63,11 +68,16 @@ export const renderImageData = (props: Props): ImageData => {
     // To render this number of pixels with same color to get a faster render.
     const sameColorPixelLineLength = 6
     let currentPixelLineIndex = 0
-    // Thi is used to keep track when we are near the edge of the OkLCH triangle to render each pixel instead a line of sameColorPixelLineLength's length.
+
+    // This is used to keep track when we are near the edge of the OkLCH triangle to render each pixel instead a line of sameColorPixelLineLength's length.
     let usePreciseRender = false
 
-    let maxChromaCurrentLine: AbsoluteChroma
     let imageDataPixelRgb: ColorRgb = { r: 0, g: 0, b: 0 }
+
+    let maxChromaCurrentLine: AbsoluteChroma
+    let maxChromaToRender: AbsoluteChroma
+
+    const decimalPosition = 100 / position
 
     for (let y = 0; y < pickerSize; y++) {
       if (localDebugInfos.all) {
@@ -78,30 +88,64 @@ export const renderImageData = (props: Props): ImageData => {
 
       currentY = (pickerSize - y) / pickerSize
 
-      maxChromaCurrentLine = clampChromaInGamut({ mode: 'oklch', l: currentY, c: MAX_CHROMA_P3, h: h }, 'oklch', currentFileColorProfile).c
-
-      usePreciseRender = false
       rgbColor = null
 
       currentPixelLineIndex = 0
+
+      maxChromaCurrentLine = clampChroma(
+        {
+          mode: 'oklch',
+          l: currentY,
+          c: MAX_CHROMA_P3,
+          h: h
+        },
+        'oklch',
+        currentFileColorProfile
+      ).c
+
+      // Get the chroma position after maxChromaCurrentLine depending on position value.
+      // If position if 0, maxChromaToRender will be maxChromaCurrentLine.
+      // prettier-ignore
+      maxChromaToRender = maxChromaCurrentLine + ((MAX_CHROMA_P3 - maxChromaCurrentLine) / decimalPosition)
 
       for (let x = 0; x < pickerSize; x++) {
         pixelIndex = (y * pickerSize + x) * 4
 
         currentX = x / (pickerSize * OKLCH_CHROMA_SCALE)
 
-        if (maxChromaCurrentLine - currentX < 0.01) usePreciseRender = true
-        else usePreciseRender = false
+        if (position > 0) {
+          currentX = getLinearMappedValue({
+            valueToMap: currentX,
+            originalRange: { min: 0, max: maxChromaToRender },
+            targetRange: { min: 0, max: maxChromaCurrentLine }
+          })
+        }
 
         if (currentX < maxChromaCurrentLine) {
+          if (maxChromaCurrentLine - currentX < 0.01) {
+            usePreciseRender = true
+          } else {
+            usePreciseRender = false
+          }
+
           if (usePreciseRender && showPreciseRenderedPixels) {
             imageDataPixelRgb = { r: 1, g: 0, b: 0 }
           } else if (rgbColor === null || usePreciseRender || currentPixelLineIndex === sameColorPixelLineLength) {
+            let xValue = currentX
+
+            if (currentX + 0.01 < maxChromaCurrentLine && position > 0 && position < 100) {
+              // Add a bit more chroma to be close to square render during transition (when position value is between 0 and 100).
+              xValue = currentX + 0.01
+            }
+
             rgbColor = convertHxyToRgb({
-              colorHxy: { h: h, x: currentX, y: currentY * 100 },
-              colorSpace: 'rgb'
+              colorHxy: { h: h, x: xValue, y: currentY * 100 },
+              originColorModel: 'oklch',
+              gamut: 'rgb'
             })
+
             imageDataPixelRgb = rgbColor!
+
             if (localDebugInfos.all) {
               numberOfRenderedPixelsForCurrentLine++
               numberOfTotalRenderedPixels++

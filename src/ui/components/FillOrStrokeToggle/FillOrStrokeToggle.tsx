@@ -45,7 +45,7 @@ export default function FillOrStrokeToggle() {
     updateRenderFillOrStrokeToggleColor()
 
     // If the bg is selected and it has a stroke, we don't want to allow selecting it as in this mode, we just want to update the bg to change the contrast an the border doesn't play a role here.
-    // That is why we do this these tests bellow with currentBgOrFg.
+    // That is why we do this these tests below with currentBgOrFg.
 
     // In case the stroke of the foreground shape was selected and we are now updating the parent, we need to get back to fill.
     if (currentBgOrFg === 'bg' && $currentFillOrStroke.get() === 'stroke') setCurrentFillOrStroke('fill')

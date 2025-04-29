@@ -1,4 +1,4 @@
-export default function CrossIcon() {
+export default function ThreeDotsIcon() {
   return (
     <svg className="svg" xmlns="http://www.w3.org/2000/svg" width="16" height="6" viewBox="0 0 16 6">
       <path

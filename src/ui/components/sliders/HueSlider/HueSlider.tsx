@@ -6,6 +6,10 @@ import { $colorHxya, setColorHxyaWithSideEffects } from '../../../stores/colors/
 import { setMouseEventCallback } from '../../../stores/mouseEventCallback/mouseEventCallback'
 import getColorHxyDecimals from '../../../helpers/colors/getColorHxyDecimals/getColorHxyDecimals'
 import round from 'lodash/round'
+import { $isTransitionRunning, $oklchRenderMode } from '../../../stores/oklchRenderMode/oklchRenderMode'
+import convertRelativeChromaToAbsolute from '../../../helpers/colors/convertRelativeChromaToAbsolute/convertRelativeChromaToAbsolute'
+import { $currentColorModel } from '../../../stores/colors/currentColorModel/currentColorModel'
+import getLinearMappedValue from '../../../helpers/getLinearMappedValue/getLinearMappedValue'
 
 export default function HueSlider() {
   if (consoleLogInfos.includes('Component renders')) {
@@ -15,21 +19,56 @@ export default function HueSlider() {
   const colorHxya = useStore($colorHxya)
 
   const hueSlider = useRef<HTMLDivElement>(null)
-  const manipulatorHueSlider = useRef<SVGSVGElement>(null)
+  const manipulatorHueSlider = useRef<HTMLDivElement>(null)
 
   const handleNewManipulatorPosition = (event: MouseEvent) => {
+    if ($isTransitionRunning.get()) return
+
     const rect = hueSlider.current!.getBoundingClientRect()
     const canvasY = event.clientX - rect.left - 7
 
-    setColorHxyaWithSideEffects({
-      newColorHxya: {
-        h: round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorHxyDecimals().h)
+    const newHValue = round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorHxyDecimals().h)
+
+    if ($currentColorModel.get() !== 'oklch') {
+      setColorHxyaWithSideEffects({
+        newColorHxya: {
+          h: round(limitMouseManipulatorPosition(canvasY / SLIDER_SIZE) * 360, getColorHxyDecimals().h)
+        }
+      })
+    } else {
+      if ($oklchRenderMode.get() === 'triangle') {
+        setColorHxyaWithSideEffects({
+          newColorHxya: {
+            h: newHValue
+          }
+        })
+      } else if ($oklchRenderMode.get() === 'square') {
+        const newXValue = convertRelativeChromaToAbsolute({
+          h: newHValue,
+          y: $colorHxya.get().y
+        })
+
+        setColorHxyaWithSideEffects({
+          newColorHxya: {
+            x: newXValue,
+            h: newHValue
+          },
+          sideEffects: {
+            syncRelativeChroma: false
+          }
+        })
       }
-    })
+    }
   }
 
   useEffect(() => {
-    manipulatorHueSlider.current!.transform.baseVal.getItem(0).setTranslate(SLIDER_SIZE * ($colorHxya.get().h / 360) - 1, -1)
+    const xPosition = getLinearMappedValue({
+      valueToMap: $colorHxya.get().h,
+      originalRange: { min: 0, max: 360 },
+      targetRange: { min: -1, max: SLIDER_SIZE }
+    })
+
+    manipulatorHueSlider.current!.style.transform = `translate(${xPosition}px, -1px)`
   }, [colorHxya.h])
 
   useEffect(() => {
@@ -44,11 +83,13 @@ export default function HueSlider() {
         <div ref={hueSlider} className="u-w-full u-h-full" id="okhxy-h-slider"></div>
       </div>
 
-      <div className="c-slider__manipulator">
-        <svg ref={manipulatorHueSlider} transform="translate(0,0)" width="14" height="14">
-          <circle cx="7" cy="7" r="4.8" fill="none" strokeWidth="2.8" stroke="#555555"></circle>
-          <circle cx="7" cy="7" r="4.8" fill="none" strokeWidth="2.5" stroke="#ffffff"></circle>
-        </svg>
+      <div className="c-slider__manipulator-container">
+        <div className="c-slider__manipulator" ref={manipulatorHueSlider}>
+          <svg width="18" height="18">
+            <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4.6" stroke="#555555"></circle>
+            <circle cx="9" cy="9" r="5.3" fill="none" strokeWidth="4" stroke="#ffffff"></circle>
+          </svg>
+        </div>
       </div>
     </div>
   )

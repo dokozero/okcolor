@@ -4,12 +4,12 @@
 }
 
 .c-info-hover-tooltip svg {
-  fill: var(--figma-color-text);
+  fill: var(--figma-color-icon);
   opacity: 0.9;
 }
 
 .c-info-hover-tooltip__tooltip {
-  z-index: 1;
+  z-index: 99;
   position: absolute;
   top: 26px;
   visibility: hidden;

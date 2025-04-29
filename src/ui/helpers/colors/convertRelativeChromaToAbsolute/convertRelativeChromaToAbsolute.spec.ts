@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import convertRelativeChromaToAbsolute from './convertRelativeChromaToAbsolute'
 
 describe('convertRelativeChromaToAbsolute()', () => {
-  test('0.134', () => {
+  test('0.133755', () => {
     expect(
       convertRelativeChromaToAbsolute({
         h: 260,
@@ -10,6 +10,6 @@ describe('convertRelativeChromaToAbsolute()', () => {
         relativeChroma: 50,
         currentFileColorProfile: 'p3'
       })
-    ).toStrictEqual(0.134)
+    ).toStrictEqual(0.133755)
   })
 })

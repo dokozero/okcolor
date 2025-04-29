@@ -1,0 +1,22 @@
+.c-file-color-profile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--base-font-size);
+  color: var(--figma-color-text);
+}
+
+.c-file-color-profile__label {
+  font-size: var(--base-font-size);
+  color: var(--figma-color-text);
+  margin-right: 20px;
+}
+
+.c-file-color-profile .select-wrapper {
+  width: 82px;
+}
+
+.c-file-color-profile select {
+  padding: 7px;
+}

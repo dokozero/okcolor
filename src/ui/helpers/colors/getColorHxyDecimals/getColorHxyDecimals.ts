@@ -26,8 +26,12 @@ export default function getColorHxyDecimals(props: Props = {}): ColorHxyDecimals
     returnObject.h = oklchHlDecimalPrecision
     returnObject.y = oklchHlDecimalPrecision
 
-    if (forInputs && useSimplifiedChroma) returnObject.x = 1
-    else returnObject.x = lockRelativeChroma ? 6 : 3
+    if (forInputs && useSimplifiedChroma) {
+      returnObject.x = 1
+    } else {
+      // TODO - no need if x is always 6 decimals.
+      returnObject.x = lockRelativeChroma ? 6 : 6
+    }
   }
 
   return returnObject

@@ -1,7 +1,25 @@
 .c-color-picker {
   position: relative;
-  border-top: 1px solid var(--figma-color-border);
+
+  padding: 0 16px;
+
+  border-radius: var(--base-border-radius);
+}
+
+.c-color-picker__wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
   background-color: var(--figma-color-bg-secondary);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+
+  border-radius: var(--base-border-radius);
+}
+
+.c-color-picker:focus {
+  outline: none;
 }
 .c-color-picker__message-wrapper {
   display: none;
@@ -10,6 +28,7 @@
   width: 100%;
   height: 100%;
   align-items: center;
+  border-radius: var(--base-border-radius);
 }
 .c-color-picker__message-text {
   margin: 0;
@@ -24,15 +43,13 @@
   line-height: 1.4;
 }
 
-.c-color-picker__color-space {
+.c-color-picker__gamut-label {
   z-index: 1;
   position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 12px;
-  color: var(--figma-color-text);
-  opacity: 0.7;
+  right: 5px;
+  font-size: var(--base-font-size);
   user-select: none;
+  transition: top 0.2s ease-out;
 }
 
 .c-color-picker__canvas,
@@ -52,15 +69,23 @@
   pointer-events: none;
 }
 
+/* TODO - rename to 'disabled' */
 .c-color-picker--deactivated .c-color-picker__canvas,
 .c-color-picker--deactivated .c-color-picker__manipulator,
 .c-color-picker--deactivated .c-color-picker__srgb-limit-stroke,
 .c-color-picker--deactivated .c-color-picker__relative-chroma-stroke,
-.c-color-picker--deactivated .c-color-picker__color-space,
+.c-color-picker--deactivated .c-color-picker__gamut-label,
 .c-color-picker--deactivated .c-color-picker__contrast-stroke {
   display: none;
 }
 
 .c-color-picker--deactivated .c-color-picker__message-wrapper {
   display: flex;
+}
+
+.c-color-picker__manipulator {
+  position: absolute;
+  top: 0;
+  width: 18px;
+  height: 18px;
 }

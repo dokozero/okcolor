@@ -1,5 +1,5 @@
 .c-settings-toggle {
-  padding: 13px 8px;
+  padding: 5px;
   border-radius: var(--base-border-radius);
 }
 
@@ -7,15 +7,18 @@
   background-color: var(--figma-color-bg-secondary);
 }
 
-.c-settings-toggle--active,
+.c-settings-toggle--active {
+  background-color: var(--figma-color-bg-selected);
+}
+
 .c-settings-toggle--active:hover {
-  background-color: var(--figma-color-bg-brand);
+  background-color: var(--figma-color-bg-selected-secondary);
 }
 
 .c-settings-toggle svg {
-  fill: var(--figma-color-text);
+  fill: var(--figma-color-icon);
 }
 
 .c-settings-toggle--active svg {
-  fill: #ffffff;
+  fill: var(--figma-color-icon-brand);
 }

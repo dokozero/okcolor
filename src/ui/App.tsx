@@ -1,6 +1,5 @@
 import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
-
 import ColorPicker from './components/ColorPicker/ColorPicker'
 import FillOrStrokeToggle from './components/FillOrStrokeToggle/FillOrStrokeToggle'
 import HueSlider from './components/sliders/HueSlider/HueSlider'
@@ -19,7 +18,7 @@ import { setCurrentFileColorProfile } from './stores/colors/currentFileColorProf
 import { setLockRelativeChroma, $lockRelativeChroma } from './stores/colors/lockRelativeChroma/lockRelativeChroma'
 import { $currentBgOrFg, setCurrentBgOrFg } from './stores/contrasts/currentBgOrFg/currentBgOrFg'
 import { setCurrentContrastMethod } from './stores/contrasts/currentContrastMethod/currentContrastMethod'
-import { setIsContrastInputOpen } from './stores/contrasts/isContrastInputOpen/isContrastInputOpen'
+import { $isContrastInputOpen, setIsContrastInputOpen } from './stores/contrasts/isContrastInputOpen/isContrastInputOpen'
 import { setLockContrast, $lockContrast } from './stores/contrasts/lockContrast/lockContrast'
 import { setCurrentFillOrStroke } from './stores/currentFillOrStroke/currentFillOrStroke'
 import { $currentKeysPressed, setCurrentKeysPressed } from './stores/currentKeysPressed/currentKeysPressed'
@@ -30,10 +29,15 @@ import { $mouseEventCallback, setMouseEventCallback } from './stores/mouseEventC
 import { $uiMessage, hideUiMessageWithSideEffects, showUiMessageWithSideEffects } from './stores/uiMessage/uiMessage'
 import round from 'lodash/round'
 import SettingsScreen from './components/SettingsScreen/SettingsScreen'
-import FileColorProfileSelect from './components/top-bar/FileColorProfileSelect/FileColorProfileSelect'
+import FileColorProfile from './components/top-bar/FileColorProfile/FileColorProfile'
 import SettingsToggle from './components/top-bar/SettingsToggle/SettingsToggle'
 import { setUserSettings } from './stores/settings/userSettings/userSettings'
 import { setSelectionId } from './stores/selectionId/selectionId'
+import OklchRenderModeToggle from './components/top-bar/OklchRenderModeToggle/OklchRenderModeToggle'
+import { setOklchRenderMode } from './stores/oklchRenderMode/oklchRenderMode'
+import ContrastToggle from './components/top-bar/ContrastToggle/ContrastToggle'
+import { useStore } from '@nanostores/react'
+import Alert from './components/Alert/Alert'
 
 // We use these var to measure speeds of app loading time (see in constants file to activate it).
 let appLoadingStart: number
@@ -51,6 +55,8 @@ function App() {
 
   // We use this var to avoid loading the components before we have all te values from the backend, see comment on the top of the file fore more infos.
   const [areStoreValuesReady, setAreStoreValuesReady] = useState(false)
+
+  const isContrastInputOpen = useStore($isContrastInputOpen)
 
   if (useBackend) {
     // Updates from the backend.
@@ -70,8 +76,8 @@ function App() {
         setLockContrast(data.newLockContrast)
         setIsColorCodeInputsOpen(data.newIsColorCodeInputsOpen)
         setCurrentColorModel(data.newCurrentColorModel)
+        setOklchRenderMode(data.newOklchRenderMode)
       }
-      // Update the color based on the selected shape in Figma.
 
       // synNewShape
       if (pluginMessage.type === 'syncNewShape') {
@@ -88,7 +94,8 @@ function App() {
           if (data.newLockRelativeChroma !== $lockRelativeChroma.get()) {
             setLockRelativeChroma(data.newLockRelativeChroma)
           }
-          //For this value, we have the same same reason but also another one: if the user has the plugin running with a shape that has a parent fill then select another one that doesn't have one, if he select back a shape with a parent fill, we need to check if $lockContrast is not equal to the one from backend and update it in accordance.
+
+          // For this value, we have the same same reason but also another one: if the user has the plugin running with a shape that has a parent fill then select another one that doesn't have one, if he select back a shape with a parent fill, we need to check if $lockContrast is not equal to the one from backend and update it in accordance.
           if (data.newLockContrast !== $lockContrast.get() && data.newColorsRgba.parentFill) {
             setLockContrast(data.newLockContrast)
           } else if (!data.newColorsRgba.parentFill || !data.newColorsRgba.fill) {
@@ -152,7 +159,7 @@ function App() {
       }
     })
 
-    // This is in case the user has multiple Figma files open with OkColor open in them as well. Without this if the plugin is focused, by pressing "ctrl + tab", the plugin in the previous tab will get the 'ctrl' in $currentKeysPressed and when the user comes back and move the manipulator in the ColorPicker, the ctrl modifier effect will be taken into account even if he's not pressing it.
+    // Reset the current keys pressed when the plugin loses focus.
     window.addEventListener('blur', () => {
       if ($currentKeysPressed.get()) setCurrentKeysPressed([''])
     })
@@ -163,6 +170,7 @@ function App() {
 
     document.addEventListener('mousedown', (event) => {
       if ($mouseEventCallback.get()) $mouseEventCallback.get()!(event)
+
       isMouseDown = true
     })
 
@@ -177,20 +185,20 @@ function App() {
       setMouseEventCallback(null)
     })
 
-    // We want to know if the user has one of these two keys down because in ColorPciker we constrain the color picker manipulator depending on them and in others parts like ColorValueInputs.
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Shift') {
-        setCurrentKeysPressed([...$currentKeysPressed.get(), 'shift'])
-      } else if (event.key === 'Control') {
-        setCurrentKeysPressed([...$currentKeysPressed.get(), 'ctrl'])
+      switch (event.key) {
+        case 'Shift':
+          setCurrentKeysPressed([...$currentKeysPressed.get(), 'shift'])
+          break
       }
     })
 
     document.addEventListener('keyup', (event) => {
-      // We do this test on 'ArrowDown' and 'ArrowUp' because if not, in the inputs like relative chroma's one, we wouldn't be able to keep shift pressed more than one time.
-      if (!['ArrowUp', 'ArrowDown'].includes(event.key) && $currentKeysPressed.get()) {
-        setCurrentKeysPressed([''])
-      }
+      // We prevent setting setCurrentKeysPressed to empty when user is using arrow keys.
+      // For example in the color picker, without this, user would be able to only use the shift key one time.
+      if (['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(event.key)) return
+
+      setCurrentKeysPressed([''])
     })
 
     if (useBackend) {
@@ -207,20 +215,32 @@ function App() {
   } else {
     return (
       <>
+        <Alert />
+
         <SettingsScreen />
 
-        <div className="u-flex u-items-center u-justify-between">
-          <FileColorProfileSelect />
+        <div className={'c-top-bar' + (isContrastInputOpen ? '' : ' u-mb-16')}>
+          <OklchRenderModeToggle />
 
-          <div className="u-mr-4">
+          <div className="u-ml-auto">
+            <FileColorProfile />
+          </div>
+
+          <div className="u-ml-8">
+            <ContrastToggle />
+          </div>
+
+          <div className="u-ml-8">
             <SettingsToggle />
           </div>
         </div>
 
+        <ContrastInput />
+
         <ColorPicker />
 
         <div className="o-bottom-controls">
-          <div className="u-flex u-items-center u-justify-between u-px-16 u-mt-18">
+          <div className="u-flex u-items-center u-justify-between u-px-16 u-mt-12">
             <FillOrStrokeToggle />
 
             <div className="u-flex u-flex-col">
@@ -229,13 +249,12 @@ function App() {
             </div>
           </div>
 
-          <div className="u-flex u-h-28 u-px-9 u-mt-12">
+          <div className="u-flex u-gap-6 u-h-28 u-px-15 u-mt-11">
             <ColorModelSelect />
             <ColorValueInputs />
           </div>
 
           <RelativeChromaInput />
-          <ContrastInput />
           <ColorCodeInputs />
         </div>
       </>
