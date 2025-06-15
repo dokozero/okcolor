@@ -19,10 +19,10 @@ const unsecuredCopyToClipboard = (textToCopy: string) => {
   document.body.removeChild(textArea)
 }
 
-export default function copyToClipboard(textToCopy: string) {
+export default async function copyToClipboard(textToCopy: string) {
   // If the context is secure and clipboard API is available, use it.
   if (window.isSecureContext && typeof navigator?.clipboard?.writeText === 'function') {
-    navigator.clipboard.writeText(textToCopy)
+    await navigator.clipboard.writeText(textToCopy)
   }
   // Otherwise, use the unsecured fallback.
   else {

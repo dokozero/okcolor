@@ -45,6 +45,7 @@ export default defineConfig([
     rules: {
       'react/react-in-jsx-scope': 'off',
       'no-unused-vars': 'off',
+      '@typescript-eslint/no-floating-promises': ['error'],
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/no-explicit-any': 'off'
     }

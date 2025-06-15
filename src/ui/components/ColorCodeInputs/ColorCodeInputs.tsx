@@ -139,9 +139,9 @@ export default function ColorCodeInputs() {
     }
   }
 
-  const handleCopyActionOnClick = (event: React.MouseEvent<HTMLDivElement>, input: HTMLInputElement) => {
+  const handleCopyActionOnClick = async (event: React.MouseEvent<HTMLDivElement>, input: HTMLInputElement) => {
     removeModifierClassOnCopyActions()
-    copyToClipboard(input.value)
+    await copyToClipboard(input.value)
     ;(event.currentTarget as HTMLDivElement).classList.add('c-copy-action--copied')
   }
 
@@ -178,8 +178,8 @@ export default function ColorCodeInputs() {
           <div
             ref={colorCode_currentColorModelCopyAction}
             className="c-copy-action"
-            onClick={(event) => {
-              handleCopyActionOnClick(event, colorCode_currentColorModelInput.current!)
+            onClick={async (event) => {
+              await handleCopyActionOnClick(event, colorCode_currentColorModelInput.current!)
             }}
           >
             <div className="c-copy-action__wrapper">
@@ -200,8 +200,8 @@ export default function ColorCodeInputs() {
           <div
             ref={colorCode_colorCopyAction}
             className="c-copy-action"
-            onClick={(event) => {
-              handleCopyActionOnClick(event, colorCode_colorInput.current!)
+            onClick={async (event) => {
+              await handleCopyActionOnClick(event, colorCode_colorInput.current!)
             }}
           >
             <div className="c-copy-action__wrapper">
@@ -222,8 +222,8 @@ export default function ColorCodeInputs() {
           <div
             ref={colorCode_rgbaCopyAction}
             className="c-copy-action"
-            onClick={(event) => {
-              handleCopyActionOnClick(event, colorCode_rgbaInput.current!)
+            onClick={async (event) => {
+              await handleCopyActionOnClick(event, colorCode_rgbaInput.current!)
             }}
           >
             <div className="c-copy-action__wrapper">
@@ -244,8 +244,8 @@ export default function ColorCodeInputs() {
           <div
             ref={colorCode_hexCopyAction}
             className="c-copy-action"
-            onClick={(event) => {
-              handleCopyActionOnClick(event, colorCode_hexInput.current!)
+            onClick={async (event) => {
+              await handleCopyActionOnClick(event, colorCode_hexInput.current!)
             }}
           >
             <div className="c-copy-action__wrapper">

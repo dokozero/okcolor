@@ -28,6 +28,6 @@ This plugin is made possible by the [Culori JS library](https://culorijs.org/) a
 
 The rendering of the color picker is done by [freydev](https://github.com/freydev) using WebGL shaders.
 
-The APCA contrast feature is made possible by the work of [Myndex](https://www.myndex.com/APCA/) .
+The APCA contrast feature is made possible by the work of [Myndex research](https://git.apcacontrast.com/) .
 
-To know more about these uniform color spaces, you can check the original article from Björn Ottosson: [Oksvh and Okhsl](https://bottosson.github.io/posts/colorpicker/) and the one from oklch.com's creators: [OKLCH in CSS: why we moved from RGB and HSL](https://evilmartians.com/chronicles/oklch-in-css-why-quit-rgb-hsl).
+To know more about these uniform color spaces, you can check the original article from Björn Ottosson: [Okhsv and Okhsl](https://bottosson.github.io/posts/colorpicker/) and the one from oklch.com's creators: [OKLCH in CSS: why we moved from RGB and HSL](https://evilmartians.com/chronicles/oklch-in-css-why-quit-rgb-hsl).
